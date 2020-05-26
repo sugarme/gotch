@@ -1,4 +1,4 @@
-package torch
+package libtch
 
 // #cgo CXXFLAGS: -std=c++17 -I${SRCDIR} -g -O3
 // #cgo CFLAGS: -I${SRCDIR} -O3 -Wall -Wno-unused-variable -Wno-deprecated-declarations -Wno-c++11-narrowing -g -Wno-sign-compare -Wno-unused-function
