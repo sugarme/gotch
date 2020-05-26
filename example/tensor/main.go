@@ -1,10 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"reflect"
+
 	t "github.com/sugarme/gotch/torch"
 )
 
 func main() {
 
-	t.NewTensor()
+	t := t.NewTensor()
+
+	fmt.Printf("Type of t: %v\n", reflect.TypeOf(t))
 }

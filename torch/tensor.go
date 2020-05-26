@@ -5,16 +5,16 @@ package torch
 import "C"
 
 import (
-	"fmt"
-	"reflect"
+	// "fmt"
+	// "reflect"
+	"unsafe"
 )
 
 type C_tensor struct {
-	_private []uint8
+	_private uint8
 }
 
-func NewTensor() {
-	t := C.at_new_tensor()
-	fmt.Printf("Tensor Type: %v\n", reflect.TypeOf(t).Kind())
-	fmt.Printf("Tensor Value: %v\n", t)
+func NewTensor() *C_tensor {
+	ct := C.at_new_tensor()
+	return &C_tensor{_private: *(*uint8)(unsafe.Pointer(&ct))}
 }
