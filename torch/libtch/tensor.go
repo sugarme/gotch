@@ -10,17 +10,23 @@ import (
 
 type c_void unsafe.Pointer
 type size_t uint
+type c_int int32
 
 type C_tensor struct {
-	_private uint8
+	private uint8
 }
 
 func NewTensor() *C_tensor {
 	t := C.at_new_tensor()
-	return &C_tensor{_private: *(*uint8)(unsafe.Pointer(&t))}
+	return &C_tensor{private: *(*uint8)(unsafe.Pointer(&t))}
 }
 
-func AtTensorOfData(vs c_void, dims int64, ndims size_t, elt_size_in_bytes size_t, kind c_int) *C_tensor {
-	t := C.at_tensor_of_data(vs, dims, ndims, elt_size_in_bytes, kind)
-	return &C_tensor{_private: *(*uint8)(unsafe.Pointer(&t))}
+func AtTensorOfData(vs unsafe.Pointer, dims int64, ndims uint, elt_size_in_bytes uint, kind int32) *C_tensor {
+	c_dims := (*C.long)(unsafe.Pointer(&dims))
+	c_ndims := *(*C.ulong)(unsafe.Pointer(&ndims))
+	c_elt_size_in_bytes := *(*C.ulong)(unsafe.Pointer(&elt_size_in_bytes))
+	c_kind := *(*C.int)(unsafe.Pointer(&kind))
+
+	t := C.at_tensor_of_data(vs, c_dims, c_ndims, c_elt_size_in_bytes, c_kind)
+	return &C_tensor{private: *(*uint8)(unsafe.Pointer(&t))}
 }

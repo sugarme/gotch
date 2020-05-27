@@ -5,7 +5,11 @@ package libtch
 //#include "stdbool.h"
 //#include "torch_api.h"
 import "C"
+import (
+	"unsafe"
+)
 
 func Atc_cuda_device_count() int {
-	return C.atc_cuda_device_count()
+	t := C.atc_cuda_device_count()
+	return *(*int)(unsafe.Pointer(&t))
 }
