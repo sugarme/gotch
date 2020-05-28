@@ -1,9 +1,9 @@
-package torch
+package gorch
 
 import (
 	"log"
 
-	lib "github.com/sugarme/gotch/torch/libtch"
+	lib "github.com/sugarme/gotch/libtch"
 )
 
 type Device struct {
