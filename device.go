@@ -1,4 +1,4 @@
-package gorch
+package gotch
 
 import (
 	"log"

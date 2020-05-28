@@ -18,7 +18,7 @@ type C_tensor struct {
 	private unsafe.Pointer
 }
 
-func NewTensor() *C_tensor {
+func AtNewTensor() *C_tensor {
 	t := C.at_new_tensor()
 	return &C_tensor{private: unsafe.Pointer(t)}
 }
@@ -30,11 +30,6 @@ func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_byt
 	c_ndims := *(*C.size_t)(unsafe.Pointer(&ndims))
 	c_elt_size_in_bytes := *(*C.size_t)(unsafe.Pointer(&elt_size_in_bytes))
 	c_kind := *(*C.int)(unsafe.Pointer(&kind))
-
-	// c_dims := (*C.long)(unsafe.Pointer(uintptr(dims)))
-	// c_ndims := *(*C.size_t)(unsafe.Pointer(uintptr(ndims)))
-	// c_elt_size_in_bytes := *(*C.size_t)(unsafe.Pointer(uintptr(elt_size_in_bytes)))
-	// c_kind := *(*C.int)(unsafe.Pointer(uintptr(kind)))
 
 	// t is of type `unsafe.Pointer` in Go and `*void` in C
 	t := C.at_tensor_of_data(vs, c_dims, c_ndims, c_elt_size_in_bytes, c_kind)

@@ -1,22 +1,15 @@
-package tensor
-
-//#include <stdlib.h>
-import "C"
+package wrapper
 
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"reflect"
-	// "runtime"
 	"unsafe"
 
-	lib "github.com/sugarme/gotch/libtch"
+	gotch "github.com/sugarme/gotch"
 )
-
-type Tensor struct {
-	ctensor *t.C_tensor
-}
 
 var nativeEndian binary.ByteOrder
 
@@ -34,58 +27,7 @@ func init() {
 	}
 }
 
-// FnOfSlice creates tensor from a slice data
-func FnOfSlice() (retVal Tensor, err error) {
-
-	data := []int{0, 0, 0, 0}
-	shape := []int64{int64(len(data))}
-	nflattened := numElements(shape)
-	dtype := 3          // Kind.Int
-	eltSizeInBytes := 4 // Element Size in Byte for Int dtype
-
-	nbytes := eltSizeInBytes * int(uintptr(nflattened))
-
-	// NOTE: dataPrt is type of `*void` in C or type of `unsafe.Pointer` in Go
-	dataPtr := C.malloc(C.size_t(nbytes))
-
-	// Recall: 1 << 30 = 1 * 2 * 30
-	// Ref. See more at https://stackoverflow.com/questions/48756732
-	dataSlice := (*[1 << 30]byte)(dataPtr)[:nbytes:nbytes]
-
-	buf := bytes.NewBuffer(dataSlice[:0:nbytes])
-
-	encodeTensor(buf, reflect.ValueOf(data), shape)
-
-	c_tensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(dtype))
-
-	retVal = Tensor{c_tensor}
-
-	// Read back created tensor values by C libtorch
-	readDataPtr := lib.AtDataPtr(retVal.c_tensor)
-	readDataSlice := (*[1 << 30]byte)(readDataPtr)[:nbytes:nbytes]
-	// typ := typeOf(dtype, shape)
-	typ := reflect.TypeOf(int32(0)) // C. type `int` ~ Go type `int32`
-	val := reflect.New(typ)
-	if err := decodeTensor(bytes.NewReader(readDataSlice), shape, typ, val); err != nil {
-		panic(fmt.Sprintf("unable to decode Tensor of type %v and shape %v - %v", dtype, shape, err))
-	}
-
-	tensorData := reflect.Indirect(val).Interface()
-
-	fmt.Println("%v", tensorData)
-
-	return retVal, nil
-}
-
-func numElements(shape []int64) int64 {
-	n := int64(1)
-	for _, d := range shape {
-		n *= d
-	}
-	return n
-}
-
-func encodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
+func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 	switch v.Kind() {
 	case reflect.Bool:
 		b := byte(0)
@@ -120,7 +62,7 @@ func encodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 
 		subShape := shape[1:]
 		for i := 0; i < v.Len(); i++ {
-			err := encodeTensor(w, v.Index(i), subShape)
+			err := EncodeTensor(w, v.Index(i), subShape)
 			if err != nil {
 				return err
 			}
@@ -132,9 +74,9 @@ func encodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 	return nil
 }
 
-// decodeTensor decodes the Tensor from the buffer to ptr using the format
+// DecodeTensor decodes the Tensor from the buffer to ptr using the format
 // specified in c_api.h. Use stringDecoder for String tensors.
-func decodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.Value) error {
+func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.Value) error {
 	switch typ.Kind() {
 	case reflect.Bool:
 		b, err := r.ReadByte()
@@ -160,7 +102,7 @@ func decodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 		}
 
 		for i := 0; i < val.Len(); i++ {
-			if err := decodeTensor(r, shape[1:], typ.Elem(), val.Index(i).Addr()); err != nil {
+			if err := DecodeTensor(r, shape[1:], typ.Elem(), val.Index(i).Addr()); err != nil {
 				return err
 			}
 		}
@@ -171,8 +113,34 @@ func decodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 	return nil
 }
 
-// // typeOf converts from a DType and Shape to the equivalent Go type.
-// func typeOf(dt DType, shape []int64) reflect.Type {
+func numElements(shape []int64) int64 {
+	n := int64(1)
+	for _, d := range shape {
+		n *= d
+	}
+	return n
+}
+
+// GetKind returns data type `Kind` (a element of tensor can hold)
+// v - a value of a data element
+func GetKind(v interface{}) (retVal gotch.Kind, err error) {
+
+	switch {
+	case reflect.TypeOf(v) == int:
+		retVal = gotch.Int
+	case reflect.TypeOf(v) == uint8:
+		retVal = gotch.Uint8
+
+	default:
+		err = fmt.Errorf("Unsupported data type for %v\n", reflect.TypeOf(v))
+		return retVal, err
+	}
+
+	return retVal, nil
+}
+
+// // TypeOf converts from a DType and Shape to the equivalent Go type.
+// func TypeOf(dt DType, shape []int64) reflect.Type {
 // var ret reflect.Type
 // for _, t := range types {
 // if dt == DType(t.dataType) {
