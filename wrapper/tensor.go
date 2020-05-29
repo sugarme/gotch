@@ -1,20 +1,18 @@
 package wrapper
 
-//#include <stdlib.h>
+// #include <stdlib.h>
 import "C"
 
 import (
-	"bytes"
-	"encoding/binary"
-	"fmt"
+	// "fmt"
 	"reflect"
-	"unsafe"
 
+	gotch "github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
 )
 
 type Tensor struct {
-	ctensor *t.C_tensor
+	ctensor *lib.C_tensor
 }
 
 // NewTensor creates a new tensor
@@ -24,45 +22,43 @@ func NewTensor() Tensor {
 }
 
 // FOfSlice creates tensor from a slice data
-func(ts Tensor) FOfSlice(data []inteface{}) (retVal Tensor, err error) {
+func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, err error) {
 
-	data := []int{0, 0, 0, 0}
-	shape := []int64{int64(len(data))}
-	nflattened := numElements(shape)
-	dtype := 3          // Kind.Int
-	eltSizeInBytes := 4 // Element Size in Byte for Int dtype
+	dataLen := reflect.ValueOf(data).Len()
+	shape := []int64{int64(dataLen)}
+	elementNum := ElementCount(shape)
+	// eltSizeInBytes := dtype.EltSizeInBytes() // Element Size in Byte for Int dtype
+	eltSizeInBytes := gotch.DTypeSize(dtype)
 
-	nbytes := eltSizeInBytes * int(uintptr(nflattened))
+	nbytes := int(eltSizeInBytes) * int(elementNum)
 
-	// NOTE: dataPrt is type of `*void` in C or type of `unsafe.Pointer` in Go
-	// data should be allocated to memory BY `C` side
-	dataPtr := C.malloc(C.size_t(nbytes))
+	dataPtr, buff := CMalloc(nbytes)
 
-	// Recall: 1 << 30 = 1 * 2 * 30
-	// Ref. See more at https://stackoverflow.com/questions/48756732
-	dataSlice := (*[1 << 30]byte)(dataPtr)[:nbytes:nbytes]
-
-	buf := bytes.NewBuffer(dataSlice[:0:nbytes])
-
-	EncodeTensor(buf, reflect.ValueOf(data), shape)
-
-	c_tensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(dtype))
-
-	retVal = Tensor{c_tensor}
-
-	// Read back created tensor values by C libtorch
-	readDataPtr := lib.AtDataPtr(retVal.c_tensor)
-	readDataSlice := (*[1 << 30]byte)(readDataPtr)[:nbytes:nbytes]
-	// typ := typeOf(dtype, shape)
-	typ := reflect.TypeOf(int32(0)) // C. type `int` ~ Go type `int32`
-	val := reflect.New(typ)
-	if err := DecodeTensor(bytes.NewReader(readDataSlice), shape, typ, val); err != nil {
-		panic(fmt.Sprintf("unable to decode Tensor of type %v and shape %v - %v", dtype, shape, err))
+	if err = EncodeTensor(buff, reflect.ValueOf(data), shape); err != nil {
+		return nil, err
 	}
 
-	tensorData := reflect.Indirect(val).Interface()
+	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(gotch.DType2CInt(dtype)))
 
-	fmt.Println("%v", tensorData)
+	retVal = &Tensor{ctensor}
+
+	// Read back created tensor values by C libtorch
+	// readDataPtr := lib.AtDataPtr(retVal.ctensor)
+	// readDataSlice := (*[1 << 30]byte)(readDataPtr)[:nbytes:nbytes]
+	// // typ := typeOf(dtype, shape)
+	// typ := reflect.TypeOf(int32(0)) // C. type `int` ~ Go type `int32`
+	// val := reflect.New(typ)
+	// if err := DecodeTensor(bytes.NewReader(readDataSlice), shape, typ, val); err != nil {
+	// panic(fmt.Sprintf("unable to decode Tensor of type %v and shape %v - %v", dtype, shape, err))
+	// }
+	//
+	// tensorData := reflect.Indirect(val).Interface()
+	//
+	// fmt.Println("%v", tensorData)
 
 	return retVal, nil
+}
+
+func (ts Tensor) Print() {
+	lib.AtPrint(ts.ctensor)
 }

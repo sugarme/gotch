@@ -1,16 +1,20 @@
 package wrapper
 
+// #include <stdlib.h>
+import "C"
+
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"reflect"
 	"unsafe"
-
-	gotch "github.com/sugarme/gotch"
+	// gotch "github.com/sugarme/gotch"
 )
 
+// nativeEndian is a ByteOrder for local platform.
+// Ref. https://stackoverflow.com/a/53286786
+// Ref. https://github.com/tensorflow/tensorflow/blob/master/tensorflow/go/tensor.go#L488-L505
 var nativeEndian binary.ByteOrder
 
 func init() {
@@ -27,6 +31,36 @@ func init() {
 	}
 }
 
+// CMalloc allocates a given number of bytes to C side memory.
+// It returns
+// - dataPtr: a C pointer type of `*void` (`unsafe.Pointer` in Go).
+// - buf : a Go pointer points to a given bytes of buffer (empty) in C memory
+// allocated by C waiting for writing data to.
+//
+// NOTE:
+// 1. Go pointer is a pointer to Go memory. C pointer is a pointer to C memory.
+// 2. General rule is Go code can use C pointers. Go code may pass Go pointer to C
+// provided that the Go memory to which it points does NOT contain any Go
+// pointers. BUT C code must not store any Go pointers in Go memory, even
+// temporarily.
+// 3. Some Go values contain Go pointers IMPLICITLY: strings, slices, maps,
+// channels and function values. Thus, pointers to these values should not be
+// passed to C side. Instead, data should be allocated to C memory and return a
+// C pointer to it using `C.malloc`.
+// Ref: https://github.com/golang/proposal/blob/master/design/12416-cgo-pointers.md
+func CMalloc(nbytes int) (dataPtr unsafe.Pointer, buf *bytes.Buffer) {
+
+	dataPtr = C.malloc(C.size_t(nbytes))
+
+	// Recall: 1 << 30 = 1 * 2 * 30
+	// Ref. See more at https://stackoverflow.com/questions/48756732
+	dataSlice := (*[1 << 30]byte)(dataPtr)[:nbytes:nbytes]
+	buf = bytes.NewBuffer(dataSlice[:0:nbytes])
+
+	return dataPtr, buf
+}
+
+// EncodeTensor loads tensor data to C memory and returns a C pointer.
 func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 	switch v.Kind() {
 	case reflect.Bool:
@@ -37,7 +71,7 @@ func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 		if err := w.WriteByte(b); err != nil {
 			return err
 		}
-	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 		if err := binary.Write(w, nativeEndian, v.Interface()); err != nil {
 			return err
 		}
@@ -55,7 +89,7 @@ func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 		// Optimisation: if only one dimension is left we can use binary.Write() directly for this slice
 		if len(shape) == 1 && v.Len() > 0 {
 			switch v.Index(0).Kind() {
-			case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+			case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 				return binary.Write(w, nativeEndian, v.Interface())
 			}
 		}
@@ -74,8 +108,8 @@ func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 	return nil
 }
 
-// DecodeTensor decodes the Tensor from the buffer to ptr using the format
-// specified in c_api.h. Use stringDecoder for String tensors.
+// DecodeTensor decodes tensor value from a C memory buffer given
+// C pointer, data type and shape and returns data value of type interface
 func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.Value) error {
 	switch typ.Kind() {
 	case reflect.Bool:
@@ -84,7 +118,7 @@ func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 			return err
 		}
 		ptr.Elem().SetBool(b == 1)
-	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 		if err := binary.Read(r, nativeEndian, ptr.Interface()); err != nil {
 			return err
 		}
@@ -96,7 +130,7 @@ func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 		// Optimization: if only one dimension is left we can use binary.Read() directly for this slice
 		if len(shape) == 1 && val.Len() > 0 {
 			switch val.Index(0).Kind() {
-			case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+			case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 				return binary.Read(r, nativeEndian, val.Interface())
 			}
 		}
@@ -113,47 +147,11 @@ func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 	return nil
 }
 
-func numElements(shape []int64) int64 {
+// ElementCount counts number of element in the tensor given a shape
+func ElementCount(shape []int64) int64 {
 	n := int64(1)
 	for _, d := range shape {
 		n *= d
 	}
 	return n
 }
-
-// GetKind returns data type `Kind` (a element of tensor can hold)
-// v - a value of a data element
-func GetKind(v interface{}) (retVal gotch.Kind, err error) {
-
-	switch {
-	case reflect.TypeOf(v) == int:
-		retVal = gotch.Int
-	case reflect.TypeOf(v) == uint8:
-		retVal = gotch.Uint8
-
-	default:
-		err = fmt.Errorf("Unsupported data type for %v\n", reflect.TypeOf(v))
-		return retVal, err
-	}
-
-	return retVal, nil
-}
-
-// // TypeOf converts from a DType and Shape to the equivalent Go type.
-// func TypeOf(dt DType, shape []int64) reflect.Type {
-// var ret reflect.Type
-// for _, t := range types {
-// if dt == DType(t.dataType) {
-// ret = t.typ
-// break
-// }
-// }
-// if ret == nil {
-// // TODO get tensor name
-// panic(fmt.Sprintf("Unsupported DType %d", int(dt)))
-// }
-// for range shape {
-// ret = reflect.SliceOf(ret)
-// }
-// return ret
-// }
