@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"log"
-	"reflect"
 
-	gotch "github.com/sugarme/gotch"
+	// gotch "github.com/sugarme/gotch"
 	wrapper "github.com/sugarme/gotch/wrapper"
 )
 
@@ -14,16 +13,21 @@ func main() {
 	// TODO: Check Go type of data and tensor DType
 	// For. if data is []int and DType is Bool
 	// It is still running but get wrong result.
-	data := []int32{1, 0, 1}
-	dtype := gotch.Int
+	data := []int32{1, 1, 1, 2, 2, 2}
+	shape := []int64{2, 3}
 
-	fmt.Println(gotch.DType{reflect.TypeOf(data)})
+	// dtype := gotch.Int
+	// ts := wrapper.NewTensor()
+	// sliceTensor, err := ts.FOfSlice(data, dtype)
+	// if err != nil {
+	// log.Fatal(err)
+	// }
 
-	ts := wrapper.NewTensor()
-	sliceTensor, err := ts.FOfSlice(data, dtype)
+	ts, err := wrapper.NewTensorFromData(data, shape)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	sliceTensor.Print()
+	ts.Print()
+
 }

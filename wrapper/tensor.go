@@ -65,3 +65,48 @@ func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, 
 func (ts Tensor) Print() {
 	lib.AtPrint(ts.ctensor)
 }
+
+// NewTensorFromData creates tensor from given data and shape
+func NewTensorFromData(data interface{}, shape []int64) (retVal *Tensor, err error) {
+	// 1. Check whether data and shape match
+	elementNum, err := DataDim(data)
+	if err != nil {
+		return nil, err
+	}
+
+	nflattend := FlattenDim(shape)
+
+	if elementNum != nflattend {
+		err = fmt.Errorf("Number of data elements and flatten shape dimension mismatched.\n")
+		return nil, err
+	}
+
+	// 2. Write raw data to C memory and get C pointer
+	dataPtr, err := DataAsPtr(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Create tensor with pointer and shape
+	dtype, err := gotch.DTypeFromData(data)
+	if err != nil {
+		return nil, err
+	}
+
+	eltSizeInBytes, err := gotch.DTypeSize(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	cint, err := gotch.DType2CInt(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
+
+	retVal = &Tensor{ctensor}
+
+	return retVal, nil
+
+}

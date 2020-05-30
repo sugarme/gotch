@@ -9,7 +9,8 @@ import (
 	"fmt"
 	"reflect"
 	"unsafe"
-	// gotch "github.com/sugarme/gotch"
+
+	gotch "github.com/sugarme/gotch"
 )
 
 // nativeEndian is a ByteOrder for local platform.
@@ -154,4 +155,74 @@ func ElementCount(shape []int64) int64 {
 		n *= d
 	}
 	return n
+}
+
+// DataDim returns number of elements in data
+func DataDim(data interface{}) (retVal int, err error) {
+	v := reflect.ValueOf(data)
+
+	switch gotch.IsSupportedScalar(v.Kind()) {
+	case true:
+		retVal = 1
+	default:
+		switch v.Kind() {
+		case reflect.Slice, reflect.Array:
+			retVal = v.Len()
+		default:
+			err = fmt.Errorf("Cannot count data element due to unsupported data type: %v\n.", v.Kind())
+			return 0, err
+		}
+
+	}
+
+	return retVal, nil
+}
+
+// DataAsPtr write to C memory and returns a C pointer.
+//
+// NOTE:
+// Supported data types are scalar, slice/array of scalar type equivalent to
+// DType.
+func DataAsPtr(data interface{}) (dataPtr unsafe.Pointer, err error) {
+
+	// 1. Count number of elements in data
+	elementNum, err := DataDim(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Element size in bytes
+	dtype, err := gotch.DTypeFromData(data)
+	fmt.Println(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	eltSizeInBytes, err := gotch.DTypeSize(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	nbytes := int(eltSizeInBytes) * int(elementNum)
+
+	// 3. Get C pointer and prepare C memory buffer for writing
+	dataPtr, buff := CMalloc(nbytes)
+
+	// 4. Write data to C memory
+	err = binary.Write(buff, nativeEndian, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return dataPtr, nil
+}
+
+// FlattenDim counts number of elements with given shape
+func FlattenDim(shape []int64) int {
+	n := int64(1)
+	for _, d := range shape {
+		n *= d
+	}
+
+	return int(n)
 }

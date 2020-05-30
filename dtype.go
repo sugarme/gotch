@@ -175,10 +175,25 @@ func DTypeFromData(data interface{}) (retVal DType, err error) {
 		return DType{}, err
 	}
 
-	retVal = DType{reflect.TypeOf(dataType)}
+	return ToDType(dataType)
 
-	return retVal, nil
+}
 
+// ElementGoType infers and returns Go type of element in given data
+func ElementGoType(data interface{}) (retVal reflect.Type, err error) {
+	dataKind := reflect.ValueOf(data).Kind()
+	var dataType reflect.Type
+	switch dataKind {
+	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
+		dataType = reflect.TypeOf(data)
+	case reflect.Slice:
+		dataType = reflect.TypeOf(data).Elem()
+	default:
+		err = fmt.Errorf("Unsupported type for data type %v\n", dataType)
+		return DType{}, err
+	}
+
+	return dataType, nil
 }
 
 // DataDType infers and returns data type of tensor data
@@ -258,4 +273,46 @@ func TypeCheck(data interface{}, dtype DType) (matched bool, msg string) {
 
 	return matched, msg
 
+}
+
+var supportedTypes = map[reflect.Kind]bool{
+	reflect.Uint8:   true,
+	reflect.Int8:    true,
+	reflect.Int16:   true,
+	reflect.Int32:   true,
+	reflect.Int64:   true,
+	reflect.Float32: true,
+	reflect.Float64: true,
+	reflect.Bool:    true,
+}
+
+var scalarTypes = map[reflect.Kind]bool{
+	reflect.Bool:       true,
+	reflect.Int:        true,
+	reflect.Int8:       true,
+	reflect.Int16:      true,
+	reflect.Int32:      true,
+	reflect.Int64:      true,
+	reflect.Uint:       true,
+	reflect.Uint8:      true,
+	reflect.Uint16:     true,
+	reflect.Uint32:     true,
+	reflect.Uint64:     true,
+	reflect.Uintptr:    true,
+	reflect.Float32:    true,
+	reflect.Float64:    true,
+	reflect.Complex64:  true,
+	reflect.Complex128: true,
+}
+
+// IsSupportedScalar checks whether given SCALAR type is supported
+// TODO: check input is a scalar.
+func IsSupportedScalar(k reflect.Kind) bool {
+	// if _, ok := scalarTypes[k]; !ok {
+	// log.Fatalf("Input type: %v is not a Go scalar type.", k)
+	// }
+
+	_, retVal := supportedTypes[k]
+
+	return retVal
 }
