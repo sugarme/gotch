@@ -4,7 +4,7 @@ package wrapper
 import "C"
 
 import (
-	// "fmt"
+	"fmt"
 	"reflect"
 
 	gotch "github.com/sugarme/gotch"
@@ -24,11 +24,19 @@ func NewTensor() Tensor {
 // FOfSlice creates tensor from a slice data
 func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, err error) {
 
+	if ok, msg := gotch.TypeCheck(data, dtype); !ok {
+		err = fmt.Errorf("data type and DType are mismatched: %v\n", msg)
+		return nil, err
+	}
+
 	dataLen := reflect.ValueOf(data).Len()
 	shape := []int64{int64(dataLen)}
 	elementNum := ElementCount(shape)
 
-	eltSizeInBytes := gotch.DTypeSize(dtype)
+	eltSizeInBytes, err := gotch.DTypeSize(dtype)
+	if err != nil {
+		return nil, err
+	}
 
 	nbytes := int(eltSizeInBytes) * int(elementNum)
 
@@ -38,7 +46,12 @@ func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, 
 		return nil, err
 	}
 
-	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(gotch.DType2CInt(dtype)))
+	cint, err := gotch.DType2CInt(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
 
 	retVal = &Tensor{ctensor}
 
