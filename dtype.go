@@ -248,3 +248,23 @@ func TypeOf(dt DType, shape []int64) (retVal reflect.Type, err error) {
 		return nil, err
 	}
 }
+
+// TypeCheck checks whether data Go type matching DType
+func TypeCheck(data interface{}, dtype DType) (matched bool, msg string) {
+
+	dataKind := reflect.ValueOf(data).Kind()
+	dataType := reflect.TypeOf(data)
+
+	switch dataKind {
+	case reflect.Slice:
+		dataEleType := reflect.TypeOf(data).Elem()
+		matched = dataEleType == dtype.Type
+		msg = fmt.Sprintf("data type: %v, DType: %v", dataEleType, dtype.Kind())
+	default:
+		matched = dataType == dtype.Type
+		msg = fmt.Sprintf("data type: %v, DType: %v", dataType, dtype.Kind())
+	}
+
+	return matched, msg
+
+}

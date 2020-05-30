@@ -27,7 +27,7 @@ func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, 
 	dataLen := reflect.ValueOf(data).Len()
 	shape := []int64{int64(dataLen)}
 	elementNum := ElementCount(shape)
-	// eltSizeInBytes := dtype.EltSizeInBytes() // Element Size in Byte for Int dtype
+
 	eltSizeInBytes := gotch.DTypeSize(dtype)
 
 	nbytes := int(eltSizeInBytes) * int(elementNum)
@@ -42,23 +42,13 @@ func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, 
 
 	retVal = &Tensor{ctensor}
 
-	// Read back created tensor values by C libtorch
-	// readDataPtr := lib.AtDataPtr(retVal.ctensor)
-	// readDataSlice := (*[1 << 30]byte)(readDataPtr)[:nbytes:nbytes]
-	// // typ := typeOf(dtype, shape)
-	// typ := reflect.TypeOf(int32(0)) // C. type `int` ~ Go type `int32`
-	// val := reflect.New(typ)
-	// if err := DecodeTensor(bytes.NewReader(readDataSlice), shape, typ, val); err != nil {
-	// panic(fmt.Sprintf("unable to decode Tensor of type %v and shape %v - %v", dtype, shape, err))
-	// }
-	//
-	// tensorData := reflect.Indirect(val).Interface()
-	//
-	// fmt.Println("%v", tensorData)
-
 	return retVal, nil
 }
 
+// Print prints tensor values to console.
+//
+// NOTE: it is printed from C and will print ALL elements of tensor
+// with no truncation at all.
 func (ts Tensor) Print() {
 	lib.AtPrint(ts.ctensor)
 }
