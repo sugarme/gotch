@@ -21,6 +21,18 @@ func NewTensor() Tensor {
 	return Tensor{ctensor}
 }
 
+func (ts Tensor) Dim() uint64 {
+	return lib.AtDim(ts.ctensor)
+}
+
+func (ts Tensor) Size() {
+	dim := lib.AtDim(ts.ctensor)
+	sz := []int64{int64(dim)}
+	lib.AtShape(ts.ctensor, sz)
+	fmt.Printf("sz val:%v", sz)
+	// return lib.AtShape(ts.ctensor, sz)
+}
+
 // FOfSlice creates tensor from a slice data
 func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, err error) {
 

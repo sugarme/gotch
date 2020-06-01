@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	"log"
 
 	// gotch "github.com/sugarme/gotch"
@@ -33,6 +33,10 @@ func main() {
 	}
 
 	ts.Print()
+
+	fmt.Println(ts.Dim())
+
+	ts.Size()
 
 	// typ, count, err := wrapper.DataCheck(data)
 	// if err != nil {

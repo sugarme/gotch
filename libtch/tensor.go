@@ -62,3 +62,16 @@ func AtDataPtr(t *C_tensor) unsafe.Pointer {
 	cTensor := (C.tensor)((*t).private)
 	return C.at_data_ptr(cTensor)
 }
+
+func AtDim(t *C_tensor) uint64 {
+	cTensor := (C.tensor)((*t).private)
+	cdim := C.at_dim(cTensor)
+	return *(*uint64)(unsafe.Pointer(&cdim))
+}
+
+func AtShape(t *C_tensor, sz []int64) {
+	cTensor := (C.tensor)((*t).private)
+	// just get pointer of the first element
+	csz := (*C.int64_t)(unsafe.Pointer(&sz[0]))
+	C.at_shape(cTensor, csz)
+}
