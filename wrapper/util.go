@@ -357,7 +357,7 @@ func flattenData(data interface{}, round int, flat []interface{}) (f []interface
 
 		return flatData, nil
 
-	case reflect.Int32, reflect.Int64:
+	case reflect.Uint8, reflect.Int8, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
 		flatData = append(flatData, data)
 	}
 
