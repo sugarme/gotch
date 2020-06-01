@@ -77,7 +77,7 @@ func NewTensorFromData(data interface{}, shape []int64) (retVal *Tensor, err err
 	nflattend := FlattenDim(shape)
 
 	if elementNum != nflattend {
-		err = fmt.Errorf("Number of data elements and flatten shape dimension mismatched.\n")
+		err = fmt.Errorf("Number of data elements (%v) and flatten shape (%v) dimension mismatched.\n", elementNum, nflattend)
 		return nil, err
 	}
 

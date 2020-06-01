@@ -163,31 +163,67 @@ var (
 
 // DTypeFromData infers returns equavalent DType from given data
 func DTypeFromData(data interface{}) (retVal DType, err error) {
-	dataKind := reflect.ValueOf(data).Kind()
-	var dataType reflect.Type
-	switch dataKind {
-	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
-		dataType = reflect.TypeOf(data)
-	case reflect.Slice:
-		dataType = reflect.TypeOf(data).Elem()
-	default:
-		err = fmt.Errorf("Unsupported type for data type %v\n", dataType)
-		return DType{}, err
+
+	// NOTE: call `Interface()` to get data type back to interface{} type
+	typ, _, err := dataCheck(reflect.ValueOf(data).Interface(), 0)
+	if err != nil {
+		return retVal, err
 	}
 
-	return ToDType(dataType)
+	return ToDType(typ)
+}
 
+// NOTE: 0 is reflect.Kind() of Invalid
+// See: https://golang.org/pkg/reflect/#Kind
+func dataCheck(data interface{}, count int) (k reflect.Type, n int, err error) {
+	v := reflect.ValueOf(data)
+	var goType reflect.Type = reflect.TypeOf(data)
+	var total int = count
+	var round = 0
+
+	switch v.Kind() {
+	case reflect.Slice, reflect.Array:
+		if round == 0 {
+			round = v.Len()
+		}
+		for i := 0; i < v.Len(); i++ {
+			round--
+			goType, total, err = dataCheck(v.Index(i).Interface(), total)
+
+			if err != nil {
+				return reflect.TypeOf(reflect.Zero), 0, err
+			}
+		}
+
+		return goType, total, nil
+
+	case reflect.Uint8, reflect.Int8, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
+		total++
+		if goType.String() != "invalid" {
+			goType = v.Type()
+		}
+	default:
+		err = fmt.Errorf("Input Data: unsupported data structure or type: %v\n", v.Kind())
+		return reflect.TypeOf(reflect.Zero), 0, err
+	}
+
+	return goType, total, nil
 }
 
 // ElementGoType infers and returns Go type of element in given data
 func ElementGoType(data interface{}) (retVal reflect.Type, err error) {
-	dataKind := reflect.ValueOf(data).Kind()
-	var dataType reflect.Type
+	dataValue := reflect.ValueOf(data)
+	return elementType(dataValue)
+}
+
+func elementType(data reflect.Value) (dataType reflect.Type, err error) {
+	dataKind := data.Kind()
 	switch dataKind {
 	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
-		dataType = reflect.TypeOf(data)
-	case reflect.Slice:
-		dataType = reflect.TypeOf(data).Elem()
+		dataType = data.Type()
+	case reflect.Slice, reflect.Array:
+		data = data.Elem()
+		dataType, err = elementType(data) // recursively type inferring
 	default:
 		err = fmt.Errorf("Unsupported type for data type %v\n", dataType)
 		return DType{}, err
@@ -257,22 +293,20 @@ func TypeOf(dt DType, shape []int64) (retVal reflect.Type, err error) {
 
 // TypeCheck checks whether data Go type matching DType
 func TypeCheck(data interface{}, dtype DType) (matched bool, msg string) {
-
-	dataKind := reflect.ValueOf(data).Kind()
-	dataType := reflect.TypeOf(data)
-
-	switch dataKind {
-	case reflect.Slice:
-		dataEleType := reflect.TypeOf(data).Elem()
-		matched = dataEleType == dtype.Type
-		msg = fmt.Sprintf("data type: %v, DType: %v", dataEleType, dtype.Kind())
-	default:
-		matched = dataType == dtype.Type
-		msg = fmt.Sprintf("data type: %v, DType: %v", dataType, dtype.Kind())
+	dataValue := reflect.ValueOf(data)
+	var dataType reflect.Type
+	var err error
+	dataType, err = elementType(dataValue)
+	if err != nil {
+		msg = fmt.Sprintf("data type: %v, DType: %v\n", dataType, dtype.Kind())
+		msg += err.Error()
+		return false, msg
 	}
 
-	return matched, msg
+	matched = dataType == dtype.Type
+	msg = fmt.Sprintf("data type: %v, DType: %v\n", dataType, dtype.Kind())
 
+	return matched, msg
 }
 
 var supportedTypes = map[reflect.Kind]bool{

@@ -158,24 +158,55 @@ func ElementCount(shape []int64) int64 {
 }
 
 // DataDim returns number of elements in data
+// NOTE: only support scalar and (nested) slice/array of scalar type
 func DataDim(data interface{}) (retVal int, err error) {
-	v := reflect.ValueOf(data)
 
-	switch gotch.IsSupportedScalar(v.Kind()) {
-	case true:
-		retVal = 1
-	default:
-		switch v.Kind() {
-		case reflect.Slice, reflect.Array:
-			retVal = v.Len()
-		default:
-			err = fmt.Errorf("Cannot count data element due to unsupported data type: %v\n.", v.Kind())
-			return 0, err
+	_, count, err := dataCheck(reflect.ValueOf(data).Interface(), 0)
+	return count, err
+}
+
+// DataCheck checks the input data for element Go type and number of elements.
+// It will return errors if element type is not supported.
+func DataCheck(data interface{}) (k reflect.Type, n int, err error) {
+
+	return dataCheck(reflect.ValueOf(data).Interface(), 0)
+}
+
+// NOTE: 0 is reflect.Kind() of Invalid
+// See: https://golang.org/pkg/reflect/#Kind
+func dataCheck(data interface{}, count int) (k reflect.Type, n int, err error) {
+	v := reflect.ValueOf(data)
+	var goType reflect.Type = reflect.TypeOf(data)
+	var total int = count
+	var round = 0
+
+	switch v.Kind() {
+	case reflect.Slice, reflect.Array:
+		if round == 0 {
+			round = v.Len()
+		}
+		for i := 0; i < v.Len(); i++ {
+			round--
+			goType, total, err = dataCheck(v.Index(i).Interface(), total)
+
+			if err != nil {
+				return reflect.TypeOf(reflect.Zero), 0, err
+			}
 		}
 
+		return goType, total, nil
+
+	case reflect.Uint8, reflect.Int8, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
+		total++
+		if goType.String() != "invalid" {
+			goType = v.Type()
+		}
+	default:
+		err = fmt.Errorf("Input Data: unsupported data structure or type: %v\n", v.Kind())
+		return reflect.TypeOf(reflect.Zero), 0, err
 	}
 
-	return retVal, nil
+	return goType, total, nil
 }
 
 // DataAsPtr write to C memory and returns a C pointer.
@@ -193,7 +224,6 @@ func DataAsPtr(data interface{}) (dataPtr unsafe.Pointer, err error) {
 
 	// 2. Element size in bytes
 	dtype, err := gotch.DTypeFromData(data)
-	fmt.Println(dtype)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +239,17 @@ func DataAsPtr(data interface{}) (dataPtr unsafe.Pointer, err error) {
 	dataPtr, buff := CMalloc(nbytes)
 
 	// 4. Write data to C memory
-	err = binary.Write(buff, nativeEndian, data)
+	// NOTE: data should be **fixed size** values so that binary.Write can work
+	// A fixed-size value is either a fixed-size arithmetic type (bool, int8, uint8,
+	// int16, float32, complex64, ...) or an array or struct containing only fixed-size values.
+	// See more: https://golang.org/pkg/encoding/binary/
+	// Therefore, we will need to flatten data to `[]T`
+	fData, err := FlattenData(data)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buff, nativeEndian, fData)
 	if err != nil {
 		return nil, err
 	}
@@ -225,4 +265,101 @@ func FlattenDim(shape []int64) int {
 	}
 
 	return int(n)
+}
+
+// FlattenData flattens data to 1D array ([]T)
+func FlattenData(data interface{}) (fData interface{}, err error) {
+
+	flat, err := flattenData(reflect.ValueOf(data).Interface(), 0, []interface{}{})
+	if err != nil {
+		return nil, err
+	}
+
+	ele := flat[0]
+
+	// Boring task. Convert interface to specific type.
+	// Any good way to do???
+	switch reflect.ValueOf(ele).Kind() {
+	case reflect.Uint8:
+		var retVal []uint8
+		for _, v := range flat {
+			retVal = append(retVal, v.(uint8))
+		}
+		return retVal, nil
+	case reflect.Int8:
+		var retVal []int8
+		for _, v := range flat {
+			retVal = append(retVal, v.(int8))
+		}
+		return retVal, nil
+	case reflect.Int16:
+		var retVal []int16
+		for _, v := range flat {
+			retVal = append(retVal, v.(int16))
+		}
+		return retVal, nil
+	case reflect.Int32:
+		var retVal []int32
+		for _, v := range flat {
+			retVal = append(retVal, v.(int32))
+		}
+		return retVal, nil
+	case reflect.Int64:
+		var retVal []int64
+		for _, v := range flat {
+			retVal = append(retVal, v.(int64))
+		}
+		return retVal, nil
+	case reflect.Float32:
+		var retVal []float32
+		for _, v := range flat {
+			retVal = append(retVal, v.(float32))
+		}
+		return retVal, nil
+	case reflect.Float64:
+		var retVal []float64
+		for _, v := range flat {
+			retVal = append(retVal, v.(float64))
+		}
+		return retVal, nil
+	case reflect.Bool:
+		var retVal []bool
+		for _, v := range flat {
+			retVal = append(retVal, v.(bool))
+		}
+		return retVal, nil
+
+	default:
+		err = fmt.Errorf("Unsupport type for input data: %v\n", reflect.ValueOf(ele).Kind())
+		return nil, err
+	}
+
+	return nil, err
+
+}
+
+func flattenData(data interface{}, round int, flat []interface{}) (f []interface{}, err error) {
+	v := reflect.ValueOf(data)
+	var flatData []interface{} = flat
+
+	switch v.Kind() {
+	case reflect.Slice, reflect.Array:
+		if round == 0 {
+			round = v.Len()
+		}
+		for i := 0; i < v.Len(); i++ {
+			round--
+			flatData, err = flattenData(v.Index(i).Interface(), round, flatData)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return flatData, nil
+
+	case reflect.Int32, reflect.Int64:
+		flatData = append(flatData, data)
+	}
+
+	return flatData, nil
 }
