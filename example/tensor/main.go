@@ -14,11 +14,11 @@ func main() {
 	// For. if data is []int and DType is Bool
 	// It is still running but get wrong result.
 	data := [][]int64{
-		{1, 1, 1, 2, 2, 2, 1},
-		{1, 1, 1, 2, 2, 2, 1},
+		{1, 1, 1, 2, 2, 2, 3, 3},
+		{1, 1, 1, 2, 2, 2, 4, 4},
 	}
-	// shape := []int64{2, 7}
-	shape := []int64{2, 7}
+	shape := []int64{2, 8}
+	// shape := []int64{2, 2, 4}
 
 	// dtype := gotch.Int
 	// ts := wrapper.NewTensor()
@@ -34,9 +34,16 @@ func main() {
 
 	ts.Print()
 
-	fmt.Println(ts.Dim())
+	// fmt.Printf("Dim: %v\n", ts.Dim())
 
-	ts.Size()
+	// ts.Size()
+	// fmt.Println(ts.Size())
+
+	sz, err := ts.Size2()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Shape: %v\n", sz)
 
 	// typ, count, err := wrapper.DataCheck(data)
 	// if err != nil {

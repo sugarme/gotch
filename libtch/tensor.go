@@ -5,14 +5,8 @@ package libtch
 import "C"
 
 import (
-	// "fmt"
-	// "reflect"
 	"unsafe"
 )
-
-// type c_void unsafe.Pointer
-// type size_t uint
-// type c_int int32
 
 type C_tensor struct {
 	private unsafe.Pointer
@@ -33,45 +27,28 @@ func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_byt
 
 	// t is of type `unsafe.Pointer` in Go and `*void` in C
 	t := C.at_tensor_of_data(vs, c_dims, c_ndims, c_elt_size_in_bytes, c_kind)
-	// fmt.Printf("t type: %v\n", reflect.TypeOf(t).Kind())
-	// fmt.Printf("1. C.tensor AtTensorOfData returned from C call: %v\n", t)
-	// Keep C pointer value tin Go struct
-	cTensorPtrVal := unsafe.Pointer(t)
-	// fmt.Printf("2. cTensorPtrVal: %v\n", cTensorPtrVal)
 
-	var retVal *C_tensor
-	retVal = &C_tensor{private: cTensorPtrVal}
-	// fmt.Printf("3. C_tensor.private: %v\n", (*retVal).private)
-
-	// test call C.at_print to print out tensor
-	// C.at_print(*(*C.tensor)(unsafe.Pointer(&t)))
-	// AtPrint(retVal)
-
-	return retVal
+	return &C_tensor{private: unsafe.Pointer(t)}
 }
 
 func AtPrint(t *C_tensor) {
-	// fmt.Printf("4. C_tensor.private AtPrint: %v\n", (*t).private)
-	cTensor := (C.tensor)((*t).private)
-	// fmt.Printf("5. C.tensor AtPrint: %v\n", cTensor)
-
-	C.at_print(cTensor)
+	c_tensor := (C.tensor)((*t).private)
+	C.at_print(c_tensor)
 }
 
 func AtDataPtr(t *C_tensor) unsafe.Pointer {
-	cTensor := (C.tensor)((*t).private)
-	return C.at_data_ptr(cTensor)
+	c_tensor := (C.tensor)((*t).private)
+	return C.at_data_ptr(c_tensor)
 }
 
 func AtDim(t *C_tensor) uint64 {
-	cTensor := (C.tensor)((*t).private)
-	cdim := C.at_dim(cTensor)
-	return *(*uint64)(unsafe.Pointer(&cdim))
+	c_tensor := (C.tensor)((*t).private)
+	c_result := C.at_dim(c_tensor)
+	return *(*uint64)(unsafe.Pointer(&c_result))
 }
 
-func AtShape(t *C_tensor, sz []int64) {
+func AtShape(t *C_tensor, ptr unsafe.Pointer) {
 	cTensor := (C.tensor)((*t).private)
-	// just get pointer of the first element
-	csz := (*C.int64_t)(unsafe.Pointer(&sz[0]))
-	C.at_shape(cTensor, csz)
+	c_ptr := (*C.long)(ptr)
+	C.at_shape(cTensor, c_ptr)
 }

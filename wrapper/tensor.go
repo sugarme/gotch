@@ -4,8 +4,12 @@ package wrapper
 import "C"
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"log"
 	"reflect"
+	"unsafe"
 
 	gotch "github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
@@ -25,13 +29,100 @@ func (ts Tensor) Dim() uint64 {
 	return lib.AtDim(ts.ctensor)
 }
 
-func (ts Tensor) Size() {
+// Size return shape of the tensor
+//
+// NOTE: C++ libtorch calls at_shape() -> t.sizes()
+// And returns a slice of sizes or shape using given pointer
+// to that slice.
+func (ts Tensor) Size() []int64 {
 	dim := lib.AtDim(ts.ctensor)
-	sz := []int64{int64(dim)}
-	lib.AtShape(ts.ctensor, sz)
-	fmt.Printf("sz val:%v", sz)
-	// return lib.AtShape(ts.ctensor, sz)
+	sz := make([]int64, dim)
+	szPtr, err := DataAsPtr(sz)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// TODO: should we free C memory here or at `DataAsPtr` func
+	defer C.free(unsafe.Pointer(szPtr))
+
+	lib.AtShape(ts.ctensor, szPtr)
+
+	retVal := decodeSize(szPtr, dim)
+	return retVal
 }
+
+// Size1 returns the tensor size for 1D tensors.
+func (ts Tensor) Size1() (retVal int64, err error) {
+	shape := ts.Size()
+	if len(shape) != 1 {
+		err = fmt.Errorf("Expected one dim, got %v\n", len(shape))
+		return 0, err
+	}
+
+	return shape[0], nil
+}
+
+// Size2 returns the tensor size for 2D tensors.
+func (ts Tensor) Size2() (retVal []int64, err error) {
+	shape := ts.Size()
+	if len(shape) != 2 {
+		err = fmt.Errorf("Expected two dims, got %v\n", len(shape))
+		return nil, err
+	}
+
+	return shape, nil
+}
+
+// Size3 returns the tensor size for 3D tensors.
+func (ts Tensor) Size3() (retVal []int64, err error) {
+	shape := ts.Size()
+	if len(shape) != 3 {
+		err = fmt.Errorf("Expected three dims, got %v\n", len(shape))
+		return nil, err
+	}
+
+	return shape, nil
+}
+
+// Size4 returns the tensor size for 4D tensors.
+func (ts Tensor) Size4() (retVal []int64, err error) {
+	shape := ts.Size()
+	if len(shape) != 4 {
+		err = fmt.Errorf("Expected four dims, got %v\n", len(shape))
+		return nil, err
+	}
+
+	return shape, nil
+}
+
+func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
+	// Decode sz
+	// 1. Count number of elements in data
+	elementNum := nsize
+	// 2. Element size in bytes
+	eltSizeInBytes, err := gotch.DTypeSize(gotch.Int64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	nbytes := int(eltSizeInBytes) * int(elementNum)
+	dataSlice := (*[1 << 30]byte)(ptr)[:nbytes:nbytes]
+	r := bytes.NewReader(dataSlice)
+	dataIn := make([]int64, nsize)
+	if err := binary.Read(r, nativeEndian, dataIn); err != nil {
+		log.Fatal(err)
+	}
+
+	return dataIn
+}
+
+// Size1 returns the tensor size for single dimension tensor
+// func (ts Tensor) Size1() {
+//
+// shape := ts.Size()
+//
+// fmt.Printf("shape: %v\n", shape)
+//
+// }
 
 // FOfSlice creates tensor from a slice data
 func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, err error) {
