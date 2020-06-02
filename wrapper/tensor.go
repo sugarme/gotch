@@ -213,3 +213,14 @@ func NewTensorFromData(data interface{}, shape []int64) (retVal *Tensor, err err
 	return retVal, nil
 
 }
+
+func (ts Tensor) DType() gotch.DType {
+	cint := lib.AtScalarType(ts.ctensor)
+
+	dtype, err := gotch.CInt2DType(cint)
+	if err != nil {
+		log.Fatalf("Tensor DType error: %v\n", err)
+	}
+
+	return dtype
+}

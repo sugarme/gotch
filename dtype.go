@@ -106,6 +106,7 @@ func CInt2DType(v CInt) (dtype DType, err error) {
 	for key, val := range dtypeCInt {
 		if val == v {
 			dtype = key
+			found = true
 			break
 		}
 	}

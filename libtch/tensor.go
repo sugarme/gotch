@@ -52,3 +52,9 @@ func AtShape(t *C_tensor, ptr unsafe.Pointer) {
 	c_ptr := (*C.long)(ptr)
 	C.at_shape(cTensor, c_ptr)
 }
+
+func AtScalarType(t *C_tensor) int32 {
+	c_tensor := (C.tensor)((*t).private)
+	c_result := C.at_scalar_type(c_tensor)
+	return *(*int32)(unsafe.Pointer(&c_result))
+}

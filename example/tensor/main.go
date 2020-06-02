@@ -53,4 +53,6 @@ func main() {
 	// fmt.Printf("typ: %v\n", typ)
 	// fmt.Printf("Count: %v\n", count)
 
+	fmt.Printf("DType: %v\n", ts.DType())
+
 }
