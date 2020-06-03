@@ -10,23 +10,23 @@ import (
 	lib "github.com/sugarme/gotch/libtch"
 )
 
-// ptrToString returns nil on the null pointer. If not null,
-// the pointer gets freed.
+// ptrToString check C pointer for null. If not null, get value
+// the pointer points to and frees up C memory. It is used for
+// getting error message C pointer points to and clean up C memory.
+//
 // NOTE: C does not have exception design. C++ throws exception
 // to stderr. This code to check stderr for any err message,
-// if it exists, takes it and frees up C pointer.
+// if it exists, takes it and frees up C memory.
 func ptrToString(cptr *C.char) string {
-	var str string
+	var str string = ""
 
-	str = *(*string)(unsafe.Pointer(&cptr))
-	fmt.Printf("Err Msg from C: %v\n", str)
-	if str != "" {
-		// Free up C memory
+	if cptr != nil {
+		str = *(*string)(unsafe.Pointer(&cptr))
+		fmt.Printf("Err Msg from C: %v\n", str)
 		C.free(unsafe.Pointer(cptr))
-		return str
-	} else {
-		return ""
 	}
+
+	return str
 }
 
 // TorchErr checks and retrieves last error message from

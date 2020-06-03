@@ -128,15 +128,19 @@ func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
 //
 // }
 
-// FOfSlice creates tensor from a slice data
-func (ts Tensor) FOfSlice(data interface{}, dtype gotch.DType) (retVal *Tensor, err error) {
+// OfSlice creates tensor from a slice data
+func OfSlice(data interface{}) (retVal *Tensor, err error) {
 
-	if ok, msg := gotch.TypeCheck(data, dtype); !ok {
-		err = fmt.Errorf("data type and DType are mismatched: %v\n", msg)
+	typ, dataLen, err := DataCheck(data)
+	if err != nil {
 		return nil, err
 	}
 
-	dataLen := reflect.ValueOf(data).Len()
+	dtype, err := gotch.ToDType(typ)
+	if err != nil {
+		return nil, err
+	}
+
 	shape := []int64{int64(dataLen)}
 	elementNum := ElementCount(shape)
 
