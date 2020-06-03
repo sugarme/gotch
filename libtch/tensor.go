@@ -58,3 +58,7 @@ func AtScalarType(t *C_tensor) int32 {
 	c_result := C.at_scalar_type(c_tensor)
 	return *(*int32)(unsafe.Pointer(&c_result))
 }
+
+func GetAndResetLastErr() *C.char {
+	return C.get_and_reset_last_err()
+}

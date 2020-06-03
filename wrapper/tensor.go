@@ -26,7 +26,11 @@ func NewTensor() Tensor {
 }
 
 func (ts Tensor) Dim() uint64 {
-	return lib.AtDim(ts.ctensor)
+	retVal := lib.AtDim(ts.ctensor)
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+	return retVal
 }
 
 // Size return shape of the tensor

@@ -95,5 +95,18 @@ then in the return of function body
 
 ```
 
+### C type pointers e.g. `char *FUNCTION()` --> `*C.char`
+
+then just return the C function call. 
+
+```c
+char *get_and_reset_last_err(); // thread-local
+```
+
+```go
+func GetAndResetLastErr() *C.char{
+   return C.get_and_reset_last_err()
+}
+```
 
 
