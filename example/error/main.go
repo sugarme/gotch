@@ -34,4 +34,6 @@ func main() {
 	fmt.Printf("ys shape: %v\n", ys.Size())
 
 	xs.Eq1(*ys)
+
+	// xs.Matmul(*ys)
 }

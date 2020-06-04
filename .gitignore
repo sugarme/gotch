@@ -15,6 +15,7 @@
 target/
 _build/
 data/
+tmp/
 gen/.merlin
 **/*.rs.bk
 Cargo.lock

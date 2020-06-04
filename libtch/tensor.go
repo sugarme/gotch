@@ -10,6 +10,7 @@ import (
 
 // NOTE: C.tensor is a C pointer to torch::Tensor
 type Ctensor = C.tensor
+type Cscalar = C.scalar
 
 func AtNewTensor() Ctensor {
 	return C.at_new_tensor()

@@ -55,4 +55,25 @@ func main() {
 
 	fmt.Printf("DType: %v\n", ts.DType())
 
+	dx := [][]int32{
+		{1, 1},
+		{1, 1},
+	}
+
+	dy := [][]int32{
+		{1, 2, 3},
+		{1, 1, 1},
+	}
+
+	xs, err := wrapper.NewTensorFromData(dx, []int64{2, 2})
+	if err != nil {
+		log.Fatal(err)
+	}
+	ys, err := wrapper.NewTensorFromData(dy, []int64{2, 3})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	xs.Matmul(*ys)
+
 }

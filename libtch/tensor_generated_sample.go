@@ -9,3 +9,8 @@ import "C"
 func AtgEq1(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_eq1(ptr, self, other)
 }
+
+// void atg_matmul(tensor *, tensor self, tensor other);
+func AtgMatmul(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_matmul(ptr, self, other)
+}
