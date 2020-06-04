@@ -17,6 +17,11 @@ func AtNewTensor() *C_tensor {
 	return &C_tensor{private: unsafe.Pointer(t)}
 }
 
+func NewTensor() unsafe.Pointer {
+	t := C.at_new_tensor()
+	return unsafe.Pointer(t)
+}
+
 func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_bytes uint, kind int) *C_tensor {
 
 	// just get pointer of the first element of shape
