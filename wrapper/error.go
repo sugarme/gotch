@@ -22,9 +22,8 @@ func ptrToString(cptr *C.char) string {
 
 	if cptr != nil {
 		// strPtr := (*string)(unsafe.Pointer(cptr))
-		// fmt.Printf("Error: string at err pointer: %v\n", cptr)
 		// TODO: get error string from pointer
-		fmt.Printf("Err Msg from C (TODO: Will show err message here)...\n")
+		str = fmt.Sprintf("TODO: will show more detail here.")
 		C.free(unsafe.Pointer(cptr))
 	}
 

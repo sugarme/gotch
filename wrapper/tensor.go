@@ -251,47 +251,21 @@ func (ts Tensor) Eq1(other Tensor) {
 	// ctensorsPtr := C.malloc(C.size_t(1) * C.size_t(unsafe.Sizeof(C.tensor)))
 
 	// C null pointer C.tensor * = null
-	ctensorPtr := lib.NewTensor()
-	fmt.Printf("Out tensor BEFORE: %v\n", &ctensorPtr)
-	fmt.Printf("Out tensor address: %v\n", *(*int)(unsafe.Pointer(&ctensorPtr)))
+	// ctensorPtr := lib.NewTensor()
+	// nbytes := C.size_t(1) * C.size_t(unsafe.Sizeof(C.tensor))
 
-	ctensorAddr := *(*int64)(unsafe.Pointer(&ctensorPtr))
-	var data []int64
-	data = append(data, ctensorAddr)
+	// Get a pointer in C memory
+	ctensorPtr := C.malloc(0)
+	fmt.Printf("ctensorPtr: %v\n", ctensorPtr)
 
-	// lib.AtPrint((*lib.C_tensor)(unsafe.Pointer(ctensorPtr)))
-
-	// nullPtr := (*C.tensor)(unsafe.Pointer(uintptr(0)))
-	// fmt.Printf("Null pointer: %v\n", &nullPtr)
-	//
-	// data := []*C.tensor{nullPtr}
-	// fmt.Printf("data: %v\n", data)
-	// // Calculate number of bytes for a slice of one element of C null pointer
-	// nbytes := 1 * unsafe.Sizeof(uintptr(0))
-	// fmt.Printf("Nbytes: %v\n", nbytes)
-	//
-	// cptr := C.malloc(C.size_t(nbytes))
-	// ctensorsPtr := (*[1 << 30]byte)(cptr)[:nbytes:nbytes]
-	// buf := bytes.NewBuffer(ctensorsPtr[:0:nbytes])
-	// // ctensorsPtr := (*[1 << 30]C.tensor)(unsafe.Pointer(uintptr(0)))[:nbytes:nbytes]
-	// fmt.Printf("ctensorsPtr 1: %v\n", &ctensorsPtr[0])
-	// fmt.Printf("Type of ctensorsPtr: %v\n", reflect.TypeOf(ctensorsPtr))
-	// // buff := bytes.NewBuffer(dataSlice[:0:nbytes])
-	// // Write to memory
-	// err := binary.Write(buf, nativeEndian, data)
-	// if err != nil {
-	// log.Fatal(err)
-	// }
-
-	// lib.Atg_eq1(unsafe.Pointer(cptr), ts.ctensor, other.ctensor)
-	lib.Atg_eq1(unsafe.Pointer(&ctensorPtr), ts.ctensor, other.ctensor)
+	lib.Atg_eq1(unsafe.Pointer(ctensorPtr), ts.ctensor, other.ctensor)
 
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Out tensor AFTER: %v\n", &ctensorPtr)
+	lib.AtPrint((*lib.C_tensor)(unsafe.Pointer(ctensorPtr)))
 
-	lib.AtPrint((*lib.C_tensor)(unsafe.Pointer(&ctensorPtr)))
+	// fmt.Printf("Out tensor AFTER: %v\n", &ctensorPtr)
 
 }
