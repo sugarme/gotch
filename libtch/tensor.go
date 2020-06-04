@@ -8,21 +8,20 @@ import (
 	"unsafe"
 )
 
-type C_tensor struct {
-	private unsafe.Pointer
+// NOTE: C.tensor is a C pointer to torch::Tensor
+type Ctensor = C.tensor
+
+func AtNewTensor() Ctensor {
+	return C.at_new_tensor()
 }
 
-func AtNewTensor() *C_tensor {
-	t := C.at_new_tensor()
-	return &C_tensor{private: unsafe.Pointer(t)}
+// tensor at_new_tensor();
+func NewTensor() Ctensor {
+	return C.at_new_tensor()
 }
 
-func NewTensor() unsafe.Pointer {
-	t := C.at_new_tensor()
-	return unsafe.Pointer(t)
-}
-
-func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_bytes uint, kind int) *C_tensor {
+// tensor at_tensor_of_data(void *vs, int64_t *dims, size_t ndims, size_t element_size_in_bytes, int type);
+func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_bytes uint, kind int) Ctensor {
 
 	// just get pointer of the first element of shape
 	c_dims := (*C.int64_t)(unsafe.Pointer(&dims[0]))
@@ -30,38 +29,36 @@ func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_byt
 	c_elt_size_in_bytes := *(*C.size_t)(unsafe.Pointer(&elt_size_in_bytes))
 	c_kind := *(*C.int)(unsafe.Pointer(&kind))
 
-	// t is of type `unsafe.Pointer` in Go and `*void` in C
-	t := C.at_tensor_of_data(vs, c_dims, c_ndims, c_elt_size_in_bytes, c_kind)
+	return C.at_tensor_of_data(vs, c_dims, c_ndims, c_elt_size_in_bytes, c_kind)
 
-	return &C_tensor{private: unsafe.Pointer(t)}
 }
 
-func AtPrint(t *C_tensor) {
-	c_tensor := (C.tensor)((*t).private)
-	C.at_print(c_tensor)
+// void at_print(tensor);
+func AtPrint(t Ctensor) {
+	C.at_print(t)
 }
 
-func AtDataPtr(t *C_tensor) unsafe.Pointer {
-	c_tensor := (C.tensor)((*t).private)
-	return C.at_data_ptr(c_tensor)
+// void *at_data_ptr(tensor);
+func AtDataPtr(t Ctensor) unsafe.Pointer {
+	return C.at_data_ptr(t)
 }
 
-func AtDim(t *C_tensor) uint64 {
-	c_tensor := (C.tensor)((*t).private)
-	c_result := C.at_dim(c_tensor)
-	return *(*uint64)(unsafe.Pointer(&c_result))
+// size_t at_dim(tensor);
+func AtDim(t Ctensor) uint64 {
+	result := C.at_dim(t)
+	return *(*uint64)(unsafe.Pointer(&result))
 }
 
-func AtShape(t *C_tensor, ptr unsafe.Pointer) {
-	cTensor := (C.tensor)((*t).private)
+// void at_shape(tensor, int64_t *);
+func AtShape(t Ctensor, ptr unsafe.Pointer) {
 	c_ptr := (*C.long)(ptr)
-	C.at_shape(cTensor, c_ptr)
+	C.at_shape(t, c_ptr)
 }
 
-func AtScalarType(t *C_tensor) int32 {
-	c_tensor := (C.tensor)((*t).private)
-	c_result := C.at_scalar_type(c_tensor)
-	return *(*int32)(unsafe.Pointer(&c_result))
+// int at_scalar_type(tensor);
+func AtScalarType(t Ctensor) int32 {
+	result := C.at_scalar_type(t)
+	return *(*int32)(unsafe.Pointer(&result))
 }
 
 func GetAndResetLastErr() *C.char {

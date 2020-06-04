@@ -12,8 +12,8 @@ func main() {
 	// Try to compare 2 tensor with incompatible dimensions
 	// and check this returns an error
 	dx := []int32{1, 2, 3}
-	dy := []int32{1, 2, 3, 4}
-	// dy := []int32{1, 2, 5}
+	// dy := []int32{1, 2, 3, 4}
+	dy := []int32{1, 2, 5}
 
 	xs, err := wrapper.OfSlice(dx)
 	if err != nil {

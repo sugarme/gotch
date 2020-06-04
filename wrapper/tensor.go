@@ -18,7 +18,7 @@ import (
 )
 
 type Tensor struct {
-	ctensor *lib.C_tensor
+	ctensor lib.Ctensor
 }
 
 // NewTensor creates a new tensor
@@ -235,37 +235,17 @@ func (ts Tensor) DType() gotch.DType {
 
 func (ts Tensor) Eq1(other Tensor) {
 
-	// var ptr unsafe.Pointer
-	// NOTE:
-	// This will cause panic: runtime error: cgo argument has Go pointer to Go pointer
-	// ptr = NewTensor()
-	// lib.Atg_eq1(unsafe.Pointer(&ptr), ts.ctensor, other.ctensor)
+	// Get a C null pointer
+	// https://stackoverflow.com/a/2022369
+	// ctensorPtr := C.malloc(0)
+	ctensorPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
-	// C pointer to [1]uintptr (Go pointer)
-	// ctensorsPtr := C.malloc(C.size_t(1) * C.size_t(unsafe.Sizeof(uintptr(0))))
-
-	// TODO: create C pointer to a slice of tensors [1]C.tensor using C.malloc
-	// Slice with 1 element type C.tensor
-	// nbytes := C.size_t(1) * C.size_t(unsafe.Sizeof(C.tensor))
-	// ctensorsPtr := C.malloc(nbytes)
-	// ctensorsPtr := C.malloc(C.size_t(1) * C.size_t(unsafe.Sizeof(C.tensor)))
-
-	// C null pointer C.tensor * = null
-	// ctensorPtr := lib.NewTensor()
-	// nbytes := C.size_t(1) * C.size_t(unsafe.Sizeof(C.tensor))
-
-	// Get a pointer in C memory
-	ctensorPtr := C.malloc(0)
-	fmt.Printf("ctensorPtr: %v\n", ctensorPtr)
-
-	lib.Atg_eq1(unsafe.Pointer(ctensorPtr), ts.ctensor, other.ctensor)
+	// lib.Atg_eq1(unsafe.Pointer(ctensorPtr), ts.ctensor, other.ctensor)
+	lib.AtgEq1(ctensorPtr, ts.ctensor, other.ctensor)
 
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
 
-	lib.AtPrint((*lib.C_tensor)(unsafe.Pointer(ctensorPtr)))
-
-	// fmt.Printf("Out tensor AFTER: %v\n", &ctensorPtr)
-
+	lib.AtPrint(*ctensorPtr)
 }
