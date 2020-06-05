@@ -6,7 +6,7 @@
 - **GoTch** is a C++ Libtorch Go binding for developing and implementing deep
     learning projects in Go.
 
-- It currently is in heavy development mode and is considered unstable until
+- It is currently in heavy development mode and is considered **unstable** until
     version v1.0.0 is marked. Hence, one can use it with own risk. 
 
 - One goal of this package is to create a thin wrapper of Libtorch to make use of
