@@ -65,3 +65,27 @@ func AtScalarType(t Ctensor) int32 {
 func GetAndResetLastErr() *C.char {
 	return C.get_and_reset_last_err()
 }
+
+// int atc_cuda_device_count();
+func AtcCudaDeviceCount() int {
+	result := C.atc_cuda_device_count()
+	return *(*int)(unsafe.Pointer(&result))
+}
+
+// int atc_cuda_is_available();
+func AtcCudaIsAvailable() bool {
+	result := C.atc_cuda_is_available()
+	return *(*bool)(unsafe.Pointer(&result))
+}
+
+// int atc_cudnn_is_available();
+func AtcCudnnIsAvailable() bool {
+	result := C.atc_cudnn_is_available()
+	return *(*bool)(unsafe.Pointer(&result))
+}
+
+// void atc_set_benchmark_cudnn(int b);
+func AtcSetBenchmarkCudnn(b int) {
+	cb := *(*C.int)(unsafe.Pointer(&b))
+	C.atc_set_benchmark_cudnn(cb)
+}

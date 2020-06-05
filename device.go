@@ -28,35 +28,33 @@ func CudaBuilder(v uint) Device {
 
 // DeviceCount returns the number of GPU that can be used.
 func (cu Cuda) DeviceCount() int64 {
-	cInt := lib.Atc_cuda_device_count()
+	cInt := lib.AtcCudaDeviceCount()
 	return int64(cInt)
 }
 
-/*
- *
- * // CudnnIsAvailable returns true if cuda support is available
- * func (cu Cuda) IsAvailable() bool {
- *   return lib.Atc_cuda_is_available()
- * }
- *
- * // CudnnIsAvailable return true if cudnn support is available
- * func (cu Cuda) CudnnIsAvailable() bool {
- *   return lib.Atc_cudnn_is_available()
- * }
- *
- * // CudnnSetBenchmark sets cudnn benchmark mode
- * //
- * // When set cudnn will try to optimize the generators during the first network
- * // runs and then use the optimized architecture in the following runs. This can
- * // result in significant performance improvements.
- * func (cu Cuda) CudnnSetBenchmark(b bool) {
- *   switch b {
- *   case true:
- *     lib.Atc_set_benchmark_cudnn(1)
- *   case false:
- *     lib.Act_cuda_benchmark_cudd(0)
- *   }
- * } */
+// CudnnIsAvailable returns true if cuda support is available
+func (cu Cuda) IsAvailable() bool {
+	return lib.AtcCudaIsAvailable()
+}
+
+// CudnnIsAvailable return true if cudnn support is available
+func (cu Cuda) CudnnIsAvailable() bool {
+	return lib.AtcCudnnIsAvailable()
+}
+
+// CudnnSetBenchmark sets cudnn benchmark mode
+//
+// When set cudnn will try to optimize the generators during the first network
+// runs and then use the optimized architecture in the following runs. This can
+// result in significant performance improvements.
+func (cu Cuda) CudnnSetBenchmark(b bool) {
+	switch b {
+	case true:
+		lib.AtcSetBenchmarkCudnn(1)
+	case false:
+		lib.AtcSetBenchmarkCudnn(0)
+	}
+}
 
 // Device methods:
 //================

@@ -10,4 +10,6 @@ package libtch
 // #cgo CXXFLAGS: -isystem /opt/libtorch/include/torch/csrc/api/include
 // #cgo CXXFLAGS: -isystem /opt/libtorch/include/torch/csrc
 // #cgo CFLAGS: -D_GLIBCXX_USE_CXX11_ABI=1
+// #cgo linux,amd64,!nogpu CFLAGS: -I/usr/local/cuda/include
+// #cgo linux,amd64,!nogpu LDFLAGS: -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcudnn -lcaffe2_nvrtc -lnvrtc-builtins -lnvrtc -lnvToolsExt -L/opt/libtorch/lib -lc10_cuda
 import "C"

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	// gotch "github.com/sugarme/gotch"
+	"github.com/sugarme/gotch"
 	wrapper "github.com/sugarme/gotch/wrapper"
 )
 
