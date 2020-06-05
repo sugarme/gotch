@@ -1,4 +1,4 @@
-# GOTCH - Libtorch Go Binding
+# GoTch - Libtorch Go Binding
 
 
 ## Overview
