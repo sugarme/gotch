@@ -23,6 +23,17 @@ func CudaBuilder(v uint) Device {
 	return Device{Name: "CUDA", Value: int(v)}
 }
 
+// NewCuda creates a cuda device (default) if available
+// If will be panic if cuda is not available.
+func NewCuda() Device {
+	var d Cuda
+	if !d.IsAvailable() {
+		log.Fatalf("Cuda is not available.")
+	}
+
+	return CudaBuilder(0)
+}
+
 // Cuda methods:
 // =============
 

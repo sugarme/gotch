@@ -178,45 +178,45 @@ func (ts Tensor) Print() {
 }
 
 // NewTensorFromData creates tensor from given data and shape
-func NewTensorFromData(data interface{}, shape []int64) (retVal *Tensor, err error) {
+func NewTensorFromData(data interface{}, shape []int64) (retVal Tensor, err error) {
 	// 1. Check whether data and shape match
 	elementNum, err := DataDim(data)
 	if err != nil {
-		return nil, err
+		return retVal, err
 	}
 
 	nflattend := FlattenDim(shape)
 
 	if elementNum != nflattend {
 		err = fmt.Errorf("Number of data elements (%v) and flatten shape (%v) dimension mismatched.\n", elementNum, nflattend)
-		return nil, err
+		return retVal, err
 	}
 
 	// 2. Write raw data to C memory and get C pointer
 	dataPtr, err := DataAsPtr(data)
 	if err != nil {
-		return nil, err
+		return retVal, err
 	}
 
 	// 3. Create tensor with pointer and shape
 	dtype, err := gotch.DTypeFromData(data)
 	if err != nil {
-		return nil, err
+		return retVal, err
 	}
 
 	eltSizeInBytes, err := gotch.DTypeSize(dtype)
 	if err != nil {
-		return nil, err
+		return retVal, err
 	}
 
 	cint, err := gotch.DType2CInt(dtype)
 	if err != nil {
-		return nil, err
+		return retVal, err
 	}
 
 	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
 
-	retVal = &Tensor{ctensor}
+	retVal = Tensor{ctensor}
 
 	return retVal, nil
 

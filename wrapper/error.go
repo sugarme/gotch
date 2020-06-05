@@ -21,9 +21,7 @@ func ptrToString(cptr *C.char) string {
 	var str string = ""
 
 	if cptr != nil {
-		// strPtr := (*string)(unsafe.Pointer(cptr))
-		// TODO: get error string from pointer
-		str = fmt.Sprintf("TODO: will show more detail here.")
+		str = C.GoString(cptr)
 		C.free(unsafe.Pointer(cptr))
 	}
 
@@ -43,7 +41,7 @@ func TorchErr() error {
 	cptr := (*C.char)(lib.GetAndResetLastErr())
 	errStr := ptrToString(cptr)
 	if errStr != "" {
-		return fmt.Errorf("Libtorch API Err: %v\n", errStr)
+		return fmt.Errorf("Libtorch API Error: %v\n", errStr)
 	}
 
 	return nil

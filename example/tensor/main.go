@@ -5,7 +5,6 @@ import (
 	"log"
 
 	// gotch "github.com/sugarme/gotch"
-	"github.com/sugarme/gotch"
 	wrapper "github.com/sugarme/gotch/wrapper"
 )
 
@@ -59,6 +58,7 @@ func main() {
 	dx := [][]int32{
 		{1, 1},
 		{1, 1},
+		{1, 1},
 	}
 
 	dy := [][]int32{
@@ -66,7 +66,7 @@ func main() {
 		{1, 1, 1},
 	}
 
-	xs, err := wrapper.NewTensorFromData(dx, []int64{2, 2})
+	xs, err := wrapper.NewTensorFromData(dx, []int64{2, 3})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,6 +75,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	xs.Matmul(*ys)
+	xs.Matmul(ys)
+
+	// device := gotch.NewCuda()
+	//
+	// // cy := ys.To(device)
+	// // cx := xs.To(device)
+	// zs := wrapper.NewTensor()
+	// cz := zs.To(device)
+	// fmt.Println(cz.Device().Name)
+
+	// cx.Matmul(cy)
+
+	// for i := 1; i < 1000000; i++ {
+	// for i := 1; i < 2; i++ {
+	// cx := xs.To(device)
+	// cx.Print()
+	// cy := ys.To(device)
+	// cy.Print()
+	//
+	// }
 
 }
