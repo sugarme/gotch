@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	// gotch "github.com/sugarme/gotch"
+	gotch "github.com/sugarme/gotch"
 	wrapper "github.com/sugarme/gotch/wrapper"
 )
 
@@ -55,18 +55,18 @@ func main() {
 
 	fmt.Printf("DType: %v\n", ts.DType())
 
-	dx := [][]int32{
+	dx := [][]float64{
 		{1, 1},
 		{1, 1},
 		{1, 1},
 	}
 
-	dy := [][]int32{
+	dy := [][]float64{
 		{1, 2, 3},
 		{1, 1, 1},
 	}
 
-	xs, err := wrapper.NewTensorFromData(dx, []int64{2, 3})
+	xs, err := wrapper.NewTensorFromData(dx, []int64{3, 2})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -77,23 +77,16 @@ func main() {
 
 	xs.Matmul(ys)
 
-	// device := gotch.NewCuda()
-	//
-	// // cy := ys.To(device)
-	// // cx := xs.To(device)
-	// zs := wrapper.NewTensor()
-	// cz := zs.To(device)
-	// fmt.Println(cz.Device().Name)
+	device := gotch.NewCuda()
 
-	// cx.Matmul(cy)
-
-	// for i := 1; i < 1000000; i++ {
-	// for i := 1; i < 2; i++ {
-	// cx := xs.To(device)
-	// cx.Print()
-	// cy := ys.To(device)
-	// cy.Print()
-	//
-	// }
+	// NOTE: this will call CUDA out of memory error.
+	// TODO: free CUDA memory at API somewhere.
+	for i := 1; i < 1000000; i++ {
+		cx := xs.To(device)
+		// cx.Print()
+		cy := ys.To(device)
+		// cy.Print()
+		cx.Matmul(cy)
+	}
 
 }
