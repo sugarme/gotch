@@ -89,3 +89,27 @@ func AtcSetBenchmarkCudnn(b int) {
 	cb := *(*C.int)(unsafe.Pointer(&b))
 	C.atc_set_benchmark_cudnn(cb)
 }
+
+// double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
+func AtDoubleValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) float64 {
+	ctensor := (C.tensor)(ts)
+	cindexes := (*C.long)(indexes)
+	cindexesLen := *(*C.int)(unsafe.Pointer(&indexesLen))
+	retVal := C.at_double_value_at_indexes(ctensor, cindexes, cindexesLen)
+	return *(*float64)(unsafe.Pointer(&retVal))
+}
+
+// int64_t at_int64_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
+func AtInt64ValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) int64 {
+	ctensor := (C.tensor)(ts)
+	cindexes := (*C.long)(indexes)
+	cindexesLen := *(*C.int)(unsafe.Pointer(&indexesLen))
+	retVal := C.at_int64_value_at_indexes(ctensor, cindexes, cindexesLen)
+	return *(*int64)(unsafe.Pointer(&retVal))
+}
+
+// int at_requires_grad(tensor);
+func AtRequiresGrad(ts Ctensor) bool {
+	retVal := C.at_requires_grad((C.tensor)(ts))
+	return *(*bool)(unsafe.Pointer(&retVal))
+}

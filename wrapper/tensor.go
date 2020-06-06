@@ -253,6 +253,18 @@ func (ts Tensor) DType() gotch.DType {
 	return dtype
 }
 
+func (ts Tensor) Device() (retVal gotch.Device, err error) {
+	cInt := lib.AtDevice(ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	var device gotch.Device
+
+	return device.OfCInt(int32(cInt)), nil
+}
+
 func (ts Tensor) Eq1(other Tensor) (retVal Tensor, err error) {
 
 	// Get a C null pointer
@@ -267,4 +279,64 @@ func (ts Tensor) Eq1(other Tensor) (retVal Tensor, err error) {
 
 	return Tensor{ctensor: *ptr}, nil
 
+}
+
+// DoubleValue returns a float value on tensors holding a single element.
+// An error is returned otherwise.
+// double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
+func (ts Tensor) Float64Value(idx []int64) (retVal float64, err error) {
+
+	idxPtr, err := DataAsPtr(idx)
+	if err != nil {
+		return retVal, err
+	}
+	defer C.free(unsafe.Pointer(idxPtr))
+
+	retVal = lib.AtDoubleValueAtIndexes(ts.ctensor, idxPtr, len(idx))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return retVal, err
+}
+
+// Int64Value returns an int value on tensors holding a single element. An error is
+// returned otherwise.
+func (ts Tensor) Int64Value(idx []int64) (retVal int64, err error) {
+
+	idxPtr, err := DataAsPtr(idx)
+	if err != nil {
+		return retVal, err
+	}
+	defer C.free(unsafe.Pointer(idxPtr))
+
+	retVal = lib.AtInt64ValueAtIndexes(ts.ctensor, idxPtr, len(idx))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return retVal, err
+}
+
+// RequiresGrad returns true if gradient are currently tracked for this tensor.
+func (ts Tensor) RequiresGrad() (retVal bool, err error) {
+	retVal = lib.AtRequiresGrad(ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return retVal, nil
+}
+
+// DataPtr returns the address of the first element of this tensor.
+func (ts Tensor) DataPtr() (retVal unsafe.Pointer, err error) {
+
+	retVal = lib.AtDataPtr(ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return retVal, nil
 }
