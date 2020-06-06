@@ -12,8 +12,8 @@ func main() {
 	// Try to compare 2 tensor with incompatible dimensions
 	// and check this returns an error
 	dx := []int32{1, 2, 3}
-	// dy := []int32{1, 2, 3, 4}
-	dy := []int32{1, 2, 5}
+	dy := []int32{1, 2, 3, 4}
+	// dy := []int32{1, 2, 5}
 
 	xs, err := wrapper.OfSlice(dx)
 	if err != nil {
@@ -30,10 +30,24 @@ func main() {
 	fmt.Printf("xs num of dimensions: %v\n", xs.Dim())
 	fmt.Printf("ys num of dimensions: %v\n", ys.Dim())
 
-	fmt.Printf("xs shape: %v\n", xs.Size())
-	fmt.Printf("ys shape: %v\n", ys.Size())
+	xsize, err := xs.Size()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	xs.Eq1(*ys)
+	ysize, err := ys.Size()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// xs.Matmul(*ys)
+	fmt.Printf("xs shape: %v\n", xsize)
+	fmt.Printf("ys shape: %v\n", ysize)
+
+	res, err := xs.Eq1(ys)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res.Print()
+
 }

@@ -74,8 +74,14 @@ func main() {
 	device := gotch.NewCuda()
 	startGPUTime := time.Now()
 	for i := 1; i < 100000; i++ {
-		cx := xs.To(device)
-		cy := ys.To(device)
+		cx, err := xs.To(device)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cy, err := ys.To(device)
+		if err != nil {
+			log.Fatal(err)
+		}
 		cx.Matmul(cy)
 	}
 
