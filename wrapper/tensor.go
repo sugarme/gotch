@@ -250,13 +250,14 @@ func (ts Tensor) Eq1(other Tensor) {
 	lib.AtPrint(*ctensorPtr)
 }
 
-func (ts Tensor) Matmul(other Tensor) {
+func (ts Tensor) Matmul(other Tensor) Tensor {
 	ctensorPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ctensorPtr))
 	lib.AtgMatmul(ctensorPtr, ts.ctensor, other.ctensor)
 
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
 
-	lib.AtPrint(*ctensorPtr)
+	return Tensor{ctensor: *ctensorPtr}
 }

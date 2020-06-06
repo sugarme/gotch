@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	gotch "github.com/sugarme/gotch"
 	wrapper "github.com/sugarme/gotch/wrapper"
@@ -34,24 +35,11 @@ func main() {
 
 	ts.Print()
 
-	// fmt.Printf("Dim: %v\n", ts.Dim())
-
-	// ts.Size()
-	// fmt.Println(ts.Size())
-
 	sz, err := ts.Size2()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Shape: %v\n", sz)
-
-	// typ, count, err := wrapper.DataCheck(data)
-	// if err != nil {
-	// log.Fatal(err)
-	// }
-	//
-	// fmt.Printf("typ: %v\n", typ)
-	// fmt.Printf("Count: %v\n", count)
 
 	fmt.Printf("DType: %v\n", ts.DType())
 
@@ -75,18 +63,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	xs.Matmul(ys)
+	// CPU
+	startCPUTime := time.Now()
+	for i := 1; i < 100000; i++ {
+		xs.Matmul(ys)
+	}
+	fmt.Printf("CPU time: %v\n", time.Since(startCPUTime))
 
+	// Cuda
 	device := gotch.NewCuda()
-
-	// NOTE: this will call CUDA out of memory error.
-	// TODO: free CUDA memory at API somewhere.
-	for i := 1; i < 1000000; i++ {
+	startGPUTime := time.Now()
+	for i := 1; i < 100000; i++ {
 		cx := xs.To(device)
-		// cx.Print()
 		cy := ys.To(device)
-		// cy.Print()
 		cx.Matmul(cy)
 	}
 
+	fmt.Printf("GPU time: %v\n", time.Since(startGPUTime))
 }
