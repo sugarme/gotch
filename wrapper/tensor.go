@@ -181,6 +181,14 @@ func OfSlice(data interface{}) (retVal Tensor, err error) {
 	return retVal, nil
 }
 
+func TensorFrom(data interface{}) (retVal Tensor) {
+	retVal, err := OfSlice(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
+}
+
 // Print prints tensor values to console.
 //
 // NOTE: it is printed from C and will print ALL elements of tensor
@@ -336,6 +344,109 @@ func (ts Tensor) DataPtr() (retVal unsafe.Pointer, err error) {
 
 	if err = TorchErr(); err != nil {
 		return retVal, err
+	}
+
+	return retVal, nil
+}
+
+// Defined returns true is the tensor is defined.
+func (ts Tensor) Defined() (retVal bool, err error) {
+	retVal = lib.AtDefined(ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustDefined() (retVal bool) {
+	retVal, err := ts.Defined()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// IsSparse returns true is the tensor is spare.
+func (ts Tensor) IsSparse() (retVal bool, err error) {
+	retVal = lib.AtIsSparse(ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return retVal, nil
+}
+
+// ZeroGrad zeroes the gradient tensor attached to this tensor if defined.
+func (ts Tensor) ZeroGrad() {
+	grad := ts.MustGrad()
+	if grad.MustDefined() {
+		// TODO: can we chain them?
+		// grad.MustDetach_().MustZero_()
+		// https://www.calhoun.io/using-functional-options-instead-of-method-chaining-in-go/
+		detach := grad.MustDetach_()
+		_ = detach.MustZero_()
+	}
+}
+
+// Backward runs the backward pass, populating the gradient tensors for tensors
+// which gradients are tracked.
+//
+// Gradients tracking can be turned on via `SetRequiresGrad`.
+func (ts Tensor) Backward() (err error) {
+	lib.AtBackward(ts.ctensor, 0, 0)
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ts Tensor) MustBackward() {
+	if err := ts.Backward(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// RunBackward runs the backward ...
+func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraphB bool) (retVal []Tensor, err error) {
+	// NOTE: outputs is a slice of tensors with length = len(inputs)
+	// outputsPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	// defer C.free(unsafe.Pointer(outputsPtr))
+	var outputsPtr []*lib.Ctensor
+	// TODO: Are they allocated continouslly???
+	for i := 0; i < len(inputs); i++ {
+		outputPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+		// defer C.free(unsafe.Pointer(outputPtr))
+		outputsPtr = append(outputsPtr, outputPtr)
+		// retVal = append(retVal, Tensor{ctensor: *outputPtr})
+	}
+
+	// Get first element pointer
+	ctensor := tensors[0].ctensor
+	cinput := inputs[0].ctensor
+	tensorsPtr := (*lib.Ctensor)(unsafe.Pointer(&ctensor))
+	inputsPtr := (*lib.Ctensor)(unsafe.Pointer(&cinput))
+	var keepGraph int = 0
+	if keepGraphB {
+		keepGraph = 1
+	}
+	var createGraph int = 0
+	if createGraphB {
+		createGraph = 1
+	}
+
+	lib.AtRunBackward(tensorsPtr, len(tensors), inputsPtr, len(inputs), outputsPtr[0], keepGraph, createGraph)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	for i := 0; i < len(inputs); i++ {
+		outputPtr := outputsPtr[i]
+		retVal = append(retVal, Tensor{ctensor: *outputPtr})
 	}
 
 	return retVal, nil

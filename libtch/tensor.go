@@ -113,3 +113,41 @@ func AtRequiresGrad(ts Ctensor) bool {
 	retVal := C.at_requires_grad((C.tensor)(ts))
 	return *(*bool)(unsafe.Pointer(&retVal))
 }
+
+// int at_defined(tensor);
+func AtDefined(ts Ctensor) bool {
+	retVal := C.at_defined((C.tensor)(ts))
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// int at_is_sparse(tensor);
+func AtIsSparse(ts Ctensor) bool {
+	retVal := C.at_is_sparse((C.tensor)(ts))
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// void at_backward(tensor, int, int);
+func AtBackward(ts Ctensor, keepGraph int, createGraph int) {
+	ctensor := (C.tensor)(ts)
+	ckeepGraph := *(*C.int)(unsafe.Pointer(&keepGraph))
+	ccreateGraph := *(*C.int)(unsafe.Pointer(&createGraph))
+
+	C.at_backward(ctensor, ckeepGraph, ccreateGraph)
+}
+
+/*
+ * void at_run_backward(tensor *tensors,
+ *                       int ntensors,
+ *                       tensor *inputs,
+ *                       int ninputs,
+ *                       tensor *outputs,
+ *                       int keep_graph,
+ *                       int create_graph);
+ *  */
+func AtRunBackward(tensorsPtr *Ctensor, ntensors int, inputsPtr *Ctensor, ninputs int, outputsPtr *Ctensor, keepGraph int, createGraph int) {
+	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
+	cninputs := *(*C.int)(unsafe.Pointer(&ninputs))
+	ckeepGraph := *(*C.int)(unsafe.Pointer(&keepGraph))
+	ccreateGraph := *(*C.int)(unsafe.Pointer(&createGraph))
+	C.at_run_backward(tensorsPtr, cntensors, inputsPtr, cninputs, outputsPtr, ckeepGraph, ccreateGraph)
+}
