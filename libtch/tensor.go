@@ -2,6 +2,7 @@ package libtch
 
 //#include "stdbool.h"
 //#include "torch_api.h"
+//#include "stdlib.h"
 import "C"
 
 import (
@@ -178,4 +179,19 @@ func AtCopy_(dst Ctensor, src Ctensor) {
 	cdst := (C.tensor)(dst)
 	csrc := (C.tensor)(src)
 	C.at_copy_(cdst, csrc)
+}
+
+// void at_save(tensor, char *filename);
+func AtSave(ts Ctensor, path string) {
+	ctensor := (C.tensor)(ts)
+	cstringPtr := C.CString(path)
+	defer C.free(unsafe.Pointer(cstringPtr))
+	C.at_save(ctensor, cstringPtr)
+}
+
+// tensor at_load(char *filename);
+func AtLoad(path string) Ctensor {
+	cstringPtr := C.CString(path)
+	defer C.free(unsafe.Pointer(cstringPtr))
+	return C.at_load(cstringPtr)
 }

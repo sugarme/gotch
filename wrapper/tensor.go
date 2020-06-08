@@ -633,3 +633,64 @@ func MustCopy_(self, src Tensor) {
 		log.Fatal(err)
 	}
 }
+
+// Save saves a tensor to a file.
+func (ts Tensor) Save(path string) (err error) {
+	lib.AtSave(ts.ctensor, path)
+
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MustSave saves a tensor to a file. It will panic if error
+func (ts Tensor) MustSave(path string) {
+	if err := ts.Save(path); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Load loads a tensor from a file.
+func Load(path string) (retVal Tensor, err error) {
+	ctensor := lib.AtLoad(path)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor}
+
+	return retVal, nil
+}
+
+// MustLoad loads a tensor to a file. It will panic if error
+func MustLoad(path string) (retVal Tensor) {
+	retVal, err := Load(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+type NamedTensor struct {
+	Name   string
+	Tensor Tensor
+}
+
+// SaveMulti saves some named tensors to a file
+//
+// The file format is the same as the one used by the PyTorch C++ API.
+func SaveMulti(namedTensors []NamedTensor, path string) (err error) {
+	var ctensors []Ctensor
+	var names []string
+
+	for _, ts := range namedTensors {
+		ctensors = append(ctensors, ts.Tensor.ctensor)
+		names = append(names, ts.Name)
+	}
+
+	return nil
+}
