@@ -550,6 +550,10 @@ func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
 	return nil
 }
 
+// MustCopyData copies number of elements from tensor to a slice of data
+//
+// NOTE: `dst` is a slice with length = numel and Go type equavalent to tensor
+// DType
 func (ts Tensor) MustCopyData(dst interface{}, numel uint) {
 	err := ts.CopyData(dst, numel)
 	if err != nil {
