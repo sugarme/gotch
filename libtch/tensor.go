@@ -159,3 +159,23 @@ func AtCopyData(tensor Ctensor, vs unsafe.Pointer, numel uint, element_size_in_b
 	celement_size_in_bytes := *(*C.size_t)(unsafe.Pointer(&element_size_in_bytes))
 	C.at_copy_data(ctensor, vs, cnumel, celement_size_in_bytes)
 }
+
+// tensor at_shallow_clone(tensor);
+func AtShallowClone(ts Ctensor) Ctensor {
+	ctensor := (C.tensor)(ts)
+	return C.at_shallow_clone(ctensor)
+}
+
+// tensor at_get(tensor, int index);
+func AtGet(ts Ctensor, index int) Ctensor {
+	ctensor := (C.tensor)(ts)
+	cindex := *(*C.int)(unsafe.Pointer(&index))
+	return C.at_get(ctensor, cindex)
+}
+
+// void at_copy_(tensor dst, tensor src);
+func AtCopy_(dst Ctensor, src Ctensor) {
+	cdst := (C.tensor)(dst)
+	csrc := (C.tensor)(src)
+	C.at_copy_(cdst, csrc)
+}

@@ -567,3 +567,69 @@ func (ts Tensor) Numel() (retVal uint) {
 	shape = ts.MustSize()
 	return uint(FlattenDim(shape))
 }
+
+// ShallowCopy returns a new tensor that share storage with the input tensor.
+func (ts Tensor) ShallowClone() (retVal Tensor, err error) {
+
+	ctensor := lib.AtShallowClone(ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor}
+
+	return retVal, nil
+}
+
+// MustShallowClone returns a new tensor that share storage with the input
+// tensor. It will panic if error occurred
+func (ts Tensor) MustShallowClone() (retVal Tensor) {
+	retVal, err := ts.ShallowClone()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// Get gets the sub-tensor at the given index.
+func (ts Tensor) Get(index int) (retVal Tensor, err error) {
+
+	ctensor := lib.AtGet(ts.ctensor, index)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+	retVal = Tensor{ctensor}
+
+	return retVal, nil
+}
+
+// MustGet gets the sub-tensor at the given index. It will panic if error
+// occurred.
+func (ts Tensor) MustGet(index int) (retVal Tensor) {
+	retVal, err := ts.Get(index)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
+}
+
+// Copy_ copies in-place values from the argument tensor to the input tensor.
+func Copy_(self, src Tensor) (err error) {
+	lib.AtCopy_(self.ctensor, src.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MustCopy_ copies in-place values from the argument tensor to the input tensor.
+// It will panic if error occurred.
+func MustCopy_(self, src Tensor) {
+	if err := Copy_(self, src); err != nil {
+		log.Fatal(err)
+	}
+}

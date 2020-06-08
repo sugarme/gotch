@@ -43,4 +43,23 @@ func main() {
 
 	fmt.Printf("Number of tensor elements: %v\n", ts.Numel())
 
+	clone := ts.MustShallowClone()
+	clone.Print()
+
+	atGet := ts.MustGet(1)
+	atGet.Print() // 29.7
+
+	atGet = ts.MustGet(0)
+	atGet.Print() // 1.3
+
+	dst, err := wrapper.NewTensorFromData([]int64{1, 2}, []int64{1, 2})
+	if err != nil {
+		panic(err)
+	}
+
+	dst = dst.MustTotype(ts.DType())
+
+	wrapper.MustCopy_(dst, ts)
+	dst.Print()
+
 }

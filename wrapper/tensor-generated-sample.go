@@ -201,3 +201,33 @@ func (ts Tensor) MustAddG(other Tensor) {
 		log.Fatal(err)
 	}
 }
+
+// Totype casts type of tensor to a new tensor with specified DType
+func (ts Tensor) Totype(dtype gt.DType) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+	cint, err := gt.DType2CInt(dtype)
+	if err != nil {
+		return retVal, err
+	}
+
+	lib.AtgTotype(ptr, ts.ctensor, cint)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+// Totype casts type of tensor to a new tensor with specified DType. It will
+// panic if error
+func (ts Tensor) MustTotype(dtype gt.DType) (retVal Tensor) {
+	retVal, err := ts.Totype(dtype)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}

@@ -61,3 +61,9 @@ func AtgMul(ptr *Ctensor, self Ctensor, other Ctensor) {
 func AtgAdd(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_add(ptr, self, other)
 }
+
+// void atg_totype(tensor *, tensor self, int scalar_type);
+func AtgTotype(ptr *Ctensor, self Ctensor, scalar_type int32) {
+	cscalar_type := *(*C.int)(unsafe.Pointer(&scalar_type))
+	C.atg_totype(ptr, self, cscalar_type)
+}
