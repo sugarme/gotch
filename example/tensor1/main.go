@@ -40,4 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("First element address: %v\n", ele1)
+
+	fmt.Printf("Number of tensor elements: %v\n", ts.Numel())
+
 }

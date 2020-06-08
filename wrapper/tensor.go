@@ -56,6 +56,14 @@ func (ts Tensor) Size() (retVal []int64, err error) {
 	return retVal, nil
 }
 
+func (ts Tensor) MustSize() (retVal []int64) {
+	retVal, err := ts.Size()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
+}
+
 // Size1 returns the tensor size for 1D tensors.
 func (ts Tensor) Size1() (retVal int64, err error) {
 	shape, err := ts.Size()
@@ -388,7 +396,7 @@ func (ts Tensor) ZeroGrad() {
 		// grad.MustDetach_().MustZero_()
 		// https://www.calhoun.io/using-functional-options-instead-of-method-chaining-in-go/
 		detach := grad.MustDetach_()
-		_ = detach.MustZero_()
+		detach.MustZero_()
 	}
 }
 
@@ -414,15 +422,12 @@ func (ts Tensor) MustBackward() {
 // RunBackward runs the backward ...
 func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraphB bool) (retVal []Tensor, err error) {
 	// NOTE: outputs is a slice of tensors with length = len(inputs)
-	// outputsPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	// defer C.free(unsafe.Pointer(outputsPtr))
 	var outputsPtr []*lib.Ctensor
 	// TODO: Are they allocated continouslly???
 	for i := 0; i < len(inputs); i++ {
 		outputPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 		// defer C.free(unsafe.Pointer(outputPtr))
 		outputsPtr = append(outputsPtr, outputPtr)
-		// retVal = append(retVal, Tensor{ctensor: *outputPtr})
 	}
 
 	// Get first element pointer
@@ -450,4 +455,106 @@ func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraph
 	}
 
 	return retVal, nil
+}
+
+// CopyDataUint8 copies `numel` elements from `self` to `dst`.
+//
+// NOTE: `dst` located in Go memory. Should it be?
+func (ts Tensor) CopyDataUint8(dst []uint8, numel uint) (err error) {
+
+	// NOTE: we must make sure that `dst` has same len as `numel`. Otherwise,
+	// there will be memory leak and or out of range error.
+	if len(dst) < int(numel) {
+		err = fmt.Errorf("CopyDataUint8 Error: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", len(dst), numel)
+		return err
+	}
+
+	vs := unsafe.Pointer(&dst[0])
+	elt_size_in_bytes, err := gotch.DTypeSize(gotch.Uint8)
+	if err != nil {
+		return err
+	}
+	lib.AtCopyData(ts.ctensor, vs, numel, elt_size_in_bytes)
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ts Tensor) MustCopyDataUint8(dst []uint8, numel uint) {
+	err := ts.CopyDataUint8(dst, numel)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// CopyData copies `numel` elements from `self` to `dst`.
+// `dst` should be a slice of Go type equivalent to tensor type.
+//
+// NOTE: `dst` located in Go memory. Should it be?
+func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
+
+	dtype, dlen, err := DataCheck(dst)
+	if err != nil {
+		return err
+	}
+
+	if dlen < int(numel) {
+		err = fmt.Errorf("CopyDataUint8 Error: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", dlen, numel)
+		return err
+	}
+
+	if ts.DType() != dtype {
+		err = fmt.Errorf("Type mismatched: `dst` type: %v, tensor DType: %v", dtype, ts.DType())
+		return err
+	}
+
+	var vs unsafe.Pointer
+	switch dtype {
+	case gotch.Uint8:
+		vs = unsafe.Pointer(&dst.([]uint8)[0])
+	case gotch.Int8:
+		vs = unsafe.Pointer(&dst.([]int8)[0])
+	case gotch.Int16:
+		vs = unsafe.Pointer(&dst.([]int16)[0])
+	case gotch.Int:
+		vs = unsafe.Pointer(&dst.([]int32)[0])
+	case gotch.Int64:
+		vs = unsafe.Pointer(&dst.([]int64)[0])
+	case gotch.Float:
+		vs = unsafe.Pointer(&dst.([]float32)[0])
+	case gotch.Double:
+		vs = unsafe.Pointer(&dst.([]float64)[0])
+	case gotch.Bool:
+		vs = unsafe.Pointer(&dst.([]bool)[0])
+	default:
+		err = fmt.Errorf("Unsupported type: `dst` type: %v, tensor DType: %v", dtype, ts.DType())
+		return err
+	}
+
+	elt_size_in_bytes, err := gotch.DTypeSize(dtype.(gotch.DType))
+	if err != nil {
+		return err
+	}
+	lib.AtCopyData(ts.ctensor, vs, numel, elt_size_in_bytes)
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ts Tensor) MustCopyData(dst interface{}, numel uint) {
+	err := ts.CopyData(dst, numel)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Numel returns the total number of elements stored in a tensor.
+func (ts Tensor) Numel() (retVal uint) {
+	var shape []int64
+	shape = ts.MustSize()
+	return uint(FlattenDim(shape))
 }

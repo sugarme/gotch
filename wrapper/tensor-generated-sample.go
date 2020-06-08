@@ -181,7 +181,7 @@ func (ts Tensor) MustAdd(other Tensor) (retVal Tensor) {
 	return retVal
 }
 
-func (ts *Tensor) AddG(other Tensor) (err error) {
+func (ts Tensor) AddG(other Tensor) (err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 	lib.AtgAdd(ptr, ts.ctensor, other.ctensor)
@@ -190,12 +190,12 @@ func (ts *Tensor) AddG(other Tensor) (err error) {
 		return err
 	}
 
-	ts = &Tensor{ctensor: *ptr}
+	ts = Tensor{ctensor: *ptr}
 
 	return nil
 }
 
-func (ts *Tensor) MustAddG(other Tensor) {
+func (ts Tensor) MustAddG(other Tensor) {
 	err := ts.AddG(other)
 	if err != nil {
 		log.Fatal(err)

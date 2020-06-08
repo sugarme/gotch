@@ -151,3 +151,11 @@ func AtRunBackward(tensorsPtr *Ctensor, ntensors int, inputsPtr *Ctensor, ninput
 	ccreateGraph := *(*C.int)(unsafe.Pointer(&createGraph))
 	C.at_run_backward(tensorsPtr, cntensors, inputsPtr, cninputs, outputsPtr, ckeepGraph, ccreateGraph)
 }
+
+// void at_copy_data(tensor tensor, void *vs, size_t numel, size_t element_size_in_bytes);
+func AtCopyData(tensor Ctensor, vs unsafe.Pointer, numel uint, element_size_in_bytes uint) {
+	ctensor := (C.tensor)(tensor)
+	cnumel := *(*C.size_t)(unsafe.Pointer(&numel))
+	celement_size_in_bytes := *(*C.size_t)(unsafe.Pointer(&element_size_in_bytes))
+	C.at_copy_data(ctensor, vs, cnumel, celement_size_in_bytes)
+}
