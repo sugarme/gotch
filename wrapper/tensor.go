@@ -495,7 +495,12 @@ func (ts Tensor) MustCopyDataUint8(dst []uint8, numel uint) {
 // NOTE: `dst` located in Go memory. Should it be?
 func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
 
-	dtype, dlen, err := DataCheck(dst)
+	gotype, dlen, err := DataCheck(dst)
+	if err != nil {
+		return err
+	}
+
+	dtype, err := gotch.ToDType(gotype)
 	if err != nil {
 		return err
 	}
@@ -533,7 +538,7 @@ func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
 		return err
 	}
 
-	elt_size_in_bytes, err := gotch.DTypeSize(dtype.(gotch.DType))
+	elt_size_in_bytes, err := gotch.DTypeSize(dtype)
 	if err != nil {
 		return err
 	}
