@@ -756,7 +756,7 @@ func MustLoadMulti(path string) (retVal []NamedTensor) {
 	return retVal
 }
 
-// Loads some named tensors from a file to a given device
+// LoadMultiWithDevice loads some named tensors from a file to a given device
 //
 // The file format is the same as the one used by the PyTorch C++ API.
 func LoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTensor, err error) {
@@ -783,6 +783,31 @@ func LoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTensor
 // MustLoadMulti loads some named tensors from a file. It will panic if error
 func MustLoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTensor) {
 	retVal, err := LoadMultiWithDevice(path, device)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// ToString returns a string representation for the tensor.
+//
+// lw : line width (size)
+// NOTE: The representation will contain all the tensor element hence may be huge for
+// large tensors.
+func (ts Tensor) ToString(lw int64) (retVal string, err error) {
+	retVal = lib.AtToString(ts.ctensor, lw)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return retVal, nil
+}
+
+// MustToString returns a string representation for the tensor. It will be panic
+// if error.
+func (ts Tensor) MustToString(lw int64) (retVal string) {
+	retVal, err := ts.ToString(lw)
 	if err != nil {
 		log.Fatal(err)
 	}

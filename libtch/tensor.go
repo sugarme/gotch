@@ -286,3 +286,22 @@ func AtLoadCallbackWithDevice(filename string, dataPtr unsafe.Pointer, device in
 	cdevice := *(*C.int)(unsafe.Pointer(&device))
 	C.at_load_callback_with_device(cfilename, dataPtr, C.f(C.callback_fn), cdevice)
 }
+
+/*
+ * char *at_to_string(tensor t, int line_size) {
+ *   PROTECT(
+ *     std::ostringstream oss;
+ *     torch::print(oss, *t, line_size);
+ *     return strdup(oss.str().c_str());
+ *   )
+ *   return nullptr;
+ * }
+ *  */
+func AtToString(ts Ctensor, lineSize int64) string {
+	ctensor := (C.tensor)(ts)
+	clineSize := *(*C.int)(unsafe.Pointer(&lineSize))
+	charPtr := C.at_to_string(ctensor, clineSize)
+	goString := C.GoString(charPtr)
+
+	return goString
+}

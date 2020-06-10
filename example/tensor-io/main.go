@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/sugarme/gotch"
 	wrapper "github.com/sugarme/gotch/wrapper"
 )
@@ -48,5 +50,9 @@ func main() {
 	for _, v := range data {
 		v.Tensor.Print()
 	}
+
+	tsString := ts.MustToString(80)
+
+	fmt.Printf("Tensor String: \n%v\n", tsString)
 
 }
