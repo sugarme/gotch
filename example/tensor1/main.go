@@ -62,4 +62,8 @@ func main() {
 	wrapper.MustCopy_(dst, ts)
 	dst.Print()
 
+	ts.MustDrop()
+	// The below statement will be panic as `ts` has been dropped.
+	// ts.Print()
+
 }

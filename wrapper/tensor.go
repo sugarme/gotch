@@ -814,3 +814,20 @@ func (ts Tensor) MustToString(lw int64) (retVal string) {
 
 	return retVal
 }
+
+// Drop drops (frees) the tensor
+func (ts Tensor) Drop() (err error) {
+	lib.AtFree(ts.ctensor)
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MustDrop drops the tensor. It will be panic if error
+func (ts Tensor) MustDrop() {
+	if err := ts.Drop(); err != nil {
+		log.Fatal(err)
+	}
+}

@@ -305,3 +305,9 @@ func AtToString(ts Ctensor, lineSize int64) string {
 
 	return goString
 }
+
+// void at_free(tensor);
+func AtFree(ts Ctensor) {
+	ctensor := (C.tensor)(ts)
+	C.at_free(ctensor)
+}
