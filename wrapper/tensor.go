@@ -756,13 +756,36 @@ func MustLoadMulti(path string) (retVal []NamedTensor) {
 	return retVal
 }
 
-func goStrings(argc C.int, argv **C.char) []string {
+// Loads some named tensors from a file to a given device
+//
+// The file format is the same as the one used by the PyTorch C++ API.
+func LoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTensor, err error) {
+	var data lib.LoadData
+	dataPtr := lib.PStore.Set(&data)
 
-	length := int(argc)
-	tmpslice := (*[1 << 30]*C.char)(unsafe.Pointer(argv))[:length:length]
-	gostrings := make([]string, length)
-	for i, s := range tmpslice {
-		gostrings[i] = C.GoString(s)
+	lib.AtLoadCallbackWithDevice(path, dataPtr, device.CInt())
+	if err = TorchErr(); err != nil {
+		return retVal, err
 	}
-	return gostrings
+
+	for _, v := range data.NamedCtensors {
+		namedTensor := NamedTensor{
+			Name:   v.Name,
+			Tensor: Tensor{v.Ctensor},
+		}
+
+		retVal = append(retVal, namedTensor)
+	}
+
+	return retVal, nil
+}
+
+// MustLoadMulti loads some named tensors from a file. It will panic if error
+func MustLoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTensor) {
+	retVal, err := LoadMultiWithDevice(path, device)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }

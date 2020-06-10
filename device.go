@@ -99,8 +99,8 @@ func (d Device) OfCInt(v CInt) Device {
 // CudaIfAvailable returns a GPU device if available, else default to CPU
 func (d Device) CudaIfAvailable() Device {
 	switch {
-	// case CUDA.IsAvailable():
-	// return CudaBuilder(0)
+	case CUDA.IsAvailable():
+		return CudaBuilder(0)
 	default:
 		return CPU
 	}

@@ -268,3 +268,21 @@ func callback_fn(dataPtr unsafe.Pointer, name *C.char, ctensor C.tensor) {
 	data := PStore.Get(dataPtr).(*LoadData)
 	data.NamedCtensors = append(data.NamedCtensors, namedCtensor)
 }
+
+/*
+ * void at_load_callback_with_device(char *filename, void *data, void (*f)(void *, char *, tensor), int device_id) {
+ *   PROTECT(
+ *     auto module = torch::jit::load(filename, device_of_int(device_id));
+ *     for (const auto &p : module.named_parameters()) {
+ *       auto v = p.value;
+ *       f(data, (char*)p.name.c_str(), new torch::Tensor(v));
+ *     }
+ *   )
+ * }
+ *  */
+func AtLoadCallbackWithDevice(filename string, dataPtr unsafe.Pointer, device int32) {
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	cdevice := *(*C.int)(unsafe.Pointer(&device))
+	C.at_load_callback_with_device(cfilename, dataPtr, C.f(C.callback_fn), cdevice)
+}

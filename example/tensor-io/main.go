@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/sugarme/gotch"
 	wrapper "github.com/sugarme/gotch/wrapper"
 )
 
@@ -37,6 +38,13 @@ func main() {
 
 	data = wrapper.MustLoadMulti(pathMulti)
 
+	for _, v := range data {
+		v.Tensor.Print()
+	}
+
+	device := gotch.NewCuda()
+
+	data = wrapper.MustLoadMultiWithDevice(pathMulti, device)
 	for _, v := range data {
 		v.Tensor.Print()
 	}
