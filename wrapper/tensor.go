@@ -732,12 +732,14 @@ func MustSaveMulti(namedTensors []NamedTensor, path string) {
 // The file format is the same as the one used by the PyTorch C++ API.
 func LoadMulti(path string) (retVal []NamedTensor, err error) {
 
-	data := lib.AtLoadCallback(path)
+	var data lib.LoadData
+	dataPtr := lib.PStore.Set(&data)
+	lib.AtLoadCallback(path, dataPtr)
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
 
-	fmt.Println(data)
+	fmt.Println(data.NamedCtensors)
 
 	return retVal, nil
 }
