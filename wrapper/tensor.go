@@ -1,6 +1,7 @@
 package wrapper
 
-// #include "stdlib.h"
+//#include "stdlib.h"
+//#include "stdbool.h"
 import "C"
 
 import (
@@ -9,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	// "strings"
 	"unsafe"
 
 	gotch "github.com/sugarme/gotch"
@@ -189,6 +191,18 @@ func OfSlice(data interface{}) (retVal Tensor, err error) {
 	return retVal, nil
 }
 
+// MustOfSlice create a tensor from slice of data. It will be panic if error.
+func MustOfSlice(data interface{}) (retVal Tensor) {
+	retVal, err := OfSlice(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+
+}
+
+// TensorFrom create a tensor from slice of data. It will be panic if error.
 func TensorFrom(data interface{}) (retVal Tensor) {
 	retVal, err := OfSlice(data)
 	if err != nil {
@@ -675,6 +689,11 @@ func MustLoad(path string) (retVal Tensor) {
 	return retVal
 }
 
+type NamedCtensor struct {
+	Name    string
+	Ctensor lib.Ctensor
+}
+
 type NamedTensor struct {
 	Name   string
 	Tensor Tensor
@@ -684,7 +703,7 @@ type NamedTensor struct {
 //
 // The file format is the same as the one used by the PyTorch C++ API.
 func SaveMulti(namedTensors []NamedTensor, path string) (err error) {
-	var ctensors []Ctensor
+	var ctensors []lib.Ctensor
 	var names []string
 
 	for _, ts := range namedTensors {
@@ -692,5 +711,71 @@ func SaveMulti(namedTensors []NamedTensor, path string) (err error) {
 		names = append(names, ts.Name)
 	}
 
+	lib.AtSaveMulti(ctensors, names, len(namedTensors), path)
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+// MustSaveMulti saves some named tensors to a file. It will panic if error
+func MustSaveMulti(namedTensors []NamedTensor, path string) {
+	err := SaveMulti(namedTensors, path)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// LoadMulti loads some named tensors from a file
+//
+// The file format is the same as the one used by the PyTorch C++ API.
+func LoadMulti(path string) (retVal []NamedTensor, err error) {
+
+	data := lib.AtLoadCallback(path)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	fmt.Println(data)
+
+	return retVal, nil
+}
+
+// //export callback_fn
+// func callback_fn(dataPtr unsafe.Pointer, name *C.char, ctensor C.tensor) {
+// // TODO: do something here
+// // data := pstore.Get(dataPtr).([]NamedTensor)
+// tsName := C.GoString(name)
+// fmt.Println(tsName)
+// }
+
+/*
+ * extern "C" fn add_callback(data: *mut c_void, name: *const c_char, c_tensor: *mut C_tensor) {
+ *     let name = unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() };
+ *     let name = name.replace("|", ".");
+ *     let v: &mut Vec<(String, Tensor)> = unsafe { &mut *(data as *mut Vec<(String, Tensor)>) };
+ *     v.push((name.to_owned(), Tensor { c_tensor }))
+ * }
+ *  */
+
+// MustLoadMulti loads some named tensors from a file. It will panic if error
+func MustLoadMulti(path string) (retVal []NamedTensor) {
+	retVal, err := LoadMulti(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func goStrings(argc C.int, argv **C.char) []string {
+
+	length := int(argc)
+	tmpslice := (*[1 << 30]*C.char)(unsafe.Pointer(argv))[:length:length]
+	gostrings := make([]string, length)
+	for i, s := range tmpslice {
+		gostrings[i] = C.GoString(s)
+	}
+	return gostrings
 }

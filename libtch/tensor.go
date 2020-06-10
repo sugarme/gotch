@@ -1,11 +1,16 @@
 package libtch
 
+//#include "stddef.h"
 //#include "stdbool.h"
 //#include "torch_api.h"
 //#include "stdlib.h"
+//void callback_fn(void *, char *, tensor);
+//typedef void (*f)(void *, char *, tensor);
 import "C"
 
 import (
+	"fmt"
+	// "time"
 	"unsafe"
 )
 
@@ -194,4 +199,99 @@ func AtLoad(path string) Ctensor {
 	cstringPtr := C.CString(path)
 	defer C.free(unsafe.Pointer(cstringPtr))
 	return C.at_load(cstringPtr)
+}
+
+// void at_save_multi(tensor *tensors, char **tensor_names, int ntensors, char *filename);
+func AtSaveMulti(tensors []Ctensor, tensor_names []string, ntensors int, filename string) {
+
+	var ctensors []C.tensor
+	for i := 0; i < len(tensors); i++ {
+		ctensors = append(ctensors, (C.tensor)(tensors[i]))
+	}
+
+	cpointerSize := 4
+	cnamesPtr := (*[1 << 30]**C.char)(C.malloc(C.size_t(cpointerSize * len(tensor_names))))
+	for i := 0; i < len(tensor_names); i++ {
+		cname := C.CString(tensor_names[i])
+		cnamesPtr[i] = &cname
+		// defer C.free(unsafe.Pointer(cnamesPtr[i]))
+	}
+	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
+	cfilename := C.CString(filename)
+
+	C.at_save_multi(&ctensors[0], cnamesPtr[0], cntensors, cfilename)
+}
+
+/* [at_load_multi] takes as input an array of nullptr for [tensors]. */
+// void at_load_multi(tensor *tensors, char **tensor_names, int ntensors, char *filename);
+func AtLoadMulti(tensors []Ctensor, tensor_names []string, ntensors int, filename string) {
+	// TODO: implement this
+}
+
+var pStore PointerStore = NewPointerStore()
+var namedCtensors []NamedCtensor = make([]NamedCtensor, 0)
+
+// void at_load_callback(char *filename, void *data, void (*f)(void *, char *, tensor));
+/*
+ * void at_load_callback(char *filename, void *data, void (*f)(void *, char *, tensor)) {
+ *   PROTECT(
+ *     auto module = torch::jit::load(filename);
+ *     for (const auto &p : module.named_parameters()) {
+ *       auto v = p.value;
+ *       f(data, (char*)p.name.c_str(), new torch::Tensor(v));
+ *     }
+ *   )
+ * }
+ *  */
+// func AtLoadCallback(filename string, data unsafe.Pointer, callbackFn *func(unsafe.Pointer, *C.char, C.tensor)) {
+func AtLoadCallback(filename string) (retVal []NamedCtensor) {
+
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+
+	var data Data = Data{NamedCtensors: make([]NamedCtensor, 0)}
+	dataPtr := pStore.Set(&data)
+
+	C.at_load_callback(cfilename, dataPtr, C.f(C.callback_fn))
+
+	data = *pStore.Get(dataPtr).(*Data)
+
+	retVal = data.NamedCtensors
+	fmt.Println(retVal)
+
+	return
+}
+
+type Data struct {
+	NamedCtensors []NamedCtensor
+}
+
+/*
+ * func (d *Data) Set(v NamedCtensor) {
+ *   d.NamedCtensors = append(d.NamedCtensors, v)
+ * }
+ *
+ * func (d *Data) Get() []NamedCtensor {
+ *   return d.NamedCtensors
+ * }
+ *  */
+
+type NamedCtensor struct {
+	Name    string
+	Ctensor C.tensor
+}
+
+//export callback_fn
+func callback_fn(dataPtr unsafe.Pointer, name *C.char, ctensor C.tensor) {
+	// TODO: do something here
+	tsName := C.GoString(name)
+	fmt.Println(tsName)
+	namedCtensor := NamedCtensor{
+		Name:    tsName,
+		Ctensor: ctensor,
+	}
+
+	data := pStore.Get(dataPtr).(*Data)
+	// data.Set(namedCtensor)
+	data.NamedCtensors = append(data.NamedCtensors, namedCtensor)
 }
