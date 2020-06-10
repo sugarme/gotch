@@ -33,6 +33,12 @@ func main() {
 		panic(err)
 	}
 
-	_ = wrapper.MustLoadMulti(pathMulti)
+	var data []wrapper.NamedTensor
+
+	data = wrapper.MustLoadMulti(pathMulti)
+
+	for _, v := range data {
+		v.Tensor.Print()
+	}
 
 }

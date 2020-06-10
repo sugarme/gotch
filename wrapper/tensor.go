@@ -689,11 +689,6 @@ func MustLoad(path string) (retVal Tensor) {
 	return retVal
 }
 
-type NamedCtensor struct {
-	Name    string
-	Ctensor lib.Ctensor
-}
-
 type NamedTensor struct {
 	Name   string
 	Tensor Tensor
@@ -739,27 +734,17 @@ func LoadMulti(path string) (retVal []NamedTensor, err error) {
 		return retVal, err
 	}
 
-	fmt.Println(data.NamedCtensors)
+	for _, v := range data.NamedCtensors {
+		namedTensor := NamedTensor{
+			Name:   v.Name,
+			Tensor: Tensor{v.Ctensor},
+		}
+
+		retVal = append(retVal, namedTensor)
+	}
 
 	return retVal, nil
 }
-
-// //export callback_fn
-// func callback_fn(dataPtr unsafe.Pointer, name *C.char, ctensor C.tensor) {
-// // TODO: do something here
-// // data := pstore.Get(dataPtr).([]NamedTensor)
-// tsName := C.GoString(name)
-// fmt.Println(tsName)
-// }
-
-/*
- * extern "C" fn add_callback(data: *mut c_void, name: *const c_char, c_tensor: *mut C_tensor) {
- *     let name = unsafe { std::ffi::CStr::from_ptr(name).to_str().unwrap() };
- *     let name = name.replace("|", ".");
- *     let v: &mut Vec<(String, Tensor)> = unsafe { &mut *(data as *mut Vec<(String, Tensor)>) };
- *     v.push((name.to_owned(), Tensor { c_tensor }))
- * }
- *  */
 
 // MustLoadMulti loads some named tensors from a file. It will panic if error
 func MustLoadMulti(path string) (retVal []NamedTensor) {
