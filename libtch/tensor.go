@@ -414,3 +414,29 @@ func AtoStep(coptimizer Coptimizer) {
 func AtoFree(coptimizer Coptimizer) {
 	C.ato_free(coptimizer)
 }
+
+// tensor at_load_image(char *filename);
+func AtLoadImage(path string) Ctensor {
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+	return C.at_load_image(cpath)
+}
+
+// int at_save_image(tensor, char *filename);
+func AtSaveImage(ts Ctensor, path string) {
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+
+	// TODO: we don't take the return value
+	// as we handle error with `TochErr()` anyway
+	_ = C.at_save_image(ts, cpath)
+}
+
+// tensor at_resize_image(tensor, int w, int h);
+func AtResizeImage(ts Ctensor, w, h int64) Ctensor {
+
+	cw := *(*C.int)(unsafe.Pointer(&w))
+	ch := *(*C.int)(unsafe.Pointer(&h))
+
+	return C.at_resize_image(ts, cw, ch)
+}
