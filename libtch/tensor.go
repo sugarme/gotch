@@ -15,6 +15,7 @@ import (
 // NOTE: C.tensor is a C pointer to torch::Tensor
 type Ctensor = C.tensor
 type Cscalar = C.scalar
+type Coptimizer = C.optimizer
 
 type NamedCtensor struct {
 	Name    string
@@ -317,4 +318,99 @@ func AtGradSetEnabled(b int) int {
 	cbool := *(*C.int)(unsafe.Pointer(&b))
 	cretVal := C.at_grad_set_enabled(cbool)
 	return *(*int)(unsafe.Pointer(&cretVal))
+}
+
+/*
+ * optimizer ato_adam(double learning_rate,
+ *                    double beta1,
+ *                    double beta2,
+ *                    double weight_decay);
+ *  */
+func AtoAdam(learningRate, beta1, beta2, weightDecay float64) Coptimizer {
+	clearningRate := *(*C.double)(unsafe.Pointer(&learningRate))
+	cbeta1 := *(*C.double)(unsafe.Pointer(&beta1))
+	cbeta2 := *(*C.double)(unsafe.Pointer(&beta2))
+	cweightDecay := *(*C.double)(unsafe.Pointer(&weightDecay))
+
+	return C.ato_adam(clearningRate, cbeta1, cbeta2, cweightDecay)
+}
+
+/*
+ * optimizer ato_rms_prop(double learning_rate,
+ *                        double alpha,
+ *                        double eps,
+ *                        double weight_decay,
+ *                        double momentum,
+ *                        int centered);
+ *  */
+func AtoRmsProp(learningRate, alpha, eps, weightDecay, momentum float64, centered int) Coptimizer {
+	clearningRate := *(*C.double)(unsafe.Pointer(&learningRate))
+	calpha := *(*C.double)(unsafe.Pointer(&alpha))
+	ceps := *(*C.double)(unsafe.Pointer(&eps))
+	cweightDecay := *(*C.double)(unsafe.Pointer(&weightDecay))
+	cmomentum := *(*C.double)(unsafe.Pointer(&momentum))
+	ccentered := *(*C.int)(unsafe.Pointer(&centered))
+
+	return C.ato_rms_prop(clearningRate, calpha, ceps, cweightDecay, cmomentum, ccentered)
+}
+
+/*
+ * optimizer ato_sgd(double learning_rate,
+ *                   double momentum,
+ *                   double dampening,
+ *                   double weight_decay,
+ *                   int nesterov);
+ *  */
+func AtoSgd(learningRate, momentum, dampening, weightDecay float64, nesterov int) Coptimizer {
+	clearningRate := *(*C.double)(unsafe.Pointer(&learningRate))
+	cmomentum := *(*C.double)(unsafe.Pointer(&momentum))
+	cdampening := *(*C.double)(unsafe.Pointer(&dampening))
+	cweightDecay := *(*C.double)(unsafe.Pointer(&weightDecay))
+	cnesterov := *(*C.int)(unsafe.Pointer(&nesterov))
+
+	return C.ato_sgd(clearningRate, cmomentum, cdampening, cweightDecay, cnesterov)
+}
+
+// void ato_add_parameters(optimizer, tensor *, int ntensors);
+func AtoAddParameters(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
+
+	var ctensors []C.tensor
+	for i := 0; i < len(tensors); i++ {
+		ctensors = append(ctensors, (C.tensor)(tensors[i]))
+	}
+
+	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
+
+	// Just give pointer to the first element of ctensors slice
+	C.ato_add_parameters(coptimizer, &ctensors[0], cntensors)
+}
+
+// void ato_set_learning_rate(optimizer, double learning_rate);
+func AtoSetLearningRate(coptimizer Coptimizer, learningRate float64) {
+	clearningRate := *(*C.double)(unsafe.Pointer(&learningRate))
+	C.ato_set_learning_rate(coptimizer, clearningRate)
+}
+
+// void ato_set_momentum(optimizer, double momentum);
+func AtoSetMomentum(coptimizer Coptimizer, momentum float64) {
+	cmomentum := *(*C.double)(unsafe.Pointer(&momentum))
+
+	C.ato_set_momentum(coptimizer, cmomentum)
+}
+
+// void ato_zero_grad(optimizer);
+func AtoZeroGrad(coptimizer Coptimizer) {
+
+	C.ato_zero_grad(coptimizer)
+}
+
+// void ato_step(optimizer);
+func AtoStep(coptimizer Coptimizer) {
+
+	C.ato_step(coptimizer)
+}
+
+// void ato_free(optimizer);
+func AtoFree(coptimizer Coptimizer) {
+	C.ato_free(coptimizer)
 }
