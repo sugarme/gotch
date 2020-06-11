@@ -831,3 +831,70 @@ func (ts Tensor) MustDrop() {
 		log.Fatal(err)
 	}
 }
+
+// GradSetEnabled sets globally whether GradMode gradient accumulation is enable or not.
+// It returns PREVIOUS state of Grad before setting.
+func GradSetEnabled(b bool) (retVal bool, err error) {
+
+	var cbool, cretVal int
+	switch b {
+	case true:
+		cbool = 1
+	case false:
+		cbool = 0
+	}
+
+	cretVal = lib.AtGradSetEnabled(cbool)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	switch cretVal {
+	case 0:
+		retVal = false
+		break
+	case 1:
+		retVal = true
+		break
+		// case -1: // should be unreachable as error is captured above with TorchrErr()
+		// err = fmt.Errorf("Cannot set grad enable. \n")
+		// return retVal, err
+		// default: // should be unreachable as error is captured above with TorchrErr()
+		// err = fmt.Errorf("Cannot set grad enable. \n")
+		// return retVal, err
+	}
+
+	return retVal, nil
+}
+
+// MustGradSetEnabled sets globally whether GradMode gradient accumuation is enable or not.
+// It returns PREVIOUS state of Grad before setting. It will be panic if error
+func MustGradSetEnabled(b bool) (retVal bool) {
+	retVal, err := GradSetEnabled(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// NoGrad runs a closure without keeping track of gradients.
+func NoGrad(fn interface{}) (retVal interface{}, err error) {
+
+	// Switch off Grad
+	prev := MustGradSetEnabled(false)
+
+	// Analyze input as function. If not, throw error
+	f, err := NewFunc(fn)
+	if err != nil {
+		return retVal, nil
+	}
+
+	// invokes the function
+	retVal = f.Invoke()
+
+	// Switch on Grad
+	_ = MustGradSetEnabled(prev)
+
+	return retVal, nil
+}

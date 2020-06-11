@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	// "log"
 
 	wrapper "github.com/sugarme/gotch/wrapper"
@@ -24,6 +24,11 @@ func main() {
 	z.Backward()
 	xgrad = x.MustGrad()
 	xgrad.Print() // [5.0] due to accumulated 2.0 + 3.0
+
+	isGradEnabled := wrapper.MustGradSetEnabled(false)
+	fmt.Printf("Previous GradMode enabled state: %v\n", isGradEnabled)
+	isGradEnabled = wrapper.MustGradSetEnabled(true)
+	fmt.Printf("Previous GradMode enabled state: %v\n", isGradEnabled)
 
 }
 

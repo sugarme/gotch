@@ -311,3 +311,10 @@ func AtFree(ts Ctensor) {
 	ctensor := (C.tensor)(ts)
 	C.at_free(ctensor)
 }
+
+//int at_grad_set_enabled(int b);
+func AtGradSetEnabled(b int) int {
+	cbool := *(*C.int)(unsafe.Pointer(&b))
+	cretVal := C.at_grad_set_enabled(cbool)
+	return *(*int)(unsafe.Pointer(&cretVal))
+}

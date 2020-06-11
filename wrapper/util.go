@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	// "log"
 	"reflect"
 	"unsafe"
 
@@ -363,4 +364,100 @@ func flattenData(data interface{}, round int, flat []interface{}) (f []interface
 	}
 
 	return flatData, nil
+}
+
+// InvokeFn reflects and invokes a function of interface type.
+func InvokeFnWithArgs(fn interface{}, args ...string) {
+	v := reflect.ValueOf(fn)
+	rargs := make([]reflect.Value, len(args))
+	for i, a := range args {
+		rargs[i] = reflect.ValueOf(a)
+	}
+	v.Call(rargs)
+}
+
+// Func struct contains information of a function
+type FuncInfo struct {
+	Signature  string
+	InArgs     []reflect.Value
+	OutArgs    []reflect.Value
+	IsVariadic bool
+}
+
+type Func struct {
+	typ  reflect.Type
+	val  reflect.Value
+	meta FuncInfo
+}
+
+func NewFunc(fn interface{}) (retVal Func, err error) {
+	meta, err := getFuncInfo(fn)
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Func{
+		typ:  reflect.TypeOf(fn),
+		val:  reflect.ValueOf(fn),
+		meta: meta,
+	}
+	return retVal, nil
+}
+
+// getFuncInfo analyzes input of interface type and returns function information
+// in FuncInfo struct. It returns error if input is not a function type under
+// the hood.
+func getFuncInfo(fn interface{}) (retVal FuncInfo, err error) {
+	fnVal := reflect.ValueOf(fn)
+	fnTyp := reflect.TypeOf(fn)
+
+	// First, check whether input is a function type
+	if fnVal.Kind() != reflect.Func {
+		err = fmt.Errorf("Input is not a function.")
+		return retVal, err
+	}
+
+	// get number of input and output arguments of function
+	numIn := fnTyp.NumIn()           // inbound parameters
+	numOut := fnTyp.NumOut()         // outbound parameters
+	isVariadic := fnTyp.IsVariadic() // whether function is a variadic func
+	fnSig := fnTyp.String()          // function signature
+
+	// get input and ouput arguments values (reflect.Value type)
+	var inArgs []reflect.Value
+	var outArgs []reflect.Value
+
+	for i := 0; i < numIn; i++ {
+		t := fnTyp.In(i) // reflect.Type
+
+		inArgs = append(inArgs, reflect.ValueOf(t))
+	}
+
+	for i := 0; i < numOut; i++ {
+		t := fnTyp.Out(i) // reflect.Type
+		outArgs = append(outArgs, reflect.ValueOf(t))
+	}
+
+	retVal = FuncInfo{
+		Signature:  fnSig,
+		InArgs:     inArgs,
+		OutArgs:    outArgs,
+		IsVariadic: isVariadic,
+	}
+
+	return retVal, nil
+}
+
+// Info analyzes input of interface type and returns function information
+// in FuncInfo struct. It returns error if input is not a function type under
+// the hood. It will be panic if input is not a function
+func (f *Func) Info() (retVal FuncInfo) {
+	return f.meta
+}
+
+func (f *Func) Invoke() interface{} {
+	// call function with input parameters
+	// TODO: return vals are []reflect.Value
+	// How do we match them to output order of signature function
+	return f.val.Call(f.meta.InArgs)
 }
