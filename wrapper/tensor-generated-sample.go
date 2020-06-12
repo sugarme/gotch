@@ -231,3 +231,65 @@ func (ts Tensor) MustTotype(dtype gt.DType) (retVal Tensor) {
 
 	return retVal
 }
+
+// Unsqueeze unsqueezes tensor to specified dimension.
+func (ts Tensor) Unsqueeze(dim int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgUnsqueeze(ptr, ts.ctensor, dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+// Select creates a new tensor from current tensor given dim and index.
+func (ts Tensor) Select(dim int64, index int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgSelect(ptr, ts.ctensor, dim, index)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+// Narrow creates a new tensor from current tensor given dim and start index
+// and length.
+func (ts Tensor) Narrow(dim int64, start int64, length int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgNarrow(ptr, ts.ctensor, dim, start, length)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+// IndexSelect creates a new tensor from current tensor given dim and index
+// tensor.
+func (ts Tensor) IndexSelect(dim int64, index Tensor) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgIndexSelect(ptr, ts.ctensor, dim, index.ctensor)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}

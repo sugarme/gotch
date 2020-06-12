@@ -67,3 +67,30 @@ func AtgTotype(ptr *Ctensor, self Ctensor, scalar_type int32) {
 	cscalar_type := *(*C.int)(unsafe.Pointer(&scalar_type))
 	C.atg_totype(ptr, self, cscalar_type)
 }
+
+// void atg_unsqueeze(tensor *, tensor self, int64_t dim);
+func AtgUnsqueeze(ptr *Ctensor, self Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg_unsqueeze(ptr, self, cdim)
+}
+
+// void atg_select(tensor *, tensor self, int64_t dim, int64_t index);
+func AtgSelect(ptr *Ctensor, self Ctensor, dim int64, index int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cindex := *(*C.int64_t)(unsafe.Pointer(&index))
+	C.atg_select(ptr, self, cdim, cindex)
+}
+
+// void atg_narrow(tensor *, tensor self, int64_t dim, int64_t start, int64_t length);
+func AtgNarrow(ptr *Ctensor, self Ctensor, dim int64, start int64, length int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cstart := *(*C.int64_t)(unsafe.Pointer(&start))
+	clength := *(*C.int64_t)(unsafe.Pointer(&length))
+	C.atg_narrow(ptr, self, cdim, cstart, clength)
+}
+
+// void atg_index_select(tensor *, tensor self, int64_t dim, tensor index);
+func AtgIndexSelect(ptr *Ctensor, self Ctensor, dim int64, index Ctensor) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg_index_select(ptr, self, cdim, index)
+}
