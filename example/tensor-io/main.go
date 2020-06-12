@@ -55,4 +55,16 @@ func main() {
 
 	fmt.Printf("Tensor String: \n%v\n", tsString)
 
+	imagePath := "mnist-sample.png"
+
+	imageTs, err := wrapper.LoadHwc(imagePath)
+	if err != nil {
+		panic(err)
+	}
+
+	err = imageTs.Save("mnist-tensor-saved.png")
+	if err != nil {
+		panic(err)
+	}
+
 }
