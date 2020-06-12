@@ -1,4 +1,4 @@
-package tensor
+package wrapper
 
 // Indexing operations for tensor
 // It defines a `i` indexing operation. This can be used in various scenarios.
@@ -64,13 +64,7 @@ import (
 	"reflect"
 
 	"github.com/sugarme/gotch"
-	"github.com/sugarme/gotch/wrapper"
 )
-
-// Tensor type `super` wrapper.Tensor
-type Tensor struct {
-	wrapper.Tensor
-}
 
 type NewAxis struct{}
 
@@ -203,7 +197,7 @@ func (ts *Tensor) Idx(index interface{}) (retVal Tensor) {
 
 // Tensor Methods:
 // ===============
-func (ts *Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
+func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 
 	// Make sure number of non-newaxis is not exceed number of dimensions
 	var nonNewAxis []TensorIndexer
@@ -228,7 +222,7 @@ func (ts *Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) 
 		if reflect.ValueOf(spec).String() == "IndexSelectFn" {
 
 			// 1. its input tensor has dimension > 1, throw error.
-			f, err := wrapper.NewFunc(spec)
+			f, err := NewFunc(spec)
 			if err != nil {
 				err = fmt.Errorf("Indexer Func Error: %v\n", err)
 				return retVal, err
@@ -260,12 +254,76 @@ func (ts *Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) 
 	}
 
 	// Now, apply indexing from left to right.
-	// TODO: implement it
+	var (
+		currTensor Tensor = ts.MustShallowClone()
+		currIdx    int64  = 0
+	)
+
+	// `spec` is a function type implements `TensorIndexer`
+	for _, spec := range indexSpec {
+		var (
+			nextTensor Tensor
+			nextIdx    int64
+		)
+
+		// get info of `spec` function
+		f, err := NewFunc(spec)
+		if err != nil {
+			err = fmt.Errorf("Indexer Func Error: %v\n", err)
+			return retVal, err
+		}
+		//  list of `spec` function input parameters.
+		inArgs := f.Info().InArgs
+
+		// Now, specific indexOp depending on `TensorIndexer` func
+		switch reflect.ValueOf(spec).Kind().String() {
+		case "InsertNewAxis":
+			nextTensor, err = currTensor.Unsqueeze(currIdx)
+			if err != nil {
+				return retVal, err
+			}
+			nextIdx = currIdx + 1
+		case "SelectFn": // 1 param of `(index int64)`
+			indexVal := inArgs[0]
+			index := reflect.ValueOf(indexVal).Interface().(int64)
+			nextTensor, err = currTensor.Select(currIdx, index) // TODO: double-check is `*index` or `index`
+			if err != nil {
+				return retVal, err
+			}
+			nextIdx = currIdx // not advanced because select() squeezes dimension
+		case "NarrowFn": // 2 params: `(start, end int64)`
+			// TODO: implement for `Unbounded`, `Included`, `Excluded` ranges
+			// NOTE: for now, just implement (Included(start), Excluded(end))` case
+			start := reflect.ValueOf(inArgs[0]).Interface().(int64)
+			end := reflect.ValueOf(inArgs[1]).Interface().(int64)
+			nextTensor, err = currTensor.Narrow(currIdx, start, end-start)
+			if err != nil {
+				return retVal, err
+			}
+			nextIdx = currIdx + 1
+		case "IndexSelectFn": // 1 param `(indexTensor Tensor)`
+			indexTensor := reflect.ValueOf(inArgs[0]).Interface().(Tensor)
+			indexTensor, err = indexTensor.ToDevice(currTensor.Device())
+			if err != nil {
+				return retVal, err
+			}
+			nextTensor, err = currTensor.IndexSelect(currIdx, indexTensor)
+			if err != nil {
+				return retVal, err
+			}
+			nextIdx = currIdx + 1
+		}
+
+		currTensor = nextTensor
+		currIdx = nextIdx
+	}
+
+	retVal = currTensor
 
 	return
 }
 
-func (ts *Tensor) mustIndexer(indexSpec []TensorIndexer) (retVal Tensor) {
+func (ts Tensor) mustIndexer(indexSpec []TensorIndexer) (retVal Tensor) {
 	retVal, err := ts.indexer(indexSpec)
 	if err != nil {
 		panic(err)
