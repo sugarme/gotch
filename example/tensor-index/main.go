@@ -1,7 +1,7 @@
 package main
 
 import (
-	wrapper "github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
 	shape := []int64{2, 8}
 	// shape := []int64{2, 2, 4}
 
-	ts, err := wrapper.NewTensorFromData(data, shape)
+	ts, err := tensor.NewTensorFromData(data, shape)
 	if err != nil {
 		panic(err)
 	}
@@ -20,28 +20,28 @@ func main() {
 	ts.Print()
 
 	// Select
-	s := wrapper.NewSelect(7)
+	s := tensor.NewSelect(7)
 	// selectedTs := ts.Idx(s)
 	// selectedTs.Print()
 
 	// Narrow (start inclusive, end exclusive)
-	n := wrapper.NewNarrow(0, 1)
+	n := tensor.NewNarrow(0, 1)
 	// narrowedTs := ts.Idx(n)
 	// narrowedTs.Print()
 
 	// InsertNewAxis
-	// i := wrapper.NewInsertNewAxis()
+	// i := tensor.NewInsertNewAxis()
 	// newAxisTs := ts.Idx(i)
 	// newAxisTs.Print()
 
 	// IndexSelect
-	// idxTensor := wrapper.MustOfSlice([]int64{0, 1})
-	// is := wrapper.NewIndexSelect(idxTensor)
+	// idxTensor := tensor.MustOfSlice([]int64{0, 1})
+	// is := tensor.NewIndexSelect(idxTensor)
 	// isTs := ts.Idx(is)
 	// isTs.Print()
 
 	// Combined
-	var tsIndexes []wrapper.TensorIndexer = []wrapper.TensorIndexer{n, s}
+	var tsIndexes []tensor.TensorIndexer = []tensor.TensorIndexer{n, s}
 	combinedTs := ts.Idx(tsIndexes)
 
 	combinedTs.Print()

@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"log"
 
-	wrapper "github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
-	x := wrapper.TensorFrom([]float64{2.0})
+	x := tensor.TensorFrom([]float64{2.0})
 	x = x.MustSetRequiresGrad(true)
 	x.ZeroGrad()
 
-	xmul := wrapper.TensorFrom([]float64{3.0})
-	xadd := wrapper.TensorFrom([]float64{5.0})
+	xmul := tensor.TensorFrom([]float64{3.0})
+	xadd := tensor.TensorFrom([]float64{5.0})
 
 	x1 := x.MustMul(xmul)
 	x2 := x1.MustMul(xmul)
@@ -21,9 +21,9 @@ func main() {
 
 	y := x3.MustAdd(xadd)
 
-	inputs := []wrapper.Tensor{x}
+	inputs := []tensor.Tensor{x}
 
-	dy_over_dx, err := wrapper.RunBackward([]wrapper.Tensor{y}, inputs, true, true)
+	dy_over_dx, err := tensor.RunBackward([]tensor.Tensor{y}, inputs, true, true)
 	if err != nil {
 		log.Fatal(err)
 	}

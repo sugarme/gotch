@@ -1,4 +1,4 @@
-package wrapper
+package tensor
 
 //#include "stdlib.h"
 //#include "stdbool.h"

@@ -4,16 +4,16 @@ import (
 	"fmt"
 	// "log"
 
-	wrapper "github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
-	x := wrapper.TensorFrom([]float64{2.0})
+	x := tensor.TensorFrom([]float64{2.0})
 	x = x.MustSetRequiresGrad(true)
 	x.ZeroGrad()
 
-	xy := wrapper.TensorFrom([]float64{2.0})
-	xz := wrapper.TensorFrom([]float64{3.0})
+	xy := tensor.TensorFrom([]float64{2.0})
+	xz := tensor.TensorFrom([]float64{3.0})
 
 	y := x.MustMul(xy)
 	z := x.MustMul(xz)
@@ -25,9 +25,9 @@ func main() {
 	xgrad = x.MustGrad()
 	xgrad.Print() // [5.0] due to accumulated 2.0 + 3.0
 
-	isGradEnabled := wrapper.MustGradSetEnabled(false)
+	isGradEnabled := tensor.MustGradSetEnabled(false)
 	fmt.Printf("Previous GradMode enabled state: %v\n", isGradEnabled)
-	isGradEnabled = wrapper.MustGradSetEnabled(true)
+	isGradEnabled = tensor.MustGradSetEnabled(true)
 	fmt.Printf("Previous GradMode enabled state: %v\n", isGradEnabled)
 
 }

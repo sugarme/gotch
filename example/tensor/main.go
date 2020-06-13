@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	gotch "github.com/sugarme/gotch"
-	wrapper "github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
@@ -22,13 +22,13 @@ func main() {
 	// shape := []int64{2, 2, 4}
 
 	// dtype := gotch.Int
-	// ts := wrapper.NewTensor()
+	// ts := tensor.NewTensor()
 	// sliceTensor, err := ts.FOfSlice(data, dtype)
 	// if err != nil {
 	// log.Fatal(err)
 	// }
 
-	ts, err := wrapper.NewTensorFromData(data, shape)
+	ts, err := tensor.NewTensorFromData(data, shape)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,11 +54,11 @@ func main() {
 		{1, 1, 1},
 	}
 
-	xs, err := wrapper.NewTensorFromData(dx, []int64{3, 2})
+	xs, err := tensor.NewTensorFromData(dx, []int64{3, 2})
 	if err != nil {
 		log.Fatal(err)
 	}
-	ys, err := wrapper.NewTensorFromData(dy, []int64{2, 3})
+	ys, err := tensor.NewTensorFromData(dy, []int64{2, 3})
 	if err != nil {
 		log.Fatal(err)
 	}

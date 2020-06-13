@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
 
-	s := wrapper.FloatScalar(float64(1.23))
+	s := tensor.FloatScalar(float64(1.23))
 	fmt.Printf("scalar value: %v\n", s)
 
 	intVal, err := s.ToInt()

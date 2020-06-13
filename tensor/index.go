@@ -1,4 +1,4 @@
-package wrapper
+package tensor
 
 // Indexing operations for tensor
 // It defines a `i` indexing operation. This can be used in various scenarios.

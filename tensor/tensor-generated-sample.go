@@ -1,5 +1,5 @@
 // NOTE: this is a sample for OCaml generated code for `tensor-generated.go`
-package wrapper
+package tensor
 
 // #include "stdlib.h"
 import "C"

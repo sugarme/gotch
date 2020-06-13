@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/sugarme/gotch"
-	wrapper "github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
 
-	ts, err := wrapper.OfSlice([]float64{1.3, 29.7})
+	ts, err := tensor.OfSlice([]float64{1.3, 29.7})
 	if err != nil {
 		panic(err)
 	}
@@ -17,28 +17,28 @@ func main() {
 	path := "file.pt"
 	ts.MustSave(path)
 
-	loadedTs := wrapper.MustLoad(path)
+	loadedTs := tensor.MustLoad(path)
 
 	loadedTs.Print()
 
-	ts1 := wrapper.MustOfSlice([]float64{1.3, 29.7})
-	ts2 := wrapper.MustOfSlice([]float64{2.1, 31.2})
+	ts1 := tensor.MustOfSlice([]float64{1.3, 29.7})
+	ts2 := tensor.MustOfSlice([]float64{2.1, 31.2})
 
-	var namedTensors []wrapper.NamedTensor = []wrapper.NamedTensor{
+	var namedTensors []tensor.NamedTensor = []tensor.NamedTensor{
 		{Name: "ts1", Tensor: ts1},
 		{Name: "ts2", Tensor: ts2},
 	}
 
 	pathMulti := "file_multi.pt"
 
-	err = wrapper.SaveMulti(namedTensors, pathMulti)
+	err = tensor.SaveMulti(namedTensors, pathMulti)
 	if err != nil {
 		panic(err)
 	}
 
-	var data []wrapper.NamedTensor
+	var data []tensor.NamedTensor
 
-	data = wrapper.MustLoadMulti(pathMulti)
+	data = tensor.MustLoadMulti(pathMulti)
 
 	for _, v := range data {
 		v.Tensor.Print()
@@ -46,7 +46,7 @@ func main() {
 
 	device := gotch.NewCuda()
 
-	data = wrapper.MustLoadMultiWithDevice(pathMulti, device)
+	data = tensor.MustLoadMultiWithDevice(pathMulti, device)
 	for _, v := range data {
 		v.Tensor.Print()
 	}
@@ -57,7 +57,7 @@ func main() {
 
 	imagePath := "mnist-sample.png"
 
-	imageTs, err := wrapper.LoadHwc(imagePath)
+	imageTs, err := tensor.LoadHwc(imagePath)
 	if err != nil {
 		panic(err)
 	}

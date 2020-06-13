@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	wrapper "github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
 
-	ts, err := wrapper.OfSlice([]float64{1.3, 29.7})
+	ts, err := tensor.OfSlice([]float64{1.3, 29.7})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,14 +52,14 @@ func main() {
 	atGet = ts.MustGet(0)
 	atGet.Print() // 1.3
 
-	dst, err := wrapper.NewTensorFromData([]int64{1, 2}, []int64{1, 2})
+	dst, err := tensor.NewTensorFromData([]int64{1, 2}, []int64{1, 2})
 	if err != nil {
 		panic(err)
 	}
 
 	dst = dst.MustTotype(ts.DType())
 
-	wrapper.MustCopy_(dst, ts)
+	tensor.MustCopy_(dst, ts)
 	dst.Print()
 
 	ts.MustDrop()

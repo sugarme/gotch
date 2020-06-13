@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	wrapper "github.com/sugarme/gotch/wrapper"
+	"github.com/sugarme/gotch/tensor"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	// data := []int16{1, 1, 1, 2, 2, 2, 3, 3}
 	// shape := []int64{1, 8}
 
-	ts, err := wrapper.NewTensorFromData(data, shape)
+	ts, err := tensor.NewTensorFromData(data, shape)
 	if err != nil {
 		log.Fatal(err)
 	}

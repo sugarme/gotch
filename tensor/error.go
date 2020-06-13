@@ -1,4 +1,4 @@
-package wrapper
+package tensor
 
 // #include <stdlib.h>
 import "C"
