@@ -94,3 +94,25 @@ func AtgIndexSelect(ptr *Ctensor, self Ctensor, dim int64, index Ctensor) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_index_select(ptr, self, cdim, index)
 }
+
+// void atg_zeros(tensor *, int64_t *size_data, int size_len, int options_kind, int options_device);
+func AtgZeros(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind, optionsDevice int32) {
+	// just get pointer of the first element of the shape(sizeData)
+	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	C.atg_zeros(ptr, csizeDataPtr, csizeLen, coptionsKind, coptionsDevice)
+}
+
+// void atg_ones(tensor *, int64_t *size_data, int size_len, int options_kind, int options_device);
+func AtgOnes(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind, optionsDevice int32) {
+	// just get pointer of the first element of the shape(sizeData)
+	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	C.atg_ones(ptr, csizeDataPtr, csizeLen, coptionsKind, coptionsDevice)
+}

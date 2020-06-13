@@ -293,3 +293,31 @@ func (ts Tensor) IndexSelect(dim int64, index Tensor) (retVal Tensor, err error)
 
 	return retVal, nil
 }
+
+func (ts Tensor) Zeros(size []int64, optionsKind, optionsDevice int32) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgZeros(ptr, size, len(size), optionsKind, optionsDevice)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) Ones(size []int64, optionsKind, optionsDevice int32) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgOnes(ptr, size, len(size), optionsKind, optionsDevice)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}

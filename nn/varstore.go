@@ -1,8 +1,9 @@
 package nn
 
 import (
-	// "fmt"
 	"fmt"
+	"log"
+	"strings"
 	"sync"
 
 	"github.com/sugarme/gotch"
@@ -56,6 +57,9 @@ func NewVarStore(device gotch.Device) VarStore {
 	}
 }
 
+// VarStore methods:
+// =================
+
 // Device returns device for this var-store
 func (vs *VarStore) Device() gotch.Device {
 	return vs.device
@@ -64,8 +68,8 @@ func (vs *VarStore) Device() gotch.Device {
 // Len returns the number of tensors currently stored on this var-store
 func (vs *VarStore) Len() (retVal int) {
 	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
 	retVal = len(vs.variables.NamedVariables)
-	vs.variables.mutex.Unlock()
 
 	return retVal
 }
@@ -73,8 +77,8 @@ func (vs *VarStore) Len() (retVal int) {
 // IsEmpty returns true if no tensors are currently stored on this var-store
 func (vs *VarStore) IsEmpty() (retVal bool) {
 	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
 	retVal = (len(vs.variables.NamedVariables) == 0)
-	vs.variables.mutex.Unlock()
 
 	return retVal
 }
@@ -82,8 +86,8 @@ func (vs *VarStore) IsEmpty() (retVal bool) {
 // TrainableVariables returns all trainable variables for this var-store
 func (vs *VarStore) TrainableVariable() (retVal []ts.Tensor) {
 	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
 	retVal = vs.variables.TrainableVariable
-	vs.variables.mutex.Unlock()
 
 	return retVal
 }
@@ -91,8 +95,8 @@ func (vs *VarStore) TrainableVariable() (retVal []ts.Tensor) {
 // Variables returns all variables and their names in a map[variable_name]Tensor
 func (vs *VarStore) Variables() (retVal map[string]ts.Tensor) {
 	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
 	retVal = vs.variables.NamedVariables
-	vs.variables.mutex.Unlock()
 
 	return retVal
 }
@@ -115,12 +119,11 @@ func (vs *VarStore) Root() (retVal Path) {
 // var-store gets saved in the given file.
 func (vs *VarStore) Save(filepath string) (err error) {
 	vs.variables.mutex.Lock()
-	namedTensorsMap := vs.variables.NamedVariables
-	vs.variables.mutex.Unlock()
+	defer vs.variables.mutex.Unlock()
 
 	// Convert map to []NamedTensor
 	var namedTensors []ts.NamedTensor
-	for k, v := range namedTensorsMap {
+	for k, v := range vs.variables.NamedVariables {
 		namedTensors = append(namedTensors, ts.NamedTensor{
 			Name:   k,
 			Tensor: v,
@@ -144,35 +147,18 @@ func (vs *VarStore) Load(filepath string) (err error) {
 		return err
 	}
 
-	var currMap map[string]ts.Tensor
-
 	// Match and in-place copy value (update) from newly loaded tensors
 	// to existing named tensors if name is matched. Throw error otherwise.
 	vs.variables.mutex.Lock()
-	currMap = vs.variables.NamedVariables
-	vs.variables.mutex.Unlock()
+	defer vs.variables.mutex.Unlock()
 
 	for _, namedTs := range namedTensors {
 		var currTs ts.Tensor
 		var ok bool
-		if currTs, ok = currMap[namedTs.Name]; !ok {
+		if currTs, ok = vs.variables.NamedVariables[namedTs.Name]; !ok {
 			err = fmt.Errorf("Cannot find tensor with name: %v in variable store. \n", namedTs.Name)
 			return err
 		}
-
-		// It's matched. Now, copy in-place the loaded tensor value to var-store
-		// TODO: implement it
-		// 1. Copy in-place with `f_copy_` for `currTs`
-		// err = ts.Copy_(currTs, namedTs.Tensor)
-		// if err != nil {
-		// return err
-		// }
-
-		// 2. Call `NoGrad` on newly updated tensor value
-		// err := ts.NoGrad(namedTs.Tensor)
-		// if err != nil {
-		// return err
-		// }
 
 		retValErr, err := ts.NoGrad(ts.Copy_(currTs, namedTs.Tensor))
 		if err != nil {
@@ -185,3 +171,551 @@ func (vs *VarStore) Load(filepath string) (err error) {
 
 	return nil
 }
+
+// LoadPartial loads the var-store variable values from a file if it exists.
+//
+// Weight values for the tensors currently stored in the var-store and the given file get
+// loaded from the given file. If a variable in the var store is not present in the given file,
+// it is skipped and its values are not updated. This method should be used if pre-trained
+// weight for only parts of the model are available.
+// Note that the set of variables stored in the var-store is not changed, only the values
+// for these tensors are modified.
+//
+// Returns a String Vector containing the names of missing variables.
+func (vs *VarStore) LoadPartial(filepath string) (retVal []string, err error) {
+
+	namedTensors, err := ts.LoadMultiWithDevice(filepath, vs.device)
+	if err != nil {
+		return nil, err
+	}
+
+	var missingVariables []string
+
+	// Match and in-place copy value (update) from newly loaded tensors
+	// to existing named tensors if name is matched. Throw error otherwise.
+	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
+
+	for _, namedTs := range namedTensors {
+		var currTs ts.Tensor
+		var ok bool
+		if currTs, ok = vs.variables.NamedVariables[namedTs.Name]; !ok {
+			// missing
+			missingVariables = append(missingVariables, namedTs.Name)
+		}
+
+		// It's matched. Now, copy in-place the loaded tensor value to var-store
+		retValErr, err := ts.NoGrad(ts.Copy_(currTs, namedTs.Tensor))
+		if err != nil {
+			return nil, err
+		}
+		if retValErr != nil {
+			return nil, retValErr.(error)
+		}
+	}
+
+	return missingVariables, nil
+}
+
+// Freeze freezes a var store.
+//
+// Gradients for the variables in this store are not tracked
+// anymore.
+func (vs *VarStore) Freeze() {
+	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
+
+	for _, v := range vs.variables.TrainableVariable {
+		_, err := v.SetRequiresGrad(false)
+		if err != nil {
+			log.Fatalf("Freeze() Error: %v\n", err)
+		}
+	}
+}
+
+// Unfreeze unfreezes a var store.
+//
+// Gradients for the variables in this store are tracked again.
+func (vs *VarStore) Unfreeze() {
+	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
+
+	for _, v := range vs.variables.TrainableVariable {
+		_, err := v.SetRequiresGrad(true)
+		if err != nil {
+			log.Fatalf("Unfreeze() Error: %v\n", err)
+		}
+	}
+}
+
+// Copy copies variable values from a source var store to this var store.
+//
+// All the variables in this var store have to exist with the same
+// name in the source var store, otherwise an error is returned.
+func (vs *VarStore) Copy(src VarStore) (err error) {
+	vs.variables.mutex.Lock()
+	defer vs.variables.mutex.Unlock()
+	src.variables.mutex.Lock()
+	defer src.variables.mutex.Unlock()
+
+	srcNamedVariables := src.variables.NamedVariables
+	device := vs.device
+
+	for k, _ := range vs.variables.NamedVariables {
+		if _, ok := srcNamedVariables[k]; !ok {
+			err = fmt.Errorf("VarStore copy error: cannot find %v in the source var store.\n", k)
+			return err
+		}
+	}
+
+	for k, v := range vs.variables.NamedVariables {
+		srcTs, _ := srcNamedVariables[k]
+		srcDevTs, err := srcTs.To(device)
+		if err != nil {
+			return err
+		}
+		retValErr, err := ts.NoGrad(ts.Copy_(v, srcDevTs))
+		if err != nil {
+			return err
+		}
+		if retValErr != nil {
+			return retValErr.(error)
+		}
+	}
+
+	return nil
+}
+
+// Path methods:
+// =============
+
+// Sub gets a sub-path of the given path.
+func (p *Path) Sub(str string) (retVal Path) {
+
+	if strings.Contains(str, SEP) {
+		log.Fatalf("Sub name cannot contain %v (%v)\n", SEP, str)
+	}
+
+	path := p.path
+	path = append(path, str)
+	return Path{
+		path:     path,
+		varstore: p.varstore,
+	}
+}
+
+// Device gets the device where the var-store variables are stored.
+func (p *Path) Device() gotch.Device {
+
+	return p.varstore.device
+}
+
+// NOTE: Cannot name as `path` as having a field name `path`
+func (p *Path) getpath(name string) (retVal string) {
+
+	if strings.Contains(name, SEP) {
+		log.Fatalf("Sub name cannot contain %v (%v)\n", SEP, name)
+	}
+
+	if len(p.path) == 0 {
+		return name
+	} else {
+		retVal = fmt.Sprintf("%v%v%v", strings.Join(p.path, SEP), SEP, name)
+		return retVal
+	}
+}
+
+func (p *Path) add(name string, newTs ts.Tensor, trainable bool) (retVal ts.Tensor) {
+	path := p.getpath(name)
+
+	p.varstore.variables.mutex.Lock()
+	defer p.varstore.variables.mutex.Unlock()
+
+	if _, ok := p.varstore.variables.NamedVariables[path]; ok {
+		path = fmt.Sprintf("%v__%v", path, len(p.varstore.variables.NamedVariables))
+	}
+
+	var (
+		tensor ts.Tensor
+		err    error
+	)
+	if trainable {
+		tensor, err = newTs.SetRequiresGrad(true)
+		if err != nil {
+			log.Fatalf("Path 'add' method error: %v\n", err)
+		}
+	} else {
+		tensor = newTs
+	}
+
+	if trainable {
+		p.varstore.variables.TrainableVariable = append(p.varstore.variables.TrainableVariable, tensor)
+	}
+
+	p.varstore.variables.NamedVariables[path] = tensor
+
+	return tensor
+}
+
+func (p *Path) getOrAddWithLock(name string, tensor ts.Tensor, trainable bool, variables Variables) (retVal ts.Tensor) {
+	path := p.getpath(name)
+
+	// if found, return it
+	if v, ok := variables.NamedVariables[path]; ok {
+		return v
+	}
+
+	// not found, add it
+	var err error
+	var ttensor ts.Tensor
+	if trainable {
+		ttensor, err = tensor.SetRequiresGrad(true)
+		if err != nil {
+			log.Fatalf("Path - call method 'getOrAddWithLock' error: %v\n", err)
+		}
+	} else {
+		ttensor = tensor
+	}
+
+	if trainable {
+		variables.TrainableVariable = append(variables.TrainableVariable, ttensor)
+	}
+
+	variables.NamedVariables[path] = ttensor
+
+	return ttensor
+}
+
+// ZerosNoTrain creates a new variable initialized with zeros.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable will not be trainable so
+// gradients will not be tracked.
+// The variable uses a float tensor initialized with zeros.
+func (p *Path) ZerosNoTrain(name string, dims []int64) (retVal ts.Tensor) {
+
+	dtype, err := gotch.DType2CInt(gotch.Float) // DType Float
+	device := p.Device().CInt()
+	z, err := ts.Zeros(dims, dtype, device)
+	if err != nil {
+		log.Fatalf("Path - 'ZerosNoTrain' method call error: %v\n", err)
+	}
+
+	return p.add(name, z, false)
+}
+
+// OnesNoTrain creates a new variable initialized with ones.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable will not be trainable so
+// gradients will not be tracked.
+// The variable uses a float tensor initialized with ones.
+func (p *Path) OnesNoTrain(name string, dims []int64) (retVal ts.Tensor) {
+
+	dtype, err := gotch.DType2CInt(gotch.Float) // DType Float
+	device := p.Device().CInt()
+	z, err := ts.Ones(dims, dtype, device)
+	if err != nil {
+		log.Fatalf("Path - 'OnesNoTrain' method call error: %v\n", err)
+	}
+
+	return p.add(name, z, false)
+}
+
+// TODO:
+
+// NewVar creates a new variable.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized as per the
+// related argument.
+func (p *Path) NewVar(name string, dims []int64, init Init) (retVal ts.Tensor) {
+
+	// TODO: implement it
+	// let v = super::init(init, dims, self.device());
+	// self.add(name, v, true)
+
+	return
+}
+
+// Zeros creates a new variable initialized with zeros.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized with zeros.
+func (p *Path) Zeros(name string, dims []int64) (retVal ts.Tensor) {
+
+	// TODO: implement it
+	// self.var(name, dims, Init::Const(0.))
+
+	return
+}
+
+// Ones creates a new variable initialized with ones.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized with ones.
+func (p *Path) Ones(name string, dims []int64) (retVal ts.Tensor) {
+	// TODO: implement it
+	// self.var(name, dims, Init::Const(1.))
+
+	return
+}
+
+// RandnStandard creates a new variable initialized randomly with normal distribution.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized randomly using a
+// standard normal distribution.
+func (p *Path) RandnStandard(name string, dims []int64) (retVal ts.Tensor) {
+	// TODO: implement it
+	// let init = Init::Randn {
+	// mean: 0.,
+	// stdev: 1.,
+	// };
+	// self.var(name, dims, init)
+
+	return
+}
+
+// Randn creates a new variable initialized randomly with normal distribution.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized randomly using a
+// normal distribution with the specified mean and standard deviation.
+func (p *Path) Randn(name string, dims []int64, mean float64, stdev float64) (retVal ts.Tensor) {
+	// TODO: implement it
+	// self.var(name, dims, Init::Randn { mean, stdev })
+
+	return
+}
+
+// Uniform creates a new variable initialized randomly with uniform distribution.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized randomly using a
+// uniform distribution between the specified bounds.
+func (p *Path) Uniform(name string, dims []int64, lo, up float64) (retVal ts.Tensor) {
+	// TODO: implement it
+	// self.var(name, dims, Init::Uniform { lo, up })
+
+	return
+}
+
+// KaimingUniform creates a new variable initialized randomly with kaiming uniform.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized randomly using a
+// uniform distribution which bounds follow Kaiming initialization.
+func (p *Path) Uniform(name string, dims []int64) (retVal ts.Tensor) {
+	// TODO: implement it
+	// self.var(name, dims, Init::KaimingUniform)
+
+	return
+}
+
+// VarCopy creates a new variable initialized by copying an existing tensor.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable is trainable, its gradient
+// will be tracked.
+// The variable uses a float tensor initialized by copying some
+// given tensor.
+func (p *Path) VarCopy(name string, t ts.Tensor) (retVal ts.Tensor) {
+
+	size, err := t.Size()
+	if err != nil {
+		log.Fatalf("Path - VarCopy method call error: %v\n", err)
+	}
+	v := p.Zeros(name, size)
+
+	retValErr, err := ts.NoGrad(ts.Copy_(v, t))
+	if err != nil {
+		return err
+	}
+	if retValErr != nil {
+		return retValErr.(error)
+	}
+
+	return v
+}
+
+// Get gets the tensor corresponding to a given name if present.
+func (p *Path) Get(name string) (retVal ts.Tensor, err error) {
+	path := p.path(name)
+
+	p.varstore.variables.mutex.Lock()
+	defer p.varstore.variables.mutex.Unlock()
+
+	v, ok := p.varstore.variables.NamedVariables[path]
+	if !ok {
+		err = fmt.Errorf("Path - Get method call error: Cannot find variable for name: %v\n", path)
+		return retVal, err
+	}
+
+	return v.ShallowClone()
+}
+
+// Entry gets the entry corresponding to a given name for in-place manipulation.
+func (p *Path) Entry(name string) (retVal Entry) {
+	p.varstore.variables.mutex.Lock()
+	defer p.varstore.variables.mutex.Unlock()
+
+	return Entry{
+		name:      name,
+		variables: p.varstore.variables,
+		path:      &p,
+	}
+}
+
+// Entry methods:
+// ==============
+
+// OrVar returns the existing entry if, otherwise create a new variable.
+//
+// If this entry name matches the name of a variables stored in the
+// var store, the corresponding tensor is returned. Otherwise a new
+// variable is added to the var-store with the entry name and is
+// initialized according to the init parameter.
+func (e *Entry) OrVar(dims []int64, init Init) (retVal ts.Tensor) {
+	// TODO: implement it
+	// let v = super::init(init, dims, self.path.device());
+	// self.path
+	// .get_or_add_with_lock(self.name, v, true, self.variables)
+
+	return
+}
+
+// Returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrVarCopy(tensor ts.Tensor) (retVal ts.Tensor) {
+
+	size, err := tensor.Size()
+	if err != nil {
+		log.Fatalf("Entry - OrVarCopy method call error: %v\n", err)
+	}
+	v := e.OrZeros(size)
+
+	retValErr, err := ts.NoGrad(ts.Copy_(v, tensor))
+	if err != nil {
+		return err
+	}
+	if retValErr != nil {
+		return retValErr.(error)
+	}
+
+	return v
+}
+
+// Returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrKaimingUniform(dims []int64) (retVal ts.Tensor) {
+	// TODO: implement
+	// self.or_var(dims, Init::KaimingUniform)
+
+	return
+}
+
+// OrOnes returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrOnes(dims []int64) (retVal ts.Tensor) {
+	// TODO: implement
+	// self.or_var(dims, Init::Const(1.))
+
+	return
+}
+
+// OrOnesNoTrain returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrOnesNoTrain(dims []int64) (retVal ts.Tensor) {
+	// TODO: implement
+	/* let o = Tensor::ones(dims, (Kind::Float, self.path.device()));
+	 * self.path
+	 *     .get_or_add_with_lock(self.name, o, true, self.variables) */
+
+	return
+}
+
+// OrRandn returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrRandn(dims []int64, mean, stdev float64) (retVal ts.Tensor) {
+	// TODO: implement
+	// self.or_var(dims, Init::Randn { mean, stdev })
+
+	return
+}
+
+// OrRandnStandard returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrRandnStandard(dims []int64) (retVal ts.Tensor) {
+	// TODO: implement
+	/*         let init = Init::Randn {
+	 *             mean: 0.,
+	 *             stdev: 1.,
+	 *         };
+	 *         self.or_var(dims, init)
+	 *  */
+	return
+}
+
+// OrUniform returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrUniform(dims []int64, lo, up float64) (retVal ts.Tensor) {
+	// TODO: implement
+	// self.or_var(dims, Init::Uniform { lo, up })
+
+	return
+}
+
+// OrZeros returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrZeros(dims []int64) (retVal ts.Tensor) {
+	// TODO: implement
+	// self.or_var(dims, Init::Const(0.))
+
+	return
+}
+
+// OrZerosNoTrain returns the existing entry if, otherwise create a new variable.
+func (e *Entry) OrZerosNoTrain(dims []int64) (retVal ts.Tensor) {
+	// TODO: implement
+	/*
+	 *         let z = Tensor::zeros(dims, (Kind::Float, self.path.device()));
+	 *         self.path
+	 *             .get_or_add_with_lock(self.name, z, true, self.variables)
+	 *
+	 *  */
+	return
+}
+
+// TODO: can we implement `Div` operator in Go?
+// NOTE: `Rhs` (right hand side) is a generic type parameter
+// If not given, it will be default to `self` type
+/*
+ * impl<'a, T> Div<T> for &'a mut Path<'a>
+ * where
+ *     T: std::string::ToString,
+ * {
+ *     type Output = Path<'a>;
+ *
+ *     fn div(self, rhs: T) -> Self::Output {
+ *         self.sub(rhs.to_string())
+ *     }
+ * }
+ *
+ * impl<'a, T> Div<T> for &'a Path<'a>
+ * where
+ *     T: std::string::ToString,
+ * {
+ *     type Output = Path<'a>;
+ *
+ *     fn div(self, rhs: T) -> Self::Output {
+ *         self.sub(rhs.to_string())
+ *     }
+ * }
+ *  */
