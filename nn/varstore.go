@@ -153,7 +153,9 @@ func (vs *VarStore) Load(filepath string) (err error) {
 	vs.variables.mutex.Unlock()
 
 	for _, namedTs := range namedTensors {
-		if currTs, ok := currMap[namedTs.Name]; !ok {
+		var currTs ts.Tensor
+		var ok bool
+		if currTs, ok = currMap[namedTs.Name]; !ok {
 			err = fmt.Errorf("Cannot find tensor with name: %v in variable store. \n", namedTs.Name)
 			return err
 		}
@@ -161,12 +163,24 @@ func (vs *VarStore) Load(filepath string) (err error) {
 		// It's matched. Now, copy in-place the loaded tensor value to var-store
 		// TODO: implement it
 		// 1. Copy in-place with `f_copy_` for `currTs`
-
-		// 2. Call `NoGrad` on newly updated tensor value
-		// noGradTs, err := ts.NoGrad(namedTs.Tensor)
+		// err = ts.Copy_(currTs, namedTs.Tensor)
 		// if err != nil {
 		// return err
 		// }
+
+		// 2. Call `NoGrad` on newly updated tensor value
+		// err := ts.NoGrad(namedTs.Tensor)
+		// if err != nil {
+		// return err
+		// }
+
+		retValErr, err := ts.NoGrad(ts.Copy_(currTs, namedTs.Tensor))
+		if err != nil {
+			return err
+		}
+		if retValErr != nil {
+			return retValErr.(error)
+		}
 	}
 
 	return nil
