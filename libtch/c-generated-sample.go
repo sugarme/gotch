@@ -116,3 +116,26 @@ func AtgOnes(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind, optionsDe
 
 	C.atg_ones(ptr, csizeDataPtr, csizeLen, coptionsKind, coptionsDevice)
 }
+
+// void atg_uniform_(tensor *, tensor self, double from, double to);
+func AtgUniform_(ptr *Ctensor, self Ctensor, from float64, to float64) {
+	cfrom := *(*C.double)(unsafe.Pointer(&from))
+	cto := *(*C.double)(unsafe.Pointer(&to))
+
+	C.atg_uniform_(ptr, self, cfrom, cto)
+}
+
+// void atg_zeros_like(tensor *, tensor self);
+func AtgZerosLike(ptr *Ctensor, self Ctensor) {
+	C.atg_zeros_like(ptr, self)
+}
+
+// void atg_fill_(tensor *, tensor self, scalar value);
+func AtgFill_(ptr *Ctensor, self Ctensor, value Cscalar) {
+	C.atg_fill_(ptr, self, value)
+}
+
+// void atg_randn_like(tensor *, tensor self);
+func AtgRandnLike(ptr *Ctensor, self Ctensor) {
+	C.atg_rand_like(ptr, self)
+}

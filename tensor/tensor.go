@@ -311,7 +311,7 @@ func (ts Tensor) Eq1(other Tensor) (retVal Tensor, err error) {
 
 }
 
-// DoubleValue returns a float value on tensors holding a single element.
+// Float64Value returns a float value on tensors holding a single element.
 // An error is returned otherwise.
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
 func (ts Tensor) Float64Value(idx []int64) (retVal float64, err error) {
@@ -630,20 +630,22 @@ func (ts Tensor) MustGet(index int) (retVal Tensor) {
 }
 
 // Copy_ copies in-place values from the argument tensor to the input tensor.
-func Copy_(self, src Tensor) (err error) {
+func Copy_(self, src Tensor) {
+	var err error
 	lib.AtCopy_(self.ctensor, src.ctensor)
 
 	if err = TorchErr(); err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	return nil
 }
 
-// MustCopy_ copies in-place values from the argument tensor to the input tensor.
-// It will panic if error occurred.
-func MustCopy_(self, src Tensor) {
-	if err := Copy_(self, src); err != nil {
+// Copy_ copies in-place values from the argument tensor to existing tensor
+func (ts Tensor) Copy_(src Tensor) {
+	var err error
+	lib.AtCopy_(ts.ctensor, src.ctensor)
+
+	if err = TorchErr(); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -321,3 +321,54 @@ func (ts Tensor) Ones(size []int64, optionsKind, optionsDevice int32) (retVal Te
 
 	return retVal, nil
 }
+
+// NOTE: `_` denotes "in-place".
+func (ts Tensor) Uniform_(from float64, to float64) {
+	var err error
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgUniform_(ptr, ts.ctensor, from, to)
+	if err = TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (ts Tensor) ZerosLike() (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgZerosLike(ptr, ts.ctensor)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) Fill_(value Scalar) {
+	var err error
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+	lib.AtgFill_(ptr, ts.ctensor, value.cscalar)
+
+	if err = TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (ts Tensor) RandnLike() (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgRandnLike(ptr, ts.ctensor)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
