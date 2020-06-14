@@ -139,3 +139,55 @@ func AtgFill_(ptr *Ctensor, self Ctensor, value Cscalar) {
 func AtgRandnLike(ptr *Ctensor, self Ctensor) {
 	C.atg_rand_like(ptr, self)
 }
+
+// void atg_log_softmax(tensor *, tensor self, int64_t dim, int dtype);
+func AtgLogSoftmax(ptr *Ctensor, self Ctensor, dim int64, dtype int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+
+	C.atg_log_softmax(ptr, self, cdim, cdtype)
+}
+
+// void atg_nll_loss(tensor *, tensor self, tensor target, tensor weight, int64_t reduction, int64_t ignore_index);
+func AtgNllLoss(ptr *Ctensor, self Ctensor, target Ctensor, weight Ctensor, reduction int64, ignoreIndex int64) {
+	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
+	cignoreIndex := *(*C.int64_t)(unsafe.Pointer(&ignoreIndex))
+
+	C.atg_nll_loss(ptr, self, target, weight, creduction, cignoreIndex)
+}
+
+// void atg_argmax(tensor *, tensor self, int64_t dim, int keepdim);
+func AtgArgmax(ptr *Ctensor, self Ctensor, dim int64, keepDim int) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	ckeepDim := *(*C.int)(unsafe.Pointer(&keepDim))
+
+	C.atg_argmax(ptr, self, cdim, ckeepDim)
+}
+
+// void atg_mean(tensor *, tensor self, int dtype);
+func AtgMean(ptr *Ctensor, self Ctensor, dtype int32) {
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+
+	C.atg_mean(ptr, self, cdtype)
+}
+
+// void atg_permute(tensor *, tensor self, int64_t *dims_data, int dims_len);
+func AtgPermute(ptr *Ctensor, self Ctensor, dims []int64, dimLen int) {
+	// just get pointer of the first element of the shape
+	cdimsPtr := (*C.int64_t)(unsafe.Pointer(&dims[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+
+	C.atg_permute(ptr, self, cdimsPtr, cdimLen)
+}
+
+// void atg_squeeze1(tensor *, tensor self, int64_t dim);
+func AtgSqueeze1(ptr *Ctensor, self Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+
+	C.atg_squeeze1(ptr, self, cdim)
+}
+
+// void atg_squeeze_(tensor *, tensor self);
+func AtgSqueeze1_(ptr *Ctensor, self Ctensor) {
+	C.atg_squeeze_(ptr, self)
+}

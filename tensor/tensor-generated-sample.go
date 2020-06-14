@@ -28,6 +28,16 @@ func (ts Tensor) To(device gt.Device) (retVal Tensor, err error) {
 	return Tensor{ctensor: *ptr}, nil
 }
 
+func (ts Tensor) MustTo(device gt.Device) (retVal Tensor) {
+	var err error
+	retVal, err = ts.To(device)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 func (ts Tensor) Matmul(other Tensor) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
@@ -371,4 +381,55 @@ func (ts Tensor) RandnLike() (retVal Tensor, err error) {
 	retVal = Tensor{ctensor: *ptr}
 
 	return retVal, nil
+}
+
+func (ts Tensor) Permute(dims []int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgPermute(ptr, ts.ctensor, dims)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) Squeeze1(dim int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgSqueeze1(ptr, ts.ctensor, dim)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSqueeze1(dim int64) (retVal Tensor) {
+	var err error
+	retVal, err = ts.Squeeze1(dim)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
+}
+
+func (ts Tensor) Squeeze_() {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgSqueeze_(ptr, ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+	return nil
 }

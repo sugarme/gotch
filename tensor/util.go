@@ -461,3 +461,12 @@ func (f *Func) Invoke() interface{} {
 	// How do we match them to output order of signature function
 	return f.val.Call(f.meta.InArgs)
 }
+
+// Must is a helper to unwrap function it wraps. If having error,
+// it will cause panic.
+func Must(ts Tensor, err error) (retVal Tensor) {
+	if err != nil {
+		panic(err)
+	}
+	return ts
+}
