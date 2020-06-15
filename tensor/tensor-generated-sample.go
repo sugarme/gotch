@@ -304,7 +304,7 @@ func (ts Tensor) IndexSelect(dim int64, index Tensor) (retVal Tensor, err error)
 	return retVal, nil
 }
 
-func (ts Tensor) Zeros(size []int64, optionsKind, optionsDevice int32) (retVal Tensor, err error) {
+func Zeros(size []int64, optionsKind, optionsDevice int32) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 
@@ -318,7 +318,15 @@ func (ts Tensor) Zeros(size []int64, optionsKind, optionsDevice int32) (retVal T
 	return retVal, nil
 }
 
-func (ts Tensor) Ones(size []int64, optionsKind, optionsDevice int32) (retVal Tensor, err error) {
+func MustZeros(size []int64, optionsKind, optionsDevice int32) (retVal Tensor) {
+	retVal, err := Zeros(size, optionsKind, optionsDevice)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
+}
+
+func Ones(size []int64, optionsKind, optionsDevice int32) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 
@@ -330,6 +338,14 @@ func (ts Tensor) Ones(size []int64, optionsKind, optionsDevice int32) (retVal Te
 	retVal = Tensor{ctensor: *ptr}
 
 	return retVal, nil
+}
+
+func MustOnes(size []int64, optionsKind, optionsDevice int32) (retVal Tensor) {
+	retVal, err := Ones(size, optionsKind, optionsDevice)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
 }
 
 // NOTE: `_` denotes "in-place".

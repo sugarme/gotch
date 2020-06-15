@@ -2,6 +2,7 @@ package gotch
 
 import (
 	"fmt"
+	"log"
 	// "log"
 	"reflect"
 )
@@ -99,6 +100,15 @@ func DType2CInt(dt DType) (retVal CInt, err error) {
 	retVal = dtypeCInt[dt]
 
 	return retVal, nil
+}
+
+func (dt DType) CInt() (retVal CInt) {
+	retVal, err := DType2CInt(dt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
 
 func CInt2DType(v CInt) (dtype DType, err error) {
