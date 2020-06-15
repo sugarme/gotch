@@ -57,9 +57,24 @@ func AtgMul(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_mul(ptr, self, other)
 }
 
+// void atg_mul_(tensor *, tensor self, tensor other);
+func AtgMul_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_mul_(ptr, self, other)
+}
+
+// void atg_mul1(tensor *, tensor self, scalar other);
+func AtgMul1(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_mul1(ptr, self, other)
+}
+
 // void atg_add(tensor *, tensor self, tensor other);
 func AtgAdd(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_add(ptr, self, other)
+}
+
+// void atg_add_(tensor *, tensor self, tensor other);
+func AtgAdd_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_add_(ptr, self, other)
 }
 
 // void atg_totype(tensor *, tensor self, int scalar_type);
@@ -199,4 +214,22 @@ func AtgStack(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int, dim int64) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 
 	C.atg_stack(ptr, tensorsDataPtr, ctensorsLen, cdim)
+}
+
+// void atg_mm(tensor *, tensor self, tensor mat2);
+func AtgMm(ptr *Ctensor, self Ctensor, mat2 Ctensor) {
+	C.atg_mm(ptr, self, mat2)
+}
+
+// void atg_view(tensor *, tensor self, int64_t *size_data, int size_len);
+func AtgView(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int) {
+	sizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+
+	C.atg_view(ptr, self, sizeDataPtr, csizeLen)
+}
+
+// void atg_div1(tensor *, tensor self, scalar other);
+func AtgDiv1(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_div1(ptr, self, other)
 }

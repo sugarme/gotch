@@ -101,25 +101,23 @@ func (ts Tensor) MustDetach_() (retVal Tensor) {
 	return retVal
 }
 
-func (ts Tensor) Zero_() (retVal Tensor, err error) {
+func (ts Tensor) Zero_() (err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 	lib.AtgZero_(ptr, ts.ctensor)
 
 	if err = TorchErr(); err != nil {
-		return retVal, err
+		return err
 	}
 
-	return Tensor{ctensor: *ptr}, nil
+	return nil
 }
 
-func (ts Tensor) MustZero_() (retVal Tensor) {
-	retVal, err := ts.Zero_()
+func (ts Tensor) MustZero_() {
+	err := ts.Zero_()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	return retVal
 }
 
 func (ts Tensor) SetRequiresGrad(rb bool) (retVal Tensor, err error) {
@@ -170,6 +168,46 @@ func (ts Tensor) MustMul(other Tensor) (retVal Tensor) {
 	return retVal
 }
 
+func (ts Tensor) Mul1(other Scalar) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+	lib.AtgMul1(ptr, ts.ctensor, other.cscalar)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return Tensor{ctensor: *ptr}, nil
+}
+
+func (ts Tensor) MustMul1(other Scalar) (retVal Tensor) {
+	retVal, err := ts.Mul1(other)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Mul_(other Tensor) (err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+	lib.AtgMul_(ptr, ts.ctensor, other.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ts Tensor) MustMul_(other Tensor) {
+	err := ts.Mul_(other)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func (ts Tensor) Add(other Tensor) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
@@ -189,6 +227,26 @@ func (ts Tensor) MustAdd(other Tensor) (retVal Tensor) {
 	}
 
 	return retVal
+}
+
+func (ts Tensor) Add_(other Tensor) (err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+	lib.AtgAdd_(ptr, ts.ctensor, other.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (ts Tensor) MustAdd_(other Tensor) {
+	err := ts.Add_(other)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (ts Tensor) AddG(other Tensor) (err error) {
@@ -467,4 +525,175 @@ func Stack(tensors []Tensor, dim int64) (retVal Tensor, err error) {
 	retVal = Tensor{ctensor: *ptr}
 
 	return retVal, nil
+}
+
+func (ts Tensor) Mm(mat2 Tensor) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgMm(ptr, ts.ctensor, mat2.ctensor)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustMm(mat2 Tensor) (retVal Tensor) {
+	retVal, err := ts.Mm(mat2)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) LogSoftmax(dim int64, dtype int32) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgLogSoftmax(ptr, ts.ctensor, dim, dtype)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustLogSoftmax(dim int64, dtype int32) (retVal Tensor) {
+	retVal, err := ts.LogSoftmax(dim, dtype)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) NllLoss(target Tensor) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	weight := NewTensor()
+
+	reduction := int64(1) // Mean of loss
+	ignoreIndex := int64(-100)
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgNllLoss(ptr, ts.ctensor, target.ctensor, weight.ctensor, reduction, ignoreIndex)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustNllLoss(target Tensor) (retVal Tensor) {
+	retVal, err := ts.NllLoss(target)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Argmax(dim int64, keepDim bool) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	var ckeepDim int = 0
+	if keepDim {
+		ckeepDim = 1
+	}
+
+	lib.AtgArgmax(ptr, ts.ctensor, dim, ckeepDim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustArgmax(dim int64, keepDim bool) (retVal Tensor) {
+	retVal, err := ts.Argmax(dim, keepDim)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Mean(dtype int32) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgMean(ptr, ts.ctensor, dtype)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustMean(dtype int32) (retVal Tensor) {
+	retVal, err := ts.Mean(dtype)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) View(sizeData []int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgView(ptr, ts.ctensor, sizeData, len(sizeData))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustView(sizeData []int64) (retVal Tensor) {
+	retVal, err := ts.View(sizeData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Div1(other Scalar) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgDiv1(ptr, ts.ctensor, other.cscalar)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustDiv1(other Scalar) (retVal Tensor) {
+	retVal, err := ts.Div1(other)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }

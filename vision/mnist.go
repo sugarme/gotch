@@ -6,123 +6,126 @@ package vision
 // http://yann.lecun.com/exdb/mnist/
 
 import (
-	"encoding/binary"
-	"io"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
 )
 
-// Image holds the pixel intensities of an image.
-// 255 is foreground (black), 0 is background (white).
-type RawImage []byte
-
-const numLabels = 10
-const pixelRange = 255
-
-const (
-	imageMagic = 0x00000803
-	labelMagic = 0x00000801
-	// Width of the input tensor / picture
-	Width = 28
-	// Height of the input tensor / picture
-	Height = 28
-)
-
-func readLabels(r io.Reader, e error) (retVal ts.Tensor) {
-	if e != nil {
-		log.Fatalf("readLabels errors: %v\n", e)
+// readInt32 read 4 bytes and convert to MSB first (big endian) interger.
+func readInt32(f *os.File) (retVal int, err error) {
+	buf := make([]byte, 4)
+	n, err := f.Read(buf)
+	switch {
+	case err != nil:
+		return 0, err
+	case n != 4:
+		err = fmt.Errorf("Invalid format: %v", f.Name())
+		return 0, err
 	}
 
-	var (
-		magic int32
-		n     int32
-		err   error
-	)
-
-	// Check magic number
-	if err = binary.Read(r, binary.BigEndian, &magic); err != nil {
-		log.Fatalf("readLabels - binary.Read error: %v\n", err)
-	}
-	if magic != labelMagic {
-		log.Fatal(os.ErrInvalid)
+	// flip to big endian
+	var v int = 0
+	for _, i := range buf {
+		v = v*256 + int(i)
 	}
 
-	// Now decode number
-	if err = binary.Read(r, binary.BigEndian, &n); err != nil {
-		log.Fatalf("readLabels - binary.Read error: %v\n", err)
-	}
+	return v, nil
+}
 
-	// label is a digit number range 0 - 9
-	labels := make([]uint8, n)
-	for i := 0; i < int(n); i++ {
-		var l uint8
-		if err := binary.Read(r, binary.BigEndian, &l); err != nil {
-			log.Fatalf("readLabels - binary.Read error: %v\n", err)
-		}
-		labels[i] = l
-	}
-
-	retVal, err = ts.OfSlice(labels)
+// checkMagicNumber checks the magic number located at the first 4 bytes of
+// mnist files.
+func checkMagicNumber(f *os.File, wantNumber int) (err error) {
+	gotNumber, err := readInt32(f)
 	if err != nil {
-		log.Fatalf("readLabels - ts.OfSlice error: %v\n", err)
+		return err
 	}
+
+	if gotNumber != wantNumber {
+		err = fmt.Errorf("incorrect magic number: got %v want %v\n", gotNumber, wantNumber)
+		return err
+	}
+
+	return nil
+}
+
+func readLabels(filename string) (retVal ts.Tensor) {
+
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("readLabels errors: %v\n", err)
+	}
+	defer f.Close()
+
+	if err = checkMagicNumber(f, 2049); err != nil {
+		log.Fatal(err)
+	}
+
+	samples, err := readInt32(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var data []uint8 = make([]uint8, samples)
+	len, err := f.Read(data)
+	if err != nil || len != samples {
+		err = fmt.Errorf("invalid format %v", f.Name())
+		log.Fatal(err)
+	}
+
+	labelsTs, err := ts.OfSlice(data)
+	if err != nil {
+		err = fmt.Errorf("create label tensor err.")
+		log.Fatal(err)
+	}
+
+	retVal = labelsTs.MustTotype(gotch.Int64)
 
 	return retVal
 }
 
-func readImages(r io.Reader, e error) (retVal ts.Tensor) {
-	if e != nil {
-		log.Fatalf("readLabels errors: %v\n", e)
-	}
-
-	var (
-		magic int32
-		n     int32
-		nrow  int32
-		ncol  int32
-		err   error
-	)
-
-	// Check magic number
-	if err = binary.Read(r, binary.BigEndian, &magic); err != nil {
-		log.Fatalf("readImages - binary.Read error: %v\n", err)
-	}
-
-	if magic != imageMagic {
-		log.Fatalf("readImages - incorrect imageMagic: %v\n", err) // err is os.ErrInvalid
-	}
-
-	// Now, decode image
-	if err = binary.Read(r, binary.BigEndian, &n); err != nil {
-		log.Fatalf("readImages - binary.Read error: %v\n", err)
-	}
-	if err = binary.Read(r, binary.BigEndian, &nrow); err != nil {
-		log.Fatalf("readImages - binary.Read error: %v\n", err)
-	}
-	if err = binary.Read(r, binary.BigEndian, &ncol); err != nil {
-		log.Fatalf("readImages - binary.Read error: %v\n", err)
-	}
-
-	imgs := make([]RawImage, n)
-	m := int(nrow * ncol)
-	for i := 0; i < int(n); i++ {
-		imgs[i] = make(RawImage, m)
-		m_, err := io.ReadFull(r, imgs[i])
-		if err != nil {
-			log.Fatalf("readImages - io.ReadFull error: %v\n", err)
-		}
-		if m_ != int(m) {
-			log.Fatalf("readImages - image matrix size mismatched error: %v\n", os.ErrInvalid)
-		}
-	}
-
-	retVal, err = ts.NewTensorFromData(imgs, []int64{int64(n), int64(nrow * ncol)})
+func readImages(filename string) (retVal ts.Tensor) {
+	f, err := os.Open(filename)
 	if err != nil {
-		log.Fatalf("readImages - ts.NewTensorFromData error: %v\n", err)
+		log.Fatalf("readImages errors: %v\n", err)
 	}
+	defer f.Close()
+
+	if err = checkMagicNumber(f, 2051); err != nil {
+		log.Fatal(err)
+	}
+
+	samples, err := readInt32(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rows, err := readInt32(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cols, err := readInt32(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dataLen := samples * rows * cols
+	var data []uint8 = make([]uint8, dataLen)
+	len, err := f.Read(data)
+	if err != nil || len != dataLen {
+		err = fmt.Errorf("invalid format %v", f.Name())
+		log.Fatal(err)
+	}
+
+	imagesTs, err := ts.OfSlice(data)
+	if err != nil {
+		err = fmt.Errorf("create images tensor err.")
+		log.Fatal(err)
+	}
+	retVal = imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}).MustTotype(gotch.Float).MustDiv1(ts.FloatScalar(255.0))
 
 	return retVal
 }
@@ -141,10 +144,10 @@ func LoadMNISTDir(dir string) (retVal Dataset) {
 	testLabelsFile := filepath.Join(dir, testLabels)
 	testImagesFile := filepath.Join(dir, testImages)
 
-	trainImagesTs := readImages(os.Open(trainImagesFile))
-	trainLabelsTs := readLabels(os.Open(trainLabelsFile))
-	testImagesTs := readImages(os.Open(testImagesFile))
-	testLabelsTs := readLabels(os.Open(testLabelsFile))
+	trainImagesTs := readImages(trainImagesFile)
+	trainLabelsTs := readLabels(trainLabelsFile)
+	testImagesTs := readImages(testImagesFile)
+	testLabelsTs := readLabels(testLabelsFile)
 
 	return Dataset{
 		TrainImages: trainImagesTs,

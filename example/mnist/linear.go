@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
@@ -27,21 +26,32 @@ func runLinear() {
 	fmt.Printf("Test label size: %v\n", ds.TestLabels.MustSize())
 
 	device := (gotch.CPU).CInt()
-	dtype := (gotch.Double).CInt()
+	dtype := (gotch.Float).CInt()
 
 	ws := ts.MustZeros([]int64{ImageDim, Label}, dtype, device).MustSetRequiresGrad(true)
-
 	bs := ts.MustZeros([]int64{Label}, dtype, device).MustSetRequiresGrad(true)
 
-	fmt.Println(ws.MustSize())
-	fmt.Println(bs.MustSize())
-
 	for epoch := 0; epoch < epochs; epoch++ {
-	}
-}
+		logits := ds.TrainImages.MustMm(ws).MustAdd(bs)
+		loss := logits.MustLogSoftmax(-1, dtype).MustNllLoss(ds.TrainLabels)
 
-func handleError(err error) {
-	if err != nil {
-		log.Fatal(err)
+		ws.ZeroGrad()
+		bs.ZeroGrad()
+		loss.Backward()
+
+		wsGrad := ws.MustGrad().MustMul1(ts.FloatScalar(-1.0))
+		bsGrad := bs.MustGrad().MustMul1(ts.FloatScalar(-1.0))
+
+		wsClone := ws.MustShallowClone()
+		bsClone := bs.MustShallowClone()
+
+		// wsClone.MustAdd_(wsGrad)
+		// bsClone.MustAdd_(bsGrad)
+
+		testLogits := ds.TestImages.MustMm(wsClone.MustAdd(wsGrad)).MustAdd(bsClone.MustAdd(bsGrad))
+		testAccuracy := testLogits.MustArgmax(-1, false).MustEq1(ds.TestLabels).MustTotype(gotch.Float).MustMean(gotch.Float.CInt()).MustView([]int64{-1}).MustFloat64Value([]int64{0})
+
+		fmt.Printf("Epoch: %v - Train loss: %v - Test accuracy: %v\n", epoch, loss.MustView([]int64{-1}).MustFloat64Value([]int64{0}), testAccuracy*100)
+
 	}
 }

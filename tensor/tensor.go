@@ -311,6 +311,15 @@ func (ts Tensor) Eq1(other Tensor) (retVal Tensor, err error) {
 
 }
 
+func (ts Tensor) MustEq1(other Tensor) (retVal Tensor) {
+	retVal, err := ts.Eq1(other)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 // Float64Value returns a float value on tensors holding a single element.
 // An error is returned otherwise.
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
@@ -328,6 +337,14 @@ func (ts Tensor) Float64Value(idx []int64) (retVal float64, err error) {
 	}
 
 	return retVal, err
+}
+
+func (ts Tensor) MustFloat64Value(idx []int64) (retVal float64) {
+	retVal, err := ts.Float64Value(idx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
 }
 
 // Int64Value returns an int value on tensors holding a single element. An error is
