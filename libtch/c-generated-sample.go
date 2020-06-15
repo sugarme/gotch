@@ -188,6 +188,15 @@ func AtgSqueeze1(ptr *Ctensor, self Ctensor, dim int64) {
 }
 
 // void atg_squeeze_(tensor *, tensor self);
-func AtgSqueeze1_(ptr *Ctensor, self Ctensor) {
+func AtgSqueeze_(ptr *Ctensor, self Ctensor) {
 	C.atg_squeeze_(ptr, self)
+}
+
+// void atg_stack(tensor *, tensor *tensors_data, int tensors_len, int64_t dim);
+func AtgStack(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int, dim int64) {
+	tensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+
+	C.atg_stack(ptr, tensorsDataPtr, ctensorsLen, cdim)
 }

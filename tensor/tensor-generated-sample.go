@@ -387,7 +387,7 @@ func (ts Tensor) Permute(dims []int64) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 
-	lib.AtgPermute(ptr, ts.ctensor, dims)
+	lib.AtgPermute(ptr, ts.ctensor, dims, len(dims))
 
 	if err = TorchErr(); err != nil {
 		return retVal, err
@@ -423,6 +423,7 @@ func (ts Tensor) MustSqueeze1(dim int64) (retVal Tensor) {
 }
 
 func (ts Tensor) Squeeze_() {
+	var err error
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 
@@ -431,5 +432,23 @@ func (ts Tensor) Squeeze_() {
 	if err = TorchErr(); err != nil {
 		log.Fatal(err)
 	}
-	return nil
+}
+
+func Stack(tensors []Tensor, dim int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	var ctensors []lib.Ctensor
+	for _, t := range tensors {
+		ctensors = append(ctensors, t.ctensor)
+	}
+
+	lib.AtgStack(ptr, ctensors, len(tensors), dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
 }
