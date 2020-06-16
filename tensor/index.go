@@ -248,7 +248,7 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 	// `spec` is a function type implements `TensorIndexer`
 	for _, spec := range indexSpec {
 
-		fmt.Printf("spec type: %v\n", reflect.TypeOf(spec).Name())
+		// fmt.Printf("spec type: %v\n", reflect.TypeOf(spec).Name())
 
 		switch reflect.TypeOf(spec).Name() {
 		case "InsertNewAxis":
@@ -290,8 +290,6 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 			}
 			nextIdx = currIdx + 1
 		} // end of switch
-
-		currTensor.Print()
 
 		currTensor = nextTensor
 		currIdx = nextIdx

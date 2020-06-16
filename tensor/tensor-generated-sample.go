@@ -8,11 +8,11 @@ import (
 	"log"
 	"unsafe"
 
-	gt "github.com/sugarme/gotch"
+	"github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
 )
 
-func (ts Tensor) To(device gt.Device) (retVal Tensor, err error) {
+func (ts Tensor) To(device gotch.Device) (retVal Tensor, err error) {
 
 	// TODO: how to get pointer to CUDA memory???
 	// C.cuMemAlloc((*C.ulonglong)(cudaPtr), 1) // 0 byte is invalid
@@ -28,7 +28,7 @@ func (ts Tensor) To(device gt.Device) (retVal Tensor, err error) {
 	return Tensor{ctensor: *ptr}, nil
 }
 
-func (ts Tensor) MustTo(device gt.Device) (retVal Tensor) {
+func (ts Tensor) MustTo(device gotch.Device) (retVal Tensor) {
 	var err error
 	retVal, err = ts.To(device)
 	if err != nil {
@@ -271,10 +271,10 @@ func (ts Tensor) MustAddG(other Tensor) {
 }
 
 // Totype casts type of tensor to a new tensor with specified DType
-func (ts Tensor) Totype(dtype gt.DType) (retVal Tensor, err error) {
+func (ts Tensor) Totype(dtype gotch.DType) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
-	cint, err := gt.DType2CInt(dtype)
+	cint, err := gotch.DType2CInt(dtype)
 	if err != nil {
 		return retVal, err
 	}
@@ -291,7 +291,7 @@ func (ts Tensor) Totype(dtype gt.DType) (retVal Tensor, err error) {
 
 // Totype casts type of tensor to a new tensor with specified DType. It will
 // panic if error
-func (ts Tensor) MustTotype(dtype gt.DType) (retVal Tensor) {
+func (ts Tensor) MustTotype(dtype gotch.DType) (retVal Tensor) {
 	retVal, err := ts.Totype(dtype)
 	if err != nil {
 		log.Fatal(err)
@@ -360,6 +360,14 @@ func (ts Tensor) IndexSelect(dim int64, index Tensor) (retVal Tensor, err error)
 	retVal = Tensor{ctensor: *ptr}
 
 	return retVal, nil
+}
+func (ts Tensor) MustIndexSelect(dim int64, index Tensor) (retVal Tensor) {
+	retVal, err := ts.IndexSelect(dim, index)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
 
 func Zeros(size []int64, optionsKind, optionsDevice int32) (retVal Tensor, err error) {
@@ -691,6 +699,29 @@ func (ts Tensor) Div1(other Scalar) (retVal Tensor, err error) {
 
 func (ts Tensor) MustDiv1(other Scalar) (retVal Tensor) {
 	retVal, err := ts.Div1(other)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func Randperm(n int64, optionKind gotch.DType, optionDevice gotch.Device) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgRandperm(ptr, n, optionKind.CInt(), optionDevice.CInt())
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustRandperm(n int64, optionKind gotch.DType, optionDevice gotch.Device) (retVal Tensor) {
+	retVal, err := Randperm(n, optionKind, optionDevice)
 	if err != nil {
 		log.Fatal(err)
 	}

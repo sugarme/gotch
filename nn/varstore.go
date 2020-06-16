@@ -160,7 +160,9 @@ func (vs *VarStore) Load(filepath string) (err error) {
 			return err
 		}
 
-		retValErr, err := ts.NoGrad(ts.Copy_(currTs, namedTs.Tensor))
+		retValErr, err := ts.NoGrad(func() {
+			ts.Copy_(currTs, namedTs.Tensor)
+		})
 		if err != nil {
 			return err
 		}
@@ -205,7 +207,9 @@ func (vs *VarStore) LoadPartial(filepath string) (retVal []string, err error) {
 		}
 
 		// It's matched. Now, copy in-place the loaded tensor value to var-store
-		retValErr, err := ts.NoGrad(ts.Copy_(currTs, namedTs.Tensor))
+		retValErr, err := ts.NoGrad(func() {
+			ts.Copy_(currTs, namedTs.Tensor)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -274,7 +278,9 @@ func (vs *VarStore) Copy(src VarStore) (err error) {
 		if err != nil {
 			return err
 		}
-		retValErr, err := ts.NoGrad(ts.Copy_(v, srcDevTs))
+		retValErr, err := ts.NoGrad(func() {
+			ts.Copy_(v, srcDevTs)
+		})
 		if err != nil {
 			return err
 		}
@@ -520,7 +526,7 @@ func (p *Path) Uniform(name string, dims []int64, lo, up float64) (retVal ts.Ten
 // will be tracked.
 // The variable uses a float tensor initialized randomly using a
 // uniform distribution which bounds follow Kaiming initialization.
-func (p *Path) Uniform(name string, dims []int64) (retVal ts.Tensor) {
+func (p *Path) KaimingUniform(name string, dims []int64) (retVal ts.Tensor) {
 	// TODO: implement it
 	// self.var(name, dims, Init::KaimingUniform)
 
@@ -542,12 +548,14 @@ func (p *Path) VarCopy(name string, t ts.Tensor) (retVal ts.Tensor) {
 	}
 	v := p.Zeros(name, size)
 
-	retValErr, err := ts.NoGrad(ts.Copy_(v, t))
+	retValErr, err := ts.NoGrad(func() {
+		ts.Copy_(v, t)
+	})
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 	if retValErr != nil {
-		return retValErr.(error)
+		log.Fatal(retValErr)
 	}
 
 	return v
@@ -555,14 +563,13 @@ func (p *Path) VarCopy(name string, t ts.Tensor) (retVal ts.Tensor) {
 
 // Get gets the tensor corresponding to a given name if present.
 func (p *Path) Get(name string) (retVal ts.Tensor, err error) {
-	path := p.path(name)
 
 	p.varstore.variables.mutex.Lock()
 	defer p.varstore.variables.mutex.Unlock()
 
-	v, ok := p.varstore.variables.NamedVariables[path]
+	v, ok := p.varstore.variables.NamedVariables[name]
 	if !ok {
-		err = fmt.Errorf("Path - Get method call error: Cannot find variable for name: %v\n", path)
+		err = fmt.Errorf("Path - Get method call error: Cannot find variable for name: %v\n", name)
 		return retVal, err
 	}
 
@@ -577,7 +584,7 @@ func (p *Path) Entry(name string) (retVal Entry) {
 	return Entry{
 		name:      name,
 		variables: p.varstore.variables,
-		path:      &p,
+		path:      *p,
 	}
 }
 
@@ -608,12 +615,14 @@ func (e *Entry) OrVarCopy(tensor ts.Tensor) (retVal ts.Tensor) {
 	}
 	v := e.OrZeros(size)
 
-	retValErr, err := ts.NoGrad(ts.Copy_(v, tensor))
+	retValErr, err := ts.NoGrad(func() {
+		ts.Copy_(v, tensor)
+	})
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 	if retValErr != nil {
-		return retValErr.(error)
+		log.Fatal(retValErr)
 	}
 
 	return v

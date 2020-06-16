@@ -30,12 +30,12 @@ func NewConstInit(v float64) constInit {
 
 func (c constInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
 	var err error
-	kind := gotch.DType2CInt(gotch.Float)
+	kind := gotch.Float.CInt()
 	switch {
 	case c.value == 0.0:
-		retVal = ts.Zeros(dims, kind, device.CInt())
+		retVal = ts.MustZeros(dims, kind, device.CInt())
 	case c.value == 1.0:
-		retVal = ts.Ones(dims, kind, device.CInt())
+		retVal = ts.MustOnes(dims, kind, device.CInt())
 	default:
 		data := make([]float64, ts.FlattenDim(dims))
 		for i := range data {
@@ -57,7 +57,7 @@ func (c constInit) Set(tensor ts.Tensor) {
 		log.Fatalf("constInit - Set method call error: %v\n", err)
 	}
 
-	ts.Fill_(scalarVal)
+	tensor.Fill_(scalarVal)
 }
 
 // randnInit :
@@ -125,9 +125,9 @@ func NewUniformInit(lo, up float64) uniformInit {
 
 func (u uniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
 	var err error
-	kind := gotch.DType2CInt(gotch.Float)
-	tmpTs := ts.Zeros(dims, kind, device.CInt())
-	retVal, err = tmpTs.Uniform_(u.lo, u.up)
+	kind := gotch.Float.CInt()
+	retVal = ts.MustZeros(dims, kind, device.CInt())
+	retVal.Uniform_(u.lo, u.up)
 	if err != nil {
 		log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
 	}
@@ -150,13 +150,10 @@ func NewKaimingUniformInit() kaimingUniformInit {
 func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
 	fanIn := factorial(uint64(len(dims) - 1))
 	bound := math.Sqrt(1.0 / float64(fanIn))
-	var err error
-	kind := gotch.DType2CInt(gotch.Float)
-	tmpTs := ts.Zeros(dims, kind, device.CInt())
-	retVal, err = tmpTs.Uniform_(-bound, bound)
-	if err != nil {
-		log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
-	}
+	kind := gotch.Float.CInt()
+	retVal = ts.MustZeros(dims, kind, device.CInt())
+	retVal.Uniform_(-bound, bound)
+
 	return retVal
 }
 

@@ -233,3 +233,12 @@ func AtgView(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int) {
 func AtgDiv1(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_div1(ptr, self, other)
 }
+
+// void atg_randperm(tensor *, int64_t n, int options_kind, int options_device);
+func AtgRandperm(ptr *Ctensor, n int64, optionKind int32, optionDevice int32) {
+	cn := *(*C.int64_t)(unsafe.Pointer(&n))
+	coptionKind := *(*C.int)(unsafe.Pointer(&optionKind))
+	coptionDevice := *(*C.int)(unsafe.Pointer(&optionDevice))
+
+	C.atg_randperm(ptr, cn, coptionKind, coptionDevice)
+}
