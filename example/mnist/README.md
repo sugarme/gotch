@@ -2,14 +2,14 @@
 
 ## MNIST
 
-- MNIST files can be obtained at [This source](http://yann.lecun.com/exdb/mnist/) and put in `data/mnist` from
+- MNIST files can be obtained from [this source](http://yann.lecun.com/exdb/mnist/) and put in `data/mnist` from
     root folder of this project.
 
 - Load MNIST data using helper function at `vision` sub-package
 
 ## Linear Regression
 
-- Run with `go clean -cache -testcache && go run main.go linear`
+- Run with `go clean -cache -testcache && go run main.go linear.go`
 
 - Accuraccy should be about **91.68%**.
 
