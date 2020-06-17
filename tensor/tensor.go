@@ -825,6 +825,7 @@ func (ts Tensor) ToString(lw int64) (retVal string, err error) {
 
 // MustToString returns a string representation for the tensor. It will be panic
 // if error.
+// lw : line width (size)
 func (ts Tensor) MustToString(lw int64) (retVal string) {
 	retVal, err := ts.ToString(lw)
 	if err != nil {

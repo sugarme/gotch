@@ -124,15 +124,9 @@ func (it *Iter2) Next() (item Iter2Item, ok bool) {
 		// Indexing
 		narrowIndex := ts.NewNarrow(start, start+size)
 
-		// ts1 := it.xs.Idx(narrowIndex).MustTo(it.device)
-		// ts2 := it.ys.Idx(narrowIndex).MustTo(it.device)
-
-		ts1 := it.xs.Idx(narrowIndex)
-		ts2 := it.ys.Idx(narrowIndex)
-
 		return Iter2Item{
-			Images: ts1,
-			Labels: ts2,
+			Images: it.xs.Idx(narrowIndex),
+			Labels: it.ys.Idx(narrowIndex),
 		}, true
 	}
 }
