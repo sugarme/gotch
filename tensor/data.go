@@ -1,11 +1,10 @@
-package nn
+package tensor
 
 import (
 	"fmt"
 	"log"
 
 	"github.com/sugarme/gotch"
-	ts "github.com/sugarme/gotch/tensor"
 )
 
 // Iter2 is an iterator over a pair of tensors which have the same first dimension
@@ -14,8 +13,8 @@ import (
 // containing a (potentially random) slice of each of the two input
 // tensors.
 type Iter2 struct {
-	xs                   ts.Tensor
-	ys                   ts.Tensor
+	xs                   Tensor
+	ys                   Tensor
 	batchIndex           int64
 	batchSize            int64
 	totalSize            int64
@@ -36,7 +35,7 @@ type Iter2 struct {
 // * `xs` - the features to be used by the model.
 // * `ys` - the targets that the model attempts to predict.
 // * `batch_size` - the size of batches to be returned.
-func NewIter2(xs, ys ts.Tensor, batchSize int64) (retVal Iter2, err error) {
+func NewIter2(xs, ys Tensor, batchSize int64) (retVal Iter2, err error) {
 
 	totalSize := xs.MustSize()[0]
 	if ys.MustSize()[0] != totalSize {
@@ -68,7 +67,7 @@ func NewIter2(xs, ys ts.Tensor, batchSize int64) (retVal Iter2, err error) {
 // * `xs` - the features to be used by the model.
 // * `ys` - the targets that the model attempts to predict.
 // * `batch_size` - the size of batches to be returned.
-func MustNewIter2(xs, ys ts.Tensor, batchSize int64) (retVal Iter2) {
+func MustNewIter2(xs, ys Tensor, batchSize int64) (retVal Iter2) {
 	retVal, err := NewIter2(xs, ys, batchSize)
 
 	if err != nil {
@@ -83,7 +82,7 @@ func MustNewIter2(xs, ys ts.Tensor, batchSize int64) (retVal Iter2) {
 // The iterator would still run over the whole dataset but the order in
 // which elements are grouped in mini-batches is randomized.
 func (it Iter2) Shuffle() (retVal Iter2) {
-	index := ts.MustRandperm(it.totalSize, gotch.Int64, gotch.CPU)
+	index := MustRandperm(it.totalSize, gotch.Int64, gotch.CPU)
 
 	it.xs = it.xs.MustIndexSelect(0, index)
 	it.ys = it.ys.MustIndexSelect(0, index)
@@ -103,8 +102,8 @@ func (it Iter2) ReturnSmallLastBatch() (retVal Iter2) {
 }
 
 type Iter2Item struct {
-	Images ts.Tensor // should change to Data
-	Labels ts.Tensor
+	Data  Tensor
+	Label Tensor
 }
 
 // Next implements iterator for Iter2
@@ -122,11 +121,11 @@ func (it *Iter2) Next() (item Iter2Item, ok bool) {
 		it.batchIndex += 1
 
 		// Indexing
-		narrowIndex := ts.NewNarrow(start, start+size)
+		narrowIndex := NewNarrow(start, start+size)
 
 		return Iter2Item{
-			Images: it.xs.Idx(narrowIndex),
-			Labels: it.ys.Idx(narrowIndex),
+			Data:  it.xs.Idx(narrowIndex),
+			Label: it.ys.Idx(narrowIndex),
 		}, true
 	}
 }
