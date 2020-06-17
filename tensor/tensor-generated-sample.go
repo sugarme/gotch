@@ -583,6 +583,8 @@ func (ts Tensor) MustLogSoftmax(dim int64, dtype int32) (retVal Tensor) {
 
 func (ts Tensor) NllLoss(target Tensor) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	// NOTE: uncomment this causes panic
+	// defer C.free(unsafe.Pointer(ptr))
 
 	weight := NewTensor()
 

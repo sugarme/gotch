@@ -466,7 +466,7 @@ func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraph
 	// TODO: Are they allocated continouslly???
 	for i := 0; i < len(inputs); i++ {
 		outputPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-		// defer C.free(unsafe.Pointer(outputPtr))
+		defer C.free(unsafe.Pointer(outputPtr))
 		outputsPtr = append(outputsPtr, outputPtr)
 	}
 

@@ -53,6 +53,8 @@ func init() {
 func CMalloc(nbytes int) (dataPtr unsafe.Pointer, buf *bytes.Buffer) {
 
 	dataPtr = C.malloc(C.size_t(nbytes))
+	// NOTE: uncomment this cause panic!
+	// defer C.free(unsafe.Pointer(dataPtr))
 
 	// Recall: 1 << 30 = 1 * 2 * 30
 	// Ref. See more at https://stackoverflow.com/questions/48756732

@@ -221,6 +221,7 @@ func AtSaveMulti(tensors []Ctensor, tensor_names []string, ntensors int, filenam
 
 	cpointerSize := 4
 	cnamesPtr := (*[1 << 30]**C.char)(C.malloc(C.size_t(cpointerSize * len(tensor_names))))
+	defer C.free(unsafe.Pointer(cnamesPtr))
 	for i := 0; i < len(tensor_names); i++ {
 		cname := C.CString(tensor_names[i])
 		cnamesPtr[i] = &cname

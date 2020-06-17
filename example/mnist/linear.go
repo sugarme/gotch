@@ -66,9 +66,6 @@ func runLinear() {
 		 *       bs.ZeroGrad()
 		 *       loss.MustBackward()
 		 *
-		 *       // TODO: why `loss` need to print out to get updated?
-		 *       fmt.Printf("loss (epoch %v): %v\n", epoch, loss.MustToString(0))
-		 *
 		 *       ts.NoGrad(func() {
 		 *         ws.MustAdd_(ws.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
 		 *         bs.MustAdd_(bs.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
