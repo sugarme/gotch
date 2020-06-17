@@ -38,6 +38,13 @@ type ModuleT interface {
 // }
 type DefaultModuleT struct{}
 
+// Implement Module interface
+func (dmt *DefaultModuleT) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+	// TODO: implement
+
+	return
+}
+
 func (dmt *DefaultModuleT) BatchAccuracyForLogits(xs, ys ts.Tensor, batchSize int) float64 {
 
 	var (
@@ -46,6 +53,18 @@ func (dmt *DefaultModuleT) BatchAccuracyForLogits(xs, ys ts.Tensor, batchSize in
 	)
 
 	// TODO: implement Iter2...
+	_ = ts.NewNoGradGuard()
+
+	iter2 := MustNewIter2(xs, ys, int64(batchSize))
+	for {
+		item, ok := iter2.Next()
+		if !ok {
+			break
+		}
+
+		// TODO: continue
+		// accu := dmt.ForwardT(item.Images)
+	}
 
 	return sumAccuracy / sampleCount
 }

@@ -940,15 +940,26 @@ type NoGradGuard struct {
 	enabled bool
 }
 
+// Init NoGradGuard and disables gradient tracking
+func NewNoGradGuard() NoGradGuard {
+	return noGradGuardInit()
+}
+
 // Disables gradient tracking, this will be enabled back when the
 // returned value gets deallocated.
-func (ngg NoGradGuard) NoGradGuard() NoGradGuard {
+func noGradGuardInit() NoGradGuard {
 	return NoGradGuard{enabled: MustGradSetEnabled(false)}
 }
 
 // Drop drops the NoGradGuard state.
-func (ngg NoGradGuard) Drop() {
-	MustGradSetEnabled(ngg.enabled)
+func (ngg *NoGradGuard) Drop() {
+	ngg.enabled = true
+	_ = MustGradSetEnabled(ngg.enabled)
+}
+
+func (ngg *NoGradGuard) Enable() {
+	ngg.enabled = false
+	_ = MustGradSetEnabled(ngg.enabled)
 }
 
 // Reduction type is an enum-like type

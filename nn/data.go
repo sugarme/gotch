@@ -103,7 +103,7 @@ func (it Iter2) ReturnSmallLastBatch() (retVal Iter2) {
 }
 
 type Iter2Item struct {
-	Images ts.Tensor
+	Images ts.Tensor // should change to Data
 	Labels ts.Tensor
 }
 
