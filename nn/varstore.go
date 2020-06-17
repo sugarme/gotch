@@ -160,15 +160,9 @@ func (vs *VarStore) Load(filepath string) (err error) {
 			return err
 		}
 
-		retValErr, err := ts.NoGrad(func() {
+		ts.NoGrad(func() {
 			ts.Copy_(currTs, namedTs.Tensor)
 		})
-		if err != nil {
-			return err
-		}
-		if retValErr != nil {
-			return retValErr.(error)
-		}
 	}
 
 	return nil
@@ -207,15 +201,9 @@ func (vs *VarStore) LoadPartial(filepath string) (retVal []string, err error) {
 		}
 
 		// It's matched. Now, copy in-place the loaded tensor value to var-store
-		retValErr, err := ts.NoGrad(func() {
+		ts.NoGrad(func() {
 			ts.Copy_(currTs, namedTs.Tensor)
 		})
-		if err != nil {
-			return nil, err
-		}
-		if retValErr != nil {
-			return nil, retValErr.(error)
-		}
 	}
 
 	return missingVariables, nil
@@ -278,15 +266,9 @@ func (vs *VarStore) Copy(src VarStore) (err error) {
 		if err != nil {
 			return err
 		}
-		retValErr, err := ts.NoGrad(func() {
+		ts.NoGrad(func() {
 			ts.Copy_(v, srcDevTs)
 		})
-		if err != nil {
-			return err
-		}
-		if retValErr != nil {
-			return retValErr.(error)
-		}
 	}
 
 	return nil
@@ -548,15 +530,9 @@ func (p *Path) VarCopy(name string, t ts.Tensor) (retVal ts.Tensor) {
 	}
 	v := p.Zeros(name, size)
 
-	retValErr, err := ts.NoGrad(func() {
+	ts.NoGrad(func() {
 		ts.Copy_(v, t)
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	if retValErr != nil {
-		log.Fatal(retValErr)
-	}
 
 	return v
 }
@@ -615,15 +591,9 @@ func (e *Entry) OrVarCopy(tensor ts.Tensor) (retVal ts.Tensor) {
 	}
 	v := e.OrZeros(size)
 
-	retValErr, err := ts.NoGrad(func() {
+	ts.NoGrad(func() {
 		ts.Copy_(v, tensor)
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	if retValErr != nil {
-		log.Fatal(retValErr)
-	}
 
 	return v
 }

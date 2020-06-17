@@ -13,10 +13,8 @@ const (
 	Label    int64  = 10
 	MnistDir string = "../../data/mnist"
 
-	// epochs    = 500
-	// batchSize = 256
 	epochs    = 200
-	batchSize = 60000
+	batchSize = 256
 )
 
 func runLinear() {
@@ -44,6 +42,7 @@ func runLinear() {
 		 *
 		 *     batches := samples / batchSize
 		 *     batchIndex := 0
+		 *     var loss ts.Tensor
 		 *     for i := 0; i < batches; i++ {
 		 *       start := batchIndex * batchSize
 		 *       size := batchSize
@@ -55,20 +54,20 @@ func runLinear() {
 		 *
 		 *       // Indexing
 		 *       narrowIndex := ts.NewNarrow(int64(start), int64(start+size))
-		 *       // bImages := ds.TrainImages.Idx(narrowIndex)
-		 *       // bLabels := ds.TrainLabels.Idx(narrowIndex)
-		 *       bImages := imagesTs.Idx(narrowIndex)
-		 *       bLabels := labelsTs.Idx(narrowIndex)
+		 *       bImages := ds.TrainImages.Idx(narrowIndex)
+		 *       bLabels := ds.TrainLabels.Idx(narrowIndex)
+		 *       // bImages := imagesTs.Idx(narrowIndex)
+		 *       // bLabels := labelsTs.Idx(narrowIndex)
 		 *
 		 *       logits := bImages.MustMm(ws).MustAdd(bs)
-		 *       // loss := logits.MustLogSoftmax(-1, dtype).MustNllLoss(bLabels)
-		 *       loss := logits.MustLogSoftmax(-1, dtype).MustNllLoss(bLabels)
+		 *       loss = logits.MustLogSoftmax(-1, dtype).MustNllLoss(bLabels).MustSetRequiresGrad(true)
 		 *
 		 *       ws.ZeroGrad()
 		 *       bs.ZeroGrad()
-		 *       loss.Backward()
+		 *       loss.MustBackward()
 		 *
-		 *       bs.MustGrad().Print()
+		 *       // TODO: why `loss` need to print out to get updated?
+		 *       fmt.Printf("loss (epoch %v): %v\n", epoch, loss.MustToString(0))
 		 *
 		 *       ts.NoGrad(func() {
 		 *         ws.MustAdd_(ws.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
@@ -81,31 +80,21 @@ func runLinear() {
 		 *  */
 
 		logits := ds.TrainImages.MustMm(ws).MustAdd(bs)
-		// loss := logits.MustLogSoftmax(-1, dtype).MustNllLoss(ds.TrainLabels).MustSetRequiresGrad(true)
-		loss := logits.MustLogSoftmax(-1, dtype).MustNllLoss(ds.TrainLabels)
-		// loss := ds.TrainImages.MustMm(ws).MustAdd(bs).MustLogSoftmax(-1, dtype).MustNllLoss(ds.TrainLabels).MustSetRequiresGrad(true)
+		loss := logits.MustLogSoftmax(-1, dtype).MustNllLoss(ds.TrainLabels).MustSetRequiresGrad(true)
 
 		ws.ZeroGrad()
 		bs.ZeroGrad()
-		// loss.MustBackward()
-		loss.Backward()
-
-		// TODO: why `loss` need to print out to get updated?
-		fmt.Printf("loss (epoch %v): %v\n", epoch, loss.MustToString(0))
-		// fmt.Printf("bs grad (epoch %v): %v\n", epoch, bs.MustGrad().MustToString(1))
+		loss.MustBackward()
 
 		ts.NoGrad(func() {
 			ws.MustAdd_(ws.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
 			bs.MustAdd_(bs.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
 		})
 
-		// fmt.Printf("bs(epoch %v): \n%v\n", epoch, bs.MustToString(1))
-		// fmt.Printf("ws mean(epoch %v): \n%v\n", epoch, ws.MustMean(gotch.Float.CInt()).MustToString(1))
-
 		testLogits := ds.TestImages.MustMm(ws).MustAdd(bs)
 		testAccuracy := testLogits.MustArgmax(-1, false).MustEq1(ds.TestLabels).MustTotype(gotch.Float).MustMean(gotch.Float.CInt()).MustView([]int64{-1}).MustFloat64Value([]int64{0})
-		// testAccuracy := ds.TestImages.MustMm(ws).MustAdd(bs).MustArgmax(-1, false).MustEq1(ds.TestLabels).MustTotype(gotch.Float).MustMean(gotch.Float.CInt()).MustView([]int64{-1}).MustFloat64Value([]int64{0})
-		//
-		fmt.Printf("Epoch: %v - Test accuracy: %v\n", epoch, testAccuracy*100)
+
+		lossVal := loss.MustShallowClone().MustView([]int64{-1}).MustFloat64Value([]int64{0})
+		fmt.Printf("Epoch: %v - Loss: %.3f - Test accuracy: %.2f%%\n", epoch, lossVal, testAccuracy*100)
 	}
 }

@@ -376,6 +376,15 @@ func (ts Tensor) RequiresGrad() (retVal bool, err error) {
 	return retVal, nil
 }
 
+func (ts Tensor) MustRequiresGrad() (retVal bool) {
+	retVal, err := ts.RequiresGrad()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 // DataPtr returns the address of the first element of this tensor.
 func (ts Tensor) DataPtr() (retVal unsafe.Pointer, err error) {
 
@@ -899,7 +908,15 @@ func MustGradSetEnabled(b bool) (retVal bool) {
 }
 
 // NoGrad runs a closure without keeping track of gradients.
-func NoGrad(fn interface{}) (retVal interface{}, err error) {
+func NoGrad(fn interface{}) {
+
+	// TODO: This is weird but somehow we need to trigger C++ print
+	// to get loss function updated. Probably it is related to
+	// C++ cache clearing.
+	// Next step would be creating a Go func that trigger C++ cache clean
+	// instead of this ugly hacky way.
+	newTs := NewTensor()
+	newTs.Drop()
 
 	// Switch off Grad
 	prev := MustGradSetEnabled(false)
@@ -907,16 +924,15 @@ func NoGrad(fn interface{}) (retVal interface{}, err error) {
 	// Analyze input as function. If not, throw error
 	f, err := NewFunc(fn)
 	if err != nil {
-		return retVal, nil
+		log.Fatal(err)
 	}
 
 	// invokes the function
-	retVal = f.Invoke()
+	f.Invoke()
 
 	// Switch on Grad
 	_ = MustGradSetEnabled(prev)
 
-	return retVal, nil
 }
 
 // NoGradGuard is a RAII guard that prevents gradient tracking until deallocated.

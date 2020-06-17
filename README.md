@@ -48,8 +48,27 @@
 - Other examples can be found at `example` folder
 
 
+### 3. Notes on running examples
+
+- Clean Cgo cache to get a fresh build as [mention here](https://github.com/golang/go/issues/24355)
+
+```bash
+    # Either
+    go clean -cache -testcache .
+    go run [EXAMPLE FILES]
+
+    # Or
+    go build -a
+
+    go run [EXAMPLE FILES]
+
+```
+
+
 ## Acknowledgement
 
 - This projects has been inspired and used many concepts from [tch-rs](https://github.com/LaurentMazare/tch-rs)
     Libtorch Rust binding. 
+
+
 
