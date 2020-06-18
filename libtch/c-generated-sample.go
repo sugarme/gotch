@@ -247,3 +247,13 @@ func AtgRandperm(ptr *Ctensor, n int64, optionKind int32, optionDevice int32) {
 func AtgClamp_(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
 	C.atg_clamp_(ptr, self, min, max)
 }
+
+// void atg_relu(tensor *, tensor self);
+func AtgRelu(ptr *Ctensor, self Ctensor) {
+	C.atg_relu(ptr, self)
+}
+
+// void atg_relu_(tensor *, tensor self);
+func AtgRelu_(ptr *Ctensor, self Ctensor) {
+	C.atg_relu_(ptr, self)
+}

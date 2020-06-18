@@ -7,22 +7,27 @@
 
 - Load MNIST data using helper function at `vision` sub-package
 
+
 ## Linear Regression
 
-- Run with `go clean -cache -testcache && go run main.go linear.go`
+- Run with `go clean -cache -testcache && go run . -model="linear"`
+
 
 - Accuraccy should be about **91.68%**.
 
 
 ## Neural Network (NN)
 
-TODO: update
+- Run with `go clean -cache -testcache && go run . -model="nn"`
+
+- Accuraccy should be about **TODO: update%**.
 
 
 ## Convolutional Neural Network (CNN)
 
-TODO: update
+- Run with `go clean -cache -testcache && go run . -model="cnn"`
 
+- Accuraccy should be about **TODO: update%**.
 
 
 

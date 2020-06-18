@@ -736,7 +736,41 @@ func (ts Tensor) Clamp_(min Scalar, max Scalar) {
 	defer C.free(unsafe.Pointer(ptr))
 
 	lib.AtgClamp_(ptr, ts.ctensor, min.cscalar, max.cscalar)
-	if err = TorchErr(); err != nil {
+	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (ts Tensor) Relu_() {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgRelu_(ptr, ts.ctensor)
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (ts Tensor) Relu() (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgRelu(ptr, ts.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustRelu() (retVal Tensor) {
+	retVal, err := ts.Relu()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
