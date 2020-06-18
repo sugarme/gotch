@@ -11,7 +11,7 @@ import (
 
 type Init interface {
 	// creates a new tensor with specified initiation
-	InitTensor(dims []int, device gotch.Device) (retVal ts.Tensor)
+	InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor)
 
 	// re-initializes (in-place) an existing tensor with the specified initiation
 	Set(tensor ts.Tensor)

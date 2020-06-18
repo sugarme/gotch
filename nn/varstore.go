@@ -410,8 +410,6 @@ func (p *Path) OnesNoTrain(name string, dims []int64) (retVal ts.Tensor) {
 	return p.add(name, z, false)
 }
 
-// TODO:
-
 // NewVar creates a new variable.
 //
 // The new variable is named according to the name parameter and
@@ -421,11 +419,8 @@ func (p *Path) OnesNoTrain(name string, dims []int64) (retVal ts.Tensor) {
 // related argument.
 func (p *Path) NewVar(name string, dims []int64, init Init) (retVal ts.Tensor) {
 
-	// TODO: implement it
-	// let v = super::init(init, dims, self.device());
-	// self.add(name, v, true)
-
-	return
+	v := init.InitTensor(dims, p.varstore.device)
+	return p.add(name, v, true)
 }
 
 // Zeros creates a new variable initialized with zeros.
@@ -436,10 +431,7 @@ func (p *Path) NewVar(name string, dims []int64, init Init) (retVal ts.Tensor) {
 // The variable uses a float tensor initialized with zeros.
 func (p *Path) Zeros(name string, dims []int64) (retVal ts.Tensor) {
 
-	// TODO: implement it
-	// self.var(name, dims, Init::Const(0.))
-
-	return
+	return p.NewVar(name, dims, NewConstInit(0.0))
 }
 
 // Ones creates a new variable initialized with ones.
@@ -449,10 +441,8 @@ func (p *Path) Zeros(name string, dims []int64) (retVal ts.Tensor) {
 // will be tracked.
 // The variable uses a float tensor initialized with ones.
 func (p *Path) Ones(name string, dims []int64) (retVal ts.Tensor) {
-	// TODO: implement it
-	// self.var(name, dims, Init::Const(1.))
 
-	return
+	return p.NewVar(name, dims, NewConstInit(1.0))
 }
 
 // RandnStandard creates a new variable initialized randomly with normal distribution.
@@ -463,14 +453,8 @@ func (p *Path) Ones(name string, dims []int64) (retVal ts.Tensor) {
 // The variable uses a float tensor initialized randomly using a
 // standard normal distribution.
 func (p *Path) RandnStandard(name string, dims []int64) (retVal ts.Tensor) {
-	// TODO: implement it
-	// let init = Init::Randn {
-	// mean: 0.,
-	// stdev: 1.,
-	// };
-	// self.var(name, dims, init)
 
-	return
+	return p.NewVar(name, dims, NewRandnInit(0.0, 1.0))
 }
 
 // Randn creates a new variable initialized randomly with normal distribution.
@@ -481,10 +465,8 @@ func (p *Path) RandnStandard(name string, dims []int64) (retVal ts.Tensor) {
 // The variable uses a float tensor initialized randomly using a
 // normal distribution with the specified mean and standard deviation.
 func (p *Path) Randn(name string, dims []int64, mean float64, stdev float64) (retVal ts.Tensor) {
-	// TODO: implement it
-	// self.var(name, dims, Init::Randn { mean, stdev })
 
-	return
+	return p.NewVar(name, dims, NewRandnInit(mean, stdev))
 }
 
 // Uniform creates a new variable initialized randomly with uniform distribution.
@@ -495,10 +477,8 @@ func (p *Path) Randn(name string, dims []int64, mean float64, stdev float64) (re
 // The variable uses a float tensor initialized randomly using a
 // uniform distribution between the specified bounds.
 func (p *Path) Uniform(name string, dims []int64, lo, up float64) (retVal ts.Tensor) {
-	// TODO: implement it
-	// self.var(name, dims, Init::Uniform { lo, up })
 
-	return
+	return p.NewVar(name, dims, NewUniformInit(lo, up))
 }
 
 // KaimingUniform creates a new variable initialized randomly with kaiming uniform.
@@ -509,10 +489,8 @@ func (p *Path) Uniform(name string, dims []int64, lo, up float64) (retVal ts.Ten
 // The variable uses a float tensor initialized randomly using a
 // uniform distribution which bounds follow Kaiming initialization.
 func (p *Path) KaimingUniform(name string, dims []int64) (retVal ts.Tensor) {
-	// TODO: implement it
-	// self.var(name, dims, Init::KaimingUniform)
 
-	return
+	return p.NewVar(name, dims, NewKaimingUniformInit())
 }
 
 // VarCopy creates a new variable initialized by copying an existing tensor.
@@ -574,12 +552,9 @@ func (p *Path) Entry(name string) (retVal Entry) {
 // variable is added to the var-store with the entry name and is
 // initialized according to the init parameter.
 func (e *Entry) OrVar(dims []int64, init Init) (retVal ts.Tensor) {
-	// TODO: implement it
-	// let v = super::init(init, dims, self.path.device());
-	// self.path
-	// .get_or_add_with_lock(self.name, v, true, self.variables)
 
-	return
+	v := init.InitTensor(dims, e.path.varstore.device)
+	return e.path.getOrAddWithLock(e.name, v, true, e.variables)
 }
 
 // Returns the existing entry if, otherwise create a new variable.
@@ -600,76 +575,52 @@ func (e *Entry) OrVarCopy(tensor ts.Tensor) (retVal ts.Tensor) {
 
 // Returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrKaimingUniform(dims []int64) (retVal ts.Tensor) {
-	// TODO: implement
-	// self.or_var(dims, Init::KaimingUniform)
 
-	return
+	return e.OrVar(dims, NewKaimingUniformInit())
 }
 
 // OrOnes returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrOnes(dims []int64) (retVal ts.Tensor) {
-	// TODO: implement
-	// self.or_var(dims, Init::Const(1.))
 
-	return
+	return e.OrVar(dims, NewConstInit(1.0))
 }
 
 // OrOnesNoTrain returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrOnesNoTrain(dims []int64) (retVal ts.Tensor) {
-	// TODO: implement
-	/* let o = Tensor::ones(dims, (Kind::Float, self.path.device()));
-	 * self.path
-	 *     .get_or_add_with_lock(self.name, o, true, self.variables) */
 
-	return
+	o := ts.MustOnes(dims, gotch.Float.CInt(), e.path.Device().CInt())
+	return e.path.getOrAddWithLock(e.name, o, true, e.variables)
 }
 
 // OrRandn returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrRandn(dims []int64, mean, stdev float64) (retVal ts.Tensor) {
-	// TODO: implement
-	// self.or_var(dims, Init::Randn { mean, stdev })
 
-	return
+	return e.OrVar(dims, NewRandnInit(mean, stdev))
 }
 
 // OrRandnStandard returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrRandnStandard(dims []int64) (retVal ts.Tensor) {
-	// TODO: implement
-	/*         let init = Init::Randn {
-	 *             mean: 0.,
-	 *             stdev: 1.,
-	 *         };
-	 *         self.or_var(dims, init)
-	 *  */
-	return
+
+	return e.OrVar(dims, NewRandnInit(0.0, 1.0))
 }
 
 // OrUniform returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrUniform(dims []int64, lo, up float64) (retVal ts.Tensor) {
-	// TODO: implement
-	// self.or_var(dims, Init::Uniform { lo, up })
 
-	return
+	return e.OrVar(dims, NewUniformInit(lo, up))
 }
 
 // OrZeros returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrZeros(dims []int64) (retVal ts.Tensor) {
-	// TODO: implement
-	// self.or_var(dims, Init::Const(0.))
 
-	return
+	return e.OrVar(dims, NewConstInit(0.0))
 }
 
 // OrZerosNoTrain returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrZerosNoTrain(dims []int64) (retVal ts.Tensor) {
-	// TODO: implement
-	/*
-	 *         let z = Tensor::zeros(dims, (Kind::Float, self.path.device()));
-	 *         self.path
-	 *             .get_or_add_with_lock(self.name, z, true, self.variables)
-	 *
-	 *  */
-	return
+
+	z := ts.MustZeros(dims, gotch.Float.CInt(), e.path.Device().CInt())
+	return e.path.getOrAddWithLock(e.name, z, true, e.variables)
 }
 
 // TODO: can we implement `Div` operator in Go?
