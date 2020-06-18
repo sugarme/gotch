@@ -730,3 +730,13 @@ func MustRandperm(n int64, optionKind gotch.DType, optionDevice gotch.Device) (r
 
 	return retVal
 }
+
+func (ts Tensor) Clamp_(min Scalar, max Scalar) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgClamp_(ptr, ts.ctensor, min.cscalar, max.cscalar)
+	if err = TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}

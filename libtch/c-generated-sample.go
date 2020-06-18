@@ -242,3 +242,8 @@ func AtgRandperm(ptr *Ctensor, n int64, optionKind int32, optionDevice int32) {
 
 	C.atg_randperm(ptr, cn, coptionKind, coptionDevice)
 }
+
+// void atg_clamp_(tensor *, tensor self, scalar min, scalar max);
+func AtgClamp_(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
+	C.atg_clamp_(ptr, self, min, max)
+}
