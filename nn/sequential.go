@@ -63,7 +63,8 @@ func (s *Sequential) ForwardAll(xs ts.Tensor, opts ...uint8) (retVal []ts.Tensor
 	return retVal
 }
 
-func ForwardAllWithN(n uint8) func() uint8 {
+// WithUint8 returns an uint8 value option
+func WithUint8(n uint8) func() uint8 {
 	return func() uint8 {
 		return n
 	}
@@ -83,4 +84,95 @@ func (s Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 	}
 
 	return currTs
+}
+
+// SequentialT is a sequential layer combining new layers with support for a training mode.
+type SequentialT struct {
+	layers []ts.ModuleT
+}
+
+// SequentialT methods:
+//=====================
+
+// Len returns number of sub-layers embedded in this layer
+func (s *SequentialT) Len() (retVal int64) {
+	return int64(len(s.layers))
+}
+
+// IsEmpty returns true if this layer does not have any sub-layers.
+func (s *SequentialT) IsEmpty() (retVal bool) {
+	return len(s.layers) == 0
+}
+
+// Implement ModuleT interface for SequentialT:
+// ==========================================
+func (s SequentialT) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+	if s.IsEmpty() {
+		return xs.MustShallowClone()
+	}
+
+	// forward sequentially
+	var currTs ts.Tensor = xs
+	for i := 0; i < len(s.layers); i++ {
+		currTs = s.layers[i].Forward(currTs)
+	}
+
+	return currTs
+}
+
+func (s SequentialT) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+	if s.IsEmpty() {
+		return xs.MustShallowClone()
+	}
+
+	// forward sequentially
+	var currTs ts.Tensor = xs
+	for i := 0; i < len(s.layers); i++ {
+		currTs = s.layers[i].ForwardT(currTs, train)
+	}
+
+	return currTs
+}
+
+// Add appends a layer after all the current layers.
+func (s *SequentialT) Add(l ts.ModuleT) {
+
+	s.layers = append(s.layers, l)
+}
+
+// AddFn appends a closure after all the current layers.
+//
+// NOTE: fn should have signature `func(t ts.Tensor) ts.Tensor`
+// and it implements Module interface
+func (s *SequentialT) AddFn(fn interface{}) {
+
+	s.Add(fn.(ts.ModuleT))
+}
+
+// AddFn appends a closure after all the current layers.
+//
+// NOTE: fn should have signature `func(t ts.Tensor, train bool) ts.Tensor`
+// and it implements Module interface
+func (s *SequentialT) AddFnT(fn interface{}) {
+
+	s.Add(fn.(ts.ModuleT))
+}
+
+// ForwardAll applies the forward pass and returns the output for each layer.
+func (s *SequentialT) ForwardAllT(xs ts.Tensor, train bool, opts ...uint8) (retVal []ts.Tensor) {
+
+	var n uint8 = uint8(len(s.layers))
+	if len(opts) > 0 {
+		n = opts[0]
+	}
+
+	if s.IsEmpty() {
+		return []ts.Tensor{xs.MustShallowClone()}
+	}
+
+	for i := 0; i < int(n); i++ {
+		retVal = append(retVal, s.layers[i].ForwardT(xs, train))
+	}
+
+	return retVal
 }
