@@ -44,8 +44,10 @@ func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optim
 	vs.variables.mutex.Lock()
 	defer vs.variables.mutex.Unlock()
 
-	if err = opt.AddParameters(vs.variables.TrainableVariable); err != nil {
-		return retVal, err
+	if len(vs.variables.TrainableVariable) > 0 {
+		if err = opt.AddParameters(vs.variables.TrainableVariable); err != nil {
+			return retVal, err
+		}
 	}
 
 	return Optimizer{
@@ -220,6 +222,7 @@ func (opt *Optimizer) Step() {
 
 // BackwardStep applies a backward step pass, update the gradients, and performs an optimization step.
 func (opt *Optimizer) BackwardStep(loss ts.Tensor) {
+
 	opt.addMissingVariables()
 	err := opt.opt.ZeroGrad()
 	if err != nil {

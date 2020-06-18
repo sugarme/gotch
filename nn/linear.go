@@ -3,6 +3,8 @@ package nn
 // linear is a fully-connected layer
 
 import (
+	"math"
+
 	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
 )
@@ -16,8 +18,8 @@ type LinearConfig struct {
 
 // DefaultLinearConfig creates default LinearConfig with
 // weights initiated using KaimingUniform and Bias is set to true
-func DefaultLinearConfig() *LinearConfig {
-	return &LinearConfig{
+func DefaultLinearConfig() LinearConfig {
+	return LinearConfig{
 		WsInit: NewKaimingUniformInit(),
 		BsInit: nil,
 		Bias:   true,
@@ -35,7 +37,7 @@ type Linear struct {
 // inDim - input dimension (x) [input features - columns]
 // outDim - output dimension (y) [output features - columns]
 // NOTE: w will have shape{outDim, inDim}; b will have shape{outDim}
-func NewLinear(vs Path, inDim, outDim int64, c *LinearConfig) *Linear {
+func NewLinear(vs Path, inDim, outDim int64, c LinearConfig) Linear {
 
 	var bs ts.Tensor
 	// bs has size of output dimension
@@ -43,10 +45,17 @@ func NewLinear(vs Path, inDim, outDim int64, c *LinearConfig) *Linear {
 	case false:
 		bs = ts.MustZeros([]int64{outDim}, gotch.Float.CInt(), vs.Device().CInt())
 	case true:
-		bs = vs.NewVar("bias", []int64{outDim}, c.BsInit)
+		switch {
+		case c.BsInit == nil:
+			bound := 1.0 / math.Sqrt(float64(inDim))
+			bsInit := NewUniformInit(-bound, bound)
+			bs = vs.NewVar("bias", []int64{outDim}, bsInit)
+		case c.BsInit != nil:
+			bs = vs.NewVar("bias", []int64{outDim}, c.BsInit)
+		}
 	}
 
-	return &Linear{
+	return Linear{
 		Ws: vs.NewVar("weight", []int64{outDim, inDim}, c.WsInit),
 		Bs: bs,
 	}
@@ -80,7 +89,7 @@ func NewLinear(vs Path, inDim, outDim int64, c *LinearConfig) *Linear {
 // 	  1 1 1
 // 	  1 1 1
 // 		1 1 1 ]
-func (l *Linear) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+func (l Linear) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 
-	return xs.MustMatMul(l.Ws).MustAdd(l.Bs)
+	return xs.MustMatMul(l.Ws.MustT()).MustAdd(l.Bs)
 }

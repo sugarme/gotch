@@ -774,3 +774,38 @@ func (ts Tensor) MustRelu() (retVal Tensor) {
 
 	return retVal
 }
+
+func (ts Tensor) T() (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgT(ptr, ts.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustT() (retVal Tensor) {
+	retVal, err := ts.T()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) T_() {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgT_(ptr, ts.ctensor)
+	err := TorchErr()
+	if err != nil {
+		log.Fatal(err)
+	}
+}

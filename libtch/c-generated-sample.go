@@ -257,3 +257,13 @@ func AtgRelu(ptr *Ctensor, self Ctensor) {
 func AtgRelu_(ptr *Ctensor, self Ctensor) {
 	C.atg_relu_(ptr, self)
 }
+
+// void atg_t(tensor *, tensor self);
+func AtgT(ptr *Ctensor, self Ctensor) {
+	C.atg_t(ptr, self)
+}
+
+// void atg_t_(tensor *, tensor self);
+func AtgT_(ptr *Ctensor, self Ctensor) {
+	C.atg_t_(ptr, self)
+}

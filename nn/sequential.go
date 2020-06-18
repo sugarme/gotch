@@ -39,9 +39,9 @@ func (s *Sequential) Add(l ts.Module) {
 //
 // NOTE: fn should have signature `func(t ts.Tensor) ts.Tensor`
 // and it implements Module interface
-func (s *Sequential) AddFn(fn interface{}) {
+func (s *Sequential) AddFn(fn ts.Module) {
 
-	s.Add(fn.(ts.Module))
+	s.Add(fn)
 }
 
 // ForwardAll applies the forward pass and returns the output for each layer.
@@ -144,18 +144,18 @@ func (s *SequentialT) Add(l ts.ModuleT) {
 //
 // NOTE: fn should have signature `func(t ts.Tensor) ts.Tensor`
 // and it implements Module interface
-func (s *SequentialT) AddFn(fn interface{}) {
+func (s *SequentialT) AddFn(fn ts.ModuleT) {
 
-	s.Add(fn.(ts.ModuleT))
+	s.Add(fn)
 }
 
 // AddFn appends a closure after all the current layers.
 //
 // NOTE: fn should have signature `func(t ts.Tensor, train bool) ts.Tensor`
 // and it implements Module interface
-func (s *SequentialT) AddFnT(fn interface{}) {
+func (s *SequentialT) AddFnT(fn ts.ModuleT) {
 
-	s.Add(fn.(ts.ModuleT))
+	s.Add(fn)
 }
 
 // ForwardAll applies the forward pass and returns the output for each layer.
@@ -175,4 +175,22 @@ func (s *SequentialT) ForwardAllT(xs ts.Tensor, train bool, opts ...uint8) (retV
 	}
 
 	return retVal
+}
+
+// ForwardWith is a handler function to implement Module interface for
+// any (anonymous) function it wraps.
+//
+// Ref. https://stackoverflow.com/a/42182987
+// NOTE: Specifically, `ForwardWith` is used to wrap anonymous function
+// as input parameter of `AddFn` Sequential method.
+type ForwardWith func(ts.Tensor) ts.Tensor
+
+func (fw ForwardWith) Forward(xs ts.Tensor) ts.Tensor {
+	return fw(xs)
+}
+
+type ForwardTWith func(ts.Tensor, bool) ts.Tensor
+
+func (fw ForwardTWith) ForwardT(xs ts.Tensor, train bool) ts.Tensor {
+	return fw(xs, train)
 }

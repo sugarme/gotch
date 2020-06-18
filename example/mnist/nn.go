@@ -16,19 +16,24 @@ const (
 	LabelNN       int64  = 10
 	MnistDirNN    string = "../../data/mnist"
 
-	epochsNN    = 200
+	epochsNN    = 3
 	batchSizeNN = 256
 
 	LrNN = 1e-3
 )
 
+var l nn.Linear
+
 func netInit(vs nn.Path) ts.Module {
 	n := nn.Seq()
 
-	n.Add(nn.NewLinear(vs.Sub("layer1"), ImageDimNN, HiddenNodesNN, nn.DefaultLinearConfig()))
-	n.AddFn(func(xs ts.Tensor) ts.Tensor {
+	l = nn.NewLinear(vs.Sub("layer1"), ImageDimNN, HiddenNodesNN, nn.DefaultLinearConfig())
+
+	n.Add(l)
+
+	n.AddFn(nn.ForwardWith(func(xs ts.Tensor) ts.Tensor {
 		return xs.MustRelu()
-	})
+	}))
 
 	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, nn.DefaultLinearConfig()))
 
@@ -46,13 +51,19 @@ func runNN() {
 		log.Fatal(err)
 	}
 
+	bsClone := l.Bs.MustShallowClone()
+
 	for epoch := 0; epoch < epochsNN; epoch++ {
 		loss := net.Forward(ds.TrainImages).CrossEntropyForLogits(ds.TrainLabels)
 		opt.BackwardStep(loss)
 
+		fmt.Printf("Bs vals: %v\n", bsClone.MustToString(int64(1)))
+
+		lossVal := loss.MustShallowClone().MustView([]int64{-1}).MustFloat64Value([]int64{0})
+
 		testAccuracy := net.Forward(ds.TestImages).AccuracyForLogits(ds.TestLabels).MustView([]int64{-1}).MustFloat64Value([]int64{0})
 
-		fmt.Printf("Epoch: %v - Loss: %.3f - Test accuracy: %.2f%%\n", epoch, loss, testAccuracy*100)
+		fmt.Printf("Epoch: %v - Loss: %.3f - Test accuracy: %.2f%%\n", epoch, lossVal, testAccuracy*100)
 	}
 
 }

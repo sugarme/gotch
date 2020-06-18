@@ -57,6 +57,9 @@ func NewVarStore(device gotch.Device) VarStore {
 	}
 }
 
+// NOTE:
+// To get (initiate) a path, call vs.Root()
+
 // VarStore methods:
 // =================
 
@@ -417,9 +420,10 @@ func (p *Path) OnesNoTrain(name string, dims []int64) (retVal ts.Tensor) {
 // will be tracked.
 // The variable uses a float tensor initialized as per the
 // related argument.
-func (p *Path) NewVar(name string, dims []int64, init Init) (retVal ts.Tensor) {
+func (p *Path) NewVar(name string, dims []int64, ini Init) (retVal ts.Tensor) {
 
-	v := init.InitTensor(dims, p.varstore.device)
+	v := ini.InitTensor(dims, p.varstore.device)
+
 	return p.add(name, v, true)
 }
 
