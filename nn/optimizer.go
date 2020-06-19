@@ -49,7 +49,7 @@ func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optim
 		parameters = append(parameters, v)
 	}
 
-	// if err = opt.AddParameters(vs.variables.TrainableVariable); err != nil {
+	// if err = opt.AddParameters(vs.variables.TrainableVariables); err != nil {
 	if err = opt.AddParameters(parameters); err != nil {
 		return retVal, err
 	}
@@ -57,7 +57,7 @@ func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optim
 	return Optimizer{
 		opt:                  opt,
 		variables:            vs.variables,
-		variablesInOptimizer: uint8(len(vs.variables.TrainableVariable)),
+		variablesInOptimizer: uint8(len(vs.variables.TrainableVariables)),
 		config:               config,
 	}, nil
 }
@@ -187,11 +187,11 @@ func (opt *Optimizer) addMissingVariables() {
 	opt.variables.mutex.Lock()
 	defer opt.variables.mutex.Unlock()
 
-	missingVariables := len(opt.variables.TrainableVariable) - int(opt.variablesInOptimizer)
+	missingVariables := len(opt.variables.TrainableVariables) - int(opt.variablesInOptimizer)
 
 	if missingVariables > 0 {
-		opt.opt.AddParameters(opt.variables.TrainableVariable[opt.variablesInOptimizer:])
-		opt.variablesInOptimizer = uint8(len(opt.variables.TrainableVariable))
+		opt.opt.AddParameters(opt.variables.TrainableVariables[opt.variablesInOptimizer:])
+		opt.variablesInOptimizer = uint8(len(opt.variables.TrainableVariables))
 	}
 
 }
@@ -210,7 +210,7 @@ func (opt *Optimizer) ClipGradValue(max float64) {
 	opt.variables.mutex.Lock()
 	defer opt.variables.mutex.Unlock()
 
-	for _, tensor := range opt.variables.TrainableVariable {
+	for _, tensor := range opt.variables.TrainableVariables {
 		tensor.MustGrad().Clamp_(ts.FloatScalar(-max), ts.FloatScalar(max))
 	}
 }

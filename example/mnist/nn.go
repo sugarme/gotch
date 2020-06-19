@@ -43,9 +43,9 @@ func netInit(vs nn.Path) ts.Module {
 func runNN() {
 	var ds vision.Dataset
 	ds = vision.LoadMNISTDir(MnistDirNN)
-
 	vs := nn.NewVarStore(gotch.CPU)
 	net := netInit(vs.Root())
+
 	opt, err := nn.DefaultAdamConfig().Build(vs, LrNN)
 	if err != nil {
 		log.Fatal(err)
@@ -58,7 +58,7 @@ func runNN() {
 		opt.BackwardStep(loss)
 		lossVal := loss.MustShallowClone().MustView([]int64{-1}).MustFloat64Value([]int64{0})
 		testAccuracy := net.Forward(ds.TestImages).AccuracyForLogits(ds.TestLabels).MustView([]int64{-1}).MustFloat64Value([]int64{0})
-		fmt.Printf("Epoch: %v - Loss: %.3f - Test accuracy: %.2f%%\n", epoch, lossVal, testAccuracy*100)
+		fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, lossVal, testAccuracy*100)
 
 		fmt.Printf("Loss: %v\n", lossVal)
 	}
