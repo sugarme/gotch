@@ -229,24 +229,36 @@ func (ts Tensor) MustAdd(other Tensor) (retVal Tensor) {
 	return retVal
 }
 
-func (ts Tensor) Add_(other Tensor) (err error) {
+func (ts Tensor) Add_(other Tensor) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 	lib.AtgAdd_(ptr, ts.ctensor, other.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return err
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
 	}
-
-	return nil
-
 }
 
-func (ts Tensor) MustAdd_(other Tensor) {
-	err := ts.Add_(other)
+func (ts Tensor) Add1(other Scalar) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+	lib.AtgAdd1(ptr, ts.ctensor, other.cscalar)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return Tensor{ctensor: *ptr}, nil
+}
+
+func (ts Tensor) MustAdd1(other Scalar) (retVal Tensor) {
+	retVal, err := ts.Add1(other)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	return retVal
 }
 
 func (ts Tensor) AddG(other Tensor) (err error) {
@@ -804,6 +816,179 @@ func (ts Tensor) T_() {
 	defer C.free(unsafe.Pointer(ptr))
 
 	lib.AtgT_(ptr, ts.ctensor)
+	err := TorchErr()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (ts Tensor) MseLoss(target Tensor, reduction int) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgMseLoss(ptr, ts.ctensor, target.ctensor, reduction)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustMseLoss(target Tensor, reduction int) (retVal Tensor) {
+	retVal, err := ts.MseLoss(target, reduction)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Exp() (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgExp(ptr, ts.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustExp() (retVal Tensor) {
+	retVal, err := ts.Exp()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Exp_() {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgExp(ptr, ts.ctensor)
+	err := TorchErr()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (ts Tensor) Pow(exponent Scalar) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgPow(ptr, ts.ctensor, exponent.cscalar)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustPow(exponent Scalar) (retVal Tensor) {
+	retVal, err := ts.Pow(exponent)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Sum(dtype int32) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgSum(ptr, ts.ctensor, dtype)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSum(dtype int32) (retVal Tensor) {
+	retVal, err := ts.Sum(dtype)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Sub(other Tensor) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgSub(ptr, ts.ctensor, other.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSub(other Tensor) (retVal Tensor) {
+	retVal, err := ts.Sub(other)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Sub1(other Scalar) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgSub1(ptr, ts.ctensor, other.cscalar)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSub1(other Scalar) (retVal Tensor) {
+	retVal, err := ts.Sub1(other)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Sub_(other Tensor) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	defer C.free(unsafe.Pointer(ptr))
+
+	lib.AtgSub_(ptr, ts.ctensor, other.ctensor)
 	err := TorchErr()
 	if err != nil {
 		log.Fatal(err)

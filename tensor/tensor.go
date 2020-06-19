@@ -967,24 +967,24 @@ type Reduction int
 
 const (
 	// Do not reduce
-	ReduceNone Reduction = iota
+	ReductionNone Reduction = iota
 	// Mean of losses
-	ReduceMean
+	ReductionMean
 	// Sum of losses
-	ReduceSum
+	ReductionSum
 	// Escape hatch in case new options become available
-	Other
+	ReductionOther
 )
 
 func (r Reduction) ToInt() (retVal int) {
 	switch r {
-	case ReduceNone:
+	case ReductionNone:
 		return 0
-	case ReduceMean:
+	case ReductionMean:
 		return 1
-	case ReduceSum:
+	case ReductionSum:
 		return 2
-	case Other:
+	case ReductionOther:
 		return 3
 	}
 	return

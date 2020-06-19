@@ -84,8 +84,8 @@ func runLinear() {
 		loss.MustBackward()
 
 		ts.NoGrad(func() {
-			ws.MustAdd_(ws.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
-			bs.MustAdd_(bs.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
+			ws.Add_(ws.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
+			bs.Add_(bs.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
 		})
 
 		testLogits := ds.TestImages.MustMm(ws).MustAdd(bs)

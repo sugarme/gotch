@@ -77,6 +77,11 @@ func AtgAdd_(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_add_(ptr, self, other)
 }
 
+// id atg_add1(tensor *, tensor self, scalar other);
+func AtgAdd1(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_add1(ptr, self, other)
+}
+
 // void atg_totype(tensor *, tensor self, int scalar_type);
 func AtgTotype(ptr *Ctensor, self Ctensor, scalar_type int32) {
 	cscalar_type := *(*C.int)(unsafe.Pointer(&scalar_type))
@@ -266,4 +271,48 @@ func AtgT(ptr *Ctensor, self Ctensor) {
 // void atg_t_(tensor *, tensor self);
 func AtgT_(ptr *Ctensor, self Ctensor) {
 	C.atg_t_(ptr, self)
+}
+
+// void atg_mse_loss(tensor *, tensor self, tensor target, int64_t reduction);
+func AtgMseLoss(ptr *Ctensor, self Ctensor, target Ctensor, reduction int) {
+	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
+
+	C.atg_mse_loss(ptr, self, target, creduction)
+}
+
+// void atg_exp(tensor *, tensor self);
+func AtgExp(ptr *Ctensor, self Ctensor) {
+	C.atg_exp(ptr, self)
+}
+
+// void atg_exp_(tensor *, tensor self);
+func AtgExp_(ptr *Ctensor, self Ctensor) {
+	C.atg_exp_(ptr, self)
+}
+
+// void atg_pow(tensor *, tensor self, scalar exponent);
+func AtgPow(ptr *Ctensor, self Ctensor, exponent Cscalar) {
+	C.atg_pow(ptr, self, exponent)
+}
+
+// void atg_sum(tensor *, tensor self, int dtype);
+func AtgSum(ptr *Ctensor, self Ctensor, dtype int32) {
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+
+	C.atg_sum(ptr, self, cdtype)
+}
+
+// void atg_sub(tensor *, tensor self, tensor other);
+func AtgSub(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_sub(ptr, self, other)
+}
+
+// void atg_sub1(tensor *, tensor self, scalar other);
+func AtgSub1(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_sub1(ptr, self, other)
+}
+
+// void atg_sub_(tensor *, tensor self, tensor other);
+func AtgSub_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_sub_(ptr, self, other)
 }
