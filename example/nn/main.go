@@ -24,25 +24,28 @@ func testOptimizer() {
 
 	vs := nn.NewVarStore(gotch.CPU)
 
-	opt, err := nn.DefaultSGDConfig().Build(vs, 1e-2)
-	if err != nil {
-		log.Fatal("Failed building SGD optimizer")
-	}
-
 	cfg := nn.LinearConfig{
 		WsInit: nn.NewConstInit(0.001),
 		BsInit: nn.NewConstInit(0.001),
 		Bias:   true,
 	}
 
+	// fmt.Printf("Number of trainable variables: %v\n", vs.Len())
 	linear := nn.NewLinear(vs.Root(), 1, 1, cfg)
+	// fmt.Printf("Trainable variables at app: %v\n", vs.TrainableVariable())
+
 	loss := xs.Apply(linear).MustMseLoss(ys, ts.ReductionMean.ToInt())
 	initialLoss := loss.MustView([]int64{-1}).MustFloat64Value([]int64{0})
 	fmt.Printf("Initial Loss: %.3f\n", initialLoss)
 
+	opt, err := nn.DefaultSGDConfig().Build(vs, 1e-2)
+	if err != nil {
+		log.Fatal("Failed building SGD optimizer")
+	}
+
 	for i := 0; i < 50; i++ {
-		loss = xs.Apply(linear)
-		// loss = linear.Forward(xs)
+		// loss = xs.Apply(linear)
+		loss = linear.Forward(xs)
 		loss = loss.MustMseLoss(ys, ts.ReductionMean.ToInt())
 
 		fmt.Printf("Loss: %.3f\n", loss.MustView([]int64{-1}).MustFloat64Value([]int64{0}))

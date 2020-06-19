@@ -3,7 +3,6 @@ package nn
 // Optimizers to be used for gradient-descent based training.
 
 import (
-	// "github.com/sugarme/gotch"
 	"log"
 
 	ts "github.com/sugarme/gotch/tensor"
@@ -41,13 +40,18 @@ func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optim
 		return retVal, err
 	}
 
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
+	// vs.variables.mutex.Lock()
+	// defer vs.variables.mutex.Unlock()
 
-	if len(vs.variables.TrainableVariable) > 0 {
-		if err = opt.AddParameters(vs.variables.TrainableVariable); err != nil {
-			return retVal, err
-		}
+	// fmt.Printf("Trainable Variables: \n:%v", len(vs.Variables()))
+	var parameters []ts.Tensor
+	for _, v := range vs.Variables() {
+		parameters = append(parameters, v)
+	}
+
+	// if err = opt.AddParameters(vs.variables.TrainableVariable); err != nil {
+	if err = opt.AddParameters(parameters); err != nil {
+		return retVal, err
 	}
 
 	return Optimizer{
@@ -224,6 +228,7 @@ func (opt *Optimizer) Step() {
 func (opt *Optimizer) BackwardStep(loss ts.Tensor) {
 
 	opt.addMissingVariables()
+
 	err := opt.opt.ZeroGrad()
 	if err != nil {
 		log.Fatalf("Optimizer - BackwardStep method call - ZeroGrad error: %v\n", err)

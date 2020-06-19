@@ -16,7 +16,7 @@ const (
 	LabelNN       int64  = 10
 	MnistDirNN    string = "../../data/mnist"
 
-	epochsNN    = 3
+	epochsNN    = 50
 	batchSizeNN = 256
 
 	LrNN = 1e-3
@@ -51,19 +51,16 @@ func runNN() {
 		log.Fatal(err)
 	}
 
-	bsClone := l.Bs.MustShallowClone()
-
 	for epoch := 0; epoch < epochsNN; epoch++ {
+
 		loss := net.Forward(ds.TrainImages).CrossEntropyForLogits(ds.TrainLabels)
+
 		opt.BackwardStep(loss)
-
-		fmt.Printf("Bs vals: %v\n", bsClone.MustToString(int64(1)))
-
 		lossVal := loss.MustShallowClone().MustView([]int64{-1}).MustFloat64Value([]int64{0})
-
 		testAccuracy := net.Forward(ds.TestImages).AccuracyForLogits(ds.TestLabels).MustView([]int64{-1}).MustFloat64Value([]int64{0})
-
 		fmt.Printf("Epoch: %v - Loss: %.3f - Test accuracy: %.2f%%\n", epoch, lossVal, testAccuracy*100)
+
+		fmt.Printf("Loss: %v\n", lossVal)
 	}
 
 }
