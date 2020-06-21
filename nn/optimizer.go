@@ -10,15 +10,15 @@ import (
 
 // Optimizer is a struct object to run gradient descent.
 type Optimizer struct {
-	opt                  ts.COptimizer
-	variables            Variables // having embedded sync.Mutex
+	opt ts.COptimizer
+	// variables            Variables // having embedded sync.Mutex
 	variablesInOptimizer uint8
 	config               interface{}
 }
 
 // OptimizerConfig defines Optimizer configurations. These configs can be used to build optimizer.
 type OptimizerConfig interface {
-	BuildCOpt(lr float64) (retVal ts.COptimizer, err error)
+	buildCOpt(lr float64) (retVal ts.COptimizer, err error)
 
 	// Build builds an optimizer with the specified learning rate handling variables stored in `vs`.
 	//
@@ -35,29 +35,27 @@ type OptimizerConfig interface {
 // defaultBuild is `default` Build method for OptimizerConfig interface
 func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optimizer, err error) {
 
-	opt, err := config.BuildCOpt(lr)
+	opt, err := config.buildCOpt(lr)
 	if err != nil {
 		return retVal, err
 	}
 
-	// vs.variables.mutex.Lock()
-	// defer vs.variables.mutex.Unlock()
-
-	// fmt.Printf("Trainable Variables: \n:%v", len(vs.Variables()))
 	var parameters []ts.Tensor
-	for _, v := range vs.Variables() {
-		parameters = append(parameters, v)
+	for _, v := range vs.Vars.TrainableVariables {
+		param := v.MustShallowClone()
+		parameters = append(parameters, param)
 	}
 
-	// if err = opt.AddParameters(vs.variables.TrainableVariables); err != nil {
-	if err = opt.AddParameters(parameters); err != nil {
+	if err = opt.AddParameters(vs.Vars.TrainableVariables); err != nil {
 		return retVal, err
 	}
 
+	// TODO: should we clone or copy?
+
 	return Optimizer{
-		opt:                  opt,
-		variables:            vs.variables,
-		variablesInOptimizer: uint8(len(vs.variables.TrainableVariables)),
+		opt: opt,
+		// variables:            vs.Vars,
+		variablesInOptimizer: uint8(len(vs.Vars.TrainableVariables)),
 		config:               config,
 	}, nil
 }
@@ -94,7 +92,7 @@ func NewSGDConfig(momentum, dampening, wd float64, nesterov bool) (retVal SGDCon
 }
 
 // Implement OptimizerConfig interface for SGDConfig
-func (c SGDConfig) BuildCOpt(lr float64) (retVal ts.COptimizer, err error) {
+func (c SGDConfig) buildCOpt(lr float64) (retVal ts.COptimizer, err error) {
 	return ts.Sgd(lr, c.Momentum, c.Dampening, c.Wd, c.Nesterov)
 }
 
@@ -130,7 +128,7 @@ func NewAdamConfig(beta1, beta2, wd float64) AdamConfig {
 }
 
 // Implement OptimizerConfig interface for AdamConfig
-func (c AdamConfig) BuildCOpt(lr float64) (retVal ts.COptimizer, err error) {
+func (c AdamConfig) buildCOpt(lr float64) (retVal ts.COptimizer, err error) {
 	return ts.Adam(lr, c.Beta1, c.Beta2, c.Wd)
 }
 
@@ -172,7 +170,7 @@ func NewRMSPropConfig(alpha, eps, wd, momentum float64, centered bool) RMSPropCo
 }
 
 // Implement OptimizerConfig interface for RMSPropConfig
-func (c RMSPropConfig) BuildCOpt(lr float64) (retVal ts.COptimizer, err error) {
+func (c RMSPropConfig) buildCOpt(lr float64) (retVal ts.COptimizer, err error) {
 	return ts.RmsProp(lr, c.Alpha, c.Eps, c.Wd, c.Momentum, c.Centered)
 }
 
@@ -184,15 +182,19 @@ func (c RMSPropConfig) Build(vs VarStore, lr float64) (retVal Optimizer, err err
 // ==================
 func (opt *Optimizer) addMissingVariables() {
 
-	opt.variables.mutex.Lock()
-	defer opt.variables.mutex.Unlock()
-
-	missingVariables := len(opt.variables.TrainableVariables) - int(opt.variablesInOptimizer)
-
-	if missingVariables > 0 {
-		opt.opt.AddParameters(opt.variables.TrainableVariables[opt.variablesInOptimizer:])
-		opt.variablesInOptimizer = uint8(len(opt.variables.TrainableVariables))
-	}
+	// missingVariables := len(opt.variables.TrainableVariables) - int(opt.variablesInOptimizer)
+	//
+	// if missingVariables > 0 {
+	// var tensors []ts.Tensor
+	// for _, t := range opt.variables.TrainableVariables[opt.variablesInOptimizer:] {
+	// tensor := t.MustShallowClone()
+	// tensor.Detach_()
+	// tensors = append(tensors, tensor)
+	// }
+	//
+	// opt.opt.AddParameters(tensors)
+	// opt.variablesInOptimizer = uint8(len(opt.variables.TrainableVariables))
+	// }
 
 }
 
@@ -207,12 +209,12 @@ func (opt *Optimizer) ZeroGrad() {
 // Clips gradient value at some specified maximum value.
 func (opt *Optimizer) ClipGradValue(max float64) {
 
-	opt.variables.mutex.Lock()
-	defer opt.variables.mutex.Unlock()
+	// opt.variables.mutex.Lock()
+	// defer opt.variables.mutex.Unlock()
 
-	for _, tensor := range opt.variables.TrainableVariables {
-		tensor.MustGrad().Clamp_(ts.FloatScalar(-max), ts.FloatScalar(max))
-	}
+	// for _, tensor := range opt.variables.TrainableVariables {
+	// tensor.MustGrad().Clamp_(ts.FloatScalar(-max), ts.FloatScalar(max))
+	// }
 }
 
 // Step performs an optimization step, updating the tracked tensors based on their gradients.

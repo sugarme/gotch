@@ -40,12 +40,22 @@ func netInit(vs nn.Path) ts.Module {
 	return n
 }
 
+func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer, epoch int) {
+	loss := m.Forward(trainX).CrossEntropyForLogits(trainY)
+
+	opt.BackwardStep(loss)
+
+	testAccuracy := m.Forward(testX).AccuracyForLogits(testY).Values()[0]
+	fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, loss.Values()[0], testAccuracy*100)
+
+}
+
 func runNN() {
+
 	var ds vision.Dataset
 	ds = vision.LoadMNISTDir(MnistDirNN)
 	vs := nn.NewVarStore(gotch.CPU)
 	net := netInit(vs.Root())
-
 	opt, err := nn.DefaultAdamConfig().Build(vs, LrNN)
 	if err != nil {
 		log.Fatal(err)
@@ -53,14 +63,8 @@ func runNN() {
 
 	for epoch := 0; epoch < epochsNN; epoch++ {
 
-		loss := net.Forward(ds.TrainImages).CrossEntropyForLogits(ds.TrainLabels)
+		train(ds.TrainImages, ds.TrainLabels, ds.TestImages, ds.TestLabels, net, opt, epoch)
 
-		opt.BackwardStep(loss)
-		lossVal := loss.MustShallowClone().MustView([]int64{-1}).MustFloat64Value([]int64{0})
-		testAccuracy := net.Forward(ds.TestImages).AccuracyForLogits(ds.TestLabels).MustView([]int64{-1}).MustFloat64Value([]int64{0})
-		fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, lossVal, testAccuracy*100)
-
-		fmt.Printf("Loss: %v\n", lossVal)
 	}
 
 }

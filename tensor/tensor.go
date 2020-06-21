@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	// "strings"
 	"unsafe"
 
 	gotch "github.com/sugarme/gotch"
@@ -432,11 +431,8 @@ func (ts Tensor) IsSparse() (retVal bool, err error) {
 func (ts Tensor) ZeroGrad() {
 	grad := ts.MustGrad()
 	if grad.MustDefined() {
-		// TODO: can we chain them?
-		// grad.MustDetach_().MustZero_()
-		// https://www.calhoun.io/using-functional-options-instead-of-method-chaining-in-go/
-		detach := grad.MustDetach_()
-		detach.MustZero_()
+		grad.Detach_()
+		grad.Zero_()
 	}
 }
 
@@ -988,4 +984,11 @@ func (r Reduction) ToInt() (retVal int) {
 		return 3
 	}
 	return
+}
+
+// Values returns values of tensor in a slice of float64.
+func (ts Tensor) Values() []float64 {
+	clone := ts.MustShallowClone()
+	clone.Detach_()
+	return []float64{clone.MustView([]int64{-1}).MustFloat64Value([]int64{-1})}
 }

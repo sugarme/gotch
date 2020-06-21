@@ -26,8 +26,8 @@ type Variables struct {
 // VarStore is used to store variables used by one or multiple layers.
 // It specifies a SINGLE device where all variables are stored.
 type VarStore struct {
-	device    gotch.Device
-	variables Variables // TODO: should we export this field
+	device gotch.Device
+	Vars   Variables
 }
 
 // Path is variable store with an associated path for variables naming.
@@ -52,8 +52,8 @@ func NewVarStore(device gotch.Device) VarStore {
 	}
 
 	return VarStore{
-		device:    device,
-		variables: variables,
+		device: device,
+		Vars:   variables,
 	}
 }
 
@@ -70,36 +70,45 @@ func (vs *VarStore) Device() gotch.Device {
 
 // Len returns the number of tensors currently stored on this var-store
 func (vs *VarStore) Len() (retVal int) {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
-	retVal = len(vs.variables.NamedVariables)
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
+	retVal = len(vs.Vars.NamedVariables)
 
 	return retVal
 }
 
 // IsEmpty returns true if no tensors are currently stored on this var-store
 func (vs *VarStore) IsEmpty() (retVal bool) {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
-	retVal = (len(vs.variables.NamedVariables) == 0)
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
+	retVal = (len(vs.Vars.NamedVariables) == 0)
 
 	return retVal
 }
 
 // TrainableVariabless returns all trainable variables for this var-store
 func (vs *VarStore) TrainableVariables() (retVal []ts.Tensor) {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
-	retVal = vs.variables.TrainableVariables
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
+
+	retVal = vs.Vars.TrainableVariables
+	for _, t := range vs.Vars.TrainableVariables {
+		retVal = append(retVal, t.MustShallowClone())
+	}
 
 	return retVal
 }
 
 // Variables returns all variables and their names in a map[variable_name]Tensor
 func (vs *VarStore) Variables() (retVal map[string]ts.Tensor) {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
-	retVal = vs.variables.NamedVariables
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
+
+	retVal = make(map[string]ts.Tensor, 0)
+
+	for k, v := range vs.Vars.NamedVariables {
+		retVal[k] = v.MustShallowClone()
+	}
 
 	return retVal
 }
@@ -121,12 +130,12 @@ func (vs *VarStore) Root() (retVal Path) {
 // NOTE: Weight values for all the tensors currently stored in the
 // var-store gets saved in the given file.
 func (vs *VarStore) Save(filepath string) (err error) {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
 
 	// Convert map to []NamedTensor
 	var namedTensors []ts.NamedTensor
-	for k, v := range vs.variables.NamedVariables {
+	for k, v := range vs.Vars.NamedVariables {
 		namedTensors = append(namedTensors, ts.NamedTensor{
 			Name:   k,
 			Tensor: v,
@@ -152,13 +161,13 @@ func (vs *VarStore) Load(filepath string) (err error) {
 
 	// Match and in-place copy value (update) from newly loaded tensors
 	// to existing named tensors if name is matched. Throw error otherwise.
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
 
 	for _, namedTs := range namedTensors {
 		var currTs ts.Tensor
 		var ok bool
-		if currTs, ok = vs.variables.NamedVariables[namedTs.Name]; !ok {
+		if currTs, ok = vs.Vars.NamedVariables[namedTs.Name]; !ok {
 			err = fmt.Errorf("Cannot find tensor with name: %v in variable store. \n", namedTs.Name)
 			return err
 		}
@@ -192,13 +201,13 @@ func (vs *VarStore) LoadPartial(filepath string) (retVal []string, err error) {
 
 	// Match and in-place copy value (update) from newly loaded tensors
 	// to existing named tensors if name is matched. Throw error otherwise.
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
 
 	for _, namedTs := range namedTensors {
 		var currTs ts.Tensor
 		var ok bool
-		if currTs, ok = vs.variables.NamedVariables[namedTs.Name]; !ok {
+		if currTs, ok = vs.Vars.NamedVariables[namedTs.Name]; !ok {
 			// missing
 			missingVariables = append(missingVariables, namedTs.Name)
 		}
@@ -217,10 +226,10 @@ func (vs *VarStore) LoadPartial(filepath string) (retVal []string, err error) {
 // Gradients for the variables in this store are not tracked
 // anymore.
 func (vs *VarStore) Freeze() {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
 
-	for _, v := range vs.variables.TrainableVariables {
+	for _, v := range vs.Vars.TrainableVariables {
 		_, err := v.SetRequiresGrad(false)
 		if err != nil {
 			log.Fatalf("Freeze() Error: %v\n", err)
@@ -232,10 +241,10 @@ func (vs *VarStore) Freeze() {
 //
 // Gradients for the variables in this store are tracked again.
 func (vs *VarStore) Unfreeze() {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
 
-	for _, v := range vs.variables.TrainableVariables {
+	for _, v := range vs.Vars.TrainableVariables {
 		_, err := v.SetRequiresGrad(true)
 		if err != nil {
 			log.Fatalf("Unfreeze() Error: %v\n", err)
@@ -248,22 +257,22 @@ func (vs *VarStore) Unfreeze() {
 // All the variables in this var store have to exist with the same
 // name in the source var store, otherwise an error is returned.
 func (vs *VarStore) Copy(src VarStore) (err error) {
-	vs.variables.mutex.Lock()
-	defer vs.variables.mutex.Unlock()
-	src.variables.mutex.Lock()
-	defer src.variables.mutex.Unlock()
+	vs.Vars.mutex.Lock()
+	defer vs.Vars.mutex.Unlock()
+	src.Vars.mutex.Lock()
+	defer src.Vars.mutex.Unlock()
 
-	srcNamedVariables := src.variables.NamedVariables
+	srcNamedVariables := src.Vars.NamedVariables
 	device := vs.device
 
-	for k, _ := range vs.variables.NamedVariables {
+	for k, _ := range vs.Vars.NamedVariables {
 		if _, ok := srcNamedVariables[k]; !ok {
 			err = fmt.Errorf("VarStore copy error: cannot find %v in the source var store.\n", k)
 			return err
 		}
 	}
 
-	for k, v := range vs.variables.NamedVariables {
+	for k, v := range vs.Vars.NamedVariables {
 		srcTs, _ := srcNamedVariables[k]
 		srcDevTs, err := srcTs.To(device)
 		if err != nil {
@@ -319,11 +328,11 @@ func (p *Path) getpath(name string) (retVal string) {
 func (p *Path) add(name string, newTs ts.Tensor, trainable bool) (retVal ts.Tensor) {
 	path := p.getpath(name)
 
-	p.varstore.variables.mutex.Lock()
-	defer p.varstore.variables.mutex.Unlock()
+	p.varstore.Vars.mutex.Lock()
+	defer p.varstore.Vars.mutex.Unlock()
 
-	if _, ok := p.varstore.variables.NamedVariables[path]; ok {
-		path = fmt.Sprintf("%v__%v", path, len(p.varstore.variables.NamedVariables))
+	if _, ok := p.varstore.Vars.NamedVariables[path]; ok {
+		path = fmt.Sprintf("%v__%v", path, len(p.varstore.Vars.NamedVariables))
 	}
 
 	var (
@@ -331,19 +340,19 @@ func (p *Path) add(name string, newTs ts.Tensor, trainable bool) (retVal ts.Tens
 		err    error
 	)
 	if trainable {
-		tensor, err = newTs.SetRequiresGrad(true)
+		tensor, err = newTs.MustShallowClone().SetRequiresGrad(true)
 		if err != nil {
 			log.Fatalf("Path 'add' method error: %v\n", err)
 		}
 	} else {
-		tensor = newTs
+		tensor = newTs.MustShallowClone()
 	}
 
 	if trainable {
-		p.varstore.variables.TrainableVariables = append(p.varstore.variables.TrainableVariables, tensor)
+		p.varstore.Vars.TrainableVariables = append(p.varstore.Vars.TrainableVariables, tensor)
 	}
 
-	p.varstore.variables.NamedVariables[path] = tensor
+	p.varstore.Vars.NamedVariables[path] = tensor
 
 	return tensor
 }
@@ -522,10 +531,10 @@ func (p *Path) VarCopy(name string, t ts.Tensor) (retVal ts.Tensor) {
 // Get gets the tensor corresponding to a given name if present.
 func (p *Path) Get(name string) (retVal ts.Tensor, err error) {
 
-	p.varstore.variables.mutex.Lock()
-	defer p.varstore.variables.mutex.Unlock()
+	p.varstore.Vars.mutex.Lock()
+	defer p.varstore.Vars.mutex.Unlock()
 
-	v, ok := p.varstore.variables.NamedVariables[name]
+	v, ok := p.varstore.Vars.NamedVariables[name]
 	if !ok {
 		err = fmt.Errorf("Path - Get method call error: Cannot find variable for name: %v\n", name)
 		return retVal, err
@@ -536,12 +545,12 @@ func (p *Path) Get(name string) (retVal ts.Tensor, err error) {
 
 // Entry gets the entry corresponding to a given name for in-place manipulation.
 func (p *Path) Entry(name string) (retVal Entry) {
-	p.varstore.variables.mutex.Lock()
-	defer p.varstore.variables.mutex.Unlock()
+	p.varstore.Vars.mutex.Lock()
+	defer p.varstore.Vars.mutex.Unlock()
 
 	return Entry{
 		name:      name,
-		variables: &p.varstore.variables,
+		variables: &p.varstore.Vars,
 		path:      p,
 	}
 }

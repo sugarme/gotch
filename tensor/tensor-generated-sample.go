@@ -80,42 +80,22 @@ func (ts Tensor) MustGrad() (retVal Tensor) {
 	return retVal
 }
 
-func (ts Tensor) Detach_() (retVal Tensor, err error) {
+func (ts Tensor) Detach_() {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 	lib.AtgDetach_(ptr, ts.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-
-	return Tensor{ctensor: *ptr}, nil
-}
-
-func (ts Tensor) MustDetach_() (retVal Tensor) {
-	retVal, err := ts.Detach_()
-	if err != nil {
+	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
-
-	return retVal
 }
 
-func (ts Tensor) Zero_() (err error) {
+func (ts Tensor) Zero_() {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 	lib.AtgZero_(ptr, ts.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ts Tensor) MustZero_() {
-	err := ts.Zero_()
-	if err != nil {
+	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
 }
