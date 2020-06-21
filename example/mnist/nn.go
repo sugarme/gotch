@@ -16,8 +16,7 @@ const (
 	LabelNN       int64  = 10
 	MnistDirNN    string = "../../data/mnist"
 
-	epochsNN    = 50
-	batchSizeNN = 256
+	epochsNN = 200
 
 	LrNN = 1e-3
 )
@@ -27,12 +26,10 @@ var l nn.Linear
 func netInit(vs nn.Path) ts.Module {
 	n := nn.Seq()
 
-	l = nn.NewLinear(vs.Sub("layer1"), ImageDimNN, HiddenNodesNN, nn.DefaultLinearConfig())
+	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, nn.DefaultLinearConfig()))
 
-	n.Add(l)
-
-	n.AddFn(nn.ForwardWith(func(xs ts.Tensor) ts.Tensor {
-		return xs.MustRelu()
+	n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		return xs.MustRelu(true)
 	}))
 
 	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, nn.DefaultLinearConfig()))
@@ -45,9 +42,11 @@ func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer
 
 	opt.BackwardStep(loss)
 
-	testAccuracy := m.Forward(testX).AccuracyForLogits(testY).Values()[0]
-	fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, loss.Values()[0], testAccuracy*100)
+	testAccuracy := m.Forward(testX).AccuracyForLogits(testY)
+	fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, loss.Values()[0], testAccuracy.Values()[0]*100)
 
+	loss.MustDrop()
+	testAccuracy.MustDrop()
 }
 
 func runNN() {
@@ -62,9 +61,7 @@ func runNN() {
 	}
 
 	for epoch := 0; epoch < epochsNN; epoch++ {
-
 		train(ds.TrainImages, ds.TrainLabels, ds.TestImages, ds.TestLabels, net, opt, epoch)
-
 	}
 
 }

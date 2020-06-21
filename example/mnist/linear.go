@@ -13,7 +13,7 @@ const (
 	Label    int64  = 10
 	MnistDir string = "../../data/mnist"
 
-	epochs = 200
+	epochs = 500
 )
 
 func runLinear() {
@@ -28,22 +28,23 @@ func runLinear() {
 
 	for epoch := 0; epoch < epochs; epoch++ {
 
-		logits := ds.TrainImages.MustMm(ws).MustAdd(bs)
-		loss := logits.MustLogSoftmax(-1, dtype).MustNllLoss(ds.TrainLabels)
+		logits := ds.TrainImages.MustMm(ws, false).MustAdd(bs, true)
+		loss := logits.MustLogSoftmax(-1, dtype, true).MustNllLoss(ds.TrainLabels, true)
 
 		ws.ZeroGrad()
 		bs.ZeroGrad()
 		loss.MustBackward()
 
 		ts.NoGrad(func() {
-			ws.Add_(ws.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
-			bs.Add_(bs.MustGrad().MustMul1(ts.FloatScalar(-1.0)))
+			ws.Add_(ws.MustGrad().MustMul1(ts.FloatScalar(-1.0), true))
+			bs.Add_(bs.MustGrad().MustMul1(ts.FloatScalar(-1.0), true))
 		})
 
-		testLogits := ds.TestImages.MustMm(ws).MustAdd(bs)
-		testAccuracy := testLogits.MustArgmax(-1, false).MustEq1(ds.TestLabels).MustTotype(gotch.Float).MustMean(gotch.Float.CInt()).MustView([]int64{-1}).MustFloat64Value([]int64{0})
+		testLogits := ds.TestImages.MustMm(ws, false).MustAdd(bs, true)
+		testAccuracy := testLogits.MustArgmax(-1, false, true).MustEq1(ds.TestLabels).MustTotype(gotch.Float, true).MustMean(gotch.Float.CInt(), true).MustView([]int64{-1}).MustFloat64Value([]int64{0})
 
 		fmt.Printf("Epoch: %v - Loss: %.3f - Test accuracy: %.2f%%\n", epoch, loss.Values()[0], testAccuracy*100)
 
+		loss.MustDrop()
 	}
 }

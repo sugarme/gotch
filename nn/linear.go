@@ -90,6 +90,6 @@ func NewLinear(vs Path, inDim, outDim int64, c LinearConfig) Linear {
 // 	  1 1 1
 // 		1 1 1 ]
 func (l Linear) Forward(xs ts.Tensor) (retVal ts.Tensor) {
-
-	return xs.MustMatMul(l.Ws.MustT()).MustAdd(l.Bs)
+	clone := l.Ws.MustShallowClone().MustT(true)
+	return xs.MustMm(clone, false).MustAdd(l.Bs, true)
 }

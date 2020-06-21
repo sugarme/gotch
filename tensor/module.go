@@ -72,7 +72,7 @@ func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize 
 			break
 		}
 
-		acc := m.ForwardT(item.Data.MustTo(d), false).AccuracyForLogits(item.Label.MustTo(d)).MustView([]int64{-1}).MustFloat64Value([]int64{0})
+		acc := m.ForwardT(item.Data.MustTo(d, true), false).AccuracyForLogits(item.Label.MustTo(d, true)).MustView([]int64{-1}).MustFloat64Value([]int64{0})
 		size := float64(item.Data.MustSize()[0])
 		sumAccuracy += acc * size
 		sampleCount += size

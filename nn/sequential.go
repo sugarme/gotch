@@ -78,12 +78,11 @@ func (s Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 	}
 
 	// forward sequentially
-	var currTs ts.Tensor = xs
 	for i := 0; i < len(s.layers); i++ {
-		currTs = s.layers[i].Forward(currTs)
+		xs = s.layers[i].Forward(xs)
 	}
 
-	return currTs
+	return xs
 }
 
 // SequentialT is a sequential layer combining new layers with support for a training mode.
@@ -136,7 +135,6 @@ func (s SequentialT) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
 
 // Add appends a layer after all the current layers.
 func (s *SequentialT) Add(l ts.ModuleT) {
-
 	s.layers = append(s.layers, l)
 }
 

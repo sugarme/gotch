@@ -84,8 +84,8 @@ func MustNewIter2(xs, ys Tensor, batchSize int64) (retVal Iter2) {
 func (it Iter2) Shuffle() (retVal Iter2) {
 	index := MustRandperm(it.totalSize, gotch.Int64, gotch.CPU)
 
-	it.xs = it.xs.MustIndexSelect(0, index)
-	it.ys = it.ys.MustIndexSelect(0, index)
+	it.xs = it.xs.MustIndexSelect(0, index, true)
+	it.ys = it.ys.MustIndexSelect(0, index, true)
 	return it
 }
 

@@ -126,29 +126,28 @@ func AtInt64ValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) i
 
 // int at_requires_grad(tensor);
 func AtRequiresGrad(ts Ctensor) bool {
-	retVal := C.at_requires_grad((C.tensor)(ts))
+	retVal := C.at_requires_grad(ts)
 	return *(*bool)(unsafe.Pointer(&retVal))
 }
 
 // int at_defined(tensor);
 func AtDefined(ts Ctensor) bool {
-	retVal := C.at_defined((C.tensor)(ts))
+	retVal := C.at_defined(ts)
 	return *(*bool)(unsafe.Pointer(&retVal))
 }
 
 // int at_is_sparse(tensor);
 func AtIsSparse(ts Ctensor) bool {
-	retVal := C.at_is_sparse((C.tensor)(ts))
+	retVal := C.at_is_sparse(ts)
 	return *(*bool)(unsafe.Pointer(&retVal))
 }
 
 // void at_backward(tensor, int, int);
 func AtBackward(ts Ctensor, keepGraph int, createGraph int) {
-	ctensor := (C.tensor)(ts)
 	ckeepGraph := *(*C.int)(unsafe.Pointer(&keepGraph))
 	ccreateGraph := *(*C.int)(unsafe.Pointer(&createGraph))
 
-	C.at_backward(ctensor, ckeepGraph, ccreateGraph)
+	C.at_backward(ts, ckeepGraph, ccreateGraph)
 }
 
 /*
@@ -169,39 +168,33 @@ func AtRunBackward(tensorsPtr *Ctensor, ntensors int, inputsPtr *Ctensor, ninput
 }
 
 // void at_copy_data(tensor tensor, void *vs, size_t numel, size_t element_size_in_bytes);
-func AtCopyData(tensor Ctensor, vs unsafe.Pointer, numel uint, element_size_in_bytes uint) {
-	ctensor := (C.tensor)(tensor)
+func AtCopyData(ts Ctensor, vs unsafe.Pointer, numel uint, element_size_in_bytes uint) {
 	cnumel := *(*C.size_t)(unsafe.Pointer(&numel))
 	celement_size_in_bytes := *(*C.size_t)(unsafe.Pointer(&element_size_in_bytes))
-	C.at_copy_data(ctensor, vs, cnumel, celement_size_in_bytes)
+	C.at_copy_data(ts, vs, cnumel, celement_size_in_bytes)
 }
 
 // tensor at_shallow_clone(tensor);
 func AtShallowClone(ts Ctensor) Ctensor {
-	ctensor := (C.tensor)(ts)
-	return C.at_shallow_clone(ctensor)
+	return C.at_shallow_clone(ts)
 }
 
 // tensor at_get(tensor, int index);
 func AtGet(ts Ctensor, index int) Ctensor {
-	ctensor := (C.tensor)(ts)
 	cindex := *(*C.int)(unsafe.Pointer(&index))
-	return C.at_get(ctensor, cindex)
+	return C.at_get(ts, cindex)
 }
 
 // void at_copy_(tensor dst, tensor src);
 func AtCopy_(dst Ctensor, src Ctensor) {
-	cdst := (C.tensor)(dst)
-	csrc := (C.tensor)(src)
-	C.at_copy_(cdst, csrc)
+	C.at_copy_(dst, src)
 }
 
 // void at_save(tensor, char *filename);
 func AtSave(ts Ctensor, path string) {
-	ctensor := (C.tensor)(ts)
 	cstringPtr := C.CString(path)
 	defer C.free(unsafe.Pointer(cstringPtr))
-	C.at_save(ctensor, cstringPtr)
+	C.at_save(ts, cstringPtr)
 }
 
 // tensor at_load(char *filename);
@@ -300,9 +293,8 @@ func AtLoadCallbackWithDevice(filename string, dataPtr unsafe.Pointer, device in
  * }
  *  */
 func AtToString(ts Ctensor, lineSize int64) string {
-	ctensor := (C.tensor)(ts)
 	clineSize := *(*C.int)(unsafe.Pointer(&lineSize))
-	charPtr := C.at_to_string(ctensor, clineSize)
+	charPtr := C.at_to_string(ts, clineSize)
 	goString := C.GoString(charPtr)
 
 	return goString
@@ -310,8 +302,7 @@ func AtToString(ts Ctensor, lineSize int64) string {
 
 // void at_free(tensor);
 func AtFree(ts Ctensor) {
-	ctensor := (C.tensor)(ts)
-	C.at_free(ctensor)
+	C.at_free(ts)
 }
 
 //int at_grad_set_enabled(int b);

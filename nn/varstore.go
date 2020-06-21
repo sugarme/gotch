@@ -274,7 +274,7 @@ func (vs *VarStore) Copy(src VarStore) (err error) {
 
 	for k, v := range vs.Vars.NamedVariables {
 		srcTs, _ := srcNamedVariables[k]
-		srcDevTs, err := srcTs.To(device)
+		srcDevTs, err := srcTs.To(device, false)
 		if err != nil {
 			return err
 		}

@@ -252,14 +252,14 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 
 		switch reflect.TypeOf(spec).Name() {
 		case "InsertNewAxis":
-			nextTensor, err = currTensor.Unsqueeze(currIdx)
+			nextTensor, err = currTensor.Unsqueeze(currIdx, true)
 			if err != nil {
 				return retVal, err
 			}
 			nextIdx = currIdx + 1
 		case "Select": // 1 field: `Index`
 			index := reflect.ValueOf(spec).FieldByName("Index").Interface().(int64)
-			nextTensor, err = currTensor.Select(currIdx, index) // TODO: double-check is `*index` or `index`
+			nextTensor, err = currTensor.Select(currIdx, index, true) // TODO: double-check is `*index` or `index`
 			if err != nil {
 				return retVal, err
 			}
@@ -269,7 +269,7 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 			// NOTE: for now, just implement (Included(start), Excluded(end))` case
 			start := reflect.ValueOf(spec).FieldByName("Start").Interface().(int64)
 			end := reflect.ValueOf(spec).FieldByName("End").Interface().(int64)
-			nextTensor, err = currTensor.Narrow(currIdx, start, end-start)
+			nextTensor, err = currTensor.Narrow(currIdx, start, end-start, true)
 			if err != nil {
 				return retVal, err
 			}
@@ -280,11 +280,11 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 			if err != nil {
 				return retVal, err
 			}
-			indexTensor, err = indexTensor.To(device)
+			indexTensor, err = indexTensor.To(device, true)
 			if err != nil {
 				return retVal, err
 			}
-			nextTensor, err = currTensor.IndexSelect(currIdx, indexTensor)
+			nextTensor, err = currTensor.IndexSelect(currIdx, indexTensor, true)
 			if err != nil {
 				return retVal, err
 			}

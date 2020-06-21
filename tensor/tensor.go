@@ -2,6 +2,7 @@ package tensor
 
 //#include "stdlib.h"
 //#include "stdbool.h"
+//#include<stdio.h>
 import "C"
 
 import (

@@ -82,7 +82,7 @@ func readLabels(filename string) (retVal ts.Tensor) {
 		log.Fatal(err)
 	}
 
-	retVal = labelsTs.MustTotype(gotch.Int64)
+	retVal = labelsTs.MustTotype(gotch.Int64, true)
 
 	return retVal
 }
@@ -125,7 +125,7 @@ func readImages(filename string) (retVal ts.Tensor) {
 		err = fmt.Errorf("create images tensor err.")
 		log.Fatal(err)
 	}
-	retVal = imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}).MustTotype(gotch.Float).MustDiv1(ts.FloatScalar(255.0))
+	retVal = imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}).MustTotype(gotch.Float, true).MustDiv1(ts.FloatScalar(255.0), true)
 
 	return retVal
 }

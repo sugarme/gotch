@@ -16,7 +16,7 @@ import (
 // (height, width, channel) -> (channel, height, width)
 func hwcToCHW(tensor ts.Tensor) (retVal ts.Tensor) {
 	var err error
-	retVal, err = tensor.Permute([]int64{2, 0, 1})
+	retVal, err = tensor.Permute([]int64{2, 0, 1}, true)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
@@ -25,7 +25,7 @@ func hwcToCHW(tensor ts.Tensor) (retVal ts.Tensor) {
 
 func chwToHWC(tensor ts.Tensor) (retVal ts.Tensor) {
 	var err error
-	retVal, err = tensor.Permute([]int64{1, 2, 0})
+	retVal, err = tensor.Permute([]int64{1, 2, 0}, true)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
@@ -54,7 +54,7 @@ func Load(path string) (retVal ts.Tensor, err error) {
 // The tensor input should be of kind UInt8 with values ranging from
 // 0 to 255.
 func Save(tensor ts.Tensor, path string) (err error) {
-	t, err := tensor.Totype(gotch.Uint8)
+	t, err := tensor.Totype(gotch.Uint8, true)
 	if err != nil {
 		err = fmt.Errorf("Save - Tensor.Totype() error: %v\n", err)
 		return err
@@ -68,9 +68,9 @@ func Save(tensor ts.Tensor, path string) (err error) {
 
 	switch {
 	case len(shape) == 4 && shape[0] == 1:
-		return ts.SaveHwc(chwToHWC(t.MustSqueeze1(int64(0)).MustTo(gotch.CPU)), path)
+		return ts.SaveHwc(chwToHWC(t.MustSqueeze1(int64(0), true).MustTo(gotch.CPU, true)), path)
 	case len(shape) == 3:
-		return ts.SaveHwc(chwToHWC(t.MustTo(gotch.CPU)), path)
+		return ts.SaveHwc(chwToHWC(t.MustTo(gotch.CPU, true)), path)
 	default:
 		err = fmt.Errorf("Unexpected size (%v) for image tensor.\n", len(shape))
 		return err
@@ -125,7 +125,7 @@ func resizePreserveAspectRatioHWC(t ts.Tensor, outW int64, outH int64) (retVal t
 		var tensorW ts.Tensor
 		var tensorH ts.Tensor
 		if resizeW != outW {
-			tensorW, err = tensor.Narrow(2, (resizeW-outW)/2, outW)
+			tensorW, err = tensor.Narrow(2, (resizeW-outW)/2, outW, true)
 			if err != nil {
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
 				return retVal, err
@@ -135,7 +135,7 @@ func resizePreserveAspectRatioHWC(t ts.Tensor, outW int64, outH int64) (retVal t
 		if resizeH == outH {
 			retVal = tensorW
 		} else {
-			tensorH, err = tensor.Narrow(2, (resizeH-outH)/2, outH)
+			tensorH, err = tensor.Narrow(2, (resizeH-outH)/2, outH, true)
 			if err != nil {
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
 				return retVal, err
