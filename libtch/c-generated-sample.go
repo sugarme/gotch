@@ -316,3 +316,42 @@ func AtgSub1(ptr *Ctensor, self Ctensor, other Cscalar) {
 func AtgSub_(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_sub_(ptr, self, other)
 }
+
+// void atg_conv1d(tensor *, tensor input, tensor weight, tensor bias, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *dilation_data, int dilation_len, int64_t groups);
+func AtgConv1d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, groups int64) {
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+
+	C.atg_conv1d(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cgroups)
+}
+
+// void atg_conv2d(tensor *, tensor input, tensor weight, tensor bias, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *dilation_data, int dilation_len, int64_t groups);
+func AtgConv2d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, groups int64) {
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+
+	C.atg_conv2d(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cgroups)
+}
+
+// void atg_conv3d(tensor *, tensor input, tensor weight, tensor bias, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *dilation_data, int dilation_len, int64_t groups);
+func AtgConv3d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, groups int64) {
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+
+	C.atg_conv3d(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cgroups)
+}

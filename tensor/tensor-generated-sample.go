@@ -1005,11 +1005,85 @@ func (ts Tensor) MustSub1(other Scalar, del bool) (retVal Tensor) {
 
 func (ts Tensor) Sub_(other Tensor) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	defer C.free(unsafe.Pointer(ptr))
 
 	lib.AtgSub_(ptr, ts.ctensor, other.ctensor)
 	err := TorchErr()
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func Conv1D(input, weight, bias Tensor, stride, padding, dilation []int64, groups int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgConv1d(ptr, input.ctensor, weight.ctensor, bias.ctensor, stride, len(stride), padding, len(padding), dilation, len(dilation), groups)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustConv1D(input, weight, bias Tensor, stride, padding, dilation []int64, groups int64) (retVal Tensor) {
+	retVal, err := Conv1D(input, weight, bias, stride, padding, dilation, groups)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func Conv2D(input, weight, bias Tensor, stride, padding, dilation []int64, groups int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgConv2d(ptr, input.ctensor, weight.ctensor, bias.ctensor, stride, len(stride), padding, len(padding), dilation, len(dilation), groups)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustConv2D(input, weight, bias Tensor, stride, padding, dilation []int64, groups int64) (retVal Tensor) {
+	retVal, err := Conv2D(input, weight, bias, stride, padding, dilation, groups)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func Conv3D(input, weight, bias Tensor, stride, padding, dilation []int64, groups int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgConv3d(ptr, input.ctensor, weight.ctensor, bias.ctensor, stride, len(stride), padding, len(padding), dilation, len(dilation), groups)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustConv3D(input, weight, bias Tensor, stride, padding, dilation []int64, groups int64) (retVal Tensor) {
+	retVal, err := Conv3D(input, weight, bias, stride, padding, dilation, groups)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }

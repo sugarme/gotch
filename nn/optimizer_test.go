@@ -22,7 +22,7 @@ func TestOptimizer(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	ys := xs.MustMul1(ts.FloatScalar(0.42)).MustAdd1(ts.FloatScalar(1.337))
+	ys := xs.MustMul1(ts.FloatScalar(0.42), true).MustAdd1(ts.FloatScalar(1.337), true)
 
 	vs := nn.NewVarStore(gotch.CPU)
 
@@ -39,7 +39,7 @@ func TestOptimizer(t *testing.T) {
 
 	linear := nn.NewLinear(vs.Root(), 1, 1, cfg)
 
-	loss := xs.Apply(linear).MustMseLoss(ys, ts.ReductionMean.ToInt())
+	loss := xs.Apply(linear).MustMseLoss(ys, ts.ReductionMean.ToInt(), true)
 
 	initialLoss := loss.MustView([]int64{-1}).MustFloat64Value([]int64{0})
 
@@ -50,13 +50,13 @@ func TestOptimizer(t *testing.T) {
 	}
 
 	for i := 0; i < 50; i++ {
-		loss = xs.Apply(linear).MustMseLoss(ys, ts.ReductionMean.ToInt())
+		loss = xs.Apply(linear).MustMseLoss(ys, ts.ReductionMean.ToInt(), true)
 
 		opt.BackwardStep(loss)
 		fmt.Printf("Loss: %.3f\n", loss.MustView([]int64{-1}).MustFloat64Value([]int64{0}))
 	}
 
-	loss = xs.Apply(linear).MustMseLoss(ys, ts.ReductionMean.ToInt())
+	loss = xs.Apply(linear).MustMseLoss(ys, ts.ReductionMean.ToInt(), true)
 	finalLoss := loss.MustView([]int64{-1}).MustFloat64Value([]int64{0})
 	fmt.Printf("Final loss: %v\n", finalLoss)
 
