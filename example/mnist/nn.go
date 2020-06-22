@@ -18,7 +18,7 @@ const (
 
 	epochsNN = 200
 
-	LrNN = 1e-3
+	LrNN = 1e-2
 )
 
 var l nn.Linear
@@ -26,18 +26,20 @@ var l nn.Linear
 func netInit(vs nn.Path) ts.Module {
 	n := nn.Seq()
 
-	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, nn.DefaultLinearConfig()))
+	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, *nn.DefaultLinearConfig()))
 
 	n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		return xs.MustRelu(true)
 	}))
 
-	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, nn.DefaultLinearConfig()))
+	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, *nn.DefaultLinearConfig()))
+	// n.Add(nn.NewLinear(vs, ImageDimNN, LabelNN, nn.DefaultLinearConfig()))
 
-	return n
+	return &n
 }
 
 func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer, epoch int) {
+
 	loss := m.Forward(trainX).CrossEntropyForLogits(trainY)
 
 	opt.BackwardStep(loss)

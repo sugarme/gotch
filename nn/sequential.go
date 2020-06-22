@@ -72,14 +72,15 @@ func WithUint8(n uint8) func() uint8 {
 
 // Implement Module interface for Sequential:
 // ==========================================
-func (s Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+func (s *Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 	if s.IsEmpty() {
 		return xs.MustShallowClone()
 	}
 
 	// forward sequentially
 	for i := 0; i < len(s.layers); i++ {
-		xs = s.layers[i].Forward(xs)
+		// xs = s.layers[i].Forward(xs)
+		xs = xs.Apply(s.layers[i])
 	}
 
 	return xs
