@@ -355,3 +355,35 @@ func AtgConv3d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, stride
 
 	C.atg_conv3d(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cgroups)
 }
+
+// void atg_max_pool2d(tensor *, tensor self, int64_t *kernel_size_data, int kernel_size_len, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *dilation_data, int dilation_len, int ceil_mode);
+func AtgMaxPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, ceilMode int) {
+
+	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
+	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
+
+	C.atg_max_pool2d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cceilMode)
+}
+
+// void atg_dropout(tensor *, tensor input, double p, int train);
+func AtgDropout(ptr *Ctensor, input Ctensor, p float64, train int) {
+	cp := *(*C.double)(unsafe.Pointer(&p))
+	ctrain := *(*C.int)(unsafe.Pointer(&train))
+
+	C.atg_dropout(ptr, input, cp, ctrain)
+}
+
+// void atg_dropout_(tensor *, tensor self, double p, int train);
+func AtgDropout_(ptr *Ctensor, self Ctensor, p float64, train int) {
+	cp := *(*C.double)(unsafe.Pointer(&p))
+	ctrain := *(*C.int)(unsafe.Pointer(&train))
+
+	C.atg_dropout_(ptr, self, cp, ctrain)
+}

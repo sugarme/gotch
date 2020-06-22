@@ -18,7 +18,7 @@ type Module interface {
 // The train parameter is commonly used to have different behavior
 // between training and evaluation. E.g. When using dropout or batch-normalization.
 type ModuleT interface {
-	Forward(xs Tensor) Tensor
+	// Forward(xs Tensor) Tensor
 	ForwardT(xs Tensor, train bool) Tensor
 }
 

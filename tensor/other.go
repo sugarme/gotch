@@ -17,4 +17,8 @@ func (ts Tensor) AccuracyForLogits(targets Tensor) (retVal Tensor) {
 	return ts.MustArgmax(-1, false, true).MustEq1(targets).MustTotype(gotch.Float, true).MustMean(gotch.Float.CInt(), true)
 }
 
+func (ts Tensor) MaxPool2DDefault(ksize int64, del bool) (retVal Tensor) {
+	return ts.MustMaxPool2D([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, []int64{1, 1}, false, del)
+}
+
 // TODO: continue

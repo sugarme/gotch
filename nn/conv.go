@@ -7,7 +7,6 @@ import (
 )
 
 type Conv1DConfig struct {
-	Kval     int64
 	Stride   []int64
 	Padding  []int64
 	Dilation []int64
@@ -18,7 +17,6 @@ type Conv1DConfig struct {
 }
 
 type Conv2DConfig struct {
-	Kval     int64
 	Stride   []int64
 	Padding  []int64
 	Dilation []int64
@@ -29,7 +27,6 @@ type Conv2DConfig struct {
 }
 
 type Conv3DConfig struct {
-	Kval     int64
 	Stride   []int64
 	Padding  []int64
 	Dilation []int64
@@ -71,14 +68,14 @@ type Conv1D struct {
 	Config Conv1DConfig
 }
 
-func NewConv1D(vs *Path, inDim, outDim int64, cfg Conv1DConfig) Conv1D {
+func NewConv1D(vs *Path, inDim, outDim, k int64, cfg Conv1DConfig) Conv1D {
 	var conv Conv1D
 	conv.Config = cfg
 	if cfg.Bias {
 		conv.Bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
-	weightSize = append(weightSize, cfg.Kval)
+	weightSize = append(weightSize, k)
 	conv.Ws = vs.NewVar("weight", weightSize, cfg.WsInit)
 
 	return conv
@@ -90,14 +87,14 @@ type Conv2D struct {
 	Config Conv2DConfig
 }
 
-func NewConv2D(vs *Path, inDim, outDim int64, cfg Conv2DConfig) Conv2D {
+func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg Conv2DConfig) Conv2D {
 	var conv Conv2D
 	conv.Config = cfg
 	if cfg.Bias {
 		conv.Bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
-	weightSize = append(weightSize, cfg.Kval, cfg.Kval)
+	weightSize = append(weightSize, k, k)
 	conv.Ws = vs.NewVar("weight", weightSize, cfg.WsInit)
 
 	return conv
@@ -109,14 +106,14 @@ type Conv3D struct {
 	Config Conv3DConfig
 }
 
-func NewConv3D(vs *Path, inDim, outDim int64, cfg Conv3DConfig) Conv3D {
+func NewConv3D(vs *Path, inDim, outDim, k int64, cfg Conv3DConfig) Conv3D {
 	var conv Conv3D
 	conv.Config = cfg
 	if cfg.Bias {
 		conv.Bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
-	weightSize = append(weightSize, cfg.Kval, cfg.Kval, cfg.Kval)
+	weightSize = append(weightSize, k, k, k)
 	conv.Ws = vs.NewVar("weight", weightSize, cfg.WsInit)
 
 	return conv

@@ -1087,3 +1087,90 @@ func MustConv3D(input, weight, bias Tensor, stride, padding, dilation []int64, g
 
 	return retVal
 }
+
+func (ts Tensor) MaxPool2D(kernel []int64, stride []int64, padding []int64, dilation []int64, ceil bool, del bool) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	if del {
+		defer ts.MustDrop()
+	}
+
+	var ceilMode int
+	switch ceil {
+	case true:
+		ceilMode = 1
+	case false:
+		ceilMode = 0
+	}
+
+	lib.AtgMaxPool2d(ptr, ts.ctensor, kernel, len(kernel), stride, len(stride), padding, len(padding), dilation, len(dilation), ceilMode)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustMaxPool2D(kernel []int64, stride []int64, padding []int64, dilation []int64, ceil bool, del bool) (retVal Tensor) {
+	retVal, err := ts.MaxPool2D(kernel, stride, padding, dilation, ceil, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func Dropout(input Tensor, p float64, train bool) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	var ctrain int
+	switch train {
+	case true:
+		ctrain = 1
+	case false:
+		ctrain = 0
+	}
+
+	lib.AtgDropout(ptr, input.ctensor, p, ctrain)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+
+}
+
+func MustDropout(input Tensor, p float64, train bool) (retVal Tensor) {
+	retVal, err := Dropout(input, p, train)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Dropout_(p float64, train bool) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	var ctrain int
+	switch train {
+	case true:
+		ctrain = 1
+	case false:
+		ctrain = 0
+	}
+	lib.AtgDropout_(ptr, ts.ctensor, p, ctrain)
+	err := TorchErr()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
