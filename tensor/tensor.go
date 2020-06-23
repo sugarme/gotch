@@ -993,5 +993,5 @@ func (r Reduction) ToInt() (retVal int) {
 func (ts Tensor) Values() []float64 {
 	clone := ts.MustShallowClone()
 	clone.Detach_()
-	return []float64{clone.MustView([]int64{-1}).MustFloat64Value([]int64{-1})}
+	return []float64{clone.MustView([]int64{-1}, true).MustFloat64Value([]int64{-1})}
 }

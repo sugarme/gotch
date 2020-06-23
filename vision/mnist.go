@@ -125,7 +125,7 @@ func readImages(filename string) (retVal ts.Tensor) {
 		err = fmt.Errorf("create images tensor err.")
 		log.Fatal(err)
 	}
-	retVal = imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}).MustTotype(gotch.Float, true).MustDiv1(ts.FloatScalar(255.0), true)
+	retVal = imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}, true).MustTotype(gotch.Float, true).MustDiv1(ts.FloatScalar(255.0), true)
 
 	return retVal
 }

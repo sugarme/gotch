@@ -678,9 +678,11 @@ func (ts Tensor) MustMean(dtype int32, del bool) (retVal Tensor) {
 	return retVal
 }
 
-func (ts Tensor) View(sizeData []int64) (retVal Tensor, err error) {
+func (ts Tensor) View(sizeData []int64, del bool) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	defer C.free(unsafe.Pointer(ptr))
+	if del {
+		defer ts.MustDrop()
+	}
 
 	lib.AtgView(ptr, ts.ctensor, sizeData, len(sizeData))
 	if err = TorchErr(); err != nil {
@@ -692,8 +694,8 @@ func (ts Tensor) View(sizeData []int64) (retVal Tensor, err error) {
 	return retVal, nil
 }
 
-func (ts Tensor) MustView(sizeData []int64) (retVal Tensor) {
-	retVal, err := ts.View(sizeData)
+func (ts Tensor) MustView(sizeData []int64, del bool) (retVal Tensor) {
+	retVal, err := ts.View(sizeData, del)
 	if err != nil {
 		log.Fatal(err)
 	}
