@@ -81,12 +81,12 @@ func MustNewIter2(xs, ys Tensor, batchSize int64) (retVal Iter2) {
 //
 // The iterator would still run over the whole dataset but the order in
 // which elements are grouped in mini-batches is randomized.
-func (it Iter2) Shuffle() (retVal Iter2) {
+func (it *Iter2) Shuffle() {
 	index := MustRandperm(it.totalSize, gotch.Int64, gotch.CPU)
 
 	it.xs = it.xs.MustIndexSelect(0, index, true)
 	it.ys = it.ys.MustIndexSelect(0, index, true)
-	return it
+
 }
 
 // ToDevice transfers the mini-batches to a specified device.

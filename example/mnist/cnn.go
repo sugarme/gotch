@@ -73,12 +73,13 @@ func (n Net) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
 
 }
 
-func runCNN() {
+func runCNN1() {
 
 	var ds vision.Dataset
 	ds = vision.LoadMNISTDir(MnistDirNN)
-	// testImages := ds.TestImages
-	// testLabels := ds.TestLabels
+	testImages := ds.TestImages
+	testLabels := ds.TestLabels
+
 	cuda := gotch.CudaBuilder(0)
 	vs := nn.NewVarStore(cuda.CudaIfAvailable())
 	// vs := nn.NewVarStore(gotch.CPU)
@@ -95,9 +96,9 @@ func runCNN() {
 
 		totalSize := ds.TrainImages.MustSize()[0]
 		samples := int(totalSize)
-		// index := ts.MustRandperm(int64(totalSize), gotch.Int64, gotch.CPU)
-		// imagesTs := ds.TrainImages.MustIndexSelect(0, index, false)
-		// labelsTs := ds.TrainLabels.MustIndexSelect(0, index, false)
+		index := ts.MustRandperm(int64(totalSize), gotch.Int64, gotch.CPU)
+		imagesTs := ds.TrainImages.MustIndexSelect(0, index, false)
+		labelsTs := ds.TrainLabels.MustIndexSelect(0, index, false)
 
 		batches := samples / batchSize
 		batchIndex := 0
@@ -114,10 +115,10 @@ func runCNN() {
 
 			// Indexing
 			narrowIndex := ts.NewNarrow(int64(start), int64(start+size))
-			bImages := ds.TrainImages.Idx(narrowIndex)
-			bLabels := ds.TrainLabels.Idx(narrowIndex)
-			// bImages := imagesTs.Idx(narrowIndex)
-			// bLabels := labelsTs.Idx(narrowIndex)
+			// bImages := ds.TrainImages.Idx(narrowIndex)
+			// bLabels := ds.TrainLabels.Idx(narrowIndex)
+			bImages := imagesTs.Idx(narrowIndex)
+			bLabels := labelsTs.Idx(narrowIndex)
 
 			bImages = bImages.MustTo(vs.Device(), true)
 			bLabels = bLabels.MustTo(vs.Device(), true)
@@ -138,11 +139,69 @@ func runCNN() {
 			loss.MustDrop()
 		}
 
-		// testAccuracy := ts.BatchAccuracyForLogits(net, testImages, testLabels, vs.Device(), 1024)
-		// fmt.Printf("Epoch: %v \t Test accuracy: %.2f%%\n", epoch, testAccuracy*100)
+		// testAccuracy := ts.BatchAccuracyForLogitsIdx(net, testImages, testLabels, vs.Device(), 1024)
+		// fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss.Values()[0], testAccuracy*100)
 
 		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\n", epoch, epocLoss.Values()[0])
 		epocLoss.MustDrop()
+		imagesTs.MustDrop()
+		labelsTs.MustDrop()
+	}
+
+	testAccuracy := ts.BatchAccuracyForLogitsIdx(net, testImages, testLabels, vs.Device(), 1024)
+	fmt.Printf("Test accuracy: %.2f%%\n", testAccuracy*100)
+
+	fmt.Printf("Taken time:\t%.2f mins\n", time.Since(startTime).Minutes())
+}
+
+func runCNN2() {
+
+	var ds vision.Dataset
+	ds = vision.LoadMNISTDir(MnistDirNN)
+
+	cuda := gotch.CudaBuilder(0)
+	vs := nn.NewVarStore(cuda.CudaIfAvailable())
+	path := vs.Root()
+	net := newNet(&path)
+	opt, err := nn.DefaultAdamConfig().Build(vs, LrNN)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	startTime := time.Now()
+
+	var lossVal float64
+	for epoch := 0; epoch < epochsCNN; epoch++ {
+
+		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, batchCNN)
+		// iter.Shuffle()
+
+		for {
+			item, ok := iter.Next()
+			if !ok {
+				break
+			}
+
+			bImages := item.Data.MustTo(vs.Device(), true)
+			bLabels := item.Label.MustTo(vs.Device(), true)
+
+			_ = ts.MustGradSetEnabled(true)
+
+			logits := net.ForwardT(bImages, true)
+			loss := logits.CrossEntropyForLogits(bLabels)
+
+			opt.BackwardStep(loss)
+
+			lossVal = loss.Values()[0]
+
+			bImages.MustDrop()
+			bLabels.MustDrop()
+			loss.MustDrop()
+		}
+
+		testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), batchCNN)
+
+		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\t Accuracy: %.2f\n", epoch, lossVal, testAcc*100)
 	}
 
 	fmt.Printf("Taken time:\t%.2f mins\n", time.Since(startTime).Minutes())
