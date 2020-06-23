@@ -28,9 +28,9 @@ func netInit(vs nn.Path) ts.Module {
 
 	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, *nn.DefaultLinearConfig()))
 
-	n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
-		return xs.MustRelu(true)
-	}))
+	// n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	// return xs.MustRelu(true)
+	// }))
 
 	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, *nn.DefaultLinearConfig()))
 	// n.Add(nn.NewLinear(vs, ImageDimNN, LabelNN, nn.DefaultLinearConfig()))
@@ -40,7 +40,8 @@ func netInit(vs nn.Path) ts.Module {
 
 func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer, epoch int) {
 
-	loss := m.Forward(trainX).CrossEntropyForLogits(trainY)
+	logits := m.Forward(trainX)
+	loss := logits.CrossEntropyForLogits(trainY)
 
 	opt.BackwardStep(loss)
 

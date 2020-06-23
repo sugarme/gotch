@@ -295,12 +295,14 @@ func (ts Tensor) Device() (retVal gotch.Device, err error) {
 	return device.OfCInt(int32(cInt)), nil
 }
 
-func (ts Tensor) Eq1(other Tensor) (retVal Tensor, err error) {
+func (ts Tensor) Eq1(other Tensor, del bool) (retVal Tensor, err error) {
 
 	// Get a C null pointer
 	// https://stackoverflow.com/a/2022369
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	defer C.free(unsafe.Pointer(ptr))
+	if del {
+		defer ts.MustDrop()
+	}
 
 	lib.AtgEq1(ptr, ts.ctensor, other.ctensor)
 	if err = TorchErr(); err != nil {
@@ -311,8 +313,8 @@ func (ts Tensor) Eq1(other Tensor) (retVal Tensor, err error) {
 
 }
 
-func (ts Tensor) MustEq1(other Tensor) (retVal Tensor) {
-	retVal, err := ts.Eq1(other)
+func (ts Tensor) MustEq1(other Tensor, del bool) (retVal Tensor) {
+	retVal, err := ts.Eq1(other, del)
 	if err != nil {
 		log.Fatal(err)
 	}

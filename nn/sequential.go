@@ -72,18 +72,28 @@ func WithUint8(n uint8) func() uint8 {
 
 // Implement Module interface for Sequential:
 // ==========================================
-func (s *Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+
+// Forward implements Module interface for Sequential
+func (s Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 	if s.IsEmpty() {
 		return xs.MustShallowClone()
 	}
 
 	// forward sequentially
+	outs := make([]ts.Tensor, len(s.layers))
 	for i := 0; i < len(s.layers); i++ {
-		// xs = s.layers[i].Forward(xs)
-		xs = xs.Apply(s.layers[i])
+		if i == 0 {
+			outs[0] = s.layers[i].Forward(xs)
+			defer outs[0].MustDrop()
+		} else if i == len(s.layers)-1 {
+			return s.layers[i].Forward(outs[i-1])
+		} else {
+			outs[i+1] = s.layers[i].Forward(outs[i-1])
+			defer outs[i+1].MustDrop()
+		}
 	}
 
-	return xs
+	return
 }
 
 // SequentialT is a sequential layer combining new layers with support for a training mode.

@@ -56,7 +56,7 @@ func NewLinear(vs Path, inDim, outDim int64, c LinearConfig) *Linear {
 	}
 
 	return &Linear{
-		Ws: vs.NewVar("weight", []int64{outDim, inDim}, c.WsInit),
+		Ws: vs.NewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false),
 		Bs: bs,
 	}
 }
@@ -90,7 +90,7 @@ func NewLinear(vs Path, inDim, outDim int64, c LinearConfig) *Linear {
 // 	  1 1 1
 // 		1 1 1 ]
 func (l *Linear) Forward(xs ts.Tensor) (retVal ts.Tensor) {
-	// TODO: measure memory leak here.
-	mul := xs.MustMatMul(l.Ws.MustT(false), false)
+
+	mul := xs.MustMatMul(l.Ws, false)
 	return mul.MustAdd(l.Bs, true)
 }
