@@ -4,6 +4,7 @@ package nn
 
 import (
 	ts "github.com/sugarme/gotch/tensor"
+	// "reflect"
 )
 
 // Sequential is a layer (container) that combines multiple other layers.
@@ -20,7 +21,7 @@ func Seq() Sequential {
 //====================
 
 // Len returns number of sub-layers embedded in this layer
-func (s *Sequential) Len() (retVal int64) {
+func (s Sequential) Len() (retVal int64) {
 	return int64(len(s.layers))
 }
 
@@ -74,7 +75,7 @@ func WithUint8(n uint8) func() uint8 {
 // ==========================================
 
 // Forward implements Module interface for Sequential
-func (s Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+func (s *Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 	if s.IsEmpty() {
 		return xs.MustShallowClone()
 	}
@@ -88,8 +89,8 @@ func (s Sequential) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 		} else if i == len(s.layers)-1 {
 			return s.layers[i].Forward(outs[i-1])
 		} else {
-			outs[i+1] = s.layers[i].Forward(outs[i-1])
-			defer outs[i+1].MustDrop()
+			outs[i] = s.layers[i].Forward(outs[i-1])
+			defer outs[i].MustDrop()
 		}
 	}
 

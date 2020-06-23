@@ -16,7 +16,7 @@ const (
 	LabelNN       int64  = 10
 	MnistDirNN    string = "../../data/mnist"
 
-	epochsNN = 200
+	epochsNN = 500
 
 	LrNN = 1e-2
 )
@@ -28,9 +28,9 @@ func netInit(vs nn.Path) ts.Module {
 
 	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, *nn.DefaultLinearConfig()))
 
-	// n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
-	// return xs.MustRelu(true)
-	// }))
+	n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		return xs.MustRelu(false)
+	}))
 
 	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, *nn.DefaultLinearConfig()))
 	// n.Add(nn.NewLinear(vs, ImageDimNN, LabelNN, nn.DefaultLinearConfig()))
