@@ -13,7 +13,7 @@ const (
 	Label    int64  = 10
 	MnistDir string = "../../data/mnist"
 
-	epochs = 500
+	epochs = 200
 )
 
 func runLinear() {

@@ -387,3 +387,80 @@ func AtgDropout_(ptr *Ctensor, self Ctensor, p float64, train int) {
 
 	C.atg_dropout_(ptr, self, cp, ctrain)
 }
+
+// void atg_conv_transpose1d(tensor *, tensor input, tensor weight, tensor bias, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *output_padding_data, int output_padding_len, int64_t groups, int64_t *dilation_data, int dilation_len);
+func AtgConvTranspose1d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, outputPaddingData []int64, outputPaddingLen int, dilationData []int64, dilationLen int, groups int64) {
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	coutputPaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&outputPaddingData[0]))
+	coutputPaddingLen := *(*C.int)(unsafe.Pointer(&outputPaddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+
+	C.atg_conv_transpose1d(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, coutputPaddingDataPtr, coutputPaddingLen, cgroups, cdilationDataPtr, cdilationLen)
+}
+
+// void atg_conv_transpose2d(tensor *, tensor input, tensor weight, tensor bias, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *output_padding_data, int output_padding_len, int64_t groups, int64_t *dilation_data, int dilation_len);
+func AtgConvTranspose2d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, outputPaddingData []int64, outputPaddingLen int, dilationData []int64, dilationLen int, groups int64) {
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	coutputPaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&outputPaddingData[0]))
+	coutputPaddingLen := *(*C.int)(unsafe.Pointer(&outputPaddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+
+	C.atg_conv_transpose2d(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, coutputPaddingDataPtr, coutputPaddingLen, cgroups, cdilationDataPtr, cdilationLen)
+}
+
+// void atg_conv_transpose3d(tensor *, tensor input, tensor weight, tensor bias, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *output_padding_data, int output_padding_len, int64_t groups, int64_t *dilation_data, int dilation_len);
+func AtgConvTranspose3d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, outputPaddingData []int64, outputPaddingLen int, dilationData []int64, dilationLen int, groups int64) {
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	coutputPaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&outputPaddingData[0]))
+	coutputPaddingLen := *(*C.int)(unsafe.Pointer(&outputPaddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+
+	C.atg_conv_transpose3d(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, coutputPaddingDataPtr, coutputPaddingLen, cgroups, cdilationDataPtr, cdilationLen)
+}
+
+// void atg_lstm(tensor *, tensor input, tensor *hx_data, int hx_len, tensor *params_data, int params_len, int has_biases, int64_t num_layers, double dropout, int train, int bidirectional, int batch_first);
+func AtgLstm(ctensorsPtr []*Ctensor, input Ctensor, hxData []Ctensor, hxLen int, paramsData []Ctensor, paramsLen int, hasBiases int, numLayers int64, dropout float64, train int, bidirectional int, batchFirst int) {
+
+	chxDataPtr := (*Ctensor)(unsafe.Pointer(&hxData[0]))
+	chxLen := *(*C.int)(unsafe.Pointer(&hxLen))
+	cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
+	cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
+	chasBiases := *(*C.int)(unsafe.Pointer(&hasBiases))
+	cnumLayers := *(*C.int64_t)(unsafe.Pointer(&numLayers))
+	cdropout := *(*C.double)(unsafe.Pointer(&dropout))
+	ctrain := *(*C.int)(unsafe.Pointer(&train))
+	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
+	cbatchFirst := *(*C.int)(unsafe.Pointer(&batchFirst))
+
+	C.atg_lstm(ctensorsPtr[0], input, chxDataPtr, chxLen, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
+}
+
+// void atg_gru(tensor *, tensor input, tensor hx, tensor *params_data, int params_len, int has_biases, int64_t num_layers, double dropout, int train, int bidirectional, int batch_first);
+func AtgGru(ctensorsPtr []*Ctensor, input Ctensor, hx Ctensor, paramsData []Ctensor, paramsLen int, hasBiases int, numLayers int64, dropout float64, train int, bidirectional int, batchFirst int) {
+
+	cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
+	cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
+	chasBiases := *(*C.int)(unsafe.Pointer(&hasBiases))
+	cnumLayers := *(*C.int64_t)(unsafe.Pointer(&numLayers))
+	cdropout := *(*C.double)(unsafe.Pointer(&dropout))
+	ctrain := *(*C.int)(unsafe.Pointer(&train))
+	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
+	cbatchFirst := *(*C.int)(unsafe.Pointer(&batchFirst))
+
+	C.atg_gru(ctensorsPtr[0], input, hx, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
+}

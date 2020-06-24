@@ -316,6 +316,15 @@ func (ts Tensor) Unsqueeze(dim int64, del bool) (retVal Tensor, err error) {
 	return retVal, nil
 }
 
+func (ts Tensor) MustUnsqueeze(dim int64, del bool) (retVal Tensor) {
+	retVal, err := ts.Unsqueeze(dim, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 // Select creates a new tensor from current tensor given dim and index.
 func (ts Tensor) Select(dim int64, index int64, del bool) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
@@ -1175,4 +1184,183 @@ func (ts Tensor) Dropout_(p float64, train bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func ConvTranspose1D(input, weight, bias Tensor, stride, padding, outputPadding, dilation []int64, groups int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgConvTranspose1d(ptr, input.ctensor, weight.ctensor, bias.ctensor, stride, len(stride), padding, len(padding), outputPadding, len(outputPadding), dilation, len(dilation), groups)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustConvTranspose1D(input, weight, bias Tensor, stride, padding, outputPadding, dilation []int64, groups int64) (retVal Tensor) {
+	retVal, err := ConvTranspose1D(input, weight, bias, stride, padding, outputPadding, dilation, groups)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func ConvTranspose2D(input, weight, bias Tensor, stride, padding, outputPadding, dilation []int64, groups int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgConvTranspose2d(ptr, input.ctensor, weight.ctensor, bias.ctensor, stride, len(stride), padding, len(padding), outputPadding, len(outputPadding), dilation, len(dilation), groups)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustConvTranspose2D(input, weight, bias Tensor, stride, padding, outputPadding, dilation []int64, groups int64) (retVal Tensor) {
+	retVal, err := ConvTranspose2D(input, weight, bias, stride, padding, outputPadding, dilation, groups)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func ConvTranspose3D(input, weight, bias Tensor, stride, padding, outputPadding, dilation []int64, groups int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgConvTranspose3d(ptr, input.ctensor, weight.ctensor, bias.ctensor, stride, len(stride), padding, len(padding), outputPadding, len(outputPadding), dilation, len(dilation), groups)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustConvTranspose3D(input, weight, bias Tensor, stride, padding, outputPadding, dilation []int64, groups int64) (retVal Tensor) {
+	retVal, err := ConvTranspose3D(input, weight, bias, stride, padding, outputPadding, dilation, groups)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) LSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h, c Tensor, err error) {
+
+	// NOTE: atg_lstm will return an array of 3 Ctensors
+	ts1Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	ts2Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	ts3Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	var ctensorsPtr []*lib.Ctensor
+	ctensorsPtr = append(ctensorsPtr, ts1Ptr, ts2Ptr, ts3Ptr)
+
+	var chxData []lib.Ctensor
+	for _, t := range hxData {
+		chxData = append(chxData, t.ctensor)
+	}
+
+	var cparamsData []lib.Ctensor
+	for _, t := range paramsData {
+		cparamsData = append(cparamsData, t.ctensor)
+	}
+
+	chasBiases := 0
+	if hasBiases {
+		chasBiases = 1
+	}
+	ctrain := 0
+	if train {
+		ctrain = 1
+	}
+	cbidirectional := 0
+	if bidirectional {
+		cbidirectional = 1
+	}
+	cbatchFirst := 0
+	if batchFirst {
+		cbatchFirst = 1
+	}
+
+	lib.AtgLstm(ctensorsPtr, ts.ctensor, chxData, len(hxData), cparamsData, len(paramsData), chasBiases, numLayers, dropout, ctrain, cbidirectional, cbatchFirst)
+	err = TorchErr()
+	if err != nil {
+		return output, h, c, err
+	}
+
+	return Tensor{ctensor: *ts1Ptr}, Tensor{ctensor: *ts2Ptr}, Tensor{ctensor: *ts3Ptr}, nil
+
+}
+
+func (ts Tensor) MustLSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h, c Tensor) {
+	output, h, c, err := ts.LSTM(hxData, paramsData, hasBiases, numLayers, dropout, train, bidirectional, batchFirst)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return output, h, c
+}
+
+func (ts Tensor) GRU(hx Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h Tensor, err error) {
+
+	// NOTE: atg_gru will returns an array of 2 Ctensor
+	ts1Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	ts2Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	var ctensorsPtr []*lib.Ctensor
+	ctensorsPtr = append(ctensorsPtr, ts1Ptr, ts2Ptr)
+
+	var cparamsData []lib.Ctensor
+	for _, t := range paramsData {
+		cparamsData = append(cparamsData, t.ctensor)
+	}
+
+	chasBiases := 0
+	if hasBiases {
+		chasBiases = 1
+	}
+	ctrain := 0
+	if train {
+		ctrain = 1
+	}
+	cbidirectional := 0
+	if bidirectional {
+		cbidirectional = 1
+	}
+	cbatchFirst := 0
+	if batchFirst {
+		cbatchFirst = 1
+	}
+
+	lib.AtgGru(ctensorsPtr, ts.ctensor, hx.ctensor, cparamsData, len(paramsData), chasBiases, numLayers, dropout, ctrain, cbidirectional, cbatchFirst)
+	err = TorchErr()
+	if err != nil {
+		return output, h, err
+	}
+
+	return Tensor{ctensor: *ts1Ptr}, Tensor{ctensor: *ts2Ptr}, nil
+}
+
+func (ts Tensor) MustGRU(hx Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h Tensor) {
+	output, h, err := ts.GRU(hx, paramsData, hasBiases, numLayers, dropout, train, bidirectional, batchFirst)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return output, h
 }

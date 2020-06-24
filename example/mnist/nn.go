@@ -16,9 +16,9 @@ const (
 	LabelNN       int64  = 10
 	MnistDirNN    string = "../../data/mnist"
 
-	epochsNN = 500
+	epochsNN = 200
 
-	LrNN = 1e-2
+	LrNN = 1e-3
 )
 
 var l nn.Linear
