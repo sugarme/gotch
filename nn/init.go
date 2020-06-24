@@ -148,11 +148,31 @@ func NewKaimingUniformInit() kaimingUniformInit {
 }
 
 func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
-	fanIn := factorial(uint64(len(dims) - 1))
+	var fanIn int64
+	if len(dims) == 1 {
+		log.Fatalf("KaimingUniformInit method call: dims (%v) should have length > 1", dims)
+	} else {
+		fanIn = product(dims[1:])
+	}
+
 	bound := math.Sqrt(1.0 / float64(fanIn))
 	kind := gotch.Float.CInt()
 	retVal = ts.MustZeros(dims, kind, device.CInt())
 	retVal.Uniform_(-bound, bound)
+
+	return retVal
+}
+
+// product calculates product by multiplying elements
+func product(dims []int64) (retVal int64) {
+
+	for i, v := range dims {
+		if i == 0 {
+			retVal = v
+		} else {
+			retVal = retVal * v
+		}
+	}
 
 	return retVal
 }
@@ -170,7 +190,14 @@ func (k kaimingUniformInit) Set(tensor ts.Tensor) {
 	if err != nil {
 		log.Fatalf("uniformInit - Set method call error: %v\n", err)
 	}
-	fanIn := factorial(uint64(len(dims) - 1))
+
+	var fanIn int64
+	if len(dims) == 1 {
+		log.Fatalf("KaimingUniformInit Set method call: Tensor (%v) should have length > 1", tensor.MustSize())
+	} else {
+		fanIn = product(dims[1:])
+	}
+
 	bound := math.Sqrt(1.0 / float64(fanIn))
 	tensor.Uniform_(-bound, bound)
 }

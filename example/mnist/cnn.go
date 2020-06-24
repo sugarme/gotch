@@ -85,7 +85,7 @@ func runCNN1() {
 	// vs := nn.NewVarStore(gotch.CPU)
 	path := vs.Root()
 	net := newNet(&path)
-	opt, err := nn.DefaultAdamConfig().Build(vs, LrNN)
+	opt, err := nn.DefaultAdamConfig().Build(vs, LrCNN)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func runCNN1() {
 			bImages.MustDrop()
 			bLabels.MustDrop()
 			// logits.MustDrop()
-			loss.MustDrop()
+			// loss.MustDrop()
 		}
 
 		// testAccuracy := ts.BatchAccuracyForLogitsIdx(net, testImages, testLabels, vs.Device(), 1024)
@@ -185,7 +185,7 @@ func runCNN2() {
 			bImages := item.Data.MustTo(vs.Device(), true)
 			bLabels := item.Label.MustTo(vs.Device(), true)
 
-			_ = ts.MustGradSetEnabled(true)
+			// _ = ts.MustGradSetEnabled(true)
 
 			logits := net.ForwardT(bImages, true)
 			loss := logits.CrossEntropyForLogits(bLabels)
@@ -199,10 +199,13 @@ func runCNN2() {
 			loss.MustDrop()
 		}
 
-		testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), batchCNN)
+		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\n", epoch, lossVal)
 
-		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\t Accuracy: %.2f\n", epoch, lossVal, testAcc*100)
+		// testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), batchCNN)
+		// fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\t Accuracy: %.2f\n", epoch, lossVal, testAcc*100)
 	}
 
+	testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), batchCNN)
+	fmt.Printf("Loss: \t %.2f\t Accuracy: %.2f\n", lossVal, testAcc*100)
 	fmt.Printf("Taken time:\t%.2f mins\n", time.Since(startTime).Minutes())
 }

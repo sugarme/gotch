@@ -21,7 +21,8 @@ func main() {
 	case "nn":
 		runNN()
 	case "cnn":
-		runCNN2()
+		// runCNN2()
+		runCNN1()
 	default:
 		panic("No specified model to run")
 	}
