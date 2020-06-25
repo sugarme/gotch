@@ -139,10 +139,14 @@ func (l LSTM) ZeroState(batchDim int64) (retVal State) {
 	}
 }
 
-func (l LSTM) Step(input ts.Tensor, inState State) (retVal State) {
+func (l LSTM) Step(input ts.Tensor, inState LSTMState) (retVal State) {
 	ip := input.MustUnsqueeze(1, false)
 
-	_, state := l.SeqInit(ip, inState.(LSTMState))
+	output, state := l.SeqInit(ip, inState)
+
+	// NOTE: though we won't use `output`, it is a Ctensor created in C land, so
+	// it should be cleaned up here to prevent memory hold-up.
+	output.MustDrop()
 
 	return state
 }
@@ -151,9 +155,9 @@ func (l LSTM) Seq(input ts.Tensor) (ts.Tensor, State) {
 	return defaultSeq(l, input)
 }
 
-func (l LSTM) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
+func (l LSTM) SeqInit(input ts.Tensor, inState LSTMState) (ts.Tensor, State) {
 
-	output, h, c := input.MustLSTM([]ts.Tensor{inState.(LSTMState).Tensor1, inState.(LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
+	output, h, c := input.MustLSTM([]ts.Tensor{inState.Tensor1, inState.Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
 
 	return output, LSTMState{
 		Tensor1: h,
@@ -225,13 +229,19 @@ func (g GRU) ZeroState(batchDim int64) (retVal State) {
 	layerDim := g.config.NumLayers * numDirections
 	shape := []int64{layerDim, batchDim, g.hiddenDim}
 
-	return ts.MustZeros(shape, gotch.Float.CInt(), g.device.CInt())
+	tensor := ts.MustZeros(shape, gotch.Float.CInt(), g.device.CInt())
+
+	return GRUState{Tensor: tensor}
 }
 
-func (g GRU) Step(input ts.Tensor, inState State) (retVal State) {
+func (g GRU) Step(input ts.Tensor, inState GRUState) (retVal State) {
 	ip := input.MustUnsqueeze(1, false)
 
-	_, state := g.SeqInit(ip, inState.(LSTMState))
+	output, state := g.SeqInit(ip, inState)
+
+	// NOTE: though we won't use `output`, it is a Ctensor created in C land, so
+	// it should be cleaned up here to prevent memory hold-up.
+	output.MustDrop()
 
 	return state
 }
@@ -240,9 +250,9 @@ func (g GRU) Seq(input ts.Tensor) (ts.Tensor, State) {
 	return defaultSeq(g, input)
 }
 
-func (g GRU) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
+func (g GRU) SeqInit(input ts.Tensor, inState GRUState) (ts.Tensor, State) {
 
-	output, h := input.MustGRU(inState.(GRUState).Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
+	output, h := input.MustGRU(inState.Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
 
 	return output, GRUState{Tensor: h}
 }

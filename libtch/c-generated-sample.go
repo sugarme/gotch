@@ -434,7 +434,7 @@ func AtgConvTranspose3d(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctenso
 }
 
 // void atg_lstm(tensor *, tensor input, tensor *hx_data, int hx_len, tensor *params_data, int params_len, int has_biases, int64_t num_layers, double dropout, int train, int bidirectional, int batch_first);
-func AtgLstm(ctensorsPtr []*Ctensor, input Ctensor, hxData []Ctensor, hxLen int, paramsData []Ctensor, paramsLen int, hasBiases int, numLayers int64, dropout float64, train int, bidirectional int, batchFirst int) {
+func AtgLstm(ptr *Ctensor, input Ctensor, hxData []Ctensor, hxLen int, paramsData []Ctensor, paramsLen int, hasBiases int, numLayers int64, dropout float64, train int, bidirectional int, batchFirst int) {
 
 	chxDataPtr := (*Ctensor)(unsafe.Pointer(&hxData[0]))
 	chxLen := *(*C.int)(unsafe.Pointer(&hxLen))
@@ -447,11 +447,11 @@ func AtgLstm(ctensorsPtr []*Ctensor, input Ctensor, hxData []Ctensor, hxLen int,
 	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
 	cbatchFirst := *(*C.int)(unsafe.Pointer(&batchFirst))
 
-	C.atg_lstm(ctensorsPtr[0], input, chxDataPtr, chxLen, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
+	C.atg_lstm(ptr, input, chxDataPtr, chxLen, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
 }
 
 // void atg_gru(tensor *, tensor input, tensor hx, tensor *params_data, int params_len, int has_biases, int64_t num_layers, double dropout, int train, int bidirectional, int batch_first);
-func AtgGru(ctensorsPtr []*Ctensor, input Ctensor, hx Ctensor, paramsData []Ctensor, paramsLen int, hasBiases int, numLayers int64, dropout float64, train int, bidirectional int, batchFirst int) {
+func AtgGru(ptr *Ctensor, input Ctensor, hx Ctensor, paramsData []Ctensor, paramsLen int, hasBiases int, numLayers int64, dropout float64, train int, bidirectional int, batchFirst int) {
 
 	cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
 	cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
@@ -462,5 +462,16 @@ func AtgGru(ctensorsPtr []*Ctensor, input Ctensor, hx Ctensor, paramsData []Cten
 	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
 	cbatchFirst := *(*C.int)(unsafe.Pointer(&batchFirst))
 
-	C.atg_gru(ctensorsPtr[0], input, hx, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
+	C.atg_gru(ptr, input, hx, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
+}
+
+// void atg_randn(tensor *, int64_t *size_data, int size_len, int options_kind, int options_device);
+func AtgRandn(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind int32, optionsDevice int32) {
+
+	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+	coptionKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	C.atg_randn(ptr, csizeDataPtr, csizeLen, coptionKind, coptionDevice)
 }

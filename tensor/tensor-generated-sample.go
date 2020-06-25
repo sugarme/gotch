@@ -1263,12 +1263,12 @@ func MustConvTranspose3D(input, weight, bias Tensor, stride, padding, outputPadd
 
 func (ts Tensor) LSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h, c Tensor, err error) {
 
-	// NOTE: atg_lstm will return an array of 3 Ctensors
-	ts1Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	ts2Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	ts3Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	var ctensorsPtr []*lib.Ctensor
-	ctensorsPtr = append(ctensorsPtr, ts1Ptr, ts2Ptr, ts3Ptr)
+	// NOTE: `atg_lstm` will create 3 consecutive Ctensors in memory of C land. The first
+	// Ctensor will have address given by `ctensorPtr1` here.
+	// The next pointers can be calculated based on `ctensorPtr1`
+	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr1)))
+	ctensorPtr3 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr2)) + unsafe.Sizeof(ctensorPtr1)))
 
 	var chxData []lib.Ctensor
 	for _, t := range hxData {
@@ -1297,13 +1297,13 @@ func (ts Tensor) LSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, numL
 		cbatchFirst = 1
 	}
 
-	lib.AtgLstm(ctensorsPtr, ts.ctensor, chxData, len(hxData), cparamsData, len(paramsData), chasBiases, numLayers, dropout, ctrain, cbidirectional, cbatchFirst)
+	lib.AtgLstm(ctensorPtr1, ts.ctensor, chxData, len(hxData), cparamsData, len(paramsData), chasBiases, numLayers, dropout, ctrain, cbidirectional, cbatchFirst)
 	err = TorchErr()
 	if err != nil {
 		return output, h, c, err
 	}
 
-	return Tensor{ctensor: *ts1Ptr}, Tensor{ctensor: *ts2Ptr}, Tensor{ctensor: *ts3Ptr}, nil
+	return Tensor{ctensor: *ctensorPtr1}, Tensor{ctensor: *ctensorPtr2}, Tensor{ctensor: *ctensorPtr3}, nil
 
 }
 
@@ -1319,11 +1319,11 @@ func (ts Tensor) MustLSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, 
 
 func (ts Tensor) GRU(hx Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h Tensor, err error) {
 
-	// NOTE: atg_gru will returns an array of 2 Ctensor
-	ts1Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	ts2Ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	var ctensorsPtr []*lib.Ctensor
-	ctensorsPtr = append(ctensorsPtr, ts1Ptr, ts2Ptr)
+	// NOTE: `atg_gru` will create 2 consecutive Ctensors in memory of C land.
+	// The first Ctensor will have address given by `ctensorPtr1` here.
+	// The next pointer can be calculated based on `ctensorPtr1`
+	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr1)))
 
 	var cparamsData []lib.Ctensor
 	for _, t := range paramsData {
@@ -1347,13 +1347,14 @@ func (ts Tensor) GRU(hx Tensor, paramsData []Tensor, hasBiases bool, numLayers i
 		cbatchFirst = 1
 	}
 
-	lib.AtgGru(ctensorsPtr, ts.ctensor, hx.ctensor, cparamsData, len(paramsData), chasBiases, numLayers, dropout, ctrain, cbidirectional, cbatchFirst)
+	lib.AtgGru(ctensorPtr1, ts.ctensor, hx.ctensor, cparamsData, len(paramsData), chasBiases, numLayers, dropout, ctrain, cbidirectional, cbatchFirst)
 	err = TorchErr()
 	if err != nil {
 		return output, h, err
 	}
 
-	return Tensor{ctensor: *ts1Ptr}, Tensor{ctensor: *ts2Ptr}, nil
+	return Tensor{ctensor: *ctensorPtr1}, Tensor{ctensor: *ctensorPtr2}, nil
+
 }
 
 func (ts Tensor) MustGRU(hx Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h Tensor) {
@@ -1363,4 +1364,29 @@ func (ts Tensor) MustGRU(hx Tensor, paramsData []Tensor, hasBiases bool, numLaye
 	}
 
 	return output, h
+}
+
+func Randn(sizeData []int64, optionsKind gotch.DType, optionsDevice gotch.Device) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgRandn(ptr, sizeData, len(sizeData), optionsKind.CInt(), optionsDevice.CInt())
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustRandn(sizeData []int64, optionsKind gotch.DType, optionsDevice gotch.Device) (retVal Tensor) {
+
+	retVal, err := Randn(sizeData, optionsKind, optionsDevice)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }

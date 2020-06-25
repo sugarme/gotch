@@ -110,3 +110,89 @@ func GetAndResetLastErr() *C.char{
 ```
 
 
+## Multiple Tensors Created In C Land Memory
+
+- When there are multiple Ctensor created in C land memory. A first Ctensor
+    pointer will be created and given to the C function. It will create
+    consecutive Ctensor(s) based on this pointer. The next pointer(s) can be
+    calulated based on this pointer and its size.
+
+- Example: **lstm* function
+
+    + **C function**
+
+    ```C
+        void atg_lstm(tensor *, tensor input, tensor *hx_data, int hx_len, tensor *params_data, int params_len, int has_biases, int64_t num_layers, double dropout, int train, int bidirectional, int batch_first);
+    ```
+
+    + **Go wrapper function**
+
+    ```go
+        func AtgLstm(ptr *Ctensor, input Ctensor, hxData []Ctensor, hxLen int, paramsData []Ctensor, paramsLen int, hasBiases int, numLayers int64, dropout float64, train int, bidirectional int, batchFirst int) {
+
+            chxDataPtr := (*Ctensor)(unsafe.Pointer(&hxData[0]))
+            chxLen := *(*C.int)(unsafe.Pointer(&hxLen))
+            cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
+            cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
+            chasBiases := *(*C.int)(unsafe.Pointer(&hasBiases))
+            cnumLayers := *(*C.int64_t)(unsafe.Pointer(&numLayers))
+            cdropout := *(*C.double)(unsafe.Pointer(&dropout))
+            ctrain := *(*C.int)(unsafe.Pointer(&train))
+            cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
+            cbatchFirst := *(*C.int)(unsafe.Pointer(&batchFirst))
+
+            C.atg_lstm(ptr, input, chxDataPtr, chxLen, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
+        }
+    ```
+
+    + **Go API function**
+
+    ```go
+        func (ts Tensor) LSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h, c Tensor, err error) {
+
+        // NOTE: `atg_lstm` will create 3 consecutive Ctensors in memory of C land. The first
+        // Ctensor will have address given by `ctensorPtr1` here.
+        // The next pointers can be calculated based on `ctensorPtr1`
+        ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+        ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr1)))
+        ctensorPtr3 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr2)) + unsafe.Sizeof(ctensorPtr1)))
+
+        var chxData []lib.Ctensor
+        for _, t := range hxData {
+            chxData = append(chxData, t.ctensor)
+        }
+
+        var cparamsData []lib.Ctensor
+        for _, t := range paramsData {
+            cparamsData = append(cparamsData, t.ctensor)
+        }
+
+        chasBiases := 0
+        if hasBiases {
+            chasBiases = 1
+        }
+        ctrain := 0
+        if train {
+            ctrain = 1
+        }
+        cbidirectional := 0
+        if bidirectional {
+            cbidirectional = 1
+        }
+        cbatchFirst := 0
+        if batchFirst {
+            cbatchFirst = 1
+        }
+
+        lib.AtgLstm(ctensorPtr1, ts.ctensor, chxData, len(hxData), cparamsData, len(paramsData), chasBiases, numLayers, dropout, ctrain, cbidirectional, cbatchFirst)
+        err = TorchErr()
+        if err != nil {
+            return output, h, c, err
+        }
+
+        return Tensor{ctensor: *ctensorPtr1}, Tensor{ctensor: *ctensorPtr2}, Tensor{ctensor: *ctensorPtr3}, nil
+
+    }
+    ```
+
+
