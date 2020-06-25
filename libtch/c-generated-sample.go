@@ -508,3 +508,14 @@ func AtgLayerNorm(ptr *Ctensor, input Ctensor, normalizedShapeData []int64, norm
 
 	C.atg_layer_norm(ptr, input, cnormalizedShapeDataPtr, cnormalizedShapeLen, weight, bias, ceps, ccudnnEnable)
 }
+
+// void atg_batch_norm(tensor *, tensor input, tensor weight, tensor bias, tensor running_mean, tensor running_var, int training, double momentum, double eps, int cudnn_enabled);
+func AtgBatchNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, runningMean Ctensor, runningVar Ctensor, training int, momentum float64, eps float64, cudnnEnable int) {
+
+	ctraining := *(*C.int)(unsafe.Pointer(&training))
+	cmomentum := *(*C.double)(unsafe.Pointer(&momentum))
+	ceps := *(*C.double)(unsafe.Pointer(&eps))
+	ccudnnEnable := *(*C.int)(unsafe.Pointer(&cudnnEnable))
+
+	C.atg_batch_norm(ptr, input, weight, bias, runningMean, runningVar, ctraining, cmomentum, ceps, ccudnnEnable)
+}
