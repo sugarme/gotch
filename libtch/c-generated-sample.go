@@ -497,3 +497,14 @@ func AtgRandint(ptr *Ctensor, high int64, sizeData []int64, sizeLen int, options
 
 	C.atg_randint(ptr, chigh, csizeDataPtr, csizeLen, coptionKind, coptionDevice)
 }
+
+// void atg_layer_norm(tensor *, tensor input, int64_t *normalized_shape_data, int normalized_shape_len, tensor weight, tensor bias, double eps, int cudnn_enable);
+func AtgLayerNorm(ptr *Ctensor, input Ctensor, normalizedShapeData []int64, normalizedShapeLen int, weight Ctensor, bias Ctensor, eps float64, cudnnEnable int) {
+
+	cnormalizedShapeDataPtr := (*C.int64_t)(unsafe.Pointer(&normalizedShapeData[0]))
+	cnormalizedShapeLen := *(*C.int)(unsafe.Pointer(&normalizedShapeLen))
+	ceps := *(*C.double)(unsafe.Pointer(&eps))
+	ccudnnEnable := *(*C.int)(unsafe.Pointer(&cudnnEnable))
+
+	C.atg_layer_norm(ptr, input, cnormalizedShapeDataPtr, cnormalizedShapeLen, weight, bias, ceps, ccudnnEnable)
+}

@@ -1449,3 +1449,31 @@ func MustRandint(high int64, sizeData []int64, optionsKind gotch.DType, optionsD
 
 	return retVal
 }
+
+func LayerNorm(input Tensor, normalizedShape []int64, weight, bias Tensor, eps float64, cudnnEnable bool) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	ccudnnEnable := 0
+	if cudnnEnable {
+		ccudnnEnable = 1
+	}
+
+	lib.AtgLayerNorm(ptr, input.ctensor, normalizedShape, len(normalizedShape), weight.ctensor, bias.ctensor, eps, ccudnnEnable)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustLayerNorm(input Tensor, normalizedShape []int64, weight, bias Tensor, eps float64, cudnnEnable bool) (retVal Tensor) {
+
+	retVal, err := LayerNorm(input, normalizedShape, weight, bias, eps, cudnnEnable)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
