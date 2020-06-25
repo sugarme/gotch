@@ -475,3 +475,25 @@ func AtgRandn(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind int32, op
 
 	C.atg_randn(ptr, csizeDataPtr, csizeLen, coptionKind, coptionDevice)
 }
+
+// void atg_embedding(tensor *, tensor weight, tensor indices, int64_t padding_idx, int scale_grad_by_freq, int sparse);
+func AtgEmbedding(ptr *Ctensor, weight Ctensor, indices Ctensor, paddingIdx int64, scaleGradByFreq int, sparse int) {
+
+	cpaddingIdx := *(*C.int64_t)(unsafe.Pointer(&paddingIdx))
+	cscaleGradByFreq := *(*C.int)(unsafe.Pointer(&scaleGradByFreq))
+	csparse := *(*C.int)(unsafe.Pointer(&sparse))
+
+	C.atg_embedding(ptr, weight, indices, cpaddingIdx, cscaleGradByFreq, csparse)
+}
+
+// void atg_randint(tensor *, int64_t high, int64_t *size_data, int size_len, int options_kind, int options_device);
+func AtgRandint(ptr *Ctensor, high int64, sizeData []int64, sizeLen int, optionsKind int32, optionsDevice int32) {
+
+	chigh := *(*C.int64_t)(unsafe.Pointer(&high))
+	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+	coptionKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	C.atg_randint(ptr, chigh, csizeDataPtr, csizeLen, coptionKind, coptionDevice)
+}

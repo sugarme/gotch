@@ -1390,3 +1390,62 @@ func MustRandn(sizeData []int64, optionsKind gotch.DType, optionsDevice gotch.De
 
 	return retVal
 }
+
+func Embedding(weight, indices Tensor, paddingIdx int64, scaleGradByFreq, sparse bool) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	cscaleGradByFreq := 0
+	if scaleGradByFreq {
+		cscaleGradByFreq = 1
+	}
+
+	csparse := 0
+	if sparse {
+		csparse = 1
+	}
+
+	lib.AtgEmbedding(ptr, weight.ctensor, indices.ctensor, paddingIdx, cscaleGradByFreq, csparse)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustEmbedding(weight, indices Tensor, paddingIdx int64, scaleGradByFreq, sparse bool) (retVal Tensor) {
+
+	retVal, err := Embedding(weight, indices, paddingIdx, scaleGradByFreq, sparse)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func Randint(high int64, sizeData []int64, optionsKind gotch.DType, optionsDevice gotch.Device) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgRandint(ptr, high, sizeData, len(sizeData), optionsKind.CInt(), optionsDevice.CInt())
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustRandint(high int64, sizeData []int64, optionsKind gotch.DType, optionsDevice gotch.Device) (retVal Tensor) {
+
+	retVal, err := Randint(high, sizeData, optionsKind, optionsDevice)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}

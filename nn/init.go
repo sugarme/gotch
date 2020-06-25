@@ -73,11 +73,13 @@ func NewRandnInit(mean, stdev float64) randnInit {
 
 func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
 	var err error
-	rd := rand.Rand{}
+	rand.Seed(86)
+
 	data := make([]float64, ts.FlattenDim(dims))
 	for i := range data {
-		data[i] = rd.NormFloat64()*r.mean + r.stdev
+		data[i] = rand.NormFloat64()*r.mean + r.stdev
 	}
+
 	retVal, err = ts.NewTensorFromData(data, dims)
 	if err != nil {
 		log.Fatalf("randInit - InitTensor method call error: %v\n", err)
@@ -98,10 +100,10 @@ func (r randnInit) Set(tensor ts.Tensor) {
 		log.Fatalf("randInit - Set method call error: %v\n", err)
 	}
 
-	rd := rand.Rand{}
+	rand.Seed(86)
 	data := make([]float64, ts.FlattenDim(dims))
 	for i := range data {
-		data[i] = rd.NormFloat64()*r.mean + r.stdev
+		data[i] = rand.NormFloat64()*r.mean + r.stdev
 	}
 	randnTs, err = ts.NewTensorFromData(data, dims)
 	if err != nil {
