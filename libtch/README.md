@@ -117,7 +117,7 @@ func GetAndResetLastErr() *C.char{
     consecutive Ctensor(s) based on this pointer. The next pointer(s) can be
     calulated based on this pointer and its size.
 
-- Example: **lstm* function
+- Example: **lstm** function
 
     + **C function**
 
@@ -148,7 +148,7 @@ func GetAndResetLastErr() *C.char{
     + **Go API function**
 
     ```go
-        func (ts Tensor) LSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h, c Tensor, err error) {
+    func (ts Tensor) LSTM(hxData []Tensor, paramsData []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (output, h, c Tensor, err error) {
 
         // NOTE: `atg_lstm` will create 3 consecutive Ctensors in memory of C land. The first
         // Ctensor will have address given by `ctensorPtr1` here.
