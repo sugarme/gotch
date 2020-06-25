@@ -139,7 +139,7 @@ func (l LSTM) ZeroState(batchDim int64) (retVal State) {
 	}
 }
 
-func (l LSTM) Step(input ts.Tensor, inState LSTMState) (retVal State) {
+func (l LSTM) Step(input ts.Tensor, inState State) (retVal State) {
 	ip := input.MustUnsqueeze(1, false)
 
 	output, state := l.SeqInit(ip, inState)
@@ -155,9 +155,9 @@ func (l LSTM) Seq(input ts.Tensor) (ts.Tensor, State) {
 	return defaultSeq(l, input)
 }
 
-func (l LSTM) SeqInit(input ts.Tensor, inState LSTMState) (ts.Tensor, State) {
+func (l LSTM) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
 
-	output, h, c := input.MustLSTM([]ts.Tensor{inState.Tensor1, inState.Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
+	output, h, c := input.MustLSTM([]ts.Tensor{inState.(LSTMState).Tensor1, inState.(LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
 
 	return output, LSTMState{
 		Tensor1: h,
@@ -234,7 +234,7 @@ func (g GRU) ZeroState(batchDim int64) (retVal State) {
 	return GRUState{Tensor: tensor}
 }
 
-func (g GRU) Step(input ts.Tensor, inState GRUState) (retVal State) {
+func (g GRU) Step(input ts.Tensor, inState State) (retVal State) {
 	ip := input.MustUnsqueeze(1, false)
 
 	output, state := g.SeqInit(ip, inState)
@@ -250,9 +250,9 @@ func (g GRU) Seq(input ts.Tensor) (ts.Tensor, State) {
 	return defaultSeq(g, input)
 }
 
-func (g GRU) SeqInit(input ts.Tensor, inState GRUState) (ts.Tensor, State) {
+func (g GRU) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
 
-	output, h := input.MustGRU(inState.Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
+	output, h := input.MustGRU(inState.(GRUState).Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
 
 	return output, GRUState{Tensor: h}
 }

@@ -46,8 +46,10 @@ func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optim
 		parameters = append(parameters, param)
 	}
 
-	if err = opt.AddParameters(vs.Vars.TrainableVariables); err != nil {
-		return retVal, err
+	if len(vs.Vars.TrainableVariables) > 0 {
+		if err = opt.AddParameters(vs.Vars.TrainableVariables); err != nil {
+			return retVal, err
+		}
 	}
 
 	// TODO: should we clone or copy?
