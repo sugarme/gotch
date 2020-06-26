@@ -2,10 +2,14 @@ package tensor
 
 // JIT interface to run model trained/saved using PyTorch Python API.
 
+// #include "stdlib.h"
+import "C"
+
 import (
 	"fmt"
 	"log"
 	"reflect"
+	"unsafe"
 
 	// "github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
@@ -71,6 +75,10 @@ func NewIValue(v interface{}) (retVal IValue) {
 		retVal.name = "Int"
 	case "bool":
 		retVal.kind = BoolVal
+		retVal.name = "Bool"
+	case "string":
+		retVal.kind = StringVal
+		retVal.name = "String"
 	case "slice":
 		switch reflect.TypeOf(v).Elem().Kind().String() {
 		case "IValue":
@@ -129,14 +137,126 @@ func (iv IValue) ToCIValue() (retVal CIValue, err error) {
 
 	case "Int":
 		cval := lib.AtiInt(iv.value.(int64))
-		fmt.Printf("cval: %v\n", cval)
 		if err = TorchErr(); err != nil {
 			return retVal, err
 		}
 
 		return CIValue{civalue: cval}, nil
 
-		// TODO: continue...
+	case "Double":
+		cval := lib.AtiDouble(iv.value.(float64))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: cval}, nil
+
+	case "Bool":
+		cval := lib.AtiBool(iv.value.(bool))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: cval}, nil
+
+	case "Tuple":
+		var v []IValue = iv.value.([]IValue)
+		var cvals []lib.Civalue
+		for _, i := range v {
+			cval, err := i.ToCIValue()
+			if err != nil {
+				err = fmt.Errorf("ToCIValue method call err - Tuple case: %v\n", err)
+				return retVal, err
+			}
+			cvals = append(cvals, cval.civalue)
+		}
+
+		tuple := lib.AtiTuple(cvals, len(cvals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: tuple}, nil
+
+	case "GenericList":
+		var v []IValue = iv.value.([]IValue)
+		var cvals []lib.Civalue
+		for _, i := range v {
+			cval, err := i.ToCIValue()
+			if err != nil {
+				err = fmt.Errorf("ToCIValue method call err - GenericList case: %v\n", err)
+				return retVal, err
+			}
+			cvals = append(cvals, cval.civalue)
+		}
+
+		list := lib.AtiGenericList(cvals, len(cvals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: list}, nil
+
+	case "IntList":
+		var vals []int64 = iv.value.([]int64)
+		cval := lib.AtiIntList(vals, len(vals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: cval}, nil
+
+	case "DoubleList":
+		var vals []float64 = iv.value.([]float64)
+		cval := lib.AtiDoubleList(vals, len(vals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: cval}, nil
+
+	case "BoolList":
+		var vals []bool = iv.value.([]bool)
+		cval := lib.AtiBoolList(vals, len(vals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: cval}, nil
+
+	case "TensorList":
+		var vals []Tensor = iv.value.([]Tensor)
+		var cvals []lib.Ctensor
+		for _, i := range vals {
+			cvals = append(cvals, i.ctensor)
+		}
+		list := lib.AtiTensorList(cvals, len(cvals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: list}, nil
+
+	case "String":
+		cval := lib.AtiString(iv.value.(string))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: cval}, nil
+
+	case "GenericDict":
+		var m map[IValue]IValue = iv.value.(map[IValue]IValue)
+		var vals []IValue
+		for k, v := range m {
+			vals = append(vals, k, v)
+		}
+		var cvals []lib.Civalue
+		for _, v := range vals {
+			cval, err := v.ToCIValue()
+			if err != nil {
+				err = fmt.Errorf("ToCIValue method call err - GenericList case: %v\n", err)
+				return retVal, err
+			}
+			cvals = append(cvals, cval.civalue)
+		}
+
+		dict := lib.AtiGenericDict(cvals, len(cvals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		return CIValue{civalue: dict}, nil
 	}
 
 	return retVal, nil
@@ -152,6 +272,8 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
+
+	fmt.Printf("tag value: %v\n", tag)
 
 	switch tag {
 	case 0:
@@ -189,6 +311,87 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 			value: v,
 			kind:  IntVal,
 			name:  "Int",
+		}
+
+	case 4:
+		v := lib.AtiToBool(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		retVal = IValue{
+			value: v,
+			kind:  BoolVal,
+			name:  "Bool",
+		}
+
+	case 5: // Tuple []IValue 2 elements
+		// 1. Determine tuple length
+		len := lib.AtiTupleLength(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		// 2. Call with first pointer and length
+		ptr1 := (*lib.Civalue)(unsafe.Pointer(C.malloc(0)))
+		lib.AtiToTuple(cval.civalue, ptr1, int(len))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 3. Get list of Civalue tuple elements
+		var civalues []CIValue
+		civalues = append(civalues, CIValue{civalue: *ptr1})
+		currPtr := ptr1
+		for i := 1; i < int(len); i++ {
+			nextPtr := (*lib.Civalue)(unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1)))
+			civalues = append(civalues, CIValue{civalue: *nextPtr})
+			currPtr = nextPtr
+		}
+
+		// 4. Get Ivalue from Civalue for each tuple element
+		var vals []interface{}
+		for _, civalue := range civalues {
+			v, err := IValueFromC(civalue)
+			if err != nil {
+				return retVal, err
+			}
+			vals = append(vals, v)
+		}
+
+		retVal = IValue{
+			value: vals,
+			kind:  TupleVal,
+			name:  "Tuple",
+		}
+
+	case 6: // IntList
+		// 1. Len
+		len := lib.AtiLength(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 2. Call
+		ptr1 := unsafe.Pointer(C.malloc(0))
+		lib.AtiToIntList(cval.civalue, ptr1, int(len))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 3. Get int list
+		var intVals []int64
+		intVals = append(intVals, *(*int64)(unsafe.Pointer(ptr1)))
+		fmt.Printf("intVal: %v\n", intVals)
+		currPtr := ptr1
+		for i := 1; i < int(len); i++ {
+			nextPtr := unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1))
+			intVals = append(intVals, *(*int64)(unsafe.Pointer(nextPtr)))
+			currPtr = nextPtr
+		}
+
+		retVal = IValue{
+			value: intVals,
+			kind:  IntListVal,
+			name:  "IntList",
 		}
 
 		// TODO: continue

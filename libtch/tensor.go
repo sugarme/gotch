@@ -476,24 +476,68 @@ func AtiString(val string) Civalue {
 }
 
 // ivalue ati_tuple(ivalue *, int);
-func AtiTuple(ptr *Civalue, val int64) Civalue {
-	cval := *(*C.int)(unsafe.Pointer(&val))
+func AtiTuple(tupleData []Civalue, tupleLen int) Civalue {
+	ctupleDataPtr := (*C.ivalue)(unsafe.Pointer(&tupleData[0]))
+	ctupleLen := *(*C.int)(unsafe.Pointer(&tupleLen))
 
-	return C.ati_tuple(ptr, cval)
+	return C.ati_tuple(ctupleDataPtr, ctupleLen)
 }
 
 // ivalue ati_generic_list(ivalue *, int);
+func AtiGenericList(genericListData []Civalue, genericListLen int) Civalue {
+	cgenericListDataPtr := (*C.ivalue)(unsafe.Pointer(&genericListData[0]))
+	cgenericListLen := *(*C.int)(unsafe.Pointer(&genericListLen))
+
+	return C.ati_generic_list(cgenericListDataPtr, cgenericListLen)
+}
 
 // ivalue ati_generic_dict(ivalue *, int);
+func AtiGenericDict(genericDictData []Civalue, genericDictLen int) Civalue {
+	cgenericDictDataPtr := (*C.ivalue)(unsafe.Pointer(&genericDictData[0]))
+	cgenericDictLen := *(*C.int)(unsafe.Pointer(&genericDictLen))
+
+	return C.ati_generic_dict(cgenericDictDataPtr, cgenericDictLen)
+}
 
 // ivalue ati_int_list(int64_t *, int);
+func AtiIntList(intListData []int64, intListLen int) Civalue {
+	cintListDataPtr := (*C.int64_t)(unsafe.Pointer(&intListData[0]))
+	cintListLen := *(*C.int)(unsafe.Pointer(&intListLen))
+
+	return C.ati_int_list(cintListDataPtr, cintListLen)
+}
 
 // ivalue ati_double_list(double *, int);
+func AtiDoubleList(doubleListData []float64, doubleListLen int) Civalue {
+	cdoubleListDataPtr := (*C.double)(unsafe.Pointer(&doubleListData[0]))
+	cdoubleListLen := *(*C.int)(unsafe.Pointer(&doubleListLen))
+
+	return C.ati_double_list(cdoubleListDataPtr, cdoubleListLen)
+}
 
 // ivalue ati_bool_list(char *, int);
+func AtiBoolList(boolListData []bool, boolListLen int) Civalue {
+	var cboolListData []int
+	for _, v := range boolListData {
+		item := 0
+		if v {
+			item = 1
+		}
+		cboolListData = append(cboolListData, item)
+	}
+	cboolListDataPtr := (*C.char)(unsafe.Pointer(&cboolListData[0]))
+	cboolListLen := *(*C.int)(unsafe.Pointer(&boolListLen))
+
+	return C.ati_bool_list(cboolListDataPtr, cboolListLen)
+}
 
 // ivalue ati_tensor_list(tensor *, int);
-//
+func AtiTensorList(tensorListData []Ctensor, tensorListLen int) Civalue {
+	ctensorListDataPtr := (*C.tensor)(unsafe.Pointer(&tensorListData[0]))
+	ctensorListLen := *(*C.int)(unsafe.Pointer(&tensorListLen))
+
+	return C.ati_tensor_list(ctensorListDataPtr, ctensorListLen)
+}
 
 // tensor ati_to_tensor(ivalue);
 func AtiToTensor(val Civalue) Ctensor {
@@ -521,28 +565,75 @@ func AtiToString(val Civalue) string {
 // int ati_to_bool(ivalue);
 func AtiToBool(val Civalue) bool {
 	cval := C.ati_to_bool(val)
-	goval := *(*int)(unsafe.Pointer(&cval))
+	goval := *(*int32)(unsafe.Pointer(&cval))
 	return goval == 1
 }
 
 // int ati_length(ivalue);
+func AtiLength(val Civalue) int32 {
+	cval := C.ati_length(val)
+	return *(*int32)(unsafe.Pointer(&cval))
+}
 
 // int ati_tuple_length(ivalue);
+func AtiTupleLength(val Civalue) int32 {
+	cval := C.ati_tuple_length(val)
+	return *(*int32)(unsafe.Pointer(&cval))
+}
 
 // void ati_to_tuple(ivalue, ivalue *, int);
+func AtiToTuple(val Civalue, ptr *Civalue, tupleLen int) {
+
+	ctupleLen := *(*C.int)(unsafe.Pointer(&tupleLen))
+	C.ati_to_tuple(val, ptr, ctupleLen)
+}
 
 // void ati_to_generic_list(ivalue, ivalue *, int);
+func AtiToGenericList(val Civalue, ptr *Civalue, genericListLen int) {
+
+	cgenericListLen := *(*C.int)(unsafe.Pointer(&genericListLen))
+	C.ati_to_generic_list(val, ptr, cgenericListLen)
+}
 
 // void ati_to_generic_dict(ivalue, ivalue *, int);
+func AtiToGenericDict(val Civalue, ptr *Civalue, genericDictLen int) {
+
+	cgenericDictLen := *(*C.int)(unsafe.Pointer(&genericDictLen))
+	C.ati_to_generic_dict(val, ptr, cgenericDictLen)
+}
 
 // void ati_to_int_list(ivalue, int64_t *, int);
+func AtiToIntList(val Civalue, ptr unsafe.Pointer, intListLen int) {
+
+	cptr := (*C.int64_t)(ptr)
+	cintListLen := *(*C.int)(unsafe.Pointer(&intListLen))
+	C.ati_to_int_list(val, cptr, cintListLen)
+}
 
 // void ati_to_double_list(ivalue, double *, int);
+func AtiToDoubleList(val Civalue, ptr unsafe.Pointer, doubleListLen int) {
+
+	cptr := (*C.double)(ptr)
+	cdoubleListLen := *(*C.int)(unsafe.Pointer(&doubleListLen))
+	C.ati_to_double_list(val, cptr, cdoubleListLen)
+}
 
 // void ati_to_bool_list(ivalue, char *, int);
+func AtiToBoolList(val Civalue, ptr unsafe.Pointer, boolListLen int) {
+
+	cptr := (*C.char)(ptr)
+	cboolListLen := *(*C.int)(unsafe.Pointer(&boolListLen))
+
+	C.ati_to_bool_list(val, cptr, cboolListLen)
+}
 
 // void ati_to_tensor_list(ivalue, tensor *, int);
-//
+func AtiToTensorList(val Civalue, ptr *Ctensor, tensorListLen int) {
+	ctensorListLen := *(*C.int)(unsafe.Pointer(&tensorListLen))
+
+	C.ati_to_tensor_list(val, ptr, ctensorListLen)
+}
+
 // int ati_tag(ivalue);
 func AtiTag(val Civalue) int32 {
 
@@ -550,7 +641,6 @@ func AtiTag(val Civalue) int32 {
 	return *(*int32)(unsafe.Pointer(&ctag))
 }
 
-//
 // void ati_free(ivalue);
 func AtiFree(val Civalue) {
 	C.ati_free(val)

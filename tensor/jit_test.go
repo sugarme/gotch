@@ -19,7 +19,7 @@ func roundTrip(v interface{}, t *testing.T) {
 
 	val2, err := ts.IValueFromC(cval)
 	if err != nil {
-		t.Logf("Error while converting to IValue from C\n")
+		t.Logf("Error while converting to IValue from C: %v\n", err)
 	}
 
 	if !reflect.DeepEqual(val, val2) {
@@ -32,7 +32,10 @@ func TestIValue(t *testing.T) {
 	roundTrip(nil, t)
 
 	roundTrip(int64(45), t)
-	//
-	// roundTrip(false, t)
-	// roundTrip(true, t)
+	roundTrip(false, t)
+	roundTrip(true, t)
+
+	roundTrip("Hello", t)
+	roundTrip([]int64{3, 4}, t)
+	roundTrip([]float64{3.1, 4.1}, t)
 }
