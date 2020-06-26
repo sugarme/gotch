@@ -9,6 +9,7 @@ package libtch
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -16,6 +17,7 @@ import (
 type Ctensor = C.tensor
 type Cscalar = C.scalar
 type Coptimizer = C.optimizer
+type Civalue = C.ivalue
 
 type NamedCtensor struct {
 	Name    string
@@ -431,4 +433,125 @@ func AtResizeImage(ts Ctensor, w, h int64) Ctensor {
 	ch := *(*C.int)(unsafe.Pointer(&h))
 
 	return C.at_resize_image(ts, cw, ch)
+}
+
+// ivalue ati_none();
+func AtiNone() Civalue {
+	return C.ati_none()
+}
+
+// ivalue ati_tensor(tensor);
+func AtiTensor(ts Ctensor) Civalue {
+	return C.ati_tensor(ts)
+}
+
+// ivalue ati_int(int64_t);
+func AtiInt(val int64) Civalue {
+	cval := *(*C.int64_t)(unsafe.Pointer(&val))
+	result := C.ati_int(cval)
+	fmt.Printf("Civalue from C: %v\n", result)
+	return result
+}
+
+// ivalue ati_double(double);
+func AtiDouble(val float64) Civalue {
+	cval := *(*C.double)(unsafe.Pointer(&val))
+	return C.ati_double(cval)
+}
+
+// ivalue ati_bool(int);
+func AtiBool(val bool) Civalue {
+	ival := 0
+	if val {
+		ival = 1
+	}
+	cval := *(*C.int)(unsafe.Pointer(&ival))
+	return C.ati_bool(cval)
+}
+
+// ivalue ati_string(char *);
+func AtiString(val string) Civalue {
+	cval := C.CString(val)
+	return C.ati_string(cval)
+}
+
+// ivalue ati_tuple(ivalue *, int);
+func AtiTuple(ptr *Civalue, val int64) Civalue {
+	cval := *(*C.int)(unsafe.Pointer(&val))
+
+	return C.ati_tuple(ptr, cval)
+}
+
+// ivalue ati_generic_list(ivalue *, int);
+
+// ivalue ati_generic_dict(ivalue *, int);
+
+// ivalue ati_int_list(int64_t *, int);
+
+// ivalue ati_double_list(double *, int);
+
+// ivalue ati_bool_list(char *, int);
+
+// ivalue ati_tensor_list(tensor *, int);
+//
+
+// tensor ati_to_tensor(ivalue);
+func AtiToTensor(val Civalue) Ctensor {
+	return C.ati_to_tensor(val)
+}
+
+// int64_t ati_to_int(ivalue);
+func AtiToInt(val Civalue) int64 {
+	cval := C.ati_to_int(val)
+	return *(*int64)(unsafe.Pointer(&cval))
+}
+
+// double ati_to_double(ivalue);
+func AtiToDouble(val Civalue) float64 {
+	cval := C.ati_to_double(val)
+	return *(*float64)(unsafe.Pointer(&cval))
+}
+
+// char *ati_to_string(ivalue);
+func AtiToString(val Civalue) string {
+	cval := C.ati_to_string(val)
+	return C.GoString(cval)
+}
+
+// int ati_to_bool(ivalue);
+func AtiToBool(val Civalue) bool {
+	cval := C.ati_to_bool(val)
+	goval := *(*int)(unsafe.Pointer(&cval))
+	return goval == 1
+}
+
+// int ati_length(ivalue);
+
+// int ati_tuple_length(ivalue);
+
+// void ati_to_tuple(ivalue, ivalue *, int);
+
+// void ati_to_generic_list(ivalue, ivalue *, int);
+
+// void ati_to_generic_dict(ivalue, ivalue *, int);
+
+// void ati_to_int_list(ivalue, int64_t *, int);
+
+// void ati_to_double_list(ivalue, double *, int);
+
+// void ati_to_bool_list(ivalue, char *, int);
+
+// void ati_to_tensor_list(ivalue, tensor *, int);
+//
+// int ati_tag(ivalue);
+func AtiTag(val Civalue) int32 {
+
+	ctag := C.ati_tag(val)
+	return *(*int32)(unsafe.Pointer(&ctag))
+}
+
+//
+// void ati_free(ivalue);
+func AtiFree(val Civalue) {
+	C.ati_free(val)
 }
