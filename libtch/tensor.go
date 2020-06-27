@@ -644,3 +644,59 @@ func AtiTag(val Civalue) int32 {
 func AtiFree(val Civalue) {
 	C.ati_free(val)
 }
+
+// module atm_load(char *);
+func AtmLoad(path string) Cmodule {
+	ptr := C.CString(path)
+	return C.atm_load(ptr)
+}
+
+// module atm_load_on_device(char *, int device);
+func AtmLoadOnDevice(path string, device int32) Cmodule {
+	ptr := C.CString(path)
+	cdevice := *(*C.int)(unsafe.Pointer(&device))
+	return C.atm_load_on_device(ptr, cdevice)
+}
+
+// module atm_load_str(char *, size_t sz);
+func AtmLoadStr(val string, sz int) Cmodule {
+	ptr := C.CString(val)
+	csz := *(*C.size_t)(unsafe.Pointer(&sz))
+
+	return C.atm_load_str(ptr, csz)
+}
+
+// module atm_load_str_on_device(char *, size_t sz, int device);
+func AtmLoadStrOnDevice(val string, sz int, device int32) Cmodule {
+	ptr := C.CString(val)
+	csz := *(*C.size_t)(unsafe.Pointer(&sz))
+	cdevice := *(*C.int)(unsafe.Pointer(&device))
+
+	return C.atm_load_str_on_device(ptr, csz, cdevice)
+}
+
+// tensor atm_forward(module, tensor *tensors, int ntensors);
+func AtmForward(m Cmodule, tensors *Ctensor, ntensors int) Ctensor {
+	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
+	return C.atm_forward(m, tensors, cntensors)
+}
+
+// ivalue atm_forward_(module, ivalue *ivalues, int nivalues);
+func AtmForward_(m Cmodule, ivalues *Civalue, nivalues int) Civalue {
+	cnivalues := *(*C.int)(unsafe.Pointer(&nivalues))
+	return C.atm_forward_(m, ivalues, cnivalues)
+}
+
+// void atm_free(module);
+func AtmFree(m Cmodule) {
+	C.atm_free(m)
+}
+
+// void atm_to(module m, int device, int dtype, bool non_blocking);
+func AtmTo(m Cmodule, device int32, dtype int32, nonBlocking bool) {
+	cdevice := *(*C.int)(unsafe.Pointer(&device))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	cnonBlocking := *(*C.bool)(unsafe.Pointer(&nonBlocking))
+
+	C.atm_to(m, cdevice, cdtype, cnonBlocking)
+}

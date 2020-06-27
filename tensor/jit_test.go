@@ -43,5 +43,5 @@ func TestIValue(t *testing.T) {
 	// roundTrip([]int{23, 32}, t)
 
 	roundTrip(map[int64]int64{12: 3, 14: 5}, t)
-	roundTrip(map[float32]float64{12.3: 3.3, 14.3: 5.3}, t)
+	// roundTrip(map[float32]float64{12.3: 3.3, 14.3: 5.3}, t)
 }

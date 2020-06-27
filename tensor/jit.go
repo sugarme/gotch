@@ -814,7 +814,7 @@ type CModule struct {
 
 func (cm CModule) Drop() {
 	lib.AtmFree(cm.Cmodule)
-	if err = TorchErr(); err != nil {
+	if err := TorchErr(); err != nil {
 		log.Fatalf("CModule Drop method err: %v\n", err)
 	}
 }
@@ -885,7 +885,11 @@ func (cm CModule) ForwardTs(tensors []Tensor) (retVal Tensor, err error) {
 		ctensors = append(ctensors, t.ctensor)
 	}
 
-	ctensor := lib.AtmForward(cm.Cmodule, ctensors[0], len(ctensors))
+	ctensorsPtr := (*lib.Ctensor)(unsafe.Pointer(&ctensors))
+
+	// TODO: Write a slice of ctensors to C memory and get a Cpointer to that
+	// slice.?
+	ctensor := lib.AtmForward(cm.Cmodule, ctensorsPtr, len(ctensors))
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
@@ -902,20 +906,25 @@ func (cm CModule) ForwardIs(ivalues []IValue) (retVal IValue, err error) {
 		if err != nil {
 			return retVal, err
 		}
-		civalues = append(civalues, ivalue)
+		civalues = append(civalues, civalue.civalue)
 	}
+
+	civaluesPtr := (*lib.Civalue)(unsafe.Pointer(&civalues))
+
+	// TODO: write a slice of civalues to C memory and get Cpointer to that slice?
+
 	/*
 	 *   for _, i := range ivalues{
 	 *     lib.AtiFree(i.civalue)
 	 *   }
 	 *  */
 
-	civ := lib.AtmForward_(cm.Cmodule, civalues[0], len(civalues))
+	civ := lib.AtmForward_(cm.Cmodule, civaluesPtr, len(civalues))
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
 
-	retVal, err := IValueFromC(c)
+	retVal, err = IValueFromC(CIValue{civ})
 	if err != nil {
 		return retVal, err
 	}
@@ -925,7 +934,7 @@ func (cm CModule) ForwardIs(ivalues []IValue) (retVal IValue, err error) {
 
 func (cm CModule) To(device gotch.Device, kind gotch.DType, nonBlocking bool) {
 	lib.AtmTo(cm.Cmodule, device.CInt(), kind.CInt(), nonBlocking)
-	if err = TorchErr(); err != nil {
+	if err := TorchErr(); err != nil {
 		log.Fatalf("CModule To method call err: %v\n", err)
 	}
 }
