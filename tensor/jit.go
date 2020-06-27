@@ -6,12 +6,14 @@ package tensor
 import "C"
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"reflect"
 	"unsafe"
 
-	// "github.com/sugarme/gotch"
+	"github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
 )
 
@@ -800,4 +802,130 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 	}
 
 	return
+}
+
+// A jit PyTorch module.
+//
+// These modules can be created via the
+// [TorchScript python api](https://pytorch.org/docs/stable/jit.html).
+type CModule struct {
+	Cmodule lib.Cmodule
+}
+
+func (cm CModule) Drop() {
+	lib.AtmFree(cm.Cmodule)
+	if err = TorchErr(); err != nil {
+		log.Fatalf("CModule Drop method err: %v\n", err)
+	}
+}
+
+// Loads a PyTorch saved JIT model from a file.
+func ModuleLoad(path string) (retVal CModule, err error) {
+	cmodule := lib.AtmLoad(path)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return CModule{cmodule}, nil
+
+}
+
+// Loads a PyTorch saved JIT model from a file onto the given device.
+//
+// This function loads the model directly on the specified device,
+// which means it also allows loading a GPU model on the CPU without having a CUDA enabled GPU.
+func ModuleLoadOnDevice(path string, device gotch.Device) (retVal CModule, err error) {
+	cmodule := lib.AtmLoadOnDevice(path, device.CInt())
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return CModule{cmodule}, nil
+}
+
+// Loads a PyTorch saved JIT model from a read instance.
+func ModuleLoadData(stream io.Reader) (retVal CModule, err error) {
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(stream)
+
+	bufString := buf.String()
+
+	cmodule := lib.AtmLoadStr(bufString, len(bufString))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return CModule{cmodule}, nil
+
+}
+
+// Loads a PyTorch saved JIT model from a read instance.
+//
+// This function loads the model directly on the specified device,
+// which means it also allows loading a GPU model on the CPU without having a CUDA enabled GPU.
+func ModuleLoadDataOnDevice(stream io.Reader, device gotch.Device) (retVal CModule, err error) {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(stream)
+
+	bufString := buf.String()
+
+	cmodule := lib.AtmLoadStrOnDevice(bufString, len(bufString), device.CInt())
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return CModule{cmodule}, nil
+}
+
+// Performs the forward pass for a model on some specified tensor inputs.
+func (cm CModule) ForwardTs(tensors []Tensor) (retVal Tensor, err error) {
+	var ctensors []lib.Ctensor
+	for _, t := range tensors {
+		ctensors = append(ctensors, t.ctensor)
+	}
+
+	ctensor := lib.AtmForward(cm.Cmodule, ctensors[0], len(ctensors))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return Tensor{ctensor}, nil
+}
+
+// Performs the forward pass for a model on some specified ivalue input.
+func (cm CModule) ForwardIs(ivalues []IValue) (retVal IValue, err error) {
+
+	var civalues []lib.Civalue
+	for _, i := range ivalues {
+		civalue, err := i.ToCIValue()
+		if err != nil {
+			return retVal, err
+		}
+		civalues = append(civalues, ivalue)
+	}
+	/*
+	 *   for _, i := range ivalues{
+	 *     lib.AtiFree(i.civalue)
+	 *   }
+	 *  */
+
+	civ := lib.AtmForward_(cm.Cmodule, civalues[0], len(civalues))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal, err := IValueFromC(c)
+	if err != nil {
+		return retVal, err
+	}
+
+	return retVal, nil
+}
+
+func (cm CModule) To(device gotch.Device, kind gotch.DType, nonBlocking bool) {
+	lib.AtmTo(cm.Cmodule, device.CInt(), kind.CInt(), nonBlocking)
+	if err = TorchErr(); err != nil {
+		log.Fatalf("CModule To method call err: %v\n", err)
+	}
 }

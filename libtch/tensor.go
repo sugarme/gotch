@@ -17,6 +17,7 @@ type Ctensor = C.tensor
 type Cscalar = C.scalar
 type Coptimizer = C.optimizer
 type Civalue = C.ivalue
+type Cmodule = C.module
 
 type NamedCtensor struct {
 	Name    string
