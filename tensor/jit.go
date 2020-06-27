@@ -37,6 +37,7 @@ var (
 	TensorListVal  IValueKind = IValueKind{reflect.TypeOf([]Tensor{})}
 	GenericListVal IValueKind = IValueKind{reflect.TypeOf([]IValue{})}
 	GenericDictVal IValueKind = IValueKind{reflect.TypeOf(map[IValue]IValue{})} // 2 elements. ? map[IValue]IValue
+	GenericVal     IValueKind = IValueKind{reflect.TypeOf(IValue{})}
 )
 
 type IValue struct {
@@ -62,17 +63,18 @@ func NewIValue(v interface{}) (retVal IValue) {
 	case "float64":
 		retVal.kind = DoubleVal
 		retVal.name = "Double"
+	case "float32":
+		retVal.kind = GenericVal
+		retVal.name = "Generic"
 	case "int64":
 		retVal.kind = IntVal
 		retVal.name = "Int"
 	case "int":
-		retVal.value = int64(v.(int))
-		retVal.kind = IntVal
-		retVal.name = "Int"
+		retVal.kind = GenericVal
+		retVal.name = "Generic"
 	case "int32":
-		retVal.value = int64(v.(int32))
-		retVal.kind = IntVal
-		retVal.name = "Int"
+		retVal.kind = GenericVal
+		retVal.name = "Generic"
 	case "bool":
 		retVal.kind = BoolVal
 		retVal.name = "Bool"
@@ -90,18 +92,30 @@ func NewIValue(v interface{}) (retVal IValue) {
 				retVal.kind = GenericListVal
 				retVal.name = "GenericList"
 			}
+		case "Tensor":
+			retVal.kind = TensorListVal
+			retVal.name = "TensorList"
 		case "int64":
 			retVal.kind = IntListVal
 			retVal.name = "IntList"
 		case "float64":
 			retVal.kind = DoubleListVal
 			retVal.name = "DoubleList"
+		case "float32":
+			retVal.kind = GenericListVal
+			retVal.name = "GenericList"
+		case "int32":
+			retVal.kind = GenericListVal
+			retVal.name = "GenericList"
+		case "int":
+			retVal.kind = GenericListVal
+			retVal.name = "GenericList"
+		case "string":
+			retVal.kind = GenericListVal
+			retVal.name = "GenericList"
 		case "bool":
 			retVal.kind = BoolListVal
 			retVal.name = "BoolList"
-		case "Tensor":
-			retVal.kind = TensorListVal
-			retVal.name = "TensorList"
 		}
 	case "map":
 		// TODO: exclude map of type other than IValue type
@@ -176,15 +190,56 @@ func (iv IValue) ToCIValue() (retVal CIValue, err error) {
 		return CIValue{civalue: tuple}, nil
 
 	case "GenericList":
-		var v []IValue = iv.value.([]IValue)
+		// GenericList can be: string, int, int32, float32
+		// TODO: refactor to function
 		var cvals []lib.Civalue
-		for _, i := range v {
-			cval, err := i.ToCIValue()
-			if err != nil {
-				err = fmt.Errorf("ToCIValue method call err - GenericList case: %v\n", err)
-				return retVal, err
+		vtyp := reflect.TypeOf(iv.value).Elem().Kind().String()
+		switch vtyp {
+		case "string":
+			var v []string = iv.value.([]string)
+			for _, i := range v {
+				ival := NewIValue(i)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					err = fmt.Errorf("ToCIValue method call err - GenericList case: %v\n", err)
+					return retVal, err
+				}
+				cvals = append(cvals, cval.civalue)
 			}
-			cvals = append(cvals, cval.civalue)
+
+		case "int":
+			var v []int = iv.value.([]int)
+			for _, i := range v {
+				ival := NewIValue(i)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					log.Fatalf("ToCIValue method call err - int case: %v\n", err)
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+		case "int32":
+			var v []int32 = iv.value.([]int32)
+			for _, i := range v {
+				ival := NewIValue(i)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					log.Fatalf("ToCIValue method call err - int32 case: %v\n", err)
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+		case "float32":
+			var v []float32 = iv.value.([]float32)
+			for _, i := range v {
+				ival := NewIValue(i)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					log.Fatalf("ToCIValue method call err - float32 case: %v\n", err)
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+		default:
+			log.Fatalf("ToCIValue method call err - Default case: Unsupport type (%v)\n", vtyp)
+
 		}
 
 		list := lib.AtiGenericList(cvals, len(cvals))
@@ -237,26 +292,73 @@ func (iv IValue) ToCIValue() (retVal CIValue, err error) {
 		return CIValue{civalue: cval}, nil
 
 	case "GenericDict":
-		var m map[IValue]IValue = iv.value.(map[IValue]IValue)
-		var vals []IValue
-		for k, v := range m {
-			vals = append(vals, k, v)
-		}
 		var cvals []lib.Civalue
-		for _, v := range vals {
-			cval, err := v.ToCIValue()
-			if err != nil {
-				err = fmt.Errorf("ToCIValue method call err - GenericList case: %v\n", err)
-				return retVal, err
+		keyType := reflect.TypeOf(iv.value).Key().Kind().String()
+		valType := reflect.TypeOf(iv.value).Elem().Kind().String()
+
+		// 1. Create key and value lists seperately
+		switch {
+		case keyType == "int64" && valType == "int64":
+			var m map[int64]int64 = iv.value.(map[int64]int64)
+			var vals []int64
+			for k, v := range m {
+				vals = append(vals, k, v)
 			}
-			cvals = append(cvals, cval.civalue)
+			for _, v := range vals {
+				ival := NewIValue(v)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					log.Fatalf("ToCIValue method call err - GenericDict case: %v\n", err)
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+
+		case keyType == "float64" && valType == "float64":
+			var m map[float64]float64 = iv.value.(map[float64]float64)
+			var vals []float64
+			for k, v := range m {
+				vals = append(vals, k, v)
+			}
+			for _, v := range vals {
+				ival := NewIValue(v)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					log.Fatalf("ToCIValue method call err - GenericDict case: %v\n", err)
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+
+		case keyType == "float32" && valType == "float32":
+			var m map[float32]float32 = iv.value.(map[float32]float32)
+			var vals []float32
+			for k, v := range m {
+				vals = append(vals, k, v)
+			}
+			for _, v := range vals {
+				ival := NewIValue(v)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					log.Fatalf("ToCIValue method call err - GenericDict case: %v\n", err)
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+
+		default:
+			log.Fatalf("ToCIValue method call - GenericDict case: unsupported key type(%v) or value type(%v) \n", keyType, valType)
 		}
 
-		dict := lib.AtiGenericDict(cvals, len(cvals))
+		// 2. Pairing key and value in a slice (cvals)
+		dict := lib.AtiGenericDict(cvals, len(cvals)/2)
 		if err = TorchErr(); err != nil {
 			return retVal, err
 		}
 		return CIValue{civalue: dict}, nil
+
+	case "Generic":
+		log.Fatalf("ToCIValue method call - Generic case: unsupport type(%v)\n", reflect.TypeOf(iv.value).Kind().String())
+
+	default:
+		log.Fatalf("ToCIValue method call - Generic case: unsupport type(%v)\n", reflect.TypeOf(iv.value).Kind().String())
 	}
 
 	return retVal, nil
@@ -272,8 +374,6 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
-
-	fmt.Printf("tag value: %v\n", tag)
 
 	switch tag {
 	case 0:
@@ -380,7 +480,6 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 		// 3. Get int list
 		var intVals []int64
 		intVals = append(intVals, *(*int64)(unsafe.Pointer(ptr1)))
-		fmt.Printf("intVal: %v\n", intVals)
 		currPtr := ptr1
 		for i := 1; i < int(len); i++ {
 			nextPtr := unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1))
@@ -394,8 +493,309 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 			name:  "IntList",
 		}
 
-		// TODO: continue
+	case 7: // DoubleList
+		// 1. Len
+		len := lib.AtiLength(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
 
+		// 2. Call
+		ptr1 := unsafe.Pointer(C.malloc(0))
+		lib.AtiToDoubleList(cval.civalue, ptr1, int(len))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 3. Get int list
+		var floatVals []float64
+		floatVals = append(floatVals, *(*float64)(unsafe.Pointer(ptr1)))
+		currPtr := ptr1
+		for i := 1; i < int(len); i++ {
+			nextPtr := unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1))
+			floatVals = append(floatVals, *(*float64)(unsafe.Pointer(nextPtr)))
+			currPtr = nextPtr
+		}
+
+		retVal = IValue{
+			value: floatVals,
+			kind:  DoubleListVal,
+			name:  "DoubleList",
+		}
+
+	case 8: // BoolList
+		// 1. Len
+		len := lib.AtiLength(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 2. Call
+		ptr1 := unsafe.Pointer(C.malloc(0))
+		lib.AtiToBoolList(cval.civalue, ptr1, int(len))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 3. Get values
+		var vals []int32
+		var bvals []bool
+		vals = append(vals, *(*int32)(unsafe.Pointer(ptr1)))
+		currPtr := ptr1
+		for i := 1; i < int(len); i++ {
+			nextPtr := unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1))
+			vals = append(vals, *(*int32)(unsafe.Pointer(nextPtr)))
+			currPtr = nextPtr
+		}
+
+		for _, i := range vals {
+			bval := false
+			if i == 1 {
+				bval = true
+			}
+			bvals = append(bvals, bval)
+		}
+
+		retVal = IValue{
+			value: bvals,
+			kind:  BoolListVal,
+			name:  "BoolList",
+		}
+
+	case 9: // String
+		v := lib.AtiToString(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		retVal = IValue{
+			value: v,
+			kind:  StringVal,
+			name:  "String",
+		}
+
+	case 10: // TensorList
+		// 1. Len
+		len := lib.AtiLength(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 2. Call
+		ptr1 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+		lib.AtiToTensorList(cval.civalue, ptr1, int(len))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 3. Get values
+		var tensors []Tensor
+		tensors = append(tensors, Tensor{ctensor: *ptr1})
+		currPtr := ptr1
+		for i := 1; i < int(len); i++ {
+			nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1)))
+			tensors = append(tensors, Tensor{ctensor: *nextPtr})
+			currPtr = nextPtr
+		}
+
+		retVal = IValue{
+			value: tensors,
+			kind:  TensorListVal,
+			name:  "TensorList",
+		}
+
+	case 12: // GenericList []IValue
+		// 1. Len
+		len := lib.AtiLength(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		// 2. Call with first pointer and length
+		ptr1 := (*lib.Civalue)(unsafe.Pointer(C.malloc(0)))
+		lib.AtiToGenericList(cval.civalue, ptr1, int(len))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 3. Get values
+		var civalues []CIValue
+		civalues = append(civalues, CIValue{civalue: *ptr1})
+		currPtr := ptr1
+		for i := 1; i < int(len); i++ {
+			nextPtr := (*lib.Civalue)(unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1)))
+			civalues = append(civalues, CIValue{civalue: *nextPtr})
+			currPtr = nextPtr
+		}
+
+		// 4. Get Ivalue from Civalue for each tuple element
+		var vals []interface{}
+		var itemTyp string
+		for _, civalue := range civalues {
+			v, err := IValueFromC(civalue)
+			if err != nil {
+				return retVal, err
+			}
+			itemTyp = reflect.TypeOf(v.value).Kind().String()
+			vals = append(vals, v.value)
+		}
+
+		switch itemTyp {
+		case "string":
+			var specVals []string
+			for _, v := range vals {
+				specVals = append(specVals, v.(string))
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericListVal,
+				name:  "GenericList",
+			}
+		case "int":
+			var specVals []int
+			for _, v := range vals {
+				specVals = append(specVals, v.(int))
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericListVal,
+				name:  "GenericList",
+			}
+		case "int32":
+			var specVals []int32
+			for _, v := range vals {
+				specVals = append(specVals, v.(int32))
+			}
+			retVal = IValue{
+				value: vals,
+				kind:  GenericListVal,
+				name:  "GenericList",
+			}
+		case "int64": // NOTE: this happens due to convert int and int32 to int64 at `NewIValue` func
+			var specVals []int64
+			for _, v := range vals {
+				specVals = append(specVals, v.(int64))
+			}
+			retVal = IValue{
+				value: vals,
+				kind:  GenericListVal,
+				name:  "GenericList",
+			}
+		case "float32":
+			var specVals []float32
+			for _, v := range vals {
+				specVals = append(specVals, v.(float32))
+			}
+			retVal = IValue{
+				value: vals,
+				kind:  GenericListVal,
+				name:  "GenericList",
+			}
+			return retVal, nil
+		}
+
+	case 13: // GenericDict map[IValue]IValue
+		// 1. Len
+		numVals := lib.AtiLength(cval.civalue)
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+		// 2. Call with first pointer and length
+		ptr1 := (*lib.Civalue)(unsafe.Pointer(C.malloc(0)))
+		lib.AtiToGenericDict(cval.civalue, ptr1, int(numVals))
+		if err = TorchErr(); err != nil {
+			return retVal, err
+		}
+
+		// 3. Get values
+
+		// TODO: Need to drill down a specific type
+		var civalues []CIValue
+		civalues = append(civalues, CIValue{civalue: *ptr1})
+		currPtr := ptr1
+		for i := 1; i < int(numVals)*2; i++ {
+			nextPtr := (*lib.Civalue)(unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1)))
+			civalues = append(civalues, CIValue{civalue: *nextPtr})
+			currPtr = nextPtr
+		}
+
+		// 4. Get Ivalue from Civalue for each element
+		var vals []interface{}
+		var itemTyp string
+		for _, civalue := range civalues {
+			v, err := IValueFromC(civalue)
+			if err != nil {
+				return retVal, err
+			}
+			itemTyp = reflect.TypeOf(v.value).Kind().String()
+			vals = append(vals, v.value)
+		}
+
+		switch itemTyp {
+		case "string":
+			var specVals map[string]string = make(map[string]string)
+			for i := 0; i < len(vals); i += 2 {
+				specVals[vals[i].(string)] = vals[i+1].(string)
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericDictVal,
+				name:  "GenericDict",
+			}
+		case "int":
+			var specVals map[int]int = make(map[int]int)
+			for i := 0; i < len(vals); i += 2 {
+				specVals[vals[i].(int)] = vals[i+1].(int)
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericDictVal,
+				name:  "GenericDict",
+			}
+		case "int32":
+			var specVals map[int32]int32 = make(map[int32]int32)
+			for i := 0; i < len(vals); i += 2 {
+				specVals[vals[i].(int32)] = vals[i+1].(int32)
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericDictVal,
+				name:  "GenericDict",
+			}
+		case "int64":
+			var specVals map[int64]int64 = make(map[int64]int64)
+			for i := 0; i < len(vals); i += 2 {
+				specVals[vals[i].(int64)] = vals[i+1].(int64)
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericDictVal,
+				name:  "GenericDict",
+			}
+		case "float32":
+			var specVals map[float32]float32 = make(map[float32]float32)
+			for i := 0; i < len(vals); i += 2 {
+				specVals[vals[i].(float32)] = vals[i+1].(float32)
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericDictVal,
+				name:  "GenericDict",
+			}
+			return retVal, nil
+		case "float64":
+			var specVals map[float64]float64 = make(map[float64]float64)
+			for i := 0; i < len(vals); i += 2 {
+				specVals[vals[i].(float64)] = vals[i+1].(float64)
+			}
+			retVal = IValue{
+				value: specVals,
+				kind:  GenericDictVal,
+				name:  "GenericDict",
+			}
+			return retVal, nil
+		}
+
+	default:
+		log.Fatalf("IValueFromC - Unsupported type (tag value: %v)\n", tag)
 	}
 
 	return

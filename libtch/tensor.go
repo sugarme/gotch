@@ -9,7 +9,6 @@ package libtch
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -449,7 +448,6 @@ func AtiTensor(ts Ctensor) Civalue {
 func AtiInt(val int64) Civalue {
 	cval := *(*C.int64_t)(unsafe.Pointer(&val))
 	result := C.ati_int(cval)
-	fmt.Printf("Civalue from C: %v\n", result)
 	return result
 }
 
