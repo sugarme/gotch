@@ -192,6 +192,7 @@ func (iv IValue) ToCIValue() (retVal CIValue, err error) {
 	case "GenericList":
 		// GenericList can be: string, int, int32, float32
 		// TODO: refactor to function
+		// NOTE: atm, `GenericList` are all unsupported cases
 		var cvals []lib.Civalue
 		vtyp := reflect.TypeOf(iv.value).Elem().Kind().String()
 		switch vtyp {
@@ -342,6 +343,12 @@ func (iv IValue) ToCIValue() (retVal CIValue, err error) {
 				}
 				cvals = append(cvals, cval.civalue)
 			}
+
+		// TODO: map[int64]Tensor
+		// TODO: map[float64]Tensor
+		// TODO: map[string]Tensor
+		// TODO: map[bool]Tensor
+		// ...
 
 		default:
 			log.Fatalf("ToCIValue method call - GenericDict case: unsupported key type(%v) or value type(%v) \n", keyType, valType)
@@ -604,6 +611,7 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 		}
 
 	case 12: // GenericList []IValue
+		// NOTE: atm, all these cases are unsupported.
 		// 1. Len
 		len := lib.AtiLength(cval.civalue)
 		if err = TorchErr(); err != nil {
@@ -669,16 +677,6 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 				kind:  GenericListVal,
 				name:  "GenericList",
 			}
-		case "int64": // NOTE: this happens due to convert int and int32 to int64 at `NewIValue` func
-			var specVals []int64
-			for _, v := range vals {
-				specVals = append(specVals, v.(int64))
-			}
-			retVal = IValue{
-				value: vals,
-				kind:  GenericListVal,
-				name:  "GenericList",
-			}
 		case "float32":
 			var specVals []float32
 			for _, v := range vals {
@@ -690,6 +688,9 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 				name:  "GenericList",
 			}
 			return retVal, nil
+
+		default:
+			log.Fatalf("IValueFromC method call - GenericList case: Unsupported item type (%v)\n", itemTyp)
 		}
 
 	case 13: // GenericDict map[IValue]IValue
