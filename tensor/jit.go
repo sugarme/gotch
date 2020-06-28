@@ -59,7 +59,9 @@ func NewIValue(v interface{}) (retVal IValue) {
 		return retVal
 	}
 
-	switch reflect.TypeOf(v).Kind().String() {
+	inputTypeStr := reflect.TypeOf(v).Kind().String()
+
+	switch inputTypeStr {
 	case "Tensor":
 		retVal.kind = TensorVal
 		retVal.name = "Tensor"
@@ -95,9 +97,6 @@ func NewIValue(v interface{}) (retVal IValue) {
 				retVal.kind = GenericListVal
 				retVal.name = "GenericList"
 			}
-		case "Tensor":
-			retVal.kind = TensorListVal
-			retVal.name = "TensorList"
 		case "int64":
 			retVal.kind = IntListVal
 			retVal.name = "IntList"
@@ -119,13 +118,47 @@ func NewIValue(v interface{}) (retVal IValue) {
 		case "bool":
 			retVal.kind = BoolListVal
 			retVal.name = "BoolList"
+		case "struct": // NOTE: only supported `Tensor` type
+			val := reflect.Indirect(reflect.ValueOf(v))
+			switch {
+			// 1. Tuple (Tensor, Tensor)
+			case val.Type() == reflect.TypeOf([]Tensor{}) && val.Len() == 2:
+				// panic("Its Tensor tuple")
+				retVal.kind = TupleVal
+				retVal.name = "Tuple"
+
+				// convert tensors to []ivalue
+				tensors := v.([]Tensor)
+				var ivals []IValue
+				for _, tensor := range tensors {
+					ival := NewIValue(tensor)
+					ivals = append(ivals, ival)
+				}
+				retVal.value = ivals
+
+				// 2. List (Tensor, Tensor, ...)
+			case val.Type() == reflect.TypeOf([]Tensor{}) && val.Len() > 2:
+				panic("Its Tensor list")
+			default:
+				log.Fatalf("NewIValue method call - 'slice -> struct' case - Unsupported type (%v)\n", reflect.TypeOf(v).Kind().String())
+			}
 		}
 	case "map":
 		// TODO: exclude map of type other than IValue type
 		retVal.kind = GenericDictVal
 		retVal.name = "GenericDict"
+	case "struct":
+		val := reflect.Indirect(reflect.ValueOf(v))
+		fieldName := val.Type().Field(0).Name
+		switch fieldName {
+		case "ctensor":
+			retVal.kind = TensorVal
+			retVal.name = "Tensor"
+		default:
+			log.Fatalf("NewIValue method call - 'struct' case - Unsupported type (%v)\n", reflect.TypeOf(v).Kind().String())
+		}
 	default:
-		log.Fatalf("NewIValue method call - Unsupport type(%v)\n", reflect.TypeOf(v).Kind().String())
+		log.Fatalf("NewIValue method call - Unsupported type (%v)\n", reflect.TypeOf(v).Kind().String())
 	}
 
 	return retVal
@@ -175,22 +208,47 @@ func (iv IValue) ToCIValue() (retVal CIValue, err error) {
 		return CIValue{civalue: cval}, nil
 
 	case "Tuple":
-		var v []IValue = iv.value.([]IValue)
-		var cvals []lib.Civalue
-		for _, i := range v {
-			cval, err := i.ToCIValue()
-			if err != nil {
-				err = fmt.Errorf("ToCIValue method call err - Tuple case: %v\n", err)
+		val := reflect.Indirect(reflect.ValueOf(iv.value))
+		switch {
+		// 1. Tuple is (Tensor, Tensor)
+		case val.Type() == reflect.TypeOf([]Tensor{}):
+			var v []Tensor = iv.value.([]Tensor)
+			var cvals []lib.Civalue
+			for _, tensor := range v {
+				ival := NewIValue(tensor)
+				cval, err := ival.ToCIValue()
+				if err != nil {
+					err = fmt.Errorf("ToCIValue method call err - Tuple case: %v\n", err)
+					return retVal, err
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+
+			tuple := lib.AtiTuple(cvals, len(cvals))
+			if err = TorchErr(); err != nil {
 				return retVal, err
 			}
-			cvals = append(cvals, cval.civalue)
-		}
+			return CIValue{civalue: tuple}, nil
 
-		tuple := lib.AtiTuple(cvals, len(cvals))
-		if err = TorchErr(); err != nil {
-			return retVal, err
+		// 2. Tuple is (IValue, IValue)
+		default:
+			var v []IValue = iv.value.([]IValue)
+			var cvals []lib.Civalue
+			for _, i := range v {
+				cval, err := i.ToCIValue()
+				if err != nil {
+					err = fmt.Errorf("ToCIValue method call err - Tuple case: %v\n", err)
+					return retVal, err
+				}
+				cvals = append(cvals, cval.civalue)
+			}
+
+			tuple := lib.AtiTuple(cvals, len(cvals))
+			if err = TorchErr(); err != nil {
+				return retVal, err
+			}
+			return CIValue{civalue: tuple}, nil
 		}
-		return CIValue{civalue: tuple}, nil
 
 	case "GenericList":
 		// GenericList can be: string, int, int32, float32
@@ -805,6 +863,18 @@ func IValueFromC(cval CIValue) (retVal IValue, err error) {
 	return
 }
 
+func (iv IValue) Value() (retVal interface{}) {
+	return iv.value
+}
+
+func (iv IValue) Name() (retVal string) {
+	return iv.name
+}
+
+func (iv IValue) Kind() (retVal IValueKind) {
+	return iv.kind
+}
+
 // A jit PyTorch module.
 //
 // These modules can be created via the
@@ -891,6 +961,7 @@ func (cm CModule) ForwardTs(tensors []Tensor) (retVal Tensor, err error) {
 	cptrSize := int(unsafe.Sizeof(ctensors[0])) // 8 bytes
 	nbytes := cptrSize * len(ctensors)
 	dataPtr := C.malloc(C.size_t(nbytes))
+	defer C.free(dataPtr)
 	dataSlice := (*[1 << 30]byte)(dataPtr)[:nbytes:nbytes]
 
 	// 2. Convert C pointers to []byte
@@ -938,15 +1009,39 @@ func (cm CModule) ForwardIs(ivalues []IValue) (retVal IValue, err error) {
 		civalues = append(civalues, civalue.civalue)
 	}
 
-	civaluesPtr := (*lib.Civalue)(unsafe.Pointer(&civalues))
+	// NOTE: Write a slice of civalues to C memory and get the pointer
+	// 1. Calculate buffer size
+	cptrSize := int(unsafe.Sizeof(civalues[0])) // 8 bytes
+	nbytes := cptrSize * len(civalues)
+	dataPtr := C.malloc(C.size_t(nbytes))
+	defer C.free(dataPtr)
+	dataSlice := (*[1 << 30]byte)(dataPtr)[:nbytes:nbytes]
 
-	// TODO: write a slice of civalues to C memory and get Cpointer to that slice?
+	// 2. Convert C pointers to []byte
+	var data []byte
+	for _, civalue := range civalues {
+		b := make([]byte, cptrSize)
+		u := uintptr(unsafe.Pointer(civalue))
+		switch cptrSize {
+		case 4:
+			binary.LittleEndian.PutUint32(b, uint32(u))
+		case 8:
+			binary.LittleEndian.PutUint64(b, uint64(u))
+		default:
+			panic(fmt.Sprintf("unknown uintptr size: %v", cptrSize))
+		}
 
-	/*
-	 *   for _, i := range ivalues{
-	 *     lib.AtiFree(i.civalue)
-	 *   }
-	 *  */
+		data = append(data, b...)
+	}
+
+	// 3. Copy data to buffer
+	copy(dataSlice[:], data)
+
+	// 4. Call C func with slice data pointer and number of civalue pointers
+	// NOTE:
+	// - `dataPtr` is the pointer to slice of civalue pointers
+	// - `nsize` is number of civalue pointers encoded in binary data.
+	civaluesPtr := (*lib.Civalue)(dataPtr)
 
 	civ := lib.AtmForward_(cm.Cmodule, civaluesPtr, len(civalues))
 	if err = TorchErr(); err != nil {

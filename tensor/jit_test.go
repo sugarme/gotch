@@ -46,7 +46,7 @@ func TestIValue(t *testing.T) {
 	// roundTrip(map[float32]float64{12.3: 3.3, 14.3: 5.3}, t)
 }
 
-func TestModuleLoad(t *testing.T) {
+func TestModuleForwardTs(t *testing.T) {
 	foo, err := ts.ModuleLoad("foo1.pt")
 	if err != nil {
 		t.Error(err)
@@ -67,5 +67,46 @@ func TestModuleLoad(t *testing.T) {
 		t.Errorf("Expected value: %v\n", want)
 		t.Errorf("Got value: %v\n", got)
 	}
+
+}
+
+func TestModuleForwardIValue(t *testing.T) {
+	foo, err := ts.ModuleLoad("foo2.pt")
+	if err != nil {
+		t.Error(err)
+	}
+
+	ts1 := ts.TensorFrom([]int64{42})
+	ts2 := ts.TensorFrom([]int64{1337})
+
+	iv1 := ts.NewIValue(ts1)
+	iv2 := ts.NewIValue(ts2)
+
+	got, err := foo.ForwardIs([]ts.IValue{iv1, iv2})
+	if err != nil {
+		t.Error(err)
+	}
+
+	expectedTs1 := ts.TensorFrom([]int64{1421})
+	expectedTs2 := ts.TensorFrom([]int64{-1295})
+	want := ts.NewIValue([]ts.Tensor{expectedTs1, expectedTs2})
+
+	if !reflect.DeepEqual(want.Name(), got.Name()) {
+		t.Errorf("Expected Ivalue Name: %v\n", want.Name())
+		t.Errorf("Got Ivalue Name: %v\n", got.Name())
+	}
+
+	if !reflect.DeepEqual(want.Kind(), got.Kind()) {
+		t.Errorf("Expected Ivalue Kind: %v\n", want.Kind())
+		t.Errorf("Got Ivalue Kind: %v\n", got.Kind())
+	}
+
+	// TODO: compare IValue value
+	// NOTE: due to their different pointer values so we need to
+	// extract their value and compare
+	/* if !reflect.DeepEqual(want, got) {
+	 *   t.Errorf("Expected value: %v\n", want)
+	 *   t.Errorf("Got value: %v\n", got)
+	 * } */
 
 }
