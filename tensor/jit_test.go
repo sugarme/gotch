@@ -45,3 +45,27 @@ func TestIValue(t *testing.T) {
 	roundTrip(map[int64]int64{12: 3, 14: 5}, t)
 	// roundTrip(map[float32]float64{12.3: 3.3, 14.3: 5.3}, t)
 }
+
+func TestModuleLoad(t *testing.T) {
+	foo, err := ts.ModuleLoad("foo1.pt")
+	if err != nil {
+		t.Error(err)
+	}
+
+	ts1 := ts.TensorFrom([]int64{42})
+	ts2 := ts.TensorFrom([]int64{1337})
+
+	res, err := foo.ForwardTs([]ts.Tensor{ts1, ts2})
+	if err != nil {
+		t.Error(err)
+	}
+	got := int(res.Values()[0])
+
+	want := 1421
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("Expected value: %v\n", want)
+		t.Errorf("Got value: %v\n", got)
+	}
+
+}
