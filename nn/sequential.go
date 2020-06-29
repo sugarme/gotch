@@ -102,6 +102,13 @@ type SequentialT struct {
 	layers []ts.ModuleT
 }
 
+/// SeqT creates a new empty sequential layer.
+func SeqT() SequentialT {
+	return SequentialT{
+		layers: make([]ts.ModuleT, 0),
+	}
+}
+
 // SequentialT methods:
 //=====================
 

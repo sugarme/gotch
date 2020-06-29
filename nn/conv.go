@@ -132,3 +132,19 @@ func (c Conv2D) Forward(xs ts.Tensor) ts.Tensor {
 func (c Conv3D) Forward(xs ts.Tensor) ts.Tensor {
 	return ts.MustConv3D(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.Dilation, c.Config.Groups)
 }
+
+// Implement ModuleT for Conv1D, Conv2D, Conv3D:
+// ============================================
+
+// NOTE: `train` param won't be used, will be?
+
+func (c Conv1D) ForwardT(xs ts.Tensor, train bool) ts.Tensor {
+	return ts.MustConv1D(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.Dilation, c.Config.Groups)
+}
+
+func (c Conv2D) ForwardT(xs ts.Tensor, train bool) ts.Tensor {
+	return ts.MustConv2D(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.Dilation, c.Config.Groups)
+}
+func (c Conv3D) ForwardT(xs ts.Tensor, train bool) ts.Tensor {
+	return ts.MustConv3D(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.Dilation, c.Config.Groups)
+}
