@@ -548,3 +548,11 @@ func AtgTopk(ptr *Ctensor, self Ctensor, k int64, dim int64, largest int, sorted
 
 	C.atg_topk(ptr, self, ck, cdim, clargest, csorted)
 }
+
+// void atg_adaptive_avg_pool2d(tensor *, tensor self, int64_t *output_size_data, int output_size_len);
+func AtgAdaptiveAvgPool2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int) {
+	outputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+
+	C.atg_adaptive_avg_pool2d(ptr, self, outputSizeDataPtr, coutputSizeLen)
+}

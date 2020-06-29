@@ -997,3 +997,12 @@ func (ts Tensor) Values() []float64 {
 	// TODO: flatten nd tensor to slice
 	return []float64{clone.MustView([]int64{-1}, true).MustFloat64Value([]int64{-1})}
 }
+
+// FlatView flattens a tensor.
+//
+// This returns a flattened version of the given tensor. The first dimension
+// is preserved as it is assumed to be the mini-batch dimension.
+func (ts Tensor) FlatView() (retVal Tensor) {
+	batchSize := ts.MustSize()[0]
+	return ts.MustView([]int64{batchSize, -1}, false)
+}

@@ -48,3 +48,31 @@ func basicBlock(path nn.Path, cIn, cOut, stride int64) (retVal ts.ModuleT) {
 		return xs.ApplyT(downsample, train).MustAdd(ys, true).MustRelu(true)
 	})
 }
+
+func basicLayer(path nn.Path, cIn, cOut, stride, cnt int64) (retVal ts.ModuleT) {
+
+	layer := nn.SeqT()
+	layer.Add(basicBlock(path.Sub("0"), cIn, cOut, stride))
+
+	for blockIndex := 0; blockIndex < int(cnt); blockIndex++ {
+		layer.Add(basicBlock(path.Sub(string(blockIndex)), cOut, cOut, 1))
+	}
+
+	return layer
+}
+
+func resnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVal nn.FuncT) {
+	conv1 := conv2d(path.Sub("conv1"), 3, 64, 7, 3, 2)
+	bn1 := nn.BatchNorm2D(path.Sub("bn1"), 64, nn.DefaultBatchNormConfig())
+	layer1 := basicLayer(path.Sub("layer1"), 64, 64, 1, c1)
+	layer2 := basicLayer(path.Sub("layer2"), 64, 64, 1, c2)
+	layer3 := basicLayer(path.Sub("layer3"), 64, 64, 1, c3)
+	layer4 := basicLayer(path.Sub("layer4"), 64, 64, 1, c4)
+
+	linearConfig := nn.DefaultLinearConfig()
+	fc := nn.NewLinear(path.Sub("fc"), 512, nclasses, *linearConfig)
+
+	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		return xs.Apply(conv1).ApplyT(bn1, train).MustRelu(false).MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true).ApplyT(layer1, train).ApplyT(layer2, train).ApplyT(layer3, train).ApplyT(layer4, train).MustAdaptiveAvgPool2D([]int64{1, 1}).FlatView().ApplyOpt(ts.WithModule(fc))
+	})
+}

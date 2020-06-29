@@ -1629,3 +1629,26 @@ func (ts Tensor) MustTopK(k int64, dim int64, largest bool, sorted bool) (ts1 Te
 
 	return ts1, ts2
 }
+
+func (ts Tensor) AdaptiveAvgPool2D(outputSizeData []int64) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgAdaptiveAvgPool2d(ptr, ts.ctensor, outputSizeData, len(outputSizeData))
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustAdaptiveAvgPool2D(outputSizeData []int64) (retVal Tensor) {
+	retVal, err := ts.AdaptiveAvgPool2D(outputSizeData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
