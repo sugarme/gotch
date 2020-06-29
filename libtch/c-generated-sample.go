@@ -239,6 +239,11 @@ func AtgDiv1(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_div1(ptr, self, other)
 }
 
+// void atg_div(tensor *, tensor self, tensor other);
+func AtgDiv(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_div(ptr, self, other)
+}
+
 // void atg_randperm(tensor *, int64_t n, int options_kind, int options_device);
 func AtgRandperm(ptr *Ctensor, n int64, optionKind int32, optionDevice int32) {
 	cn := *(*C.int64_t)(unsafe.Pointer(&n))
@@ -251,6 +256,11 @@ func AtgRandperm(ptr *Ctensor, n int64, optionKind int32, optionDevice int32) {
 // void atg_clamp_(tensor *, tensor self, scalar min, scalar max);
 func AtgClamp_(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
 	C.atg_clamp_(ptr, self, min, max)
+}
+
+// void atg_clamp(tensor *, tensor self, scalar min, scalar max);
+func AtgClamp(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
+	C.atg_clamp(ptr, self, min, max)
 }
 
 // void atg_relu(tensor *, tensor self);
@@ -518,4 +528,23 @@ func AtgBatchNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, run
 	ccudnnEnable := *(*C.int)(unsafe.Pointer(&cudnnEnable))
 
 	C.atg_batch_norm(ptr, input, weight, bias, runningMean, runningVar, ctraining, cmomentum, ceps, ccudnnEnable)
+}
+
+// void atg_cat(tensor *, tensor *tensors_data, int tensors_len, int64_t dim);
+func AtgCat(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int, dim int64) {
+	tensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+
+	C.atg_cat(ptr, tensorsDataPtr, ctensorsLen, cdim)
+}
+
+// void atg_topk(tensor *, tensor self, int64_t k, int64_t dim, int largest, int sorted);
+func AtgTopk(ptr *Ctensor, self Ctensor, k int64, dim int64, largest int, sorted int) {
+	ck := *(*C.int64_t)(unsafe.Pointer(&k))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	clargest := *(*C.int)(unsafe.Pointer(&largest))
+	csorted := *(*C.int)(unsafe.Pointer(&sorted))
+
+	C.atg_topk(ptr, self, ck, cdim, clargest, csorted)
 }

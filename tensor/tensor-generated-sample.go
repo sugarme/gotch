@@ -533,6 +533,7 @@ func (ts Tensor) Squeeze_() {
 }
 
 func Stack(tensors []Tensor, dim int64) (retVal Tensor, err error) {
+	// TODO: should we implement del param to delete tensors after stacking?
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	defer C.free(unsafe.Pointer(ptr))
 
@@ -549,6 +550,38 @@ func Stack(tensors []Tensor, dim int64) (retVal Tensor, err error) {
 	retVal = Tensor{ctensor: *ptr}
 
 	return retVal, nil
+}
+
+func Cat(tensors []Tensor, dim int64, del bool) (retVal Tensor, err error) {
+	if del {
+		for _, t := range tensors {
+			defer t.MustDrop()
+		}
+	}
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	var ctensors []lib.Ctensor
+	for _, t := range tensors {
+		ctensors = append(ctensors, t.ctensor)
+	}
+
+	lib.AtgCat(ptr, ctensors, len(tensors), dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+	return retVal, nil
+}
+
+func MustCat(tensors []Tensor, dim int64, del bool) (retVal Tensor) {
+	retVal, err := Cat(tensors, dim, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
 
 func (ts Tensor) Mm(mat2 Tensor, del bool) (retVal Tensor, err error) {
@@ -737,6 +770,31 @@ func (ts Tensor) MustDiv1(other Scalar, del bool) (retVal Tensor) {
 	return retVal
 }
 
+func (ts Tensor) Div(other Tensor, del bool) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	if del {
+		defer ts.MustDrop()
+	}
+
+	lib.AtgDiv(ptr, ts.ctensor, other.ctensor)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustDiv(other Tensor, del bool) (retVal Tensor) {
+	retVal, err := ts.Div(other, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 func Randperm(n int64, optionKind gotch.DType, optionDevice gotch.Device) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
@@ -766,6 +824,32 @@ func (ts Tensor) Clamp_(min Scalar, max Scalar) {
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (ts Tensor) Clamp(min Scalar, max Scalar, del bool) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	if del {
+		defer ts.MustDrop()
+	}
+
+	lib.AtgClamp(ptr, ts.ctensor, min.cscalar, max.cscalar)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+	return retVal, nil
+}
+
+func (ts Tensor) MustClamp(min Scalar, max Scalar, del bool) (retVal Tensor) {
+
+	retVal, err := ts.Clamp(min, max, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
 
 func (ts Tensor) Relu_() {
@@ -1510,4 +1594,38 @@ func MustBatchNorm(input Tensor, weight, bias, runningMean, runningVar Tensor, t
 	}
 
 	return retVal
+}
+
+func (ts Tensor) TopK(k int64, dim int64, largest bool, sorted bool) (ts1 Tensor, ts2 Tensor, err error) {
+
+	// NOTE: `lib.AtgTopk` will return 2 tensors in C memory. First tensor pointer
+	// is given by ctensorPtr1
+	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr1)))
+	clargest := 0
+	if largest {
+		clargest = 1
+	}
+	csorted := 0
+	if sorted {
+		csorted = 1
+	}
+
+	lib.AtgTopk(ctensorPtr1, ts.ctensor, k, dim, clargest, csorted)
+	err = TorchErr()
+	if err != nil {
+		return ts1, ts2, err
+	}
+
+	return Tensor{ctensor: *ctensorPtr1}, Tensor{ctensor: *ctensorPtr2}, nil
+}
+
+func (ts Tensor) MustTopK(k int64, dim int64, largest bool, sorted bool) (ts1 Tensor, ts2 Tensor) {
+
+	ts1, ts2, err := ts.TopK(k, dim, largest, sorted)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return ts1, ts2
 }
