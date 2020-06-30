@@ -33,7 +33,7 @@ func (in ImageNet) Normalize(tensor ts.Tensor) (retVal ts.Tensor, err error) {
 	in.mutex.Lock()
 	defer in.mutex.Unlock()
 
-	res, err := tensor.Totype(gotch.Float, true)
+	res, err := tensor.Totype(gotch.Float, false)
 	if err != nil {
 		return retVal, err
 	}
@@ -42,6 +42,7 @@ func (in ImageNet) Normalize(tensor ts.Tensor) (retVal ts.Tensor, err error) {
 	if err != nil {
 		return retVal, err
 	}
+
 	resMean, err := resDiv1.Sub(in.mean, true)
 	if err != nil {
 		return retVal, err
@@ -132,6 +133,7 @@ func (in ImageNet) LoadImageAndResize224(path string) (retVal ts.Tensor, err err
 		err = fmt.Errorf("ImageNet - LoadImageAndResize224/LoadImageAndResize method call: %v", err)
 		return retVal, err
 	}
+
 	return in.Normalize(tensor)
 }
 
@@ -1288,30 +1290,33 @@ type TopItem struct {
 func (in ImageNet) Top(input ts.Tensor, k int64) (retVal []TopItem) {
 
 	var tensor ts.Tensor
-	shape := tensor.MustSize()
+	shape := input.MustSize()
 
 	switch {
 	case reflect.DeepEqual(shape, []int64{imagenetClassCount}):
 		tensor = input.MustShallowClone()
 	case reflect.DeepEqual(shape, []int64{1, imagenetClassCount}):
-		// TODO: check whether []int64{imagenetClassCount, -1}
-		tensor = input.MustView([]int64{imagenetClassCount, -1}, false)
+		tensor = input.MustView([]int64{imagenetClassCount}, false) // shape: [1000]
 	case reflect.DeepEqual(shape, []int64{1, 1, imagenetClassCount}):
-		tensor = input.MustView([]int64{imagenetClassCount, -1}, false)
+		tensor = input.MustView([]int64{imagenetClassCount}, false) // shape: [1000]
 	default:
 		log.Fatalf("Unexpected tensor shape: %v\n", shape)
 	}
 
 	valsTs, idxsTs := tensor.MustTopK(k, 0, true, true)
-	vals := valsTs.Values()
-	idxs := idxsTs.Values()
 
 	var topItems []TopItem
 
-	for i := 0; i < len(vals); i++ {
+	vals := valsTs.Values()
+	idxs := idxsTs.Values()
+
+	for i := 0; i < int(k); i++ {
+		val := vals[i]
+		idx := idxs[i]
+
 		item := TopItem{
-			Pvalue: vals[i],
-			Label:  imagenetClasses[int(idxs[i])],
+			Pvalue: val,
+			Label:  imagenetClasses[int(idx)],
 		}
 		topItems = append(topItems, item)
 	}

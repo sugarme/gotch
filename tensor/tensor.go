@@ -367,6 +367,14 @@ func (ts Tensor) Int64Value(idx []int64) (retVal int64, err error) {
 	return retVal, err
 }
 
+func (ts Tensor) MustInt64Value(idx []int64) (retVal int64) {
+	retVal, err := ts.Int64Value(idx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return retVal
+}
+
 // RequiresGrad returns true if gradient are currently tracked for this tensor.
 func (ts Tensor) RequiresGrad() (retVal bool, err error) {
 	retVal = lib.AtRequiresGrad(ts.ctensor)
@@ -991,11 +999,17 @@ func (r Reduction) ToInt() (retVal int) {
 
 // Values returns values of tensor in a slice of float64.
 func (ts Tensor) Values() []float64 {
-	clone := ts.MustShallowClone()
-	clone.Detach_()
-	// NOTE: this for 2D tensor.
-	// TODO: flatten nd tensor to slice
-	return []float64{clone.MustView([]int64{-1}, true).MustFloat64Value([]int64{-1})}
+	clone := ts.MustShallowClone().MustDetach().MustView([]int64{-1}, true)
+
+	n := clone.MustSize()[0]
+
+	var values []float64
+	for i := 0; i < int(n); i++ {
+		val := clone.MustFloat64Value([]int64{int64(i)})
+		values = append(values, val)
+	}
+
+	return values
 }
 
 // FlatView flattens a tensor.

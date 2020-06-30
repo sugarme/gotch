@@ -11,6 +11,8 @@
 
 *.txt
 *.json
+*.pt
+*.jpg
 
 target/
 _build/

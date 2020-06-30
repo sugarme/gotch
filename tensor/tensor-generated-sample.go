@@ -93,6 +93,28 @@ func (ts Tensor) Detach_() {
 	}
 }
 
+func (ts Tensor) Detach() (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgDetach(ptr, ts.ctensor)
+
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	return Tensor{ctensor: *ptr}, nil
+
+}
+
+func (ts Tensor) MustDetach() (retVal Tensor) {
+	retVal, err := ts.Detach()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+
+}
+
 func (ts Tensor) Zero_() {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	lib.AtgZero_(ptr, ts.ctensor)
@@ -341,6 +363,15 @@ func (ts Tensor) Select(dim int64, index int64, del bool) (retVal Tensor, err er
 	return retVal, nil
 }
 
+func (ts Tensor) MustSelect(dim int64, index int64, del bool) (retVal Tensor) {
+	retVal, err := ts.Select(dim, index, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 // Narrow creates a new tensor from current tensor given dim and start index
 // and length.
 func (ts Tensor) Narrow(dim int64, start int64, length int64, del bool) (retVal Tensor, err error) {
@@ -357,6 +388,15 @@ func (ts Tensor) Narrow(dim int64, start int64, length int64, del bool) (retVal 
 	retVal = Tensor{ctensor: *ptr}
 
 	return retVal, nil
+}
+
+func (ts Tensor) MustNarrow(dim int64, start int64, length int64, del bool) (retVal Tensor) {
+	retVal, err := ts.Narrow(dim, start, length, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
 
 // IndexSelect creates a new tensor from current tensor given dim and index
@@ -1646,6 +1686,32 @@ func (ts Tensor) AdaptiveAvgPool2D(outputSizeData []int64) (retVal Tensor, err e
 
 func (ts Tensor) MustAdaptiveAvgPool2D(outputSizeData []int64) (retVal Tensor) {
 	retVal, err := ts.AdaptiveAvgPool2D(outputSizeData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Softmax(dim int64, dtype gotch.DType, del bool) (retVal Tensor, err error) {
+
+	if del {
+		defer ts.MustDrop()
+	}
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgSoftmax(ptr, ts.ctensor, dim, dtype.CInt())
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSoftmax(dim int64, dtype gotch.DType, del bool) (retVal Tensor) {
+	retVal, err := ts.Softmax(dim, dtype, del)
 	if err != nil {
 		log.Fatal(err)
 	}

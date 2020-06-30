@@ -130,6 +130,8 @@ func resizePreserveAspectRatioHWC(t ts.Tensor, outW int64, outH int64) (retVal t
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
 				return retVal, err
 			}
+		} else {
+			tensorW = tensor
 		}
 
 		if resizeH == outH {

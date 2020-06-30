@@ -41,6 +41,11 @@ func AtgDetach_(ptr *Ctensor, self Ctensor) {
 	C.atg_detach_(ptr, self)
 }
 
+// void atg_detach(tensor *, tensor self);
+func AtgDetach(ptr *Ctensor, self Ctensor) {
+	C.atg_detach(ptr, self)
+}
+
 // void atg_zero_(tensor *, tensor self);
 func AtgZero_(ptr *Ctensor, self Ctensor) {
 	C.atg_zero_(ptr, self)
@@ -555,4 +560,12 @@ func AtgAdaptiveAvgPool2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, ou
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 
 	C.atg_adaptive_avg_pool2d(ptr, self, outputSizeDataPtr, coutputSizeLen)
+}
+
+// void atg_softmax(tensor *, tensor self, int64_t dim, int dtype);
+func AtgSoftmax(ptr *Ctensor, self Ctensor, dim int64, dtype int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+
+	C.atg_softmax(ptr, self, cdim, cdtype)
 }

@@ -1062,3 +1062,25 @@ func (cm CModule) To(device gotch.Device, kind gotch.DType, nonBlocking bool) {
 		log.Fatalf("CModule To method call err: %v\n", err)
 	}
 }
+
+// Implement Module for CModule:
+// =============================
+
+func (cm CModule) Forward(tensor Tensor) (retVal Tensor, err error) {
+
+	var tensors []Tensor = []Tensor{tensor}
+	return cm.ForwardTs(tensors)
+}
+
+// Tensor methods for CModule:
+// ======================================
+
+// Apply forwards tensor itself through a module.
+func (ts Tensor) ApplyCModule(m CModule) (retVal Tensor) {
+	retVal, err := m.Forward(ts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
