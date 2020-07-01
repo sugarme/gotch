@@ -121,7 +121,7 @@ func (in ImageNet) LoadImageAndResize(path string, w, h int64) (retVal ts.Tensor
 		return retVal, err
 	}
 
-	return in.Normalize(tensor)
+	return tensor, nil
 }
 
 // LoadImageAndResize224 loads an image from a file and resize it to 224x224.

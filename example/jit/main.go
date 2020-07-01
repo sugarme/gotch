@@ -30,13 +30,10 @@ func main() {
 	imageNet := vision.NewImageNet()
 
 	// Load the image file and resize it to the usual imagenet dimension of 224x224.
-	// image, err := imageNet.LoadImageAndResize224(imageFile)
-	image, err := imageNet.LoadImage(imageFile)
+	image, err := imageNet.LoadImageAndResize224(imageFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// image.MustSave("resize224.jpg")
 
 	// Load the Python saved module.
 	model, err := ts.ModuleLoad(modelPath)
