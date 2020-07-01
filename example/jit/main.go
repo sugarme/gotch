@@ -50,6 +50,6 @@ func main() {
 	top5 = imageNet.Top(output, int64(5))
 
 	for _, i := range top5 {
-		fmt.Printf("%v \t\t\t: %.2f%%\n", i.Label, i.Pvalue*100)
+		fmt.Printf("%-80v %5.2f%%\n", i.Label, i.Pvalue*100)
 	}
 }
