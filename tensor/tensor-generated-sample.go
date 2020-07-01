@@ -214,6 +214,15 @@ func (ts Tensor) MustMul_(other Tensor) {
 	}
 }
 
+func (ts Tensor) Mul1_(other Scalar) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgMul1_(ptr, ts.ctensor, other.cscalar)
+
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func (ts Tensor) Add(other Tensor, del bool) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	if del {
@@ -268,6 +277,15 @@ func (ts Tensor) MustAdd1(other Scalar, del bool) (retVal Tensor) {
 	}
 
 	return retVal
+}
+
+func (ts Tensor) Add1_(other Scalar) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgAdd1_(ptr, ts.ctensor, other.cscalar)
+
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (ts Tensor) AddG(other Tensor) (err error) {

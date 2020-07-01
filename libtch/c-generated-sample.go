@@ -72,6 +72,11 @@ func AtgMul1(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_mul1(ptr, self, other)
 }
 
+// void atg_mul_1(tensor *, tensor self, scalar other);
+func AtgMul1_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_mul_1(ptr, self, other)
+}
+
 // void atg_add(tensor *, tensor self, tensor other);
 func AtgAdd(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_add(ptr, self, other)
@@ -85,6 +90,11 @@ func AtgAdd_(ptr *Ctensor, self Ctensor, other Ctensor) {
 // id atg_add1(tensor *, tensor self, scalar other);
 func AtgAdd1(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_add1(ptr, self, other)
+}
+
+// void atg_add_1(tensor *, tensor self, scalar other);
+func AtgAdd1_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_add_1(ptr, self, other)
 }
 
 // void atg_totype(tensor *, tensor self, int scalar_type);
