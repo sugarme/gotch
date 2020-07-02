@@ -37,8 +37,6 @@ func downSample(path nn.Path, cIn, cOut, stride int64) (retVal ts.ModuleT) {
 
 func basicBlock(path nn.Path, cIn, cOut, stride int64) (retVal ts.ModuleT) {
 
-	// TODO: check and make sure delete middle tensors created in C memory
-	// otherwise, there will be a memory blow out!
 	conv1 := conv2d(path.Sub("conv1"), cIn, cOut, 3, 1, stride)
 	bn1 := nn.BatchNorm2D(path.Sub("bn1"), cOut, nn.DefaultBatchNormConfig())
 	conv2 := conv2d(path.Sub("conv2"), cOut, cOut, 3, 1, 1)
@@ -46,9 +44,6 @@ func basicBlock(path nn.Path, cIn, cOut, stride int64) (retVal ts.ModuleT) {
 	downsample := downSample(path.Sub("downsample"), cIn, cOut, stride)
 
 	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		// ys := xs.Apply(conv1).ApplyT(bn1, train).MustRelu(false).Apply(conv2).ApplyT(bn2, train)
-		// downsampleLayer := xs.ApplyT(downsample, train).MustAdd(ys, true)
-		// res := downsampleLayer.MustRelu(true)
 		c1 := xs.Apply(conv1)
 		bn1 := c1.ApplyT(bn1, train)
 		c1.MustDrop()
@@ -88,8 +83,12 @@ func resnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVal nn.FuncT
 
 	if nclasses > 0 {
 		// With final layer
+		linearConfig := nn.DefaultLinearConfig()
+		fc := nn.NewLinear(path.Sub("fc"), 512, nclasses, *linearConfig)
+
 		return nn.NewFuncT(func(xs ts.Tensor, train bool) (retVal ts.Tensor) {
 			c1 := xs.Apply(conv1)
+			xs.MustDrop()
 			bn1 := c1.ApplyT(bn1, train)
 			c1.MustDrop()
 			relu := bn1.MustRelu(true)
@@ -106,12 +105,8 @@ func resnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVal nn.FuncT
 			fv := avgpool.FlatView()
 			avgpool.MustDrop()
 
-			// final layer
-			linearConfig := nn.DefaultLinearConfig()
-			fc := nn.NewLinear(path.Sub("fc"), 512, nclasses, *linearConfig)
-
 			retVal = fv.ApplyOpt(ts.WithModule(fc))
-
+			fv.MustDrop()
 			return retVal
 		})
 
@@ -125,6 +120,7 @@ func resnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVal nn.FuncT
 			relu := bn1.MustRelu(true)
 			maxpool := relu.MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true)
 			l1 := maxpool.ApplyT(layer1, train)
+			maxpool.MustDrop()
 			l2 := l1.ApplyT(layer2, train)
 			l1.MustDrop()
 			l3 := l2.ApplyT(layer3, train)
@@ -171,8 +167,23 @@ func bottleneckBlock(path nn.Path, cIn, cOut, stride, e int64) (retVal ts.Module
 	downsample := downSample(path.Sub("downsample"), cIn, eDim, stride)
 
 	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		ys := xs.Apply(conv1).ApplyT(bn1, train).MustRelu(true).Apply(conv2).ApplyT(bn2, train).MustRelu(true).Apply(conv3).ApplyT(bn3, train)
-		return xs.ApplyT(downsample, train).MustAdd(ys, true).MustRelu(true)
+		c1 := xs.Apply(conv1)
+		bn1 := c1.ApplyT(bn1, train)
+		c1.MustDrop()
+		relu1 := bn1.MustRelu(true)
+		c2 := relu1.Apply(conv2)
+		relu1.MustDrop()
+		bn2 := c2.ApplyT(bn2, train)
+		relu2 := bn2.MustRelu(true)
+		c3 := relu2.Apply(conv3)
+		relu2.MustDrop()
+		bn3 := c3.ApplyT(bn3, train)
+
+		dsl := xs.ApplyT(downsample, train)
+		add := dsl.MustAdd(bn3, true)
+		bn3.MustDrop()
+		res := add.MustRelu(true)
+		return res
 	})
 }
 
@@ -180,7 +191,7 @@ func bottleneckLayer(path nn.Path, cIn, cOut, stride, cnt int64) (retVal ts.Modu
 
 	layer := nn.SeqT()
 	layer.Add(bottleneckBlock(path.Sub("0"), cIn, cOut, stride, 4))
-	for blockIndex := 0; blockIndex < int(cnt); blockIndex++ {
+	for blockIndex := 1; blockIndex < int(cnt); blockIndex++ {
 		layer.Add(bottleneckBlock(path.Sub(fmt.Sprint(blockIndex)), (cOut * 4), cOut, 1, 4))
 	}
 
@@ -198,12 +209,51 @@ func bottleneckResnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVa
 	if nclasses > 0 {
 		fc := nn.NewLinear(path.Sub("fc"), 4*512, nclasses, *nn.DefaultLinearConfig())
 
-		return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-			return xs.Apply(conv1).ApplyT(bn1, train).MustRelu(true).MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true).ApplyT(layer1, train).ApplyT(layer2, train).ApplyT(layer3, train).ApplyT(layer4, train).MustAdaptiveAvgPool2D([]int64{1, 1}).FlatView().ApplyOpt(ts.WithModule(fc))
+		return nn.NewFuncT(func(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+			c1 := xs.Apply(conv1)
+			xs.MustDrop()
+			bn1 := c1.ApplyT(bn1, train)
+			c1.MustDrop()
+			relu := bn1.MustRelu(true)
+			maxpool := relu.MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true)
+			l1 := maxpool.ApplyT(layer1, train)
+			l2 := l1.ApplyT(layer2, train)
+			l1.MustDrop()
+			l3 := l2.ApplyT(layer3, train)
+			l2.MustDrop()
+			l4 := l3.ApplyT(layer4, train)
+			l3.MustDrop()
+			avgpool := l4.MustAdaptiveAvgPool2D([]int64{1, 1})
+			l4.MustDrop()
+			fv := avgpool.FlatView()
+			avgpool.MustDrop()
+
+			retVal = fv.ApplyOpt(ts.WithModule(fc))
+			fv.MustDrop()
+			return retVal
 		})
 	} else {
-		return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-			return xs.Apply(conv1).ApplyT(bn1, train).MustRelu(true).MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true).ApplyT(layer1, train).ApplyT(layer2, train).ApplyT(layer3, train).ApplyT(layer4, train).MustAdaptiveAvgPool2D([]int64{1, 1}).FlatView()
+		return nn.NewFuncT(func(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+			c1 := xs.Apply(conv1)
+			xs.MustDrop()
+			bn1 := c1.ApplyT(bn1, train)
+			c1.MustDrop()
+			relu := bn1.MustRelu(true)
+			maxpool := relu.MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true)
+			l1 := maxpool.ApplyT(layer1, train)
+			maxpool.MustDrop()
+			l2 := l1.ApplyT(layer2, train)
+			l1.MustDrop()
+			l3 := l2.ApplyT(layer3, train)
+			l2.MustDrop()
+			l4 := l3.ApplyT(layer4, train)
+			l3.MustDrop()
+			avgpool := l4.MustAdaptiveAvgPool2D([]int64{1, 1})
+			l4.MustDrop()
+			retVal = avgpool.FlatView()
+			avgpool.MustDrop()
+
+			return retVal
 		})
 	}
 }

@@ -33,7 +33,6 @@ func netInit(vs nn.Path) ts.Module {
 	}))
 
 	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, *nn.DefaultLinearConfig()))
-	// n.Add(nn.NewLinear(vs, ImageDimNN, LabelNN, nn.DefaultLinearConfig()))
 
 	return &n
 }
@@ -45,11 +44,14 @@ func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer
 
 	opt.BackwardStep(loss)
 
-	testAccuracy := m.Forward(testX).AccuracyForLogits(testY)
-	fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, loss.Values()[0], testAccuracy.Values()[0]*100)
-
-	loss.MustDrop()
+	testLogits := m.Forward(testX)
+	testAccuracy := testLogits.AccuracyForLogits(testY)
+	accuracy := testAccuracy.Values()[0] * 100
 	testAccuracy.MustDrop()
+	lossVal := loss.Values()[0]
+	loss.MustDrop()
+
+	fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, lossVal, accuracy)
 }
 
 func runNN() {

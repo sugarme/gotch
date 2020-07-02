@@ -1014,13 +1014,15 @@ func (r Reduction) ToInt() (retVal int) {
 
 // Values returns values of tensor in a slice of float64.
 func (ts Tensor) Values() []float64 {
-	clone := ts.MustShallowClone().MustDetach().MustView([]int64{-1}, true)
-
-	n := clone.MustSize()[0]
+	clone := ts.MustShallowClone()
+	dt := clone.MustDetach()
+	clone.MustDrop()
+	flat := dt.MustView([]int64{-1}, true)
+	n := flat.MustSize()[0]
 
 	var values []float64
 	for i := 0; i < int(n); i++ {
-		val := clone.MustFloat64Value([]int64{int64(i)})
+		val := flat.MustFloat64Value([]int64{int64(i)})
 		values = append(values, val)
 	}
 
