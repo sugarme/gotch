@@ -48,17 +48,19 @@ func main() {
 	vs := nn.NewVarStore(gotch.CPU)
 	net := vision.ResNet18NoFinalLayer(vs.Root())
 
-	for k, _ := range vs.Vars.NamedVariables {
-		fmt.Printf("First variable name: %v\n", k)
-	}
-
-	panic("Stop")
+	// for k, _ := range vs.Vars.NamedVariables {
+	// fmt.Printf("First variable name: %v\n", k)
+	// }
+	fmt.Printf("vs variables: %v\n", vs.Variables())
+	fmt.Printf("vs num of variables: %v\n", vs.Len())
 
 	err = vs.Load(weights)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	panic(net)
+	fmt.Printf("Net infor: %v\n", net)
+
+	panic("stop")
 
 }

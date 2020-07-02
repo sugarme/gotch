@@ -9,6 +9,7 @@ package libtch
 import "C"
 
 import (
+	"strings"
 	"unsafe"
 )
 
@@ -257,6 +258,7 @@ func AtLoadCallback(filename string, dataPtr unsafe.Pointer) {
 //export callback_fn
 func callback_fn(dataPtr unsafe.Pointer, name *C.char, ctensor C.tensor) {
 	tsName := C.GoString(name)
+	tsName = strings.ReplaceAll(tsName, "|", ".")
 	namedCtensor := NamedCtensor{
 		Name:    tsName,
 		Ctensor: ctensor,

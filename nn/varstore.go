@@ -159,24 +159,28 @@ func (vs *VarStore) Load(filepath string) (err error) {
 		return err
 	}
 
+	var namedTensorsMap map[string]ts.Tensor = make(map[string]ts.Tensor, 0)
+	for _, namedTensor := range namedTensors {
+		namedTensorsMap[namedTensor.Name] = namedTensor.Tensor
+	}
+
 	// Match and in-place copy value (update) from newly loaded tensors
 	// to existing named tensors if name is matched. Throw error otherwise.
 	vs.Vars.mutex.Lock()
 	defer vs.Vars.mutex.Unlock()
 
-	for _, namedTs := range namedTensors {
+	for tsName, _ := range vs.Vars.NamedVariables {
 		var currTs ts.Tensor
 		var ok bool
-		if currTs, ok = vs.Vars.NamedVariables[namedTs.Name]; !ok {
-			err = fmt.Errorf("Cannot find tensor with name: %v in variable store. \n", namedTs.Name)
+		if currTs, ok = namedTensorsMap[tsName]; !ok {
+			err = fmt.Errorf("Cannot find tensor with name: %v in variable store. \n", tsName)
 			return err
 		}
 
 		ts.NoGrad(func() {
-			ts.Copy_(currTs, namedTs.Tensor)
+			vs.Vars.NamedVariables[tsName].Copy_(currTs)
 		})
 	}
-
 	return nil
 }
 

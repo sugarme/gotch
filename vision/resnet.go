@@ -1,6 +1,8 @@
 package vision
 
 import (
+	"fmt"
+
 	nn "github.com/sugarme/gotch/nn"
 	ts "github.com/sugarme/gotch/tensor"
 )
@@ -23,8 +25,8 @@ func downSample(path nn.Path, cIn, cOut, stride int64) (retVal ts.ModuleT) {
 
 	if stride != 1 || cIn != cOut {
 		seq := nn.SeqT()
-		seq.Add(conv2d(path, cIn, cOut, 1, 0, stride))
-
+		seq.Add(conv2d(path.Sub("0"), cIn, cOut, 1, 0, stride))
+		seq.Add(nn.BatchNorm2D(path.Sub("1"), cOut, nn.DefaultBatchNormConfig()))
 	} else {
 		retVal = nn.SeqT()
 	}
@@ -54,8 +56,8 @@ func basicLayer(path nn.Path, cIn, cOut, stride, cnt int64) (retVal ts.ModuleT) 
 	layer := nn.SeqT()
 	layer.Add(basicBlock(path.Sub("0"), cIn, cOut, stride))
 
-	for blockIndex := 0; blockIndex < int(cnt); blockIndex++ {
-		layer.Add(basicBlock(path.Sub(string(blockIndex)), cOut, cOut, 1))
+	for blockIndex := 1; blockIndex < int(cnt); blockIndex++ {
+		layer.Add(basicBlock(path.Sub(fmt.Sprint(blockIndex)), cOut, cOut, 1))
 	}
 
 	return layer
@@ -65,9 +67,9 @@ func resnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVal nn.FuncT
 	conv1 := conv2d(path.Sub("conv1"), 3, 64, 7, 3, 2)
 	bn1 := nn.BatchNorm2D(path.Sub("bn1"), 64, nn.DefaultBatchNormConfig())
 	layer1 := basicLayer(path.Sub("layer1"), 64, 64, 1, c1)
-	layer2 := basicLayer(path.Sub("layer2"), 64, 64, 1, c2)
-	layer3 := basicLayer(path.Sub("layer3"), 64, 64, 1, c3)
-	layer4 := basicLayer(path.Sub("layer4"), 64, 64, 1, c4)
+	layer2 := basicLayer(path.Sub("layer2"), 64, 128, 2, c2)
+	layer3 := basicLayer(path.Sub("layer3"), 128, 256, 2, c3)
+	layer4 := basicLayer(path.Sub("layer4"), 256, 512, 2, c4)
 
 	if nclasses > 0 {
 		linearConfig := nn.DefaultLinearConfig()
@@ -125,7 +127,7 @@ func bottleneckLayer(path nn.Path, cIn, cOut, stride, cnt int64) (retVal ts.Modu
 	layer := nn.SeqT()
 	layer.Add(bottleneckBlock(path.Sub("0"), cIn, cOut, stride, 4))
 	for blockIndex := 0; blockIndex < int(cnt); blockIndex++ {
-		layer.Add(bottleneckBlock(path.Sub(string(blockIndex)), (cOut * 4), cOut, 1, 4))
+		layer.Add(bottleneckBlock(path.Sub(fmt.Sprint(blockIndex)), (cOut * 4), cOut, 1, 4))
 	}
 
 	return layer
