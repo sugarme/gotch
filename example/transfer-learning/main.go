@@ -11,6 +11,7 @@ import (
 
 	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/nn"
+	ts "github.com/sugarme/gotch/tensor"
 	"github.com/sugarme/gotch/vision"
 )
 
@@ -38,29 +39,45 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Dataset: %v\n", dataset)
-	fmt.Printf("Train shape: %v\n", dataset.TrainImages.MustSize())
-	fmt.Printf("Train shape: %v\n", dataset.TrainLabels.MustSize())
-	fmt.Printf("Test shape: %v\n", dataset.TestImages.MustSize())
-	fmt.Printf("Test shape: %v\n", dataset.TestLabels.MustSize())
+	fmt.Println("Dataset loaded")
 
 	// Create the model and load the weights from the file.
 	vs := nn.NewVarStore(gotch.CPU)
 	net := vision.ResNet18NoFinalLayer(vs.Root())
-
-	// for k, _ := range vs.Vars.NamedVariables {
-	// fmt.Printf("First variable name: %v\n", k)
-	// }
-	fmt.Printf("vs variables: %v\n", vs.Variables())
-	fmt.Printf("vs num of variables: %v\n", vs.Len())
 
 	err = vs.Load(weights)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Net infor: %v\n", net)
+	fmt.Println("Weights loaded")
 
-	panic("stop")
+	// Pre-compute the final activations.
 
+	linear := nn.NewLinear(vs.Root(), 512, dataset.Labels, *nn.DefaultLinearConfig())
+	sgd, err := nn.DefaultSGDConfig().Build(vs, 1e-3)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	trainImages := ts.NoGrad1(func() (retVal interface{}) {
+		return dataset.TrainImages.ApplyT(net, true)
+	}).(ts.Tensor)
+
+	testImages := ts.NoGrad1(func() (retVal interface{}) {
+		return dataset.TestImages.ApplyT(net, true)
+	}).(ts.Tensor)
+
+	fmt.Println("start training...")
+
+	for epoch := 1; epoch <= 1000; epoch++ {
+
+		predicted := trainImages.Apply(linear)
+		loss := predicted.CrossEntropyForLogits(dataset.TrainLabels)
+		sgd.BackwardStep(loss)
+		loss.MustDrop()
+
+		testAccuracy := testImages.Apply(linear).AccuracyForLogits(dataset.TestLabels)
+		fmt.Printf("Epoch %v\t Accuracy: %5.2f%%\n", epoch, testAccuracy.Values()[0]*100)
+	}
 }

@@ -942,6 +942,21 @@ func NoGrad(fn interface{}) {
 
 }
 
+func NoGrad1(fn func() interface{}) (retVal interface{}) {
+	newTs := NewTensor()
+	newTs.Drop()
+
+	// Switch off Grad
+	prev := MustGradSetEnabled(false)
+
+	retVal = fn()
+
+	// Switch on Grad
+	_ = MustGradSetEnabled(prev)
+
+	return retVal
+}
+
 // NoGradGuard is a RAII guard that prevents gradient tracking until deallocated.
 type NoGradGuard struct {
 	enabled bool
