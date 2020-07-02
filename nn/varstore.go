@@ -169,7 +169,8 @@ func (vs *VarStore) Load(filepath string) (err error) {
 	vs.Vars.mutex.Lock()
 	defer vs.Vars.mutex.Unlock()
 
-	for tsName, _ := range vs.Vars.NamedVariables {
+	// for tsName, _ := range vs.Vars.NamedVariables {
+	for tsName := range vs.Vars.NamedVariables {
 		var currTs ts.Tensor
 		var ok bool
 		if currTs, ok = namedTensorsMap[tsName]; !ok {
@@ -201,6 +202,11 @@ func (vs *VarStore) LoadPartial(filepath string) (retVal []string, err error) {
 		return nil, err
 	}
 
+	var namedTensorsMap map[string]ts.Tensor = make(map[string]ts.Tensor, 0)
+	for _, namedTensor := range namedTensors {
+		namedTensorsMap[namedTensor.Name] = namedTensor.Tensor
+	}
+
 	var missingVariables []string
 
 	// Match and in-place copy value (update) from newly loaded tensors
@@ -208,17 +214,16 @@ func (vs *VarStore) LoadPartial(filepath string) (retVal []string, err error) {
 	vs.Vars.mutex.Lock()
 	defer vs.Vars.mutex.Unlock()
 
-	for _, namedTs := range namedTensors {
+	for tsName := range vs.Vars.NamedVariables {
 		var currTs ts.Tensor
 		var ok bool
-		if currTs, ok = vs.Vars.NamedVariables[namedTs.Name]; !ok {
+		if currTs, ok = namedTensorsMap[tsName]; !ok {
 			// missing
-			missingVariables = append(missingVariables, namedTs.Name)
+			missingVariables = append(missingVariables, tsName)
 		}
 
-		// It's matched. Now, copy in-place the loaded tensor value to var-store
 		ts.NoGrad(func() {
-			ts.Copy_(currTs, namedTs.Tensor)
+			vs.Vars.NamedVariables[tsName].Copy_(currTs)
 		})
 	}
 
