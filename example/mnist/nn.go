@@ -26,13 +26,13 @@ var l nn.Linear
 func netInit(vs nn.Path) ts.Module {
 	n := nn.Seq()
 
-	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, *nn.DefaultLinearConfig()))
+	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, nn.DefaultLinearConfig()))
 
 	n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		return xs.MustRelu(false)
 	}))
 
-	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, *nn.DefaultLinearConfig()))
+	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, nn.DefaultLinearConfig()))
 
 	return &n
 }

@@ -1310,6 +1310,43 @@ func MustDropout(input Tensor, p float64, train bool) (retVal Tensor) {
 	return retVal
 }
 
+func (ts Tensor) Dropout(p float64, train bool, del bool) (retVal Tensor, err error) {
+
+	if del {
+		defer ts.MustDrop()
+	}
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	var ctrain int
+	switch train {
+	case true:
+		ctrain = 1
+	case false:
+		ctrain = 0
+	}
+
+	lib.AtgDropout(ptr, ts.ctensor, p, ctrain)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+
+}
+
+func (ts Tensor) MustDropout(p float64, train bool, del bool) (retVal Tensor) {
+	retVal, err := ts.Dropout(p, train, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 func (ts Tensor) Dropout_(p float64, train bool) {
 
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))

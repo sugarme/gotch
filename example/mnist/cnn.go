@@ -31,14 +31,14 @@ type Net struct {
 func newNet(vs *nn.Path) Net {
 	conv1 := nn.NewConv2D(vs, 1, 32, 5, nn.DefaultConv2DConfig())
 	conv2 := nn.NewConv2D(vs, 32, 64, 5, nn.DefaultConv2DConfig())
-	fc1 := nn.NewLinear(*vs, 1024, 1024, *nn.DefaultLinearConfig())
-	fc2 := nn.NewLinear(*vs, 1024, 10, *nn.DefaultLinearConfig())
+	fc1 := nn.NewLinear(*vs, 1024, 1024, nn.DefaultLinearConfig())
+	fc2 := nn.NewLinear(*vs, 1024, 10, nn.DefaultLinearConfig())
 
 	return Net{
 		conv1,
 		conv2,
-		*fc1,
-		*fc2}
+		fc1,
+		fc2}
 }
 
 func (n Net) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {

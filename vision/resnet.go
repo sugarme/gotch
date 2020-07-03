@@ -84,7 +84,7 @@ func resnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVal nn.FuncT
 	if nclasses > 0 {
 		// With final layer
 		linearConfig := nn.DefaultLinearConfig()
-		fc := nn.NewLinear(path.Sub("fc"), 512, nclasses, *linearConfig)
+		fc := nn.NewLinear(path.Sub("fc"), 512, nclasses, linearConfig)
 
 		return nn.NewFuncT(func(xs ts.Tensor, train bool) (retVal ts.Tensor) {
 			c1 := xs.Apply(conv1)
@@ -207,7 +207,7 @@ func bottleneckResnet(path nn.Path, nclasses int64, c1, c2, c3, c4 int64) (retVa
 	layer4 := bottleneckLayer(path.Sub("layer4"), 4*256, 512, 2, c4)
 
 	if nclasses > 0 {
-		fc := nn.NewLinear(path.Sub("fc"), 4*512, nclasses, *nn.DefaultLinearConfig())
+		fc := nn.NewLinear(path.Sub("fc"), 4*512, nclasses, nn.DefaultLinearConfig())
 
 		return nn.NewFuncT(func(xs ts.Tensor, train bool) (retVal ts.Tensor) {
 			c1 := xs.Apply(conv1)

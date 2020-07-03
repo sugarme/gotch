@@ -77,41 +77,43 @@ func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.Sequ
 				seq.Add(nn.BatchNorm2D(f.Sub(fmt.Sprintf("%v", bnLen)), cOut, nn.DefaultBatchNormConfig()))
 			}
 
-			seq.AddFn(func(xs ts.Tensor) ts.Tensor {
+			seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 				return xs.MustRelu(false)
-			})
+			}))
+
 			cIn = cOut
 		} // end of inner For loop
 
-		seq.AddFn(func(xs ts.Tensor) ts.Tensor {
+		seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 			return xs.MaxPool2DDefault(2, false)
-		})
+		}))
 	} // end of outer For loop
 
-	seq.AddFn(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		return xs.FlatView()
-	})
+	}))
 
-	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("0")), 512*7*7, 4096, *nn.DefaultLinearConfig()))
+	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("0")), 512*7*7, 4096, nn.DefaultLinearConfig()))
 
-	seq.AddFn(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		return xs.MustRelu(false)
-	})
+	}))
 
-	seq.AddFnT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.Dropout(0.5, train)
-	})
+	seq.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		return xs.MustDropout(0.5, train, false)
+	}))
 
-	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("3")), 4096, 4096, *nn.DefaultLinearConfig()))
+	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("3")), 4096, 4096, nn.DefaultLinearConfig()))
 
-	seq.AddFn(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		return xs.MustRelu(false)
-	})
+	}))
 
-	seq.AddFnT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.Dropout(0.5, train)
-	})
-	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("6")), 4096, nclasses, *nn.DefaultLinearConfig()))
+	seq.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		return xs.MustDropout(0.5, train, false)
+	}))
+
+	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("6")), 4096, nclasses, nn.DefaultLinearConfig()))
 
 	return seq
 }

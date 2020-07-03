@@ -20,6 +20,13 @@ func (fn Func) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 	return fn.f(xs)
 }
 
+// ForwardT implements ModuleT for Func object as well.
+//
+// NOTE: train param will not be used.
+func (fn Func) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+	return fn.f(xs)
+}
+
 type FuncT struct {
 	f func(ts.Tensor, bool) ts.Tensor
 }
