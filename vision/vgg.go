@@ -87,6 +87,7 @@ func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.Sequ
 		seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 			return xs.MaxPool2DDefault(2, false)
 		}))
+
 	} // end of outer For loop
 
 	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {

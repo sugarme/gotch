@@ -188,8 +188,11 @@ func (s *SequentialT) ForwardAllT(xs ts.Tensor, train bool, opts ...uint8) (retV
 		return []ts.Tensor{xs.MustShallowClone()}
 	}
 
+	currTs := xs
 	for i := 0; i < int(n); i++ {
-		retVal = append(retVal, s.layers[i].ForwardT(xs, train))
+		res := s.layers[i].ForwardT(currTs, train)
+		retVal = append(retVal, res)
+		currTs = res
 	}
 
 	return retVal
