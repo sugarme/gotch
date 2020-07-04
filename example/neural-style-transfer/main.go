@@ -169,12 +169,15 @@ func main() {
 		loss := lossMul.MustAdd(cLoss, true)
 		opt.BackwardStep(loss)
 
-		if (stepIdx % 1000) == 0 {
-			img := inputVar.MustShallowClone().MustDetach()
-			err := in.SaveImage(img, fmt.Sprintf("out%v.jpg", stepIdx))
+		if (stepIdx % 10) == 0 {
+			clone := inputVar.MustShallowClone()
+			img := clone.MustDetach()
+			clone.MustDrop()
+			err := in.SaveImage(img, fmt.Sprintf("../../data/neural-style-transfer/out%v.jpg", stepIdx))
 			if err != nil {
 				log.Fatal(err)
 			}
+			img.MustDrop()
 		}
 
 		fmt.Printf("Step %v ... Done. Loss %10.1f\n", stepIdx, loss.Values()[0])
