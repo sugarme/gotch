@@ -86,10 +86,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// cuda := gotch.CudaBuilder(0)
-	// device := cuda.CudaIfAvailable()
+	cuda := gotch.CudaBuilder(0)
+	device := cuda.CudaIfAvailable()
 
-	device := gotch.CPU
+	// device := gotch.CPU
 	netVS := nn.NewVarStore(device)
 	in := vision.NewImageNet()
 	net := vision.VGG16(netVS.Root(), in.ClassCount())
