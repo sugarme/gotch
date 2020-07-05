@@ -137,7 +137,7 @@ func main() {
 
 	vs := nn.NewVarStore(device)
 	path := vs.Root()
-	// inputVar := path.VarCopy("img", contentImg)
+	inputVar := path.VarCopy("img", contentImg)
 	opt, err := nn.DefaultAdamConfig().Build(vs, LearningRate)
 	if err != nil {
 		log.Fatal(err)
@@ -145,7 +145,7 @@ func main() {
 
 	styleWeight := ts.FloatScalar(StyleWeight)
 	for stepIdx := 1; stepIdx <= int(TotalSteps); stepIdx++ {
-		inputVar := path.VarCopy("img", contentImg)
+		fmt.Printf("Input var: %v\n", inputVar)
 		inputLayers := net.ForwardAllT(inputVar, false, maxLayer)
 
 		// var sLoss ts.Tensor
