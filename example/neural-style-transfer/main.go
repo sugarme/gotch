@@ -181,7 +181,7 @@ func main() {
 		}
 
 		fmt.Printf("Step %v ... Done. Loss %10.1f\n", stepIdx, loss.Values()[0])
-		cLoss.MustDrop()
+		// cLoss.MustDrop()
 		loss.MustDrop()
 	}
 
