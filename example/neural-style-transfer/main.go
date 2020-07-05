@@ -172,7 +172,7 @@ func main() {
 		if (stepIdx % 10) == 0 {
 			clone := inputVar.MustShallowClone()
 			img := clone.MustDetach()
-			clone.MustDrop()
+			// clone.MustDrop()
 			err := in.SaveImage(img, fmt.Sprintf("../../data/neural-style-transfer/out%v.jpg", stepIdx))
 			if err != nil {
 				log.Fatal(err)
