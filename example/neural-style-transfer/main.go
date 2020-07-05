@@ -137,7 +137,7 @@ func main() {
 
 	vs := nn.NewVarStore(device)
 	path := vs.Root()
-	inputVar := path.VarCopy("img", contentImg)
+	// inputVar := path.VarCopy("img", contentImg)
 	opt, err := nn.DefaultAdamConfig().Build(vs, LearningRate)
 	if err != nil {
 		log.Fatal(err)
@@ -145,6 +145,7 @@ func main() {
 
 	styleWeight := ts.FloatScalar(StyleWeight)
 	for stepIdx := 1; stepIdx <= int(TotalSteps); stepIdx++ {
+		inputVar := path.VarCopy("img", contentImg)
 		inputLayers := net.ForwardAllT(inputVar, false, maxLayer)
 
 		// var sLoss ts.Tensor
@@ -172,7 +173,7 @@ func main() {
 		if (stepIdx % 10) == 0 {
 			clone := inputVar.MustShallowClone()
 			img := clone.MustDetach()
-			// clone.MustDrop()
+			clone.MustDrop()
 			err := in.SaveImage(img, fmt.Sprintf("../../data/neural-style-transfer/out%v.jpg", stepIdx))
 			if err != nil {
 				log.Fatal(err)
@@ -181,7 +182,7 @@ func main() {
 		}
 
 		fmt.Printf("Step %v ... Done. Loss %10.1f\n", stepIdx, loss.Values()[0])
-		// cLoss.MustDrop()
+		cLoss.MustDrop()
 		loss.MustDrop()
 	}
 
