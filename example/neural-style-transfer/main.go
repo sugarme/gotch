@@ -145,7 +145,7 @@ func main() {
 
 	styleWeight := ts.FloatScalar(StyleWeight)
 	for stepIdx := 1; stepIdx <= int(TotalSteps); stepIdx++ {
-		fmt.Printf("Input var: %v\n", inputVar)
+		fmt.Printf("Input var size: %v\n", inputVar.MustSize())
 		inputLayers := net.ForwardAllT(inputVar, false, maxLayer)
 
 		// var sLoss ts.Tensor
