@@ -132,7 +132,7 @@ func main() {
 
 	fmt.Printf("max layer: %v\n", maxLayer)
 
-	styleLayers := net.ForwardAllT(styleImg, false, maxLayer)
+	// styleLayers := net.ForwardAllT(styleImg, false, maxLayer)
 	contentLayers := net.ForwardAllT(contentImg, false, maxLayer)
 
 	vs := nn.NewVarStore(device)
