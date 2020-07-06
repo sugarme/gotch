@@ -579,3 +579,16 @@ func AtgSoftmax(ptr *Ctensor, self Ctensor, dim int64, dtype int32) {
 
 	C.atg_softmax(ptr, self, cdim, cdtype)
 }
+
+// void atg_constant_pad_nd(tensor *, tensor self, int64_t *pad_data, int pad_len);
+func AtgConstantPadNd(ptr *Ctensor, self Ctensor, padData []int64, padLen int) {
+	cpadDataPtr := (*C.int64_t)(unsafe.Pointer(&padData[0]))
+	cpadLen := *(*C.int)(unsafe.Pointer(&padLen))
+
+	C.atg_constant_pad_nd(ptr, self, cpadDataPtr, cpadLen)
+}
+
+// void atg_sigmoid(tensor *, tensor self);
+func AtgSigmoid(ptr *Ctensor, self Ctensor) {
+	C.atg_sigmoid(ptr, self)
+}

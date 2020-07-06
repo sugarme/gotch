@@ -1037,3 +1037,28 @@ func (ts Tensor) FlatView() (retVal Tensor) {
 	batchSize := ts.MustSize()[0]
 	return ts.MustView([]int64{batchSize, -1}, false)
 }
+
+func (ts Tensor) ZeroPad2d(left, right, top, bottom int64, del bool) (retVal Tensor, err error) {
+	if ts.Dim() != 4 {
+		err = fmt.Errorf("Expected a 4 dimension tensor, got %v\n", ts.MustSize())
+		return retVal, err
+	}
+
+	return ts.ConstantPadNd([]int64{left, right, top, bottom}, del)
+}
+
+func (ts Tensor) MustZeroPad2d(left, right, top, bottom int64, del bool) (retVal Tensor) {
+	retVal, err := ts.ZeroPad2d(left, right, top, bottom, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Swish() (retVal Tensor) {
+	sig := ts.MustSigmoid(false)
+	retVal = ts.MustMul(sig, false)
+	sig.MustDrop()
+	return retVal
+}

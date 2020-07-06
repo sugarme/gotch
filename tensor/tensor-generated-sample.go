@@ -1773,3 +1773,54 @@ func (ts Tensor) MustSoftmax(dim int64, dtype gotch.DType, del bool) (retVal Ten
 
 	return retVal
 }
+
+func (ts Tensor) ConstantPadNd(padData []int64, del bool) (retVal Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgConstantPadNd(ptr, ts.ctensor, padData, len(padData))
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustConstantPadNd(padData []int64, del bool) (retVal Tensor) {
+	retVal, err := ts.ConstantPadNd(padData, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Sigmoid(del bool) (retVal Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgSigmoid(ptr, ts.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSigmoid(del bool) (retVal Tensor) {
+	retVal, err := ts.Sigmoid(del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
