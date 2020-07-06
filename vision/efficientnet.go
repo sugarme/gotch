@@ -1,6 +1,7 @@
 package vision
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/sugarme/gotch/nn"
@@ -53,9 +54,9 @@ type params struct {
 	Dropout float64
 }
 
-func (p params) roundRepeats(repeats float64) (retVal int64) {
+func (p params) roundRepeats(repeats int64) (retVal int64) {
 
-	return int64(math.Ceil(p.Depth * repeats))
+	return int64(math.Ceil(p.Depth * float64(repeats)))
 }
 
 func (p params) roundFilters(filters int64) (retVal int64) {
@@ -232,4 +233,116 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 			return ys6
 		}
 	})
+}
+
+func efficientnet(p nn.Path, params params, nclasses int64) (retVal ts.ModuleT) {
+
+	args := blockArgs()
+
+	bn2dConfig := nn.DefaultBatchNormConfig()
+	bn2dConfig.Momentum = 1.0 - batchNormMomentum
+	bn2dConfig.Eps = batchNormEpsilon
+
+	convConfigNoBias := nn.DefaultConv2DConfig()
+	convConfigNoBias.Bias = false
+
+	convS2Config := nn.DefaultConv2DConfig()
+	convS2Config.Stride = []int64{2, 2}
+	convS2Config.Bias = false
+
+	outC := params.roundFilters(32)
+	convStem := enConv2d(p.Sub("_conv_stem"), 3, outC, 3, convS2Config, false)
+	bn0 := nn.BatchNorm2D(p.Sub("_bn0"), outC, bn2dConfig)
+
+	blocks := nn.SeqT()
+	blockP := p.Sub("_blocks")
+	blockIdx := 0
+	for _, arg := range args {
+		a1 := arg
+		a1.InputFilters = params.roundFilters(arg.InputFilters)
+		a1.OutputFilter = params.roundFilters(arg.OutputFilter)
+
+		blocks.Add(block(blockP.Sub(fmt.Sprintf("%v", blockIdx)), a1))
+		blockIdx += 1
+
+		a2 := a1
+		a2.InputFilters = a1.OutputFilter
+		a2.Stride = 1
+
+		for i := 1; i < int(params.roundRepeats(a2.NumRepeat)); i++ {
+			blocks.Add(block(blockP.Sub(fmt.Sprintf("%v", blockIdx)), a2))
+			blockIdx += 1
+		}
+	}
+
+	lastArg := args[len(args)-1]
+	inChannels := params.roundFilters(lastArg.OutputFilter)
+	outC = params.roundFilters(1280)
+
+	convHead := enConv2d(p.Sub("_conv_head"), inChannels, outC, 1, convConfigNoBias, false)
+	bn1 := nn.BatchNorm2D(p.Sub("_bn1"), outC, bn2dConfig)
+
+	classifier := nn.SeqT()
+
+	classifier.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		return xs.MustDropout(0.2, train, false)
+	}))
+
+	classifier.Add(nn.NewLinear(p.Sub("_fc"), outC, nclasses, nn.DefaultLinearConfig()))
+
+	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		tmp1 := xs.ApplyT(convStem, false)
+		tmp2 := tmp1.ApplyT(bn0, train)
+		tmp1.MustDrop()
+		tmp3 := tmp2.Swish()
+		tmp2.MustDrop()
+		tmp4 := tmp3.ApplyT(blocks, train)
+		tmp3.MustDrop()
+		tmp5 := tmp4.ApplyT(convHead, false)
+		tmp6 := tmp5.ApplyT(bn1, train)
+		tmp5.MustDrop()
+		tmp7 := tmp6.Swish()
+		tmp6.MustDrop()
+		tmp8 := tmp7.MustAdaptiveAvgPool2D([]int64{1, 1})
+		tmp7.MustDrop()
+		tmp9 := tmp8.MustSqueeze1(-1, true)
+		tmp10 := tmp9.MustSqueeze1(-1, true)
+
+		res := tmp10.ApplyT(classifier, train)
+		tmp10.MustDrop()
+		return res
+	})
+
+}
+
+func EfficientNetB0(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b0(), nclasses)
+}
+
+func EfficientNetB1(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b1(), nclasses)
+}
+
+func EfficientNetB2(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b2(), nclasses)
+}
+
+func EfficientNetB3(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b3(), nclasses)
+}
+
+func EfficientNetB4(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b4(), nclasses)
+}
+
+func EfficientNetB5(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b5(), nclasses)
+}
+
+func EfficientNetB6(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b6(), nclasses)
+}
+
+func EfficientNetB7(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return efficientnet(p, b7(), nclasses)
 }
