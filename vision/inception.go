@@ -85,4 +85,23 @@ func inceptionA(p nn.Path, cIn, cPool int64) (retVal ts.ModuleT) {
 	})
 }
 
-// TODO: continue
+func inceptionB(p nn.Path, cIn int64) (retVal ts.ModuleT) {
+	b1 := convBn(p.Sub("branch3x3"), cIn, 384, 3, 0, 2)
+	b21 := convBn(p.Sub("branch3x3dbl_1"), cIn, 64, 1, 0, 1)
+	b22 := convBn(p.Sub("branch3x3dbl_2"), 64, 96, 3, 1, 1)
+	b23 := convBn(p.Sub("branch3x3dbl_3"), 96, 96, 3, 0, 2)
+
+	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		b1Ts := xs.ApplyT(b1, train)
+
+		b2Tmp1 := xs.ApplyT(b21, train)
+		b2Tmp2 := b2Tmp1.ApplyT(b22, train)
+		b2Tmp1.MustDrop()
+		b2Ts := b2Tmp2.ApplyT(b23, train)
+		b2Tmp2.MustDrop()
+
+		bpoolTs := inMaxPool2D(xs, 3, 2)
+
+		return ts.MustCat([]ts.Tensor{b1Ts, b2Ts, bpoolTs}, 1, true)
+	})
+}
