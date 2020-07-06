@@ -1062,3 +1062,7 @@ func (ts Tensor) Swish() (retVal Tensor) {
 	sig.MustDrop()
 	return retVal
 }
+
+func (ts Tensor) AvgPool2DDefault(ksize int64, del bool) (retVal Tensor) {
+	return ts.MustAvgPool2D([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, false, true, 1, del)
+}

@@ -6,6 +6,8 @@ package vision
 // https://arxiv.org/abs/1608.06993
 
 import (
+	"fmt"
+
 	"github.com/sugarme/gotch/nn"
 	ts "github.com/sugarme/gotch/tensor"
 )
@@ -42,4 +44,88 @@ func denseLayer(p nn.Path, cIn, bnSize, growth int64) (retVal ts.ModuleT) {
 
 		return res
 	})
+}
+
+func denseBlock(p nn.Path, cIn, bnSize, growth, nlayers int64) (retVal ts.ModuleT) {
+	seq := nn.SeqT()
+
+	for i := 0; i < int(nlayers); i++ {
+		seq.Add(denseLayer(p.Sub(fmt.Sprintf("denselayer%v", 1+i)), cIn+int64(i)*growth, bnSize, growth))
+	}
+
+	return seq
+}
+
+func transition(p nn.Path, cIn, cOut int64) (retVal ts.ModuleT) {
+	seq := nn.SeqT()
+
+	seq.Add(nn.BatchNorm2D(p.Sub("norm"), cIn, nn.DefaultBatchNormConfig()))
+
+	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		return xs.MustRelu(false)
+	}))
+
+	seq.Add(dnConv2d(p.Sub("conv"), cIn, cOut, 1, 0, 1))
+
+	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		return xs.AvgPool2DDefault(2, false)
+	}))
+
+	return seq
+}
+
+func densenet(p nn.Path, cIn, cOut, bnSize int64, blockConfig []int64, growth int64) (retVal ts.ModuleT) {
+	fp := p.Sub("features")
+	seq := nn.SeqT()
+
+	seq.Add(dnConv2d(fp.Sub("conv0"), 3, cIn, 7, 3, 2))
+
+	seq.Add(nn.BatchNorm2D(fp.Sub("norm0"), cIn, nn.DefaultBatchNormConfig()))
+
+	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		tmp := xs.MustRelu(false)
+		return tmp.MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true)
+	}))
+
+	nfeat := cIn
+
+	for i, nlayers := range blockConfig {
+		seq.Add(denseBlock(fp.Sub(fmt.Sprintf("densebloc%v", 1+i)), nfeat, bnSize, growth, nlayers))
+
+		nfeat += nlayers * growth
+
+		if i+1 != len(blockConfig) {
+			seq.Add(transition(fp.Sub(fmt.Sprintf("transition%v", 1+i)), nfeat, nfeat/2))
+		}
+	}
+
+	seq.Add(nn.BatchNorm2D(fp.Sub("norm5"), nfeat, nn.DefaultBatchNormConfig()))
+
+	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		tmp1 := xs.MustRelu(false)
+		tmp2 := tmp1.MustAvgPool2D([]int64{7, 7}, []int64{1, 1}, []int64{0, 0}, false, true, 1, true)
+		res := tmp2.FlatView()
+		tmp2.MustDrop()
+		return res
+	}))
+
+	seq.Add(nn.NewLinear(p.Sub("classifier"), nfeat, cOut, nn.DefaultLinearConfig()))
+
+	return seq
+}
+
+func DenseNet121(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return densenet(p, 64, 4, 32, []int64{6, 12, 24, 16}, nclasses)
+}
+
+func DenseNet161(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return densenet(p, 96, 4, 48, []int64{6, 12, 36, 24}, nclasses)
+}
+
+func DenseNet169(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return densenet(p, 64, 4, 32, []int64{6, 12, 32, 32}, nclasses)
+}
+
+func DenseNet201(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+	return densenet(p, 64, 4, 32, []int64{6, 12, 48, 32}, nclasses)
 }

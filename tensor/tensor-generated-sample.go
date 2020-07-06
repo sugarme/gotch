@@ -1277,6 +1277,47 @@ func (ts Tensor) MustMaxPool2D(kernel []int64, stride []int64, padding []int64, 
 	return retVal
 }
 
+func (ts Tensor) AvgPool2D(kernel []int64, stride []int64, padding []int64, ceil bool, countIncludePad bool, divisorOverride int64, del bool) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	if del {
+		defer ts.MustDrop()
+	}
+
+	var ceilMode int
+	switch ceil {
+	case true:
+		ceilMode = 1
+	case false:
+		ceilMode = 0
+	}
+
+	var countIncludePadMode int = 0
+	if countIncludePad {
+		countIncludePadMode = 1
+	}
+
+	lib.AtgAvgPool2d(ptr, ts.ctensor, kernel, len(kernel), stride, len(stride), padding, len(padding), ceilMode, countIncludePadMode, divisorOverride)
+
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustAvgPool2D(kernel []int64, stride []int64, padding []int64, ceil bool, countIncludePad bool, divisorOverride int64, del bool) (retVal Tensor) {
+	retVal, err := ts.AvgPool2D(kernel, stride, padding, ceil, countIncludePad, divisorOverride, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 func Dropout(input Tensor, p float64, train bool) (retVal Tensor, err error) {
 
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))

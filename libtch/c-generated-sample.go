@@ -397,6 +397,22 @@ func AtgMaxPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSize
 	C.atg_max_pool2d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cceilMode)
 }
 
+// void atg_avg_pool2d(tensor *, tensor self, int64_t *kernel_size_data, int kernel_size_len, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int ceil_mode, int count_include_pad, int64_t divisor_override);
+func AtgAvgPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int, countIncludePad int, divisorOverride int64) {
+
+	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
+	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
+	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
+	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
+
+	C.atg_avg_pool2d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+}
+
 // void atg_dropout(tensor *, tensor input, double p, int train);
 func AtgDropout(ptr *Ctensor, input Ctensor, p float64, train int) {
 	cp := *(*C.double)(unsafe.Pointer(&p))
