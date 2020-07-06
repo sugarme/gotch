@@ -3,6 +3,9 @@ package nn
 // N-dimensional convolution layers.
 
 import (
+	"fmt"
+	"reflect"
+
 	ts "github.com/sugarme/gotch/tensor"
 )
 
@@ -117,6 +120,73 @@ func NewConv3D(vs *Path, inDim, outDim, k int64, cfg Conv3DConfig) Conv3D {
 	conv.Ws = vs.NewVar("weight", weightSize, cfg.WsInit)
 
 	return conv
+}
+
+type Conv interface{}
+
+// func buildConvConfig(ksizes []int64, groups int64, bias bool, ws Init, bs Init) interface{} {
+func buildConvConfig(ksizes []int64) interface{} {
+	// Default values
+	groups := int64(1)
+	bias := true
+	ws := NewKaimingUniformInit()
+	bs := NewConstInit(0.0)
+
+	switch len(ksizes) {
+	case 1:
+		return Conv1DConfig{
+			Stride:   ksizes,
+			Padding:  ksizes,
+			Dilation: ksizes,
+			Groups:   groups,
+			Bias:     bias,
+			WsInit:   ws,
+			BsInit:   bs,
+		}
+	case 2:
+		return Conv2DConfig{
+			Stride:   ksizes,
+			Padding:  ksizes,
+			Dilation: ksizes,
+			Groups:   groups,
+			Bias:     bias,
+			WsInit:   ws,
+			BsInit:   bs,
+		}
+	case 3:
+		return Conv3DConfig{
+			Stride:   ksizes,
+			Padding:  ksizes,
+			Dilation: ksizes,
+			Groups:   groups,
+			Bias:     bias,
+			WsInit:   ws,
+			BsInit:   bs,
+		}
+
+	default:
+		err := fmt.Errorf("Expected nd length from 1 to 3. Got %v\n", len(ksizes))
+		panic(err)
+	}
+}
+
+func NewConv(vs Path, inDim, outDim int64, ksizes []int64, config interface{}) Conv {
+	// config := buildConvConfig(ksizes)
+
+	configVal := reflect.Indirect(reflect.ValueOf(config))
+
+	switch {
+	case len(ksizes) == 1 && configVal.Type() == reflect.TypeOf(Conv1DConfig{}):
+		return NewConv1D(&vs, inDim, outDim, ksizes[0], config.(Conv1DConfig))
+	case len(ksizes) == 2 && configVal.Type() == reflect.TypeOf(Conv2DConfig{}):
+		return NewConv2D(&vs, inDim, outDim, ksizes[0], config.(Conv2DConfig))
+	case len(ksizes) == 3 && configVal.Type() == reflect.TypeOf(Conv3DConfig{}):
+		return NewConv3D(&vs, inDim, outDim, ksizes[0], config.(Conv3DConfig))
+
+	default:
+		err := fmt.Errorf("Expected nd length from 1 to 3. Got %v\n", len(ksizes))
+		panic(err)
+	}
 }
 
 // Implement Module for Conv1D, Conv2D, Conv3D:
