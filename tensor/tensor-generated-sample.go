@@ -778,6 +778,36 @@ func (ts Tensor) MustMean(dtype int32, del bool) (retVal Tensor) {
 	return retVal
 }
 
+func (ts Tensor) Mean1(dims []int64, keepDim bool, dtype gotch.DType, del bool) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	if del {
+		defer ts.MustDrop()
+	}
+
+	ckeepDim := 0
+	if keepDim {
+		ckeepDim = 1
+	}
+
+	lib.AtgMean1(ptr, ts.ctensor, dims, len(dims), ckeepDim, dtype.CInt())
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustMean1(dims []int64, keepDim bool, dtype gotch.DType, del bool) (retVal Tensor) {
+	retVal, err := ts.Mean1(dims, keepDim, dtype, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 func (ts Tensor) View(sizeData []int64, del bool) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	if del {
@@ -903,6 +933,31 @@ func (ts Tensor) Clamp(min Scalar, max Scalar, del bool) (retVal Tensor, err err
 func (ts Tensor) MustClamp(min Scalar, max Scalar, del bool) (retVal Tensor) {
 
 	retVal, err := ts.Clamp(min, max, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) ClampMax(max Scalar, del bool) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	if del {
+		defer ts.MustDrop()
+	}
+
+	lib.AtgClampMax(ptr, ts.ctensor, max.cscalar)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+	return retVal, nil
+}
+
+func (ts Tensor) MustClampMax(max Scalar, del bool) (retVal Tensor) {
+	retVal, err := ts.ClampMax(max, del)
 	if err != nil {
 		log.Fatal(err)
 	}

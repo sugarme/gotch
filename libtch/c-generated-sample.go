@@ -206,6 +206,17 @@ func AtgMean(ptr *Ctensor, self Ctensor, dtype int32) {
 	C.atg_mean(ptr, self, cdtype)
 }
 
+// void atg_mean1(tensor *, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype);
+func AtgMean1(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int, keepDim int, dtype int32) {
+
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepDim := *(*C.int)(unsafe.Pointer(&keepDim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+
+	C.atg_mean1(ptr, self, cdimDataPtr, cdimLen, ckeepDim, cdtype)
+}
+
 // void atg_permute(tensor *, tensor self, int64_t *dims_data, int dims_len);
 func AtgPermute(ptr *Ctensor, self Ctensor, dims []int64, dimLen int) {
 	// just get pointer of the first element of the shape
@@ -276,6 +287,11 @@ func AtgClamp_(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
 // void atg_clamp(tensor *, tensor self, scalar min, scalar max);
 func AtgClamp(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
 	C.atg_clamp(ptr, self, min, max)
+}
+
+// void atg_clamp_max(tensor *, tensor self, scalar max);
+func AtgClampMax(ptr *Ctensor, self Ctensor, max Cscalar) {
+	C.atg_clamp_max(ptr, self, max)
 }
 
 // void atg_relu(tensor *, tensor self);
