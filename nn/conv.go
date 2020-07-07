@@ -173,14 +173,14 @@ func buildConvConfig(ksizes []int64) interface{} {
 func NewConv(vs Path, inDim, outDim int64, ksizes []int64, config interface{}) Conv {
 	// config := buildConvConfig(ksizes)
 
-	configVal := reflect.Indirect(reflect.ValueOf(config))
+	configT := reflect.TypeOf(config)
 
 	switch {
-	case len(ksizes) == 1 && configVal.Type() == reflect.TypeOf(Conv1DConfig{}):
+	case len(ksizes) == 1 && configT.Name() == "Conv1DConfig":
 		return NewConv1D(&vs, inDim, outDim, ksizes[0], config.(Conv1DConfig))
-	case len(ksizes) == 2 && configVal.Type() == reflect.TypeOf(Conv2DConfig{}):
+	case len(ksizes) == 2 && configT.Name() == "Conv2DConfig":
 		return NewConv2D(vs, inDim, outDim, ksizes[0], config.(Conv2DConfig))
-	case len(ksizes) == 3 && configVal.Type() == reflect.TypeOf(Conv3DConfig{}):
+	case len(ksizes) == 3 && configT.Name() == "Conv3DConfig":
 		return NewConv3D(&vs, inDim, outDim, ksizes[0], config.(Conv3DConfig))
 
 	default:
