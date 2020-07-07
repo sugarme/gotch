@@ -13,7 +13,7 @@ func anConv2d(p nn.Path, cIn, cOut, ksize, padding, stride int64) (retVal nn.Con
 	config.Stride = []int64{stride, stride}
 	config.Padding = []int64{padding, padding}
 
-	return nn.NewConv2D(&p, cIn, cOut, ksize, config)
+	return nn.NewConv2D(p, cIn, cOut, ksize, config)
 }
 
 func anMaxPool2d(xs ts.Tensor, ksize, stride int64) (retVal ts.Tensor) {

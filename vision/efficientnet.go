@@ -75,7 +75,7 @@ func (p params) roundFilters(filters int64) (retVal int64) {
 
 // Conv2D with same padding
 func enConv2d(vs nn.Path, i, o, k int64, c nn.Conv2DConfig, train bool) (retVal ts.ModuleT) {
-	conv2d := nn.NewConv2D(&vs, i, o, k, c)
+	conv2d := nn.NewConv2D(vs, i, o, k, c)
 	s := c.Stride
 
 	return nn.NewFunc(func(xs ts.Tensor) (res ts.Tensor) {

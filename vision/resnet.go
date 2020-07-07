@@ -18,7 +18,7 @@ func conv2d(path nn.Path, cIn, cOut, ksize, padding, stride int64) (retVal nn.Co
 	config.Padding = []int64{padding, padding}
 	config.Bias = false
 
-	return nn.NewConv2D(&path, cIn, cOut, ksize, config)
+	return nn.NewConv2D(path, cIn, cOut, ksize, config)
 }
 
 func downSample(path nn.Path, cIn, cOut, stride int64) (retVal ts.ModuleT) {

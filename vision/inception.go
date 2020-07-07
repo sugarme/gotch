@@ -20,7 +20,7 @@ func convBn(p nn.Path, cIn, cOut, ksize, pad, stride int64) (retVal ts.ModuleT) 
 	seq := nn.SeqT()
 
 	convP := p.Sub("conv")
-	seq.Add(nn.NewConv2D(&convP, cIn, cOut, ksize, convConfig))
+	seq.Add(nn.NewConv2D(convP, cIn, cOut, ksize, convConfig))
 
 	seq.Add(nn.BatchNorm2D(p.Sub("bn"), cOut, bnConfig))
 

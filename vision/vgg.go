@@ -57,7 +57,7 @@ func vggConv2d(path nn.Path, cIn, cOut int64) (retVal nn.Conv2D) {
 	config.Stride = []int64{1, 1}
 	config.Padding = []int64{1, 1}
 
-	return nn.NewConv2D(&path, cIn, cOut, 3, config)
+	return nn.NewConv2D(path, cIn, cOut, 3, config)
 }
 
 func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.SequentialT {

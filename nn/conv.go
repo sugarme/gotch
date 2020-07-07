@@ -90,7 +90,7 @@ type Conv2D struct {
 	Config Conv2DConfig
 }
 
-func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg Conv2DConfig) Conv2D {
+func NewConv2D(vs Path, inDim, outDim int64, k int64, cfg Conv2DConfig) Conv2D {
 	var conv Conv2D
 	conv.Config = cfg
 	if cfg.Bias {
@@ -179,7 +179,7 @@ func NewConv(vs Path, inDim, outDim int64, ksizes []int64, config interface{}) C
 	case len(ksizes) == 1 && configVal.Type() == reflect.TypeOf(Conv1DConfig{}):
 		return NewConv1D(&vs, inDim, outDim, ksizes[0], config.(Conv1DConfig))
 	case len(ksizes) == 2 && configVal.Type() == reflect.TypeOf(Conv2DConfig{}):
-		return NewConv2D(&vs, inDim, outDim, ksizes[0], config.(Conv2DConfig))
+		return NewConv2D(vs, inDim, outDim, ksizes[0], config.(Conv2DConfig))
 	case len(ksizes) == 3 && configVal.Type() == reflect.TypeOf(Conv3DConfig{}):
 		return NewConv3D(&vs, inDim, outDim, ksizes[0], config.(Conv3DConfig))
 

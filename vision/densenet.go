@@ -18,7 +18,7 @@ func dnConv2d(p nn.Path, cIn, cOut, ksize, padding, stride int64) (retVal nn.Con
 	config.Padding = []int64{padding, padding}
 	config.Bias = false
 
-	return nn.NewConv2D(&p, cIn, cOut, ksize, config)
+	return nn.NewConv2D(p, cIn, cOut, ksize, config)
 }
 
 func denseLayer(p nn.Path, cIn, bnSize, growth int64) (retVal ts.ModuleT) {

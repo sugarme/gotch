@@ -28,11 +28,11 @@ type Net struct {
 	fc2   nn.Linear
 }
 
-func newNet(vs *nn.Path) Net {
+func newNet(vs nn.Path) Net {
 	conv1 := nn.NewConv2D(vs, 1, 32, 5, nn.DefaultConv2DConfig())
 	conv2 := nn.NewConv2D(vs, 32, 64, 5, nn.DefaultConv2DConfig())
-	fc1 := nn.NewLinear(*vs, 1024, 1024, nn.DefaultLinearConfig())
-	fc2 := nn.NewLinear(*vs, 1024, 10, nn.DefaultLinearConfig())
+	fc1 := nn.NewLinear(vs, 1024, 1024, nn.DefaultLinearConfig())
+	fc2 := nn.NewLinear(vs, 1024, 10, nn.DefaultLinearConfig())
 
 	return Net{
 		conv1,
@@ -83,8 +83,7 @@ func runCNN1() {
 	cuda := gotch.CudaBuilder(0)
 	vs := nn.NewVarStore(cuda.CudaIfAvailable())
 	// vs := nn.NewVarStore(gotch.CPU)
-	path := vs.Root()
-	net := newNet(&path)
+	net := newNet(vs.Root())
 	opt, err := nn.DefaultAdamConfig().Build(vs, LrCNN)
 	if err != nil {
 		log.Fatal(err)
@@ -161,8 +160,7 @@ func runCNN2() {
 
 	cuda := gotch.CudaBuilder(0)
 	vs := nn.NewVarStore(cuda.CudaIfAvailable())
-	path := vs.Root()
-	net := newNet(&path)
+	net := newNet(vs.Root())
 	opt, err := nn.DefaultAdamConfig().Build(vs, LrNN)
 	if err != nil {
 		log.Fatal(err)

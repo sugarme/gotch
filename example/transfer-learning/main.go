@@ -54,7 +54,7 @@ func main() {
 
 	// Pre-compute the final activations.
 
-	linear := nn.NewLinear(vs.Root(), 512, dataset.Labels, *nn.DefaultLinearConfig())
+	linear := nn.NewLinear(vs.Root(), 512, dataset.Labels, nn.DefaultLinearConfig())
 	sgd, err := nn.DefaultSGDConfig().Build(vs, 1e-3)
 	if err != nil {
 		log.Fatal(err)
