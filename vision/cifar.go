@@ -59,12 +59,11 @@ func readFile(filename string) (imagesTs ts.Tensor, labelsTs ts.Tensor) {
 		tmp1 := content.MustNarrow(0, int64(1+contentOffset), int64(bytesPerImage-1), false)
 		tmp2 := tmp1.MustView([]int64{cfC, cfH, cfW}, true)
 		tmp3 := tmp2.MustTo(gotch.CPU, true)
-		selectImageTs := images.Idx(ts.NewSelect(int64(idx)))
-		selectImageTs.Copy_(tmp3)
-		tmp3.MustDrop()
 
-		// TODO: concat all selectLabelTs and selectImageTs to single labelsTs and
-		// imagesTs
+		// NOTE: tensor indexing operations return view on the same memory
+		// images.Idx(ts.NewSelect(int64(idx))).Copy_(tmp3)
+		images.Idx(ts.NewSelect(int64(idx))).MustView([]int64{cfC, cfH, cfW}, false).Copy_(tmp3)
+		tmp3.MustDrop()
 	}
 
 	tmp1 := images.MustTotype(gotch.Float, true)

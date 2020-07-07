@@ -58,6 +58,9 @@ package tensor
 // is that `i` guarantees the input and result tensor shares the same
 // underlying storage, while NumPy may copy the tensor in certain scenarios.
 
+// NOTE: select, narrow and indexing operations (except when using a LongTensor index) return views onto the same memory.
+// https://discuss.pytorch.org/t/does-select-and-narrow-return-a-view-or-copy/289
+
 import (
 	"fmt"
 	"log"

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/tensor"
 )
 
@@ -45,5 +46,15 @@ func main() {
 	combinedTs := ts.Idx(tsIndexes)
 
 	combinedTs.Print()
+
+	// Copy to index
+	desTs := tensor.MustZeros([]int64{5}, gotch.Float.CInt(), gotch.CPU.CInt())
+	srcTs := tensor.MustOnes([]int64{1}, gotch.Float.CInt(), gotch.CPU.CInt())
+	idx := tensor.NewNarrow(0, 3)
+
+	// NOTE: indexing operations return view on the same memory
+	desTs.Print()
+	desTs.Idx(idx).MustView([]int64{-1}, false).Copy_(srcTs)
+	desTs.Print()
 
 }
