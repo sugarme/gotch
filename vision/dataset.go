@@ -101,10 +101,11 @@ func RandomCrop(t ts.Tensor, pad int64) (retVal ts.Tensor) {
 		wIdx := ts.NewNarrow(int64(startW), int64(startW)+szW)
 		srcIdx = append(srcIdx, nIdx, cIdx, hIdx, wIdx)
 		src := padded.Idx(srcIdx)
-		padded.MustDrop()
 		outputView.Copy_(src)
 		src.MustDrop()
 	}
+
+	padded.MustDrop()
 
 	return output
 }
