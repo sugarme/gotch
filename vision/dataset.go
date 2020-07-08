@@ -150,6 +150,7 @@ func Augmentation(t ts.Tensor, flip bool, crop int64, cutout int64) (retVal ts.T
 	var flipTs ts.Tensor
 	if flip {
 		flipTs = RandomFlip(tclone)
+		tclone.MustDrop()
 	} else {
 		flipTs = tclone
 	}
