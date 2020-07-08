@@ -62,6 +62,7 @@ func RandomFlip(t ts.Tensor) (retVal ts.Tensor) {
 
 		outputView.Copy_(src)
 		src.MustDrop()
+		outputView.MustDrop()
 	}
 
 	return output
@@ -103,6 +104,7 @@ func RandomCrop(t ts.Tensor, pad int64) (retVal ts.Tensor) {
 		src := padded.Idx(srcIdx)
 		outputView.Copy_(src)
 		src.MustDrop()
+		outputView.MustDrop()
 	}
 
 	padded.MustDrop()
