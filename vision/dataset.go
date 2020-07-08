@@ -142,12 +142,10 @@ func RandomCutout(t ts.Tensor, sz int64) (retVal ts.Tensor) {
 		wIdx := ts.NewNarrow(int64(startW), int64(startW)+sz)
 		srcIdx = append(srcIdx, nIdx, cIdx, hIdx, wIdx)
 
-		tmp := output.Idx(srcIdx)
-		tmp.Fill_(ts.FloatScalar(0.0))
-		tmp.MustDrop()
+		outputView := output.Idx(srcIdx)
+		outputView.Fill_(ts.FloatScalar(0.0))
+		outputView.MustDrop()
 	}
-
-	t.MustDrop()
 
 	return output
 }
