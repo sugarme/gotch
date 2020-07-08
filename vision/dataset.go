@@ -57,9 +57,9 @@ func RandomFlip(t ts.Tensor) (retVal ts.Tensor) {
 			src = tView
 		} else {
 			src = tView.MustFlip([]int64{2})
-			tView.MustDrop()
 		}
 
+		tView.MustDrop()
 		outputView.Copy_(src)
 		src.MustDrop()
 		outputView.MustDrop()
