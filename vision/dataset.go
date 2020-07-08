@@ -147,6 +147,8 @@ func RandomCutout(t ts.Tensor, sz int64) (retVal ts.Tensor) {
 		tmp.MustDrop()
 	}
 
+	t.MustDrop()
+
 	return output
 }
 
