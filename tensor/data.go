@@ -101,6 +101,7 @@ func (it *Iter2) Shuffle() {
 	it.xs = it.xs.MustIndexSelect(0, index, true)
 	it.ys = it.ys.MustIndexSelect(0, index, true)
 
+	index.MustDrop()
 }
 
 // ToDevice transfers the mini-batches to a specified device.
