@@ -137,12 +137,15 @@ func main() {
 				break
 			}
 
-			bimages := vision.Augmentation(item.Data.MustTo(vs.Device(), true), true, 4, 8)
+			devicedData := item.Data.MustTo(vs.Device(), true)
+			devicedLabel := item.Label.MustTo(vs.Device(), true)
+
+			bimages := vision.Augmentation(devicedData, true, 4, 8)
 
 			logits := net.ForwardT(bimages, true)
 
 			// logits := net.ForwardT(item.Data.MustTo(vs.Device(), true), false)
-			loss := logits.CrossEntropyForLogits(item.Label.MustTo(vs.Device(), true))
+			loss := logits.CrossEntropyForLogits(devicedLabel)
 			opt.BackwardStep(loss)
 
 			lossVal = loss.Values()[0]
@@ -150,6 +153,8 @@ func main() {
 			// logits.MustDrop()
 			// item.Data.MustDrop()
 			// item.Label.MustDrop()
+			devicedData.MustDrop()
+			devicedLabel.MustDrop()
 			bimages.MustDrop()
 			loss.MustDrop()
 
