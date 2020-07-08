@@ -152,7 +152,7 @@ func main() {
 
 			lossVal = loss.Values()[0]
 
-			// logits.MustDrop()
+			logits.MustDrop()
 			// item.Data.MustDrop()
 			// item.Label.MustDrop()
 			devicedData.MustDrop()
