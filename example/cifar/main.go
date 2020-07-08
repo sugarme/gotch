@@ -129,7 +129,7 @@ func main() {
 		opt.SetLR(learningRate(epoch))
 
 		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(64))
-		// iter.Shuffle()
+		iter.Shuffle()
 		// iter = iter.ToDevice(device)
 
 		for {
