@@ -123,9 +123,14 @@ func (it *Iter2) Next() (item Iter2Item, ok bool) {
 		// Indexing
 		narrowIndex := NewNarrow(start, start+size)
 
+		// data := it.xs.Idx(narrowIndex).MustTo(it.device, false)
+		// label := it.ys.Idx(narrowIndex).MustTo(it.device, false)
+
 		return Iter2Item{
 			Data:  it.xs.Idx(narrowIndex),
 			Label: it.ys.Idx(narrowIndex),
+			// Data:  data,
+			// Label: label,
 		}, true
 	}
 }

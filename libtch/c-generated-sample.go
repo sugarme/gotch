@@ -624,3 +624,21 @@ func AtgConstantPadNd(ptr *Ctensor, self Ctensor, padData []int64, padLen int) {
 func AtgSigmoid(ptr *Ctensor, self Ctensor) {
 	C.atg_sigmoid(ptr, self)
 }
+
+// void atg_flip(tensor *, tensor self, int64_t *dims_data, int dims_len);
+func AtgFlip(ptr *Ctensor, self Ctensor, dimsData []int64, dimsLen int) {
+
+	cdimsDataPtr := (*C.int64_t)(unsafe.Pointer(&dimsData[0]))
+	cdimsLen := *(*C.int)(unsafe.Pointer(&dimsLen))
+
+	C.atg_flip(ptr, self, cdimsDataPtr, cdimsLen)
+}
+
+// void atg_reflection_pad2d(tensor *, tensor self, int64_t *padding_data, int padding_len);
+func AtgReflectionPad2d(ptr *Ctensor, self Ctensor, paddingData []int64, paddingLen int) {
+
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+
+	C.atg_reflection_pad2d(ptr, self, cpaddingDataPtr, cpaddingLen)
+}

@@ -145,12 +145,21 @@ func (s SequentialT) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
 	}
 
 	// forward sequentially
-	var currTs ts.Tensor = xs
+	outs := make([]ts.Tensor, len(s.layers))
 	for i := 0; i < len(s.layers); i++ {
-		currTs = s.layers[i].ForwardT(currTs, train)
+		if i == 0 {
+			outs[0] = s.layers[i].ForwardT(xs, train)
+			defer outs[0].MustDrop()
+		} else if i == len(s.layers)-1 {
+			return s.layers[i].ForwardT(outs[i-1], train)
+		} else {
+			outs[i] = s.layers[i].ForwardT(outs[i-1], train)
+			defer outs[i].MustDrop()
+		}
 	}
 
-	return currTs
+	return
+
 }
 
 // Add appends a layer after all the current layers.

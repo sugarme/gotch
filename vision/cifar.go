@@ -46,7 +46,7 @@ func readFile(filename string) (imagesTs ts.Tensor, labelsTs ts.Tensor) {
 	}
 
 	images := ts.MustZeros([]int64{samplesPerFile, cfC, cfH, cfW}, gotch.Float.CInt(), gotch.CPU.CInt())
-	labels := ts.MustZeros([]int64{samplesPerFile}, gotch.Float.CInt(), gotch.CPU.CInt())
+	labels := ts.MustZeros([]int64{samplesPerFile}, gotch.Int64.CInt(), gotch.CPU.CInt())
 
 	for idx := 0; idx < int(samplesPerFile); idx++ {
 		contentOffset := int(bytesPerImage) * idx

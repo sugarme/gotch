@@ -1920,3 +1920,49 @@ func (ts Tensor) MustSigmoid(del bool) (retVal Tensor) {
 
 	return retVal
 }
+
+func (ts Tensor) Flip(dims []int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgFlip(ptr, ts.ctensor, dims, len(dims))
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+
+}
+
+func (ts Tensor) MustFlip(dims []int64) (retVal Tensor) {
+	retVal, err := ts.Flip(dims)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) ReflectionPad2d(paddingData []int64) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgReflectionPad2d(ptr, ts.ctensor, paddingData, len(paddingData))
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+
+}
+
+func (ts Tensor) MustReflectionPad2d(paddingData []int64) (retVal Tensor) {
+	retVal, err := ts.ReflectionPad2d(paddingData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
