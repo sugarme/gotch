@@ -43,9 +43,23 @@ func NewIter2(xs, ys Tensor, batchSize int64) (retVal Iter2, err error) {
 		return retVal, err
 	}
 
+	xsClone, err := xs.ZerosLike(false)
+	if err != nil {
+		log.Fatal(err)
+	}
+	xsClone.Copy_(xs)
+
+	ysClone, err := ys.ZerosLike(false)
+	if err != nil {
+		log.Fatal(err)
+	}
+	ysClone.Copy_(ys)
+
 	retVal = Iter2{
-		xs:                   xs.MustShallowClone(),
-		ys:                   ys.MustShallowClone(),
+		// xs:                   xs.MustShallowClone(),
+		// ys:                   ys.MustShallowClone(),
+		xs:                   xsClone,
+		ys:                   ysClone,
 		batchIndex:           0,
 		batchSize:            batchSize,
 		totalSize:            totalSize,
@@ -133,4 +147,9 @@ func (it *Iter2) Next() (item Iter2Item, ok bool) {
 			// Label: label,
 		}, true
 	}
+}
+
+func (it Iter2) Drop() {
+	it.xs.MustDrop()
+	it.ys.MustDrop()
 }

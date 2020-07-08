@@ -36,7 +36,6 @@ func convBn(p nn.Path, cIn, cOut int64) (retVal nn.SequentialT) {
 
 func layer(p nn.Path, cIn, cOut int64) (retVal nn.FuncT) {
 	pre := convBn(p.Sub("pre"), cIn, cOut)
-
 	block1 := convBn(p.Sub("b1"), cOut, cOut)
 	block2 := convBn(p.Sub("b2"), cOut, cOut)
 
@@ -101,9 +100,16 @@ func main() {
 	fmt.Printf("TestLabel shape: %v\n", ds.TestLabels.MustSize())
 	fmt.Printf("Number of labels: %v\n", ds.Labels)
 
-	cuda := gotch.CudaBuilder(0)
-	device := cuda.CudaIfAvailable()
-	// device := gotch.CPU
+	var si *gotch.SI
+	si = gotch.GetSysInfo()
+	fmt.Printf("Total RAM (MB):\t %8.2f\n", float64(si.TotalRam)/1024)
+	fmt.Printf("Used RAM (MB):\t %8.2f\n", float64(si.TotalRam-si.FreeRam)/1024)
+
+	startRAM := si.TotalRam - si.FreeRam
+
+	// cuda := gotch.CudaBuilder(0)
+	// device := cuda.CudaIfAvailable()
+	device := gotch.CPU
 
 	vs := nn.NewVarStore(device)
 
@@ -122,8 +128,8 @@ func main() {
 		opt.SetLR(learningRate(epoch))
 
 		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(64))
-		iter.Shuffle()
-		iter = iter.ToDevice(device)
+		// iter.Shuffle()
+		// iter = iter.ToDevice(device)
 
 		for {
 			item, ok := iter.Next()
@@ -134,25 +140,24 @@ func main() {
 			// bimages := vision.Augmentation(item.Data, true, 4, 8)
 			// logits := net.ForwardT(bimages, true)
 
-			bImages := item.Data.MustTo(vs.Device(), true)
-			bLabels := item.Label.MustTo(vs.Device(), true)
-
-			// // logits := net.ForwardT(item.Data, true)
-			logits := net.ForwardT(bImages, true)
-			// // loss := logits.CrossEntropyForLogits(item.Label)
-			loss := logits.CrossEntropyForLogits(bLabels)
+			logits := net.ForwardT(item.Data, false)
+			loss := logits.CrossEntropyForLogits(item.Label)
 			opt.BackwardStep(loss)
 
 			lossVal = loss.Values()[0]
 
 			// logits.MustDrop()
-			bImages.MustDrop()
-			bLabels.MustDrop()
+			item.Data.MustDrop()
+			item.Label.MustDrop()
 			loss.MustDrop()
 
 		}
 
 		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\n", epoch, lossVal)
+
+		si = gotch.GetSysInfo()
+		fmt.Printf("Epoch %v\t Used: [%8.2f MiB]\n", epoch, (float64(si.TotalRam-si.FreeRam)-float64(startRAM))/1024)
+		iter.Drop()
 
 	}
 
