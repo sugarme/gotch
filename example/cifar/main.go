@@ -141,10 +141,10 @@ func main() {
 			devicedData := item.Data.MustTo(vs.Device(), true)
 			devicedLabel := item.Label.MustTo(vs.Device(), true)
 
-			// bimages := vision.Augmentation(devicedData, true, 4, 8)
+			bimages := vision.Augmentation(devicedData, true, 4, 8)
 
-			// logits := net.ForwardT(bimages, true)
-			logits := net.ForwardT(devicedData, true)
+			logits := net.ForwardT(bimages, true)
+			// logits := net.ForwardT(devicedData, true)
 
 			// logits := net.ForwardT(item.Data.MustTo(vs.Device(), true), false)
 			loss := logits.CrossEntropyForLogits(devicedLabel)
@@ -157,7 +157,7 @@ func main() {
 			// item.Label.MustDrop()
 			devicedData.MustDrop()
 			devicedLabel.MustDrop()
-			// bimages.MustDrop()
+			bimages.MustDrop()
 			loss.MustDrop()
 
 		}
