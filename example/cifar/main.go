@@ -107,9 +107,9 @@ func main() {
 
 	startRAM := si.TotalRam - si.FreeRam
 
-	// cuda := gotch.CudaBuilder(0)
-	// device := cuda.CudaIfAvailable()
-	device := gotch.CPU
+	cuda := gotch.CudaBuilder(0)
+	device := cuda.CudaIfAvailable()
+	// device := gotch.CPU
 
 	vs := nn.NewVarStore(device)
 
