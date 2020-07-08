@@ -172,17 +172,12 @@ func Augmentation(t ts.Tensor, flip bool, crop int64, cutout int64) (retVal ts.T
 
 	flipTs.MustDrop()
 
-	return cropTs
+	if cutout > 0 {
+		retVal = RandomCutout(cropTs, cutout)
+	} else {
+		retVal = cropTs
+	}
 
-	// if cutout > 0 {
-	// retVal = RandomCutout(cropTs, cutout)
-	// } else {
-	// retVal = cropTs
-	// }
-
-	// tclone.MustDrop()
-	// flipTs.MustDrop()
-	// // cropTs.MustDrop()
-	//
-	// return retVal
+	cropTs.MustDrop()
+	return retVal
 }
