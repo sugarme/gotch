@@ -160,9 +160,10 @@ func main() {
 			loss.MustDrop()
 		}
 
+		testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
 		si = gotch.GetSysInfo()
 		memUsed := (float64(si.TotalRam-si.FreeRam) - float64(startRAM)) / 1024
-		fmt.Printf("Epoch:\t %v\t Memory Used:\t [%8.2f MiB]\tLoss: \t %.3f\n", epoch, memUsed, lossVal)
+		fmt.Printf("Epoch:\t %v\t Memory Used:\t [%8.2f MiB]\tLoss: \t %.3f \tAcc: %10.3f\n", epoch, memUsed, lossVal, testAcc*100.0)
 		iter.Drop()
 
 		// Print out GPU used
