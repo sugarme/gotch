@@ -86,6 +86,8 @@ func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize 
 		acc.MustDrop()
 	}
 
+	MustGradSetEnabled(true)
+
 	return sumAccuracy / sampleCount
 }
 
