@@ -10,7 +10,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"os/exec"
+	// "os/exec"
 	"time"
 
 	"github.com/sugarme/gotch"
@@ -156,20 +156,21 @@ func main() {
 
 		// testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
 		// fmt.Printf("Epoch:\t %v\t Memory Used:\t [%8.2f MiB]\tLoss: \t %.3f \tAcc: %10.2f%%\n", epoch, memUsed, lossVal, testAcc*100.0)
-		fmt.Printf("Epoch:\t %v\t \tLoss: \t\t %.3f\n", epoch, lossVal)
+		fmt.Printf("Epoch: %10.0d\tLoss:%10.3f\n", epoch, lossVal)
 		iter.Drop()
 
-		// Print out GPU used
-		nvidia := "nvidia-smi"
-		cmd := exec.Command(nvidia)
-		stdout, err := cmd.Output()
-
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		fmt.Println(string(stdout))
-
+		/*
+		 *     // Print out GPU used
+		 *     nvidia := "nvidia-smi"
+		 *     cmd := exec.Command(nvidia)
+		 *     stdout, err := cmd.Output()
+		 *
+		 *     if err != nil {
+		 *       log.Fatal(err.Error())
+		 *     }
+		 *
+		 *     fmt.Println(string(stdout))
+		 *  */
 	}
 
 	testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
