@@ -83,11 +83,11 @@ func fastResnet(p nn.Path) (retVal nn.SequentialT) {
 func learningRate(epoch int) (retVal float64) {
 	switch {
 	case epoch < 50:
-		return 0.1
+		return 0.4
 	case epoch < 100:
-		return 0.01
+		return 0.2
 	default:
-		return 0.001
+		return 0.1
 	}
 }
 
@@ -125,10 +125,11 @@ func main() {
 	var lossVal float64
 	startTime := time.Now()
 
-	for epoch := 0; epoch < 150; epoch++ {
+	for epoch := 0; epoch < 24; epoch++ {
 		opt.SetLR(learningRate(epoch))
 
-		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(64))
+		// iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(64))
+		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(512))
 		iter.Shuffle()
 		// iter = iter.ToDevice(device)
 
