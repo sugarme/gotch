@@ -63,7 +63,8 @@ func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize 
 		sampleCount float64 = 0.0
 	)
 
-	_ = NewNoGradGuard()
+	noGradGuard := NewNoGradGuard()
+	defer noGradGuard.Drop()
 
 	iter2 := MustNewIter2(xs, ys, int64(batchSize))
 	for {
@@ -85,8 +86,6 @@ func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize 
 		bLabels.MustDrop()
 		acc.MustDrop()
 	}
-
-	MustGradSetEnabled(true)
 
 	return sumAccuracy / sampleCount
 }
