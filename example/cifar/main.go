@@ -117,7 +117,7 @@ func main() {
 	net := fastResnet(vs.Root())
 
 	optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4, true)
-	opt, err := optConfig.Build(vs, 0.0)
+	opt, err := optConfig.Build(vs, 0.2)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -126,7 +126,7 @@ func main() {
 	startTime := time.Now()
 
 	for epoch := 0; epoch < 24; epoch++ {
-		opt.SetLR(learningRate(epoch))
+		// opt.SetLR(learningRate(epoch))
 
 		// iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(64))
 		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(512))
