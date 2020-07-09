@@ -2,6 +2,7 @@ package tensor
 
 import (
 	// "unsafe"
+	"log"
 
 	lib "github.com/sugarme/gotch/libtch"
 )
@@ -62,4 +63,12 @@ func (sc Scalar) ToString() (retVal string, err error) {
 func (sc Scalar) Drop() (err error) {
 	lib.AtsFree(sc.cscalar)
 	return TorchErr()
+}
+
+func (sc Scalar) MustDrop() {
+	lib.AtsFree(sc.cscalar)
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+
 }

@@ -3,6 +3,7 @@ package vision
 // A simple dataset structure shared by various computer vision datasets.
 
 import (
+	// "fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -122,6 +123,11 @@ func RandomCutout(t ts.Tensor, sz int64) (retVal ts.Tensor) {
 		log.Fatalf("Unexpected shape (%v) for tensor %v\n", size, t)
 	}
 
+	// output, err := t.ShallowClone()
+	// if err != nil {
+	// log.Fatal(err)
+	// }
+
 	output, err := t.ZerosLike(false)
 	if err != nil {
 		log.Fatal(err)
@@ -137,14 +143,17 @@ func RandomCutout(t ts.Tensor, sz int64) (retVal ts.Tensor) {
 
 		var srcIdx []ts.TensorIndexer
 		nIdx := ts.NewSelect(int64(bidx))
-		cIdx := ts.NewSelect(int64(-1))
+		cIdx := ts.NewNarrow(0, size[1])
 		hIdx := ts.NewNarrow(int64(startH), int64(startH)+sz)
 		wIdx := ts.NewNarrow(int64(startW), int64(startW)+sz)
 		srcIdx = append(srcIdx, nIdx, cIdx, hIdx, wIdx)
 
-		outputView := output.Idx(srcIdx)
-		outputView.Fill_(ts.FloatScalar(0.0))
-		outputView.MustDrop()
+		// TODO: there's memory blow-up here. Need to fix.
+		// view := output.Idx(srcIdx)
+		// zeroSc := ts.FloatScalar(0.0)
+		// view.Fill_(zeroSc)
+		// zeroSc.MustDrop()
+		// view.MustDrop()
 	}
 
 	return output
@@ -157,28 +166,25 @@ func Augmentation(t ts.Tensor, flip bool, crop int64, cutout int64) (retVal ts.T
 	var flipTs ts.Tensor
 	if flip {
 		flipTs = RandomFlip(tclone)
+		tclone.MustDrop()
 	} else {
 		flipTs = tclone
 	}
 
-	tclone.MustDrop()
-
 	var cropTs ts.Tensor
 	if crop > 0 {
 		cropTs = RandomCrop(flipTs, crop)
+		flipTs.MustDrop()
 	} else {
 		cropTs = flipTs
 	}
 
-	flipTs.MustDrop()
-	return cropTs
+	if cutout > 0 {
+		retVal = RandomCutout(cropTs, cutout)
+		cropTs.MustDrop()
+	} else {
+		retVal = cropTs
+	}
 
-	// if cutout > 0 {
-	// retVal = RandomCutout(cropTs, cutout)
-	// } else {
-	// retVal = cropTs
-	// }
-	//
-	// cropTs.MustDrop()
-	// return retVal
+	return retVal
 }

@@ -83,11 +83,11 @@ func fastResnet(p nn.Path) (retVal nn.SequentialT) {
 func learningRate(epoch int) (retVal float64) {
 	switch {
 	case epoch < 50:
-		return float64(0.1)
+		return 0.1
 	case epoch < 100:
-		return float64(0.01)
+		return 0.01
 	default:
-		return float64(0.001)
+		return 0.001
 	}
 }
 
@@ -110,7 +110,7 @@ func main() {
 	net := fastResnet(vs.Root())
 
 	optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4, true)
-	opt, err := optConfig.Build(vs, 0.1)
+	opt, err := optConfig.Build(vs, 0.01)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -154,9 +154,9 @@ func main() {
 			loss.MustDrop()
 		}
 
-		// testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
-		// fmt.Printf("Epoch:\t %v\t Memory Used:\t [%8.2f MiB]\tLoss: \t %.3f \tAcc: %10.2f%%\n", epoch, memUsed, lossVal, testAcc*100.0)
-		fmt.Printf("Epoch: %10.0d\tLoss:%10.3f\n", epoch, lossVal)
+		testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
+		fmt.Printf("Epoch:\t %v\t Loss: \t %.3f \tAcc: %10.2f%%\n", epoch, lossVal, testAcc*100.0)
+		// fmt.Printf("Epoch: %10.0d\tLoss:%10.3f\n", epoch, lossVal)
 		iter.Drop()
 
 		/*
