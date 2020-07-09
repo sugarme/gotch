@@ -64,6 +64,7 @@ func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize 
 	)
 
 	noGradGuard := NewNoGradGuard()
+
 	defer noGradGuard.Drop()
 
 	iter2 := MustNewIter2(xs, ys, int64(batchSize))
@@ -88,6 +89,7 @@ func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize 
 	}
 
 	return sumAccuracy / sampleCount
+
 }
 
 // BatchAccuracyForLogitIdx is an alternative of BatchAccuracyForLogits to
