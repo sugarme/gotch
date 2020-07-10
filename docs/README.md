@@ -21,6 +21,7 @@
 - [Initiation](nn-init.md)
 - [Optimizer](nn-optimizer.md)
 - [Variable store](nn-varstore.md)
+- [Module](nn-module.md)
 - [Layer - Sequential](nn-sequential.md)
 - [Linear](nn-linear.md)
 - [Convolutional Neural Network](nn-cnn.md)
