@@ -5,6 +5,7 @@
 - [Quick start guide](how-quickstart.md)
 - [Installation](how-installation.md)
 - [Cloud training](how-cloud.md)
+- [Use pre-trained model](how-pretrained.md)
 
 ## General
 
@@ -26,6 +27,7 @@
 - [Linear](nn-linear.md)
 - [Convolutional Neural Network](nn-cnn.md)
 - [Recurrent Neural Network](nn-rnn.md)
+- [JIT](nn-jit.md)
 
 ## Vision
 

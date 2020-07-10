@@ -254,7 +254,6 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 
 		switch reflect.TypeOf(spec).Name() {
 		case "InsertNewAxis":
-			fmt.Println(currIdx)
 			nextTensor, err = currTensor.Unsqueeze(currIdx, true)
 			if err != nil {
 				return retVal, err

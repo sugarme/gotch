@@ -1029,6 +1029,38 @@ func (ts Tensor) Values() []float64 {
 	return values
 }
 
+// Vals returns tensor values in a slice
+// NOTE: need a type insersion to get runtime type
+// E.g. res := xs.Vals().([]int64)
+func (ts Tensor) Vals() (retVal interface{}) {
+	dtype := ts.DType()
+	numel := ts.Numel()
+
+	switch dtype.Name() {
+	case "uint8":
+		retVal = make([]uint8, numel)
+	case "int8":
+		retVal = make([]int8, numel)
+	case "int16":
+		retVal = make([]int16, numel)
+	case "int32":
+		retVal = make([]int32, numel)
+	case "int64":
+		retVal = make([]int64, numel)
+	case "float32":
+		retVal = make([]float32, numel)
+	case "float64":
+		retVal = make([]float64, numel)
+	case "bool":
+		retVal = make([]bool, numel)
+	default:
+		log.Fatalf("Unsupported dtype (%v)", dtype)
+	}
+
+	ts.CopyData(retVal, numel)
+	return retVal
+}
+
 // FlatView flattens a tensor.
 //
 // This returns a flattened version of the given tensor. The first dimension
