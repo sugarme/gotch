@@ -642,3 +642,39 @@ func AtgReflectionPad2d(ptr *Ctensor, self Ctensor, paddingData []int64, padding
 
 	C.atg_reflection_pad2d(ptr, self, cpaddingDataPtr, cpaddingLen)
 }
+
+// void atg_arange(tensor *, scalar end, int options_kind, int options_device);
+func AtgArange(ptr *Ctensor, end Cscalar, optionsKind int32, optionsDevice int32) {
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	C.atg_arange(ptr, end, coptionsKind, coptionsDevice)
+}
+
+// void atg_arange1(tensor *, scalar start, scalar end, int options_kind, int options_device);
+func AtgArange1(ptr *Ctensor, start Cscalar, end Cscalar, optionsKind int32, optionsDevice int32) {
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	C.atg_arange1(ptr, start, end, coptionsKind, coptionsDevice)
+}
+
+// void atg_arange2(tensor *, scalar start, scalar end, scalar step, int options_kind, int options_device);
+func AtgArange2(ptr *Ctensor, start Cscalar, end Cscalar, step Cscalar, optionsKind int32, optionsDevice int32) {
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	C.atg_arange2(ptr, start, end, step, coptionsKind, coptionsDevice)
+}
+
+// void atg_arange_out(tensor *, tensor out, scalar end);
+func AtgArangeOut(ptr *Ctensor, out Ctensor, end Cscalar) {
+
+	C.atg_arange_out(ptr, out, end)
+}
+
+// void atg_arange_out1(tensor *, tensor out, scalar start, scalar end);
+func AtgArangeOut1(ptr *Ctensor, out Ctensor, start Cscalar, end Cscalar) {
+
+	C.atg_arange_out1(ptr, out, start, end)
+}

@@ -193,18 +193,19 @@ func (ts *Tensor) Idx(index interface{}) (retVal Tensor) {
 func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 
 	// Make sure number of non-newaxis is not exceed number of dimensions
-	var nonNewAxis []TensorIndexer
+	var numNewAxis int = 0
 	for _, ti := range indexSpec {
-		if reflect.ValueOf(ti).String() != "InsertNewAxis" {
-			nonNewAxis = append(nonNewAxis, ti)
+		if reflect.TypeOf(ti).Name() == "InsertNewAxis" {
+			numNewAxis += 1
 		}
 	}
+
 	tsShape, err := ts.Size()
 	if err != nil {
 		return retVal, err
 	}
 	tsLen := len(tsShape)
-	if len(nonNewAxis) > tsLen {
+	if len(indexSpec) > tsLen+numNewAxis {
 		err = fmt.Errorf("Too many indices for tensor of dimension %v\n", tsLen)
 		return retVal, err
 	}
@@ -253,6 +254,7 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 
 		switch reflect.TypeOf(spec).Name() {
 		case "InsertNewAxis":
+			fmt.Println(currIdx)
 			nextTensor, err = currTensor.Unsqueeze(currIdx, true)
 			if err != nil {
 				return retVal, err

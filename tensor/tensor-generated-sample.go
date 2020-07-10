@@ -1966,3 +1966,123 @@ func (ts Tensor) MustReflectionPad2d(paddingData []int64) (retVal Tensor) {
 
 	return retVal
 }
+
+func Arange(end Scalar, kind gotch.DType, device gotch.Device) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgArange(ptr, end.cscalar, kind.CInt(), device.CInt())
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+
+}
+
+func MustArange(end Scalar, kind gotch.DType, device gotch.Device) (retVal Tensor) {
+
+	retVal, err := Arange(end, kind, device)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func Arange1(start Scalar, end Scalar, kind gotch.DType, device gotch.Device) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgArange1(ptr, start.cscalar, end.cscalar, kind.CInt(), device.CInt())
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+
+}
+
+func MustArange1(start, end Scalar, kind gotch.DType, device gotch.Device) (retVal Tensor) {
+
+	retVal, err := Arange1(start, end, kind, device)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func Arange2(start Scalar, end Scalar, step Scalar, kind gotch.DType, device gotch.Device) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgArange2(ptr, start.cscalar, end.cscalar, step.cscalar, kind.CInt(), device.CInt())
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustArange2(start Scalar, end Scalar, step Scalar, kind gotch.DType, device gotch.Device) (retVal Tensor) {
+
+	retVal, err := Arange2(start, end, step, kind, device)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func ArangeOut(out Tensor, end Scalar) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgArangeOut(ptr, out.ctensor, end.cscalar)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustArangeOut(out Tensor, end Scalar) (retVal Tensor) {
+	retVal, err := ArangeOut(out, end)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func ArangeOut1(out Tensor, start, end Scalar) (retVal Tensor, err error) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgArangeOut1(ptr, out.ctensor, start.cscalar, end.cscalar)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func MustArangeOut1(out Tensor, start, end Scalar) (retVal Tensor) {
+	retVal, err := ArangeOut1(out, start, end)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}

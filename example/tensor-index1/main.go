@@ -1,27 +1,25 @@
 package main
 
 import (
-	// "github.com/sugarme/gotch"
+	"fmt"
+
+	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
 )
 
 func main() {
-	data := [][]int64{
-		{1, 1, 1, 2, 2, 2, 3, 3},
-		{1, 1, 1, 2, 2, 2, 4, 4},
-	}
-	// shape := []int64{2, 8}
-	shape := []int64{2, 2, 4}
 
-	t, err := ts.NewTensorFromData(data, shape)
-	if err != nil {
-		panic(err)
+	tensor := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(2*3), gotch.Int64, gotch.CPU).MustView([]int64{2, 3}, true)
+
+	var idxs []ts.TensorIndexer = []ts.TensorIndexer{
+		// ts.NewNarrow(0, tensor.MustSize()[0]),
+		// ts.NewNarrow(0, tensor.MustSize()[1]),
+		ts.NewInsertNewAxis(),
 	}
 
-	t.Print()
+	result := tensor.Idx(idxs)
 
-	idx := ts.NewNarrow(0, 3)
+	fmt.Printf("Original Ts shape: %v\n", tensor.MustSize())
+	fmt.Printf("Result Ts shape: %v\n", result.MustSize())
 
-	selTs := t.Idx(idx)
-	selTs.Print()
 }
