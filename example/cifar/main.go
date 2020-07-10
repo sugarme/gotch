@@ -156,7 +156,8 @@ func main() {
 
 			devicedData := item.Data.MustTo(vs.Device(), true)
 			devicedLabel := item.Label.MustTo(vs.Device(), true)
-			bimages := vision.Augmentation(devicedData, true, 4, 8)
+			// bimages := vision.Augmentation(devicedData, true, 4, 8)
+			bimages := vision.Augmentation(devicedData, true, 32, 8)
 
 			logits := net.ForwardT(bimages, true)
 
