@@ -148,12 +148,21 @@ func RandomCutout(t ts.Tensor, sz int64) (retVal ts.Tensor) {
 		wIdx := ts.NewNarrow(int64(startW), int64(startW)+sz)
 		srcIdx = append(srcIdx, nIdx, cIdx, hIdx, wIdx)
 
-		// TODO: there's memory blow-up here. Need to fix.
+		// NOTE: using ts.Fill_() causes memory blow-up. Why???
 		// view := output.Idx(srcIdx)
 		// zeroSc := ts.FloatScalar(0.0)
 		// view.Fill_(zeroSc)
 		// zeroSc.MustDrop()
 		// view.MustDrop()
+
+		view := output.Idx(srcIdx)
+		zeroTs, err := view.ZerosLike(false)
+		if err != nil {
+			log.Fatal(err)
+		}
+		view.Copy_(zeroTs)
+		zeroTs.MustDrop()
+		view.MustDrop()
 	}
 
 	return output
