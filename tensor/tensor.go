@@ -958,6 +958,13 @@ func NoGrad1(fn func() interface{}) (retVal interface{}) {
 }
 
 // NoGradGuard is a RAII guard that prevents gradient tracking until deallocated.
+// It actually sets a global flag that is checked by the backend whenever an op is done on a variable.
+// The guard itself saved the current status and set it to false in the constructor.
+// And restore the saved status in it’s destructor.
+// That way it is similar to a with torch.no_grad(): block in python.
+// Ref. https://discuss.pytorch.org/t/how-does-nogradguard-works-in-cpp/34960/2
+//
+// TODO: should we implement Go `mutex` here???
 type NoGradGuard struct {
 	enabled bool
 }

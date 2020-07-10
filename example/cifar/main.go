@@ -154,9 +154,9 @@ func main() {
 			loss.MustDrop()
 		}
 
-		// testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
-		// fmt.Printf("Epoch:\t %v\t Loss: \t %.3f \tAcc: %10.2f%%\n", epoch, lossVal, testAcc*100.0)
-		fmt.Printf("Epoch: %10.0d\tLoss:%10.3f\n", epoch, lossVal)
+		testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
+		fmt.Printf("Epoch:\t %v\t Loss: \t %.3f \tAcc: %10.2f%%\n", epoch, lossVal, testAcc*100.0)
+		// fmt.Printf("Epoch: %10.0d\tLoss:%10.3f\n", epoch, lossVal)
 		iter.Drop()
 
 		/*
