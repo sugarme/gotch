@@ -125,6 +125,8 @@ func runCNN1() {
 			logits := net.ForwardT(bImages, true)
 			loss := logits.CrossEntropyForLogits(bLabels)
 
+			// loss = loss.MustSetRequiresGrad(true)
+
 			opt.BackwardStep(loss)
 
 			epocLoss = loss.MustShallowClone()
@@ -138,10 +140,12 @@ func runCNN1() {
 			// loss.MustDrop()
 		}
 
-		// testAccuracy := ts.BatchAccuracyForLogitsIdx(net, testImages, testLabels, vs.Device(), 1024)
-		// fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss.Values()[0], testAccuracy*100)
+		vs.Freeze()
+		testAccuracy := batchAccuracyForLogits(net, testImages, testLabels, vs.Device(), 1024)
+		vs.Unfreeze()
+		fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss.Values()[0], testAccuracy*100.0)
 
-		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\n", epoch, epocLoss.Values()[0])
+		// fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\n", epoch, epocLoss.Values()[0])
 		epocLoss.MustDrop()
 		imagesTs.MustDrop()
 		labelsTs.MustDrop()
@@ -197,13 +201,47 @@ func runCNN2() {
 			loss.MustDrop()
 		}
 
-		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\n", epoch, lossVal)
+		// fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\n", epoch, lossVal)
 
-		// testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), batchCNN)
-		// fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\t Accuracy: %.2f\n", epoch, lossVal, testAcc*100)
+		vs.Freeze()
+		testAcc := batchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), batchCNN)
+		vs.Unfreeze()
+		fmt.Printf("Epoch:\t %v\tLoss: \t %.2f\t Accuracy: %.2f\n", epoch, lossVal, testAcc*100.0)
 	}
 
 	testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), batchCNN)
 	fmt.Printf("Loss: \t %.2f\t Accuracy: %.2f\n", lossVal, testAcc*100)
 	fmt.Printf("Taken time:\t%.2f mins\n", time.Since(startTime).Minutes())
+}
+
+func batchAccuracyForLogits(m ts.ModuleT, xs, ys ts.Tensor, d gotch.Device, batchSize int) (retVal float64) {
+
+	var (
+		sumAccuracy float64 = 0.0
+		sampleCount float64 = 0.0
+	)
+
+	iter2 := ts.MustNewIter2(xs, ys, int64(batchSize))
+	for {
+		item, ok := iter2.Next()
+		if !ok {
+			break
+		}
+
+		size := float64(item.Data.MustSize()[0])
+		bImages := item.Data.MustTo(d, true)
+		bLabels := item.Label.MustTo(d, true)
+
+		logits := m.ForwardT(bImages, false)
+		acc := logits.AccuracyForLogits(bLabels)
+		sumAccuracy += acc.Values()[0] * size
+		sampleCount += size
+
+		bImages.MustDrop()
+		bLabels.MustDrop()
+		acc.MustDrop()
+	}
+
+	return sumAccuracy / sampleCount
+
 }
