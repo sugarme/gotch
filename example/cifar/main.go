@@ -120,9 +120,10 @@ func main() {
 
 	var bestAccuracy float64
 
-	for epoch := 0; epoch < 150; epoch++ {
+	batchSize := 512
+	for epoch := 0; epoch < 350; epoch++ {
 		// opt.SetLR(learningRate(epoch))
-		optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4, true)
+		optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4*float64(batchSize), true)
 		var opt nn.Optimizer
 		var err error
 		switch {
@@ -156,8 +157,7 @@ func main() {
 
 			devicedData := item.Data.MustTo(vs.Device(), true)
 			devicedLabel := item.Label.MustTo(vs.Device(), true)
-			// bimages := vision.Augmentation(devicedData, true, 4, 8)
-			bimages := vision.Augmentation(devicedData, true, 32, 8)
+			bimages := vision.Augmentation(devicedData, true, 4, 8)
 
 			logits := net.ForwardT(bimages, true)
 
