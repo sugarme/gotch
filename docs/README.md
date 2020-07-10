@@ -36,6 +36,7 @@
 - [Alexnet](vision-alexnet.md)
 - [Densenet](vision-densenet.md)
 - [Efficientnet](vision-efficientnet.md)
+- [Resnet](vision-resnet.md)
 - [Inception](vision-inception.md)
 - [Squeezenet](vision-squeezenet.md)
 - [Mobilenet](vision-mobilenet.md)
