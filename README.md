@@ -47,6 +47,10 @@
 
 - Other examples can be found at `example` folder
 
+## [Documentations](docs/README.md)
+
+## [Examples](example/README.md)
+
 
 ### 3. Notes on running examples
 
