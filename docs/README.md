@@ -4,4 +4,4 @@
 
 ### Tensor
 
-    1. [Tensor indexing]("./tensor-indexing.md")
+    1. [Tensor indexing](tensor-operations.md)
