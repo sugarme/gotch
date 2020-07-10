@@ -101,6 +101,12 @@ func NewInsertNewAxis() InsertNewAxis {
 	return InsertNewAxis{}
 }
 
+func NewSliceIndex(sl []int64) IndexSelect {
+	ts := MustOfSlice(sl)
+
+	return IndexSelect{Index: ts}
+}
+
 // type SelectFn func(int64)
 // type NarrowFn func(from int64, to int64)
 // type IndexSelectFn func(ts Tensor)
