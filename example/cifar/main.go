@@ -120,10 +120,9 @@ func main() {
 
 	var bestAccuracy float64
 
-	batchSize := 512
 	for epoch := 0; epoch < 350; epoch++ {
 		// opt.SetLR(learningRate(epoch))
-		optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4*float64(batchSize), true)
+		optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4, true)
 		var opt nn.Optimizer
 		var err error
 		switch {
