@@ -119,7 +119,6 @@ func MobileNetV2(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 
 		tmp2 := tmp1.MustMean1([]int64{2}, false, gotch.Float, true)
 		tmp3 := tmp2.MustMean1([]int64{2}, false, gotch.Float, true)
-		tmp2.MustDrop()
 
 		res := tmp3.ApplyT(classifier, train)
 		tmp3.MustDrop()

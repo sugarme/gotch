@@ -104,5 +104,7 @@ func AlexNet(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 		return res
 	}))
 
+	seq.Add(classifier(p.Sub("classifier"), nclasses))
+
 	return seq
 }
