@@ -883,6 +883,22 @@ func (ts Tensor) MustDiv(other Tensor, del bool) (retVal Tensor) {
 	return retVal
 }
 
+func (ts Tensor) Div_(other Tensor) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgDiv_(ptr, ts.ctensor, other.ctensor)
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (ts Tensor) Div1_(other Scalar) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgDiv1_(ptr, ts.ctensor, other.cscalar)
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func Randperm(n int64, optionKind gotch.DType, optionDevice gotch.Device) (retVal Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
@@ -1215,6 +1231,15 @@ func (ts Tensor) Sub_(other Tensor) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	lib.AtgSub_(ptr, ts.ctensor, other.ctensor)
+	err := TorchErr()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (ts Tensor) Sub1_(other Scalar) {
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgSub1_(ptr, ts.ctensor, other.cscalar)
 	err := TorchErr()
 	if err != nil {
 		log.Fatal(err)

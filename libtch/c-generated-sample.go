@@ -270,6 +270,16 @@ func AtgDiv(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_div(ptr, self, other)
 }
 
+// void atg_div_(tensor *, tensor self, tensor other);
+func AtgDiv_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_div_(ptr, self, other)
+}
+
+// void atg_div_1(tensor *, tensor self, scalar other);
+func AtgDiv1_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_div_1(ptr, self, other)
+}
+
 // void atg_randperm(tensor *, int64_t n, int options_kind, int options_device);
 func AtgRandperm(ptr *Ctensor, n int64, optionKind int32, optionDevice int32) {
 	cn := *(*C.int64_t)(unsafe.Pointer(&n))
@@ -356,6 +366,11 @@ func AtgSub1(ptr *Ctensor, self Ctensor, other Cscalar) {
 // void atg_sub_(tensor *, tensor self, tensor other);
 func AtgSub_(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_sub_(ptr, self, other)
+}
+
+// void atg_sub_1(tensor *, tensor self, scalar other);
+func AtgSub1_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_sub_1(ptr, self, other)
 }
 
 // void atg_conv1d(tensor *, tensor input, tensor weight, tensor bias, int64_t *stride_data, int stride_len, int64_t *padding_data, int padding_len, int64_t *dilation_data, int dilation_len, int64_t groups);
