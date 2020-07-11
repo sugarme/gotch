@@ -1,7 +1,5 @@
 package tensor
 
-import "github.com/sugarme/gotch"
-
 // Module interface is a container with only one method `Forward`
 //
 // The following is `module` concept from Pytorch documenation:
@@ -52,108 +50,50 @@ type ModuleT interface {
  * }
  *  */
 
-// BatchAccuracyForLigits calculate accuracy in batch.
-//
-// TODO: It would be nice if it is one method an object that implements ModuleT
-// interface.
-func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize int) (retVal float64) {
-
-	var (
-		sumAccuracy float64 = 0.0
-		sampleCount float64 = 0.0
-	)
-
-	_ = MustGradSetEnabled(false)
-
-	iter2 := MustNewIter2(xs, ys, int64(batchSize))
-	for {
-		item, ok := iter2.Next()
-		if !ok {
-			break
-		}
-
-		size := float64(item.Data.MustSize()[0])
-		bImages := item.Data.MustTo(d, true)
-		bLabels := item.Label.MustTo(d, true)
-
-		logits := m.ForwardT(bImages, false)
-		acc := logits.AccuracyForLogits(bLabels)
-		sumAccuracy += acc.Values()[0] * size
-		sampleCount += size
-
-		bImages.MustDrop()
-		bLabels.MustDrop()
-		acc.MustDrop()
-	}
-
-	_ = MustGradSetEnabled(true)
-
-	return sumAccuracy / sampleCount
-
-}
-
-// BatchAccuracyForLogitIdx is an alternative of BatchAccuracyForLogits to
-// calculate accuracy for specified batch on module weight. It uses tensor
-// indexing instead of Iter2
-func BatchAccuracyForLogitsIdx(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize int) (retVal float64) {
-	var (
-		sumAccuracy float64 = 0.0
-		sampleCount float64 = 0.0
-	)
-
-	// Switch Grad off
-	_ = NewNoGradGuard()
-
-	totalSize := xs.MustSize()[0]
-	samples := int(totalSize)
-
-	index := MustRandperm(int64(totalSize), gotch.Int64, gotch.CPU)
-	imagesTs := xs.MustIndexSelect(0, index, false)
-	labelsTs := ys.MustIndexSelect(0, index, false)
-
-	batches := samples / batchSize
-	batchIndex := 0
-
-	for i := 0; i < batches; i++ {
-		start := batchIndex * batchSize
-		size := batchSize
-		if samples-start < batchSize {
-			// size = samples - start
-			break
-		}
-		batchIndex += 1
-
-		// Indexing
-		narrowIndex := NewNarrow(int64(start), int64(start+size))
-		bImages := imagesTs.Idx(narrowIndex)
-		bLabels := labelsTs.Idx(narrowIndex)
-
-		bImages = bImages.MustTo(d, true)
-		bLabels = bLabels.MustTo(d, true)
-
-		logits := m.ForwardT(bImages, true)
-		bAccuracy := logits.AccuracyForLogits(bLabels)
-
-		accuVal := bAccuracy.Values()[0]
-		bSamples := float64(xs.MustSize()[0])
-		sumAccuracy += accuVal * bSamples
-		sampleCount += bSamples
-
-		// Free up tensors on C memory
-		bImages.MustDrop()
-		bLabels.MustDrop()
-		// logits.MustDrop()
-		bAccuracy.MustDrop()
-	}
-
-	imagesTs.MustDrop()
-	labelsTs.MustDrop()
-
-	// Switch Grad on
-	// _ = MustGradSetEnabled(true)
-
-	return sumAccuracy / sampleCount
-}
+// NOTE: this func has been moved to `nn/sequential` as `NoGradGuard`
+// seem not working in Go and the function needs to add varstore variable
+// parameter. Hence, it is moved to `nn` to avoid cycle reference.
+/*
+ * // BatchAccuracyForLigits calculate accuracy in batch.
+ * //
+ * // TODO: It would be nice if it is one method an object that implements ModuleT
+ * // interface.
+ * func BatchAccuracyForLogits(m ModuleT, xs, ys Tensor, d gotch.Device, batchSize int) (retVal float64) {
+ *
+ *   var (
+ *     sumAccuracy float64 = 0.0
+ *     sampleCount float64 = 0.0
+ *   )
+ *
+ *   _ = MustGradSetEnabled(false)
+ *
+ *   iter2 := MustNewIter2(xs, ys, int64(batchSize))
+ *   for {
+ *     item, ok := iter2.Next()
+ *     if !ok {
+ *       break
+ *     }
+ *
+ *     size := float64(item.Data.MustSize()[0])
+ *     bImages := item.Data.MustTo(d, true)
+ *     bLabels := item.Label.MustTo(d, true)
+ *
+ *     logits := m.ForwardT(bImages, false)
+ *     acc := logits.AccuracyForLogits(bLabels)
+ *     sumAccuracy += acc.Values()[0] * size
+ *     sampleCount += size
+ *
+ *     bImages.MustDrop()
+ *     bLabels.MustDrop()
+ *     acc.MustDrop()
+ *   }
+ *
+ *   _ = MustGradSetEnabled(true)
+ *
+ *   return sumAccuracy / sampleCount
+ *
+ * }
+ *  */
 
 // Tensor methods for Module and ModuleT:
 // ======================================

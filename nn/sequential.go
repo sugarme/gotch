@@ -3,6 +3,7 @@ package nn
 // A sequential layer used to chain multiple layers and closures.
 
 import (
+	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
 	// "reflect"
 )
@@ -223,4 +224,105 @@ type ForwardTWith func(ts.Tensor, bool) ts.Tensor
 
 func (fw ForwardTWith) ForwardT(xs ts.Tensor, train bool) ts.Tensor {
 	return fw(xs, train)
+}
+
+// BatchAccuracyForLogits calculates average accuracy of test batches.
+//
+// NOTE: Pytorch uses `NoGradGuard` which is a thread local scope and
+// it sets a global flag that is checked by the backend whenever an op is done on a variable.
+// The guard itself saved the current status and set it to false in the constructor.
+// And restore the saved status in it’s destructor. That way it is similar to a with torch.no_grad(): block in python.
+// This seems not working in Go.
+// There 2 ways to get around. One is freeze VarStore, the other is
+// set manually set AutoGrad at `loss` tensor. I.e., `loss = loss.MustSetRequiresGrad(true)`
+func BatchAccuracyForLogits(vs VarStore, m ts.ModuleT, xs, ys ts.Tensor, d gotch.Device, batchSize int) (retVal float64) {
+
+	var (
+		sumAccuracy float64 = 0.0
+		sampleCount float64 = 0.0
+	)
+
+	vs.Freeze()
+	defer vs.Unfreeze()
+
+	iter2 := ts.MustNewIter2(xs, ys, int64(batchSize))
+	for {
+		item, ok := iter2.Next()
+		if !ok {
+			break
+		}
+
+		size := float64(item.Data.MustSize()[0])
+		bImages := item.Data.MustTo(d, true)
+		bLabels := item.Label.MustTo(d, true)
+
+		logits := m.ForwardT(bImages, false)
+		acc := logits.AccuracyForLogits(bLabels)
+		sumAccuracy += acc.Values()[0] * size
+		sampleCount += size
+
+		bImages.MustDrop()
+		bLabels.MustDrop()
+		acc.MustDrop()
+	}
+
+	return sumAccuracy / sampleCount
+}
+
+// BatchAccuracyForLogitIdx is an alternative of BatchAccuracyForLogits to
+// calculate accuracy for specified batch on module weight. It uses tensor
+// indexing instead of Iter2
+func BatchAccuracyForLogitsIdx(vs VarStore, m ts.ModuleT, xs, ys ts.Tensor, d gotch.Device, batchSize int) (retVal float64) {
+	var (
+		sumAccuracy float64 = 0.0
+		sampleCount float64 = 0.0
+	)
+
+	totalSize := xs.MustSize()[0]
+	samples := int(totalSize)
+
+	index := ts.MustRandperm(int64(totalSize), gotch.Int64, gotch.CPU)
+	imagesTs := xs.MustIndexSelect(0, index, false)
+	labelsTs := ys.MustIndexSelect(0, index, false)
+
+	batches := samples / batchSize
+	batchIndex := 0
+
+	vs.Freeze()
+	defer vs.Unfreeze()
+
+	for i := 0; i < batches; i++ {
+		start := batchIndex * batchSize
+		size := batchSize
+		if samples-start < batchSize {
+			break
+		}
+		batchIndex += 1
+
+		// Indexing
+		narrowIndex := ts.NewNarrow(int64(start), int64(start+size))
+		bImages := imagesTs.Idx(narrowIndex)
+		bLabels := labelsTs.Idx(narrowIndex)
+
+		bImages = bImages.MustTo(d, true)
+		bLabels = bLabels.MustTo(d, true)
+
+		logits := m.ForwardT(bImages, true)
+		bAccuracy := logits.AccuracyForLogits(bLabels)
+
+		accuVal := bAccuracy.Values()[0]
+		bSamples := float64(xs.MustSize()[0])
+		sumAccuracy += accuVal * bSamples
+		sampleCount += bSamples
+
+		// Free up tensors on C memory
+		bImages.MustDrop()
+		bLabels.MustDrop()
+		bAccuracy.MustDrop()
+	}
+
+	imagesTs.MustDrop()
+	labelsTs.MustDrop()
+
+	return sumAccuracy / sampleCount
 }

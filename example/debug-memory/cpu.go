@@ -1,10 +1,8 @@
-// A wrapper around the linux syscall sysinfo(2).
-package gotch
+package main
 
 // helper to debug memory blow-up
 
 import (
-	"fmt"
 	"sync"
 	"syscall"
 	"time"
@@ -36,7 +34,7 @@ var sis = &SI{}
 // https://github.com/capnm/golang/blob/go1.1.1/src/pkg/syscall/zsyscall_linux_amd64.go#L1050
 // https://github.com/capnm/golang/blob/go1.1.1/src/pkg/syscall/ztypes_linux_amd64.go#L528
 // https://github.com/capnm/golang/blob/go1.1.1/src/pkg/syscall/ztypes_linux_arm.go#L502
-func GetSysInfo() *SI {
+func CPUInfo() *SI {
 
 	/*
 	   // Note: uint64 is uint32 on 32 bit CPUs
@@ -90,37 +88,4 @@ func GetSysInfo() *SI {
 	sis.FreeHighRam = uint64(si.Freehigh) / unit
 
 	return sis
-}
-
-// Make the "fmt" Stringer interface happy.
-func (si SI) String() string {
-	// XXX: Is the copy of SI done atomic? Not sure.
-	// Without an outer lock this may print a junk.
-	return fmt.Sprintf("uptime\t\t%v\nload\t\t%2.2f %2.2f %2.2f\nprocs\t\t%d\n"+
-		"ram  total\t%d kB\nram  free\t%d kB\nram  buffer\t%d kB\n"+
-		"swap total\t%d kB\nswap free\t%d kB",
-		//"high ram total\t%d kB\nhigh ram free\t%d kB\n"
-		si.Uptime, si.Loads[0], si.Loads[1], si.Loads[2], si.Procs,
-		si.TotalRam, si.FreeRam, si.BufferRam,
-		si.TotalSwap, si.FreeSwap,
-		// archaic si.TotalHighRam, si.FreeHighRam
-	)
-}
-
-/*
-Convert to string in a thread safe way.
- Output:
-	uptime		279h6m21s
-	load		0.12 0.04 0.05
-	procs		143
-	ram  total	383752 kB
-	ram  free	254980 kB
-	ram  buffer	7640 kB
-	swap total	887800 kB
-	swap free	879356 kB
-*/
-func (si *SI) ToString() string {
-	defer si.mu.Unlock()
-	si.mu.Lock()
-	return si.String()
 }

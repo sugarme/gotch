@@ -13,21 +13,21 @@
 - Run with `go clean -cache -testcache && go run . -model="linear"`
 
 
-- Accuraccy should be about **91.68%**.
+- Accuracy should be about **91.68%**.
 
 
 ## Neural Network (NN)
 
 - Run with `go clean -cache -testcache && go run . -model="nn"`
 
-- Accuraccy should be about **TODO: update%**.
+- Accuracy should be about **94%**.
 
 
 ## Convolutional Neural Network (CNN)
 
 - Run with `go clean -cache -testcache && go run . -model="cnn"`
 
-- Accuraccy should be about **TODO: update%**.
+- Accuracy should be about **99.3%**.
 
 
 

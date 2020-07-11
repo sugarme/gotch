@@ -10,7 +10,6 @@ package main
 import (
 	"fmt"
 	"log"
-	// "os/exec"
 	"time"
 
 	"github.com/sugarme/gotch"
@@ -80,17 +79,6 @@ func fastResnet(p nn.Path) (retVal nn.SequentialT) {
 	return seq
 }
 
-func learningRate(epoch int) (retVal float64) {
-	switch {
-	case epoch < 50:
-		return 0.1
-	case epoch < 100:
-		return 0.01
-	default:
-		return 0.001
-	}
-}
-
 func main() {
 	dir := "../../data/cifar10"
 	ds := vision.CFLoadDir(dir)
@@ -103,50 +91,42 @@ func main() {
 
 	cuda := gotch.CudaBuilder(0)
 	device := cuda.CudaIfAvailable()
-	// device := gotch.CPU
 
 	vs := nn.NewVarStore(device)
 
 	net := fastResnet(vs.Root())
-
-	// optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4, true)
-	// opt, err := optConfig.Build(vs, 0.01)
-	// if err != nil {
-	// log.Fatal(err)
-	// }
 
 	var lossVal float64
 	startTime := time.Now()
 
 	var bestAccuracy float64
 
-	for epoch := 0; epoch < 350; epoch++ {
-		// opt.SetLR(learningRate(epoch))
+	for epoch := 0; epoch < 150; epoch++ {
 		optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4, true)
-		var opt nn.Optimizer
-		var err error
+		var (
+			opt nn.Optimizer
+			err error
+		)
 		switch {
-		case epoch < 150:
+		case epoch < 50:
 			opt, err = optConfig.Build(vs, 0.1)
 			if err != nil {
 				log.Fatal(err)
 			}
-		case epoch < 250:
+		case epoch < 100:
 			opt, err = optConfig.Build(vs, 0.01)
 			if err != nil {
 				log.Fatal(err)
 			}
-		case epoch >= 250:
+		case epoch >= 100:
 			opt, err = optConfig.Build(vs, 0.001)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
-		// iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(64))
-		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(128))
+		iter := ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, int64(64))
 		iter.Shuffle()
-		// iter = iter.ToDevice(device)
 
 		for {
 			item, ok := iter.Next()
@@ -171,63 +151,14 @@ func main() {
 			loss.MustDrop()
 		}
 
-		vs.Freeze()
-		testAcc := batchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 100)
-		vs.Unfreeze()
+		testAcc := nn.BatchAccuracyForLogits(vs, net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
 		fmt.Printf("Epoch:\t %v\t Loss: \t %.3f \tAcc: %10.2f%%\n", epoch, lossVal, testAcc*100.0)
-		// fmt.Printf("Epoch: %10.0d\tLoss:%10.3f\n", epoch, lossVal)
 		if testAcc > bestAccuracy {
 			bestAccuracy = testAcc
 		}
 		iter.Drop()
-
-		/*
-		 *     // Print out GPU used
-		 *     nvidia := "nvidia-smi"
-		 *     cmd := exec.Command(nvidia)
-		 *     stdout, err := cmd.Output()
-		 *
-		 *     if err != nil {
-		 *       log.Fatal(err.Error())
-		 *     }
-		 *
-		 *     fmt.Println(string(stdout))
-		 *  */
 	}
 
-	// testAcc := ts.BatchAccuracyForLogits(net, ds.TestImages, ds.TestLabels, vs.Device(), 512)
 	fmt.Printf("Best Accuracy: %10.2f%%\n", bestAccuracy*100.0)
 	fmt.Printf("Taken time:\t%.2f mins\n", time.Since(startTime).Minutes())
-}
-
-func batchAccuracyForLogits(m ts.ModuleT, xs, ys ts.Tensor, d gotch.Device, batchSize int) (retVal float64) {
-
-	var (
-		sumAccuracy float64 = 0.0
-		sampleCount float64 = 0.0
-	)
-
-	iter2 := ts.MustNewIter2(xs, ys, int64(batchSize))
-	for {
-		item, ok := iter2.Next()
-		if !ok {
-			break
-		}
-
-		size := float64(item.Data.MustSize()[0])
-		bImages := item.Data.MustTo(d, true)
-		bLabels := item.Label.MustTo(d, true)
-
-		logits := m.ForwardT(bImages, false)
-		acc := logits.AccuracyForLogits(bLabels)
-		sumAccuracy += acc.Values()[0] * size
-		sampleCount += size
-
-		bImages.MustDrop()
-		bLabels.MustDrop()
-		acc.MustDrop()
-	}
-
-	return sumAccuracy / sampleCount
-
 }
