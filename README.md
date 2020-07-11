@@ -9,7 +9,7 @@
 - It is currently in heavy development mode and is considered **unstable** until
     version v1.0.0 is marked. Hence, one can use it with own risk. 
 
-- One goal of this package is to create a thin wrapper of Libtorch to make use of
+- This package is to create a thin wrapper of Libtorch to make use of
     its tensor APIs and CUDA support while implementing as much
     idiomatic Go as possible. 
 
