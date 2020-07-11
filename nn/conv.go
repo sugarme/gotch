@@ -170,19 +170,43 @@ func buildConvConfig(ksizes []int64) interface{} {
 	}
 }
 
+// NewConv is a generic builder to build Conv1D, Conv2D, Conv3D. It returns
+// an interface Conv which might need a type assertion for further use.
 func NewConv(vs Path, inDim, outDim int64, ksizes []int64, config interface{}) Conv {
-	// config := buildConvConfig(ksizes)
 
 	configT := reflect.TypeOf(config)
 
 	switch {
 	case len(ksizes) == 1 && configT.Name() == "Conv1DConfig":
-		return NewConv1D(&vs, inDim, outDim, ksizes[0], config.(Conv1DConfig))
+		var conv Conv1D
+		conv.Config = config.(Conv1DConfig)
+		if config.(Conv1DConfig).Bias {
+			conv.Bs = vs.NewVar("bias", []int64{outDim}, config.(Conv1DConfig).BsInit)
+		}
+		weightSize := []int64{outDim, int64(inDim / config.(Conv1DConfig).Groups)}
+		weightSize = append(weightSize, ksizes...)
+		conv.Ws = vs.NewVar("weight", weightSize, config.(Conv1DConfig).WsInit)
+		return conv
 	case len(ksizes) == 2 && configT.Name() == "Conv2DConfig":
-		return NewConv2D(vs, inDim, outDim, ksizes[0], config.(Conv2DConfig))
+		var conv Conv2D
+		conv.Config = config.(Conv2DConfig)
+		if config.(Conv2DConfig).Bias {
+			conv.Bs = vs.NewVar("bias", []int64{outDim}, config.(Conv2DConfig).BsInit)
+		}
+		weightSize := []int64{outDim, int64(inDim / config.(Conv2DConfig).Groups)}
+		weightSize = append(weightSize, ksizes...)
+		conv.Ws = vs.NewVar("weight", weightSize, config.(Conv2DConfig).WsInit)
+		return conv
 	case len(ksizes) == 3 && configT.Name() == "Conv3DConfig":
-		return NewConv3D(&vs, inDim, outDim, ksizes[0], config.(Conv3DConfig))
-
+		var conv Conv3D
+		conv.Config = config.(Conv3DConfig)
+		if config.(Conv3DConfig).Bias {
+			conv.Bs = vs.NewVar("bias", []int64{outDim}, config.(Conv3DConfig).BsInit)
+		}
+		weightSize := []int64{outDim, int64(inDim / config.(Conv3DConfig).Groups)}
+		weightSize = append(weightSize, ksizes...)
+		conv.Ws = vs.NewVar("weight", weightSize, config.(Conv3DConfig).WsInit)
+		return conv
 	default:
 		err := fmt.Errorf("Expected nd length from 1 to 3. Got %v\n", len(ksizes))
 		panic(err)

@@ -81,7 +81,9 @@ func inceptionA(p nn.Path, cIn, cPool int64) (retVal ts.ModuleT) {
 		bpoolTmp := xs.MustAvgPool2D([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
 		bpoolTs := bpoolTmp.ApplyT(bpool, train)
 
-		return ts.MustCat([]ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1, true)
+		res := ts.MustCat([]ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1, true)
+
+		return res
 	})
 }
 
@@ -102,7 +104,9 @@ func inceptionB(p nn.Path, cIn int64) (retVal ts.ModuleT) {
 
 		bpoolTs := inMaxPool2D(xs, 3, 2)
 
-		return ts.MustCat([]ts.Tensor{b1Ts, b2Ts, bpoolTs}, 1, true)
+		res := ts.MustCat([]ts.Tensor{b1Ts, b2Ts, bpoolTs}, 1, true)
+
+		return res
 	})
 }
 
@@ -122,7 +126,7 @@ func inceptionC(p nn.Path, cIn int64, c7 int64) (retVal ts.ModuleT) {
 
 	bpool := convBn(p.Sub("branch_pool"), cIn, 192, 1, 0, 1)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs ts.Tensor, train bool) (res ts.Tensor) {
 		b1Ts := xs.ApplyT(b1, train)
 
 		b2Tmp1 := xs.ApplyT(b21, train)
@@ -144,7 +148,9 @@ func inceptionC(p nn.Path, cIn int64, c7 int64) (retVal ts.ModuleT) {
 		bpTmp1 := xs.MustAvgPool2D([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
 		bpoolTs := bpTmp1.ApplyT(bpool, train)
 
-		return ts.MustCat([]ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1, true)
+		res = ts.MustCat([]ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1, true)
+
+		return res
 
 	})
 }
