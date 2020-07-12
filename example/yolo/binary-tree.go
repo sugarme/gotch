@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 )
 
 const (
@@ -28,7 +30,11 @@ type Node struct {
 
 // NewTree creates a tree with a specified comparator
 func NewTree(c Comparator) *Tree {
-	return &Tree{Comparator: c}
+	return &Tree{
+		Root:       nil,
+		Comparator: c,
+		size:       0,
+	}
 }
 
 // Put inserts a node to tree
@@ -38,13 +44,12 @@ func (t *Tree) Put(k interface{}, v interface{}) (err error) {
 	if t.Root == nil {
 		t.Comparator = t.Comparator.Init()
 		t.Root = &Node{Key: k, Value: v, color: red}
-		err = nil
+		insertedNode = t.Root
 	} else {
 		node := t.Root
 
 		var loop bool = true
 		for loop {
-
 			switch t.Comparator.Compare(k, node.Key) {
 			case 0:
 				node.Key = k
@@ -168,6 +173,225 @@ func (t *Tree) Values() (retVal []interface{}) {
 	return vals
 }
 
+// Left returns the left-most (min) node or nil if tree is empty.
+func (t *Tree) Left() *Node {
+	var parent *Node
+	current := t.Root
+	for current != nil {
+		parent = current
+		current = current.Left
+	}
+	return parent
+}
+
+// Right returns the right-most (max) node or nil if tree is empty.
+func (t *Tree) Right() *Node {
+	var parent *Node
+	current := t.Root
+	for current != nil {
+		parent = current
+		current = current.Right
+	}
+	return parent
+}
+
+// Floor finds floor node of the input key.
+//
+// NOTE: `floor node` is defined as the largest node that is smaller or equal
+// to given node. There may be no floor node if the tree is empty or all nodes
+// in the tree are larger than the given node.
+func (t *Tree) Floor(k interface{}) (retVal *Node, found bool) {
+	found = false
+	root := t.Root
+
+	for root != nil {
+		switch t.Comparator.Compare(k, root.Key) {
+		case 0:
+			return root, true
+		case -1:
+			root = root.Left
+		case 1:
+			retVal, found = root, true
+			root = root.Right
+		}
+	}
+
+	if !found {
+		return nil, false
+	}
+
+	return retVal, found
+}
+
+// Ceil returns the ceiling node of the input node.
+//
+// Ceiling node is defined as the smallest node that is larger or
+// equal to the given node. There may not have a ceiling node if
+// tree is empty or all other nodes in the tree are smaller than
+// the given node.
+func (t *Tree) Ceil(k interface{}) (retVal *Node, found bool) {
+	found = false
+	root := t.Root
+
+	for root != nil {
+		switch t.Comparator.Compare(k, root.Key) {
+		case 0:
+			return root, true
+		case -1:
+			retVal, found = root, true
+			root = root.Left
+		case 1:
+			root = root.Right
+		}
+	}
+
+	if !found {
+		return nil, false
+	}
+
+	return retVal, found
+}
+
+// Clear deletes all nodes
+func (t *Tree) Clear() {
+	t.Root = nil
+	t.size = 0
+}
+
+// String returns a string representation of the tree.
+func (t *Tree) String() (retVal string) {
+	str := "BinaryTree\n"
+
+	if !t.IsEmpty() {
+		output(t.Root, "", true, &str)
+	}
+
+	return str
+}
+
+// Node methods:
+//==============
+
+func (n *Node) String() (retVal string) {
+	return fmt.Sprintf("%v", n.Key)
+}
+
+func output(n *Node, prefix string, isTail bool, str *string) {
+	if n.Right != nil {
+		newPrefix := prefix
+		if isTail {
+			newPrefix += "│   "
+		} else {
+			newPrefix += "    "
+		}
+		output(n.Right, newPrefix, false, str)
+	}
+	*str += prefix
+	if isTail {
+		*str += "└── "
+	} else {
+		*str += "┌── "
+	}
+	*str += n.String() + "\n"
+	if n.Left != nil {
+		newPrefix := prefix
+		if isTail {
+			newPrefix += "    "
+		} else {
+			newPrefix += "│   "
+		}
+		output(n.Left, newPrefix, true, str)
+	}
+}
+
+func (t *Tree) lookup(k interface{}) (retVal *Node) {
+	root := t.Root
+
+	for root != nil {
+		switch t.Comparator.Compare(k, root.Key) {
+		case 0:
+			return root
+		case -1:
+			root = root.Left
+		case 1:
+			root = root.Right
+		}
+	}
+
+	return nil
+}
+
+func (n *Node) grandparent() (retVal *Node) {
+	if n != nil && n.Parent != nil {
+		return n.Parent.Parent
+	}
+
+	return nil
+}
+
+func (n *Node) uncle() (retVal *Node) {
+	if n == nil || n.Parent == nil || n.Parent.Parent == nil {
+		return nil
+	}
+
+	return n.Parent.sibling()
+}
+
+func (n *Node) sibling() (retVal *Node) {
+	if n == nil || n.Parent == nil {
+		return nil
+	}
+
+	if n == n.Parent.Left {
+		return n.Parent.Right
+	}
+
+	return n.Parent.Left
+}
+
+func (t *Tree) rotateLeft(n *Node) {
+	right := n.Right
+	t.replaceNode(n, right)
+
+	n.Right = right.Left
+
+	if right.Left != nil {
+		right.Left.Parent = n
+	}
+
+	right.Left = n
+	n.Parent = right
+}
+
+func (t *Tree) rotateRight(n *Node) {
+	left := n.Left
+	t.replaceNode(n, left)
+	n.Left = left.Right
+
+	if left.Right != nil {
+		left.Right.Parent = n
+	}
+
+	left.Right = n
+	n.Parent = left
+}
+
+func (t *Tree) replaceNode(old, new *Node) {
+	if old.Parent == nil {
+		t.Root = new
+	} else {
+		if old == old.Parent.Left {
+			old.Parent.Left = new
+		} else {
+			old.Parent.Right = new
+		}
+	}
+
+	if new != nil {
+		new.Parent = old.Parent
+	}
+}
+
 func (t *Tree) insertCase1(node *Node) {
 	if node.Parent == nil {
 		node.color = black
@@ -176,51 +400,196 @@ func (t *Tree) insertCase1(node *Node) {
 	}
 }
 
-func (tree *Tree) insertCase2(node *Node) {
-	if nodeColor(node.Parent) == black {
+func (t *Tree) insertCase2(n *Node) {
+	if nodeColor(n.Parent) == black {
 		return
 	}
-	tree.insertCase3(node)
+	t.insertCase3(n)
 }
 
-func (tree *Tree) insertCase3(node *Node) {
-	uncle := node.uncle()
+func (t *Tree) insertCase3(n *Node) {
+	uncle := n.uncle()
 	if nodeColor(uncle) == red {
-		node.Parent.color = black
+		n.Parent.color = black
 		uncle.color = black
-		node.grandparent().color = red
-		tree.insertCase1(node.grandparent())
+		n.grandparent().color = red
+		t.insertCase1(n.grandparent())
 	} else {
-		tree.insertCase4(node)
+		t.insertCase4(n)
 	}
 }
 
-func (tree *Tree) insertCase4(node *Node) {
-	grandparent := node.grandparent()
-	if node == node.Parent.Right && node.Parent == grandparent.Left {
-		tree.rotateLeft(node.Parent)
-		node = node.Left
-	} else if node == node.Parent.Left && node.Parent == grandparent.Right {
-		tree.rotateRight(node.Parent)
-		node = node.Right
+func (t *Tree) insertCase4(n *Node) {
+	grandparent := n.grandparent()
+	if n == n.Parent.Right && n.Parent == grandparent.Left {
+		t.rotateLeft(n.Parent)
+		n = n.Left
+	} else if n == n.Parent.Left && n.Parent == grandparent.Right {
+		t.rotateRight(n.Parent)
+		n = n.Right
 	}
-	tree.insertCase5(node)
+	t.insertCase5(n)
 }
 
-func (tree *Tree) insertCase5(node *Node) {
-	node.Parent.color = black
-	grandparent := node.grandparent()
+func (t *Tree) insertCase5(n *Node) {
+	n.Parent.color = black
+	grandparent := n.grandparent()
 	grandparent.color = red
-	if node == node.Parent.Left && node.Parent == grandparent.Left {
-		tree.rotateRight(grandparent)
-	} else if node == node.Parent.Right && node.Parent == grandparent.Right {
-		tree.rotateLeft(grandparent)
+	if n == n.Parent.Left && n.Parent == grandparent.Left {
+		t.rotateRight(grandparent)
+	} else if n == n.Parent.Right && n.Parent == grandparent.Right {
+		t.rotateLeft(grandparent)
 	}
 }
 
-func nodeColor(node *Node) bool {
-	if node == nil {
+func (n *Node) maximumNode() (retVal *Node) {
+	if n == nil {
+		return nil
+	}
+	for n.Right != nil {
+		n = n.Right
+	}
+	return n
+}
+
+func (t *Tree) deleteCase1(n *Node) {
+	if n.Parent == nil {
+		return
+	}
+	t.deleteCase2(n)
+}
+
+func (t *Tree) deleteCase2(n *Node) {
+	sibling := n.sibling()
+	if nodeColor(sibling) == red {
+		n.Parent.color = red
+		sibling.color = black
+		if n == n.Parent.Left {
+			t.rotateLeft(n.Parent)
+		} else {
+			t.rotateRight(n.Parent)
+		}
+	}
+	t.deleteCase3(n)
+}
+
+func (t *Tree) deleteCase3(n *Node) {
+	sibling := n.sibling()
+	if nodeColor(n.Parent) == black &&
+		nodeColor(sibling) == black &&
+		nodeColor(sibling.Left) == black &&
+		nodeColor(sibling.Right) == black {
+		sibling.color = red
+		t.deleteCase1(n.Parent)
+	} else {
+		t.deleteCase4(n)
+	}
+}
+
+func (t *Tree) deleteCase4(n *Node) {
+	sibling := n.sibling()
+	if nodeColor(n.Parent) == red &&
+		nodeColor(sibling) == black &&
+		nodeColor(sibling.Left) == black &&
+		nodeColor(sibling.Right) == black {
+		sibling.color = red
+		n.Parent.color = black
+	} else {
+		t.deleteCase5(n)
+	}
+}
+
+func (t *Tree) deleteCase5(n *Node) {
+	sibling := n.sibling()
+	if n == n.Parent.Left &&
+		nodeColor(sibling) == black &&
+		nodeColor(sibling.Left) == red &&
+		nodeColor(sibling.Right) == black {
+		sibling.color = red
+		sibling.Left.color = black
+		t.rotateRight(sibling)
+	} else if n == n.Parent.Right &&
+		nodeColor(sibling) == black &&
+		nodeColor(sibling.Right) == red &&
+		nodeColor(sibling.Left) == black {
+		sibling.color = red
+		sibling.Right.color = black
+		t.rotateLeft(sibling)
+	}
+	t.deleteCase6(n)
+}
+
+func (t *Tree) deleteCase6(n *Node) {
+	sibling := n.sibling()
+	sibling.color = nodeColor(n.Parent)
+	n.Parent.color = black
+	if n == n.Parent.Left && nodeColor(sibling.Right) == red {
+		sibling.Right.color = black
+		t.rotateLeft(n.Parent)
+	} else if nodeColor(sibling.Left) == red {
+		sibling.Left.color = black
+		t.rotateRight(n.Parent)
+	}
+}
+
+func nodeColor(n *Node) bool {
+	if n == nil {
 		return black
 	}
-	return node.color
+	return n.color
+}
+
+// ToJSON outputs the JSON representation of the tree.
+func (t *Tree) ToJSON() ([]byte, error) {
+	elements := make(map[string]interface{})
+	it := t.Iterator()
+	for it.Next() {
+		elements[toString(it.Key())] = it.Value()
+	}
+	return json.Marshal(&elements)
+}
+
+// FromJSON populates the tree from the input JSON representation.
+func (t *Tree) FromJSON(data []byte) error {
+	elements := make(map[string]interface{})
+	err := json.Unmarshal(data, &elements)
+	if err == nil {
+		t.Clear()
+		for key, value := range elements {
+			t.Put(key, value)
+		}
+	}
+	return err
+}
+
+// ToString converts a value to string.
+func toString(value interface{}) string {
+	switch value := value.(type) {
+	case string:
+		return value
+	case int8:
+		return strconv.FormatInt(int64(value), 10)
+	case int16:
+		return strconv.FormatInt(int64(value), 10)
+	case int32:
+		return strconv.FormatInt(int64(value), 10)
+	case int64:
+		return strconv.FormatInt(int64(value), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(value), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(value), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(value), 10)
+	case uint64:
+		return strconv.FormatUint(uint64(value), 10)
+	case float32:
+		return strconv.FormatFloat(float64(value), 'g', -1, 64)
+	case float64:
+		return strconv.FormatFloat(float64(value), 'g', -1, 64)
+	case bool:
+		return strconv.FormatBool(value)
+	default:
+		return fmt.Sprintf("%+v", value)
+	}
 }

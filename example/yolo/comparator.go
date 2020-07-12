@@ -54,7 +54,7 @@ func (c Comparator) Compare(a, b interface{}) (retVal int) {
 	case "float64":
 		return compareFloat64(a.(float64), b.(float64))
 	default:
-		log.Fatalf("Unsupported a type() or b type().\n", reflect.TypeOf(a).Kind(), reflect.TypeOf(b).Kind())
+		log.Fatalf("Unsupported a type(%v) or b type(%v).\n", reflect.TypeOf(a).Kind(), reflect.TypeOf(b).Kind())
 	}
 
 	return retVal
