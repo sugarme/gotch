@@ -96,7 +96,7 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Println("InceptionV3 weights loaded.")
-	case "efficient-b4":
+	case "efficientnet-b4":
 		net = vision.EfficientNetB4(vs.Root(), in.ClassCount())
 		err = vs.Load(modelPath)
 		if err != nil {
