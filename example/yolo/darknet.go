@@ -146,8 +146,13 @@ type (
 	Route    = []uint
 	Shortcut = uint
 	Yolo     struct {
-		V1 int64
-		V2 []int64
+		Val1 int64
+		V2   []int64
+	}
+
+	Param struct {
+		Val1 int64
+		Val2 interface{}
 	}
 )
 
@@ -233,9 +238,8 @@ func conv(vs nn.Path, index uint, p int64, b block) (retVal1 int64, retVal2 inte
 
 		if leaky {
 			tmp2Mul := tmp2.MustMul1(ts.FloatScalar(0.1), false)
-			res = tmp2.MustMax1(tmp2Mul)
+			res = tmp2.MustMax1(tmp2Mul, true)
 			tmp2Mul.MustDrop()
-			tmp2.MustDrop()
 		} else {
 			res = tmp2
 		}
@@ -245,3 +249,113 @@ func conv(vs nn.Path, index uint, p int64, b block) (retVal1 int64, retVal2 inte
 
 	return filters, fn
 }
+
+func upsample(prevChannels int64) (retVal1 int64, retVal2 interface{}) {
+	layer := nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		// []int64{n, c, h, w}
+		res, err := xs.Size4()
+		if err != nil {
+			log.Fatal(err)
+		}
+		h := res[2]
+		w := res[3]
+
+		return xs.MustUpsampleNearest2d([]int64{h * 2, w * 2}, 2.0, 2.0)
+	})
+
+	return prevChannels, layer
+}
+
+func intListOfString(s string) (retVal []int64) {
+	strs := strings.Split(s, ",")
+	for _, str := range strs {
+		str = strings.TrimSpace(str)
+		i, err := strconv.ParseInt(str, 10, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
+		retVal = append(retVal, i)
+	}
+
+	return retVal
+}
+
+func uintOfIndex(index uint, i int64) (retVal uint) {
+	if i >= 0 {
+		return uint(i)
+	} else {
+		return uint(int64(index) + i)
+	}
+}
+
+func route(index uint, p []Param, blk block) (retVal1 int64, retVal2 interface{}) {
+	intLayers := intListOfString(blk.get("layers"))
+
+	var layers []uint
+	for _, l := range intLayers {
+		layers = append(layers, uintOfIndex(index, l))
+	}
+
+	var channels int64
+	for _, l := range layers {
+		channels += p[l].Val1
+	}
+
+	return channels, layers
+}
+
+func shortcut(index uint, p int64, blk block) (retVal1 int64, retVal2 interface{}) {
+	fromStr := blk.get("from")
+
+	from, err := strconv.ParseInt(fromStr, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return p, uintOfIndex(index, from)
+}
+
+func yolo(p int64, blk block) (retVal1 int64, retVal2 interface{}) {
+	classesStr := blk.get("classes")
+	classes, err := strconv.ParseInt(classesStr, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	flat := intListOfString(blk.get("anchors"))
+
+	if (len(flat) % 2) != 0 {
+		log.Fatalf("Expected even number of flat")
+	}
+
+	var anchors [][]int64
+
+	for i := 0; i < len(flat)/2; i++ {
+		anchors = append(anchors, []int64{flat[2*i], flat[2*i+1]})
+	}
+
+	intMask := intListOfString(blk.get("mask"))
+
+	var retAnchors [][]int64
+	for _, i := range intMask {
+		retAnchors = append(retAnchors, anchors[i])
+	}
+
+	return p, retAnchors
+}
+
+// Apply f to a slice of tensor xs and replace xs values with f output.
+func sliceApplyAndSet(xs ts.Tensor, start int64, len int64, f func(ts.Tensor) ts.Tensor) {
+	slice := xs.MustNarrow(2, start, len, false)
+	src := f(slice)
+
+	slice.Copy_(src)
+	src.MustDrop()
+	// TODO: check whether we need to delete slice to prevent memory blow-up
+	// slice.MustDrop()
+}
+
+// TODO: continue
+// func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors
+// [][]int64) (retVal ts.Tensor){
+// }

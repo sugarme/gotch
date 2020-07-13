@@ -693,3 +693,19 @@ func AtgArangeOut1(ptr *Ctensor, out Ctensor, start Cscalar, end Cscalar) {
 
 	C.atg_arange_out1(ptr, out, start, end)
 }
+
+// void atg_max1(tensor *, tensor self, tensor other);
+func AtgMax1(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_max1(ptr, self, other)
+}
+
+// void atg_upsample_nearest2d(tensor *, tensor self, int64_t *output_size_data, int output_size_len, double scales_h, double scales_w);
+func AtgUpsampleNearest2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesH float64, scalesW float64) {
+
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
+	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
+
+	C.atg_upsample_nearest2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscalesH, cscalesW)
+}

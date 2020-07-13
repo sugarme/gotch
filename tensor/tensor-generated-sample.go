@@ -2111,3 +2111,55 @@ func MustArangeOut1(out Tensor, start, end Scalar) (retVal Tensor) {
 
 	return retVal
 }
+
+func (ts Tensor) Max1(other Tensor, del bool) (retVal Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgMax1(ptr, ts.ctensor, other.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustMax1(other Tensor, del bool) (retVal Tensor) {
+
+	retVal, err := ts.Max1(other, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) UpsampleNearest2d(outputSize []int64, scalesH, scalesW float64) (retVal Tensor, err error) {
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtgUpsampleNearest2d(ptr, ts.ctensor, outputSize, len(outputSize), scalesH, scalesW)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustUpsampleNearest2d(outputSize []int64, scalesH, scalesW float64) (retVal Tensor) {
+
+	retVal, err := ts.UpsampleNearest2d(outputSize, scalesH, scalesW)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
