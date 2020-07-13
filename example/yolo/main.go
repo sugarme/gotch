@@ -2,23 +2,26 @@ package main
 
 import (
 	"fmt"
+	// "flag"
+	"log"
+	"path/filepath"
 )
+
+const configName = "yolo-v3.cfg"
+
+func init() {
+
+}
 
 func main() {
 
-	c := Comparator{}
-	tree := NewTree(c)
+	configPath, err := filepath.Abs(configName)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	tree.MustPut("key1", "Val1")
-	tree.MustPut("key2", "Val2")
-	tree.MustPut("key3", "Val3")
-	tree.MustPut("key4", "Val4")
-	tree.MustPut("key5", "Val5")
-	tree.MustPut("key6", "Val6")
-	tree.MustPut("key7", "Val7")
-	tree.MustPut("key8", "Val8")
+	var darknet Darknet = ParseConfig(configPath)
 
-	fmt.Println(tree.String())
-
-	fmt.Println(tree.Ceil("key7"))
+	fmt.Printf("darknet number of parameters: %v\n", len(darknet.parameters))
+	fmt.Printf("darknet number of blocks: %v\n", len(darknet.blocks))
 }
