@@ -2163,3 +2163,82 @@ func (ts Tensor) MustUpsampleNearest2d(outputSize []int64, scalesH, scalesW floa
 
 	return retVal
 }
+
+func (ts Tensor) Repeat(repeatData []int64, del bool) (retVal Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgRepeat(ptr, ts.ctensor, repeatData, len(repeatData))
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustRepeat(repeatData []int64, del bool) (retVal Tensor) {
+	retVal, err := ts.Repeat(repeatData, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Contiguous(del bool) (retVal Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgContiguous(ptr, ts.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustContiguous(del bool) (retVal Tensor) {
+
+	retVal, err := ts.Contiguous(del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+func (ts Tensor) Transpose(dim0, dim1 int64, del bool) (retVal Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgTranspose(ptr, ts.ctensor, dim0, dim1)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustTranspose(dim0, dim1 int64, del bool) (retVal Tensor) {
+	retVal, err := ts.Transpose(dim0, dim1, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}

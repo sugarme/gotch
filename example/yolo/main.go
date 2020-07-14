@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	// "flag"
+	"github.com/sugarme/gotch"
+	"github.com/sugarme/gotch/nn"
 	"log"
 	"path/filepath"
 )
@@ -22,6 +24,11 @@ func main() {
 
 	var darknet Darknet = ParseConfig(configPath)
 
-	fmt.Printf("darknet number of parameters: %v\n", len(darknet.parameters))
-	fmt.Printf("darknet number of blocks: %v\n", len(darknet.blocks))
+	fmt.Printf("darknet number of parameters: %v\n", len(darknet.Parameters))
+	fmt.Printf("darknet number of blocks: %v\n", len(darknet.Blocks))
+
+	vs := nn.NewVarStore(gotch.CPU)
+	model := darknet.BuildModel(vs.Root())
+
+	fmt.Printf("Model: %v\n", model)
 }

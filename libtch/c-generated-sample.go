@@ -709,3 +709,25 @@ func AtgUpsampleNearest2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, ou
 
 	C.atg_upsample_nearest2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscalesH, cscalesW)
 }
+
+// void atg_repeat(tensor *, tensor self, int64_t *repeats_data, int repeats_len);
+func AtgRepeat(ptr *Ctensor, self Ctensor, repeatData []int64, repeatLen int) {
+	crepeatDataPtr := (*C.int64_t)(unsafe.Pointer(&repeatData[0]))
+	crepeatLen := *(*C.int)(unsafe.Pointer(&repeatLen))
+
+	C.atg_repeat(ptr, self, crepeatDataPtr, crepeatLen)
+}
+
+// void atg_contiguous(tensor *, tensor self);
+func AtgContiguous(ptr *Ctensor, self Ctensor) {
+	C.atg_contiguous(ptr, self)
+}
+
+// void atg_transpose(tensor *, tensor self, int64_t dim0, int64_t dim1);
+func AtgTranspose(ptr *Ctensor, self Ctensor, dim0 int64, dim1 int64) {
+
+	cdim0 := *(*C.int64_t)(unsafe.Pointer(&dim0))
+	cdim1 := *(*C.int64_t)(unsafe.Pointer(&dim1))
+
+	C.atg_transpose(ptr, self, cdim0, cdim1)
+}
