@@ -82,7 +82,7 @@ func Save(tensor ts.Tensor, path string) (err error) {
 // This expects as input a tensor of shape [channel, height, width] and returns
 // a tensor of shape [channel, out_h, out_w].
 func Resize(t ts.Tensor, outW int64, outH int64) (retVal ts.Tensor, err error) {
-	tmpTs, err := ts.ResizeHwc(t, outW, outH)
+	tmpTs, err := ts.ResizeHwc(chwToHWC(t), outW, outH)
 	if err != nil {
 		return retVal, err
 	}
