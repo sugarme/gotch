@@ -2242,3 +2242,29 @@ func (ts Tensor) MustTranspose(dim0, dim1 int64, del bool) (retVal Tensor) {
 
 	return retVal
 }
+
+func (ts Tensor) Squeeze(del bool) (retVal Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	lib.AtgSqueeze(ptr, ts.ctensor)
+	err = TorchErr()
+	if err != nil {
+		return retVal, err
+	}
+
+	retVal = Tensor{ctensor: *ptr}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSqueeze(del bool) (retVal Tensor) {
+	retVal, err := ts.Squeeze(del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}

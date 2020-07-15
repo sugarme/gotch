@@ -362,8 +362,7 @@ func sliceApplyAndSet(xs ts.Tensor, start int64, len int64, f func(ts.Tensor) ts
 
 	slice.Copy_(src)
 	src.MustDrop()
-	// TODO: check whether we need to delete slice to prevent memory blow-up
-	// slice.MustDrop()
+	slice.MustDrop()
 }
 
 func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (retVal ts.Tensor) {
@@ -386,34 +385,43 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 	// fmt.Printf("gridSize: %v\n", gridSize)
 
 	tmp1 := xs.MustView([]int64{bsize, bboxAttrs * nanchors, gridSize * gridSize}, false)
-
 	tmp2 := tmp1.MustTranspose(1, 2, true)
-
 	tmp3 := tmp2.MustContiguous(true)
-
 	xsTs := tmp3.MustView([]int64{bsize, gridSize * gridSize * nanchors, bboxAttrs}, true)
 
 	grid := ts.MustArange(ts.IntScalar(gridSize), gotch.Float, gotch.CPU)
 	a := grid.MustRepeat([]int64{gridSize, 1}, false)
 	bTmp := a.MustT(false)
 	b := bTmp.MustContiguous(true)
+
 	xOffset := a.MustView([]int64{-1, 1}, false)
 	yOffset := b.MustView([]int64{-1, 1}, false)
-
 	xyOffsetTmp1 := ts.MustCat([]ts.Tensor{xOffset, yOffset}, 1, false)
 	xyOffsetTmp2 := xyOffsetTmp1.MustRepeat([]int64{1, nanchors}, true)
 	xyOffsetTmp3 := xyOffsetTmp2.MustView([]int64{-1, 2}, true)
 	xyOffset := xyOffsetTmp3.MustUnsqueeze(0, true)
+
+	fmt.Printf("xyOffset shape: %v\n", xyOffset.MustSize())
 
 	var flatAnchors []int64
 	for _, a := range anchors {
 		flatAnchors = append(flatAnchors, a...)
 	}
 
-	anchorsTmp1 := ts.MustOfSlice(flatAnchors)
+	var anchorVals []float32
+	for _, a := range flatAnchors {
+		v := float32(a) / float32(stride)
+		anchorVals = append(anchorVals, v)
+	}
+
+	fmt.Printf("anchors: %v\n", anchorVals)
+
+	anchorsTmp1 := ts.MustOfSlice(anchorVals)
 	anchorsTmp2 := anchorsTmp1.MustView([]int64{-1, 2}, true)
 	anchorsTmp3 := anchorsTmp2.MustRepeat([]int64{gridSize * gridSize, 1}, true)
 	anchorsTs := anchorsTmp3.MustUnsqueeze(0, true)
+
+	fmt.Printf("anchors ts shape: %v\n", anchorsTs.MustSize())
 
 	sliceApplyAndSet(xsTs, 0, 2, func(xs ts.Tensor) (res ts.Tensor) {
 		tmp := xs.MustSigmoid(false)
@@ -436,7 +444,6 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 	})
 
 	// TODO: delete all middle tensors.
-
 	return xsTs
 }
 

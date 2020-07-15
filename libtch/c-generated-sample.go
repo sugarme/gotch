@@ -731,3 +731,8 @@ func AtgTranspose(ptr *Ctensor, self Ctensor, dim0 int64, dim1 int64) {
 
 	C.atg_transpose(ptr, self, cdim0, cdim1)
 }
+
+// void atg_squeeze(tensor *, tensor self);
+func AtgSqueeze(ptr *Ctensor, self Ctensor) {
+	C.atg_squeeze(ptr, self)
+}
