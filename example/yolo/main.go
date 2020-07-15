@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	saveDir             string  = "../../data/yolo"
 	configName          string  = "yolo-v3.cfg"
 	confidenceThreshold float64 = 0.5
 	nmsThreshold        float64 = 0.4
@@ -243,7 +244,14 @@ func main() {
 
 	imgRes := report(predictions, originalImage, netWidth, netHeight)
 
-	err = vision.Save(imgRes, "image_result.jpg")
+	savePath, err := filepath.Abs(saveDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	inputFile := filepath.Base(imagePath)
+	saveFile := fmt.Sprintf("%v/yolo_%v", savePath, inputFile)
+	err = vision.Save(imgRes, saveFile)
 	if err != nil {
 		log.Fatal(err)
 	}
