@@ -51,6 +51,7 @@ func Iou(b1, b2 Bbox) (retVal float64) {
 	iXmax := math.Min(b1.xmax, b2.xmax)
 	iYmin := math.Max(b1.ymin, b2.ymin)
 	iYmax := math.Min(b1.ymax, b2.ymax)
+
 	iArea := math.Max((iXmax-iXmin+1.0), 0.0) * math.Max((iYmax-iYmin+1.0), 0)
 
 	return (iArea) / (b1Area + b2Area - iArea)
@@ -60,6 +61,8 @@ func Iou(b1, b2 Bbox) (retVal float64) {
 func drawRect(t ts.Tensor, x1, x2, y1, y2 int64) {
 	color := ts.MustOfSlice([]float64{0.0, 0.0, 1.0}).MustView([]int64{3, 1, 1}, true)
 
+	// NOTE: `narrow` will create a tensor (view) that share same storage with
+	// original one.
 	tmp1 := t.MustNarrow(2, x1, x2-x1, false)
 	tmp2 := tmp1.MustNarrow(1, y1, y2-y1, true)
 	tmp2.Copy_(color)
@@ -97,14 +100,10 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 
 			if predVals[classIndex+5] > 0.0 {
 				bbox := Bbox{
-					xmin: predVals[0] - (predVals[2] / 2.0),
-					ymin: predVals[1] - (predVals[3] / 2.0),
-					xmax: predVals[0] + (predVals[2] / 2.0),
-					ymax: predVals[1] + (predVals[3] / 2.0),
-					// xmin:            (predVals[0] - predVals[2]) / 2.0,
-					// ymin:            (predVals[1] - predVals[3]) / 2.0,
-					// xmax:            (predVals[0] + predVals[2]) / 2.0,
-					// ymax:            (predVals[1] + predVals[3]) / 2.0,
+					xmin:            predVals[0] - (predVals[2] / 2.0),
+					ymin:            predVals[1] - (predVals[3] / 2.0),
+					xmax:            predVals[0] + (predVals[2] / 2.0),
+					ymax:            predVals[1] + (predVals[3] / 2.0),
 					confidence:      confidence,
 					classIndex:      uint(classIndex),
 					classConfidence: predVals[5+classIndex],
@@ -141,9 +140,10 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 			}
 		}
 		// 3. Truncate currentIndex
-		if len(bboxesForClass) > 1 {
+		if currentIndex < len(bboxesForClass) {
 			bboxesForClass = append(bboxesForClass[:currentIndex], bboxesForClass[currentIndex+1:]...)
 		}
+
 		bboxesRes = append(bboxesRes, bboxesForClass)
 	}
 
@@ -159,7 +159,7 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 	initialW := size3[2]
 
 	imageTmp := img.MustTotype(gotch.Float, false)
-	image := imageTmp.MustDiv1(ts.FloatScalar(255.0), true)
+	image := imageTmp.MustDiv1(ts.FloatScalar(255.0), false)
 
 	var wRatio float64 = float64(initialW) / float64(w)
 	var hRatio float64 = float64(initialH) / float64(h)
@@ -179,10 +179,11 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 			// fmt.Printf("xmin: %v\t ymin: %v\t xmax: %v\t ymax: %v\n", xmin, ymin, xmax, ymax)
 
 			// draw rect
-			drawRect(img, xmin, xmax, ymin, int64(math.Min(float64(ymax), float64(ymin+2))))
-			drawRect(img, xmin, xmax, int64(math.Max(float64(ymin), float64(ymax-2))), ymax)
-			drawRect(img, xmin, int64(math.Min(float64(xmax), float64(xmin+2))), ymin, ymax)
-			drawRect(img, int64(math.Max(float64(xmax-2), float64(xmin))), xmax, ymin, ymax)
+			drawRect(image, xmin, xmax, ymin, min(ymax, ymin+2))
+			drawRect(image, xmin, xmax, max(ymin, ymax-2), ymax)
+			drawRect(image, xmin, min(xmax, xmin+2), ymin, ymax)
+			drawRect(image, max(xmin, xmax-2), xmax, ymin, ymax)
+
 		}
 	}
 
