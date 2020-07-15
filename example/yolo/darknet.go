@@ -378,12 +378,6 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 	bboxAttrs := classes + 5
 	nanchors := int64(len(anchors))
 
-	// fmt.Printf("xs shape: %v\n", xs.MustSize())
-	// fmt.Printf("bsize: %v\n", bsize)
-	// fmt.Printf("bboxAttrs: %v\n", bboxAttrs)
-	// fmt.Printf("nanchors: %v\n", nanchors)
-	// fmt.Printf("gridSize: %v\n", gridSize)
-
 	tmp1 := xs.MustView([]int64{bsize, bboxAttrs * nanchors, gridSize * gridSize}, false)
 	tmp2 := tmp1.MustTranspose(1, 2, true)
 	tmp3 := tmp2.MustContiguous(true)
@@ -401,8 +395,6 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 	xyOffsetTmp3 := xyOffsetTmp2.MustView([]int64{-1, 2}, true)
 	xyOffset := xyOffsetTmp3.MustUnsqueeze(0, true)
 
-	fmt.Printf("xyOffset shape: %v\n", xyOffset.MustSize())
-
 	var flatAnchors []int64
 	for _, a := range anchors {
 		flatAnchors = append(flatAnchors, a...)
@@ -414,14 +406,10 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 		anchorVals = append(anchorVals, v)
 	}
 
-	fmt.Printf("anchors: %v\n", anchorVals)
-
 	anchorsTmp1 := ts.MustOfSlice(anchorVals)
 	anchorsTmp2 := anchorsTmp1.MustView([]int64{-1, 2}, true)
 	anchorsTmp3 := anchorsTmp2.MustRepeat([]int64{gridSize * gridSize, 1}, true)
 	anchorsTs := anchorsTmp3.MustUnsqueeze(0, true)
-
-	fmt.Printf("anchors ts shape: %v\n", anchorsTs.MustSize())
 
 	sliceApplyAndSet(xsTs, 0, 2, func(xs ts.Tensor) (res ts.Tensor) {
 		tmp := xs.MustSigmoid(false)
@@ -529,7 +517,6 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 				classes := b.Bl.(Yolo).Classes
 				anchors := b.Bl.(Yolo).Anchors
 				xsTs := xs
-
 				if len(prevYs) > 0 {
 					xsTs = prevYs[len(prevYs)-1]
 				}

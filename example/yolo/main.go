@@ -78,8 +78,6 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 	npreds := size2[0]
 	predSize := size2[1]
 
-	fmt.Printf("npreds: %v - predSize: %v\n", npreds, predSize)
-
 	nclasses := uint(predSize - 5)
 
 	// The bounding boxes grouped by (maximum) class index.
@@ -116,7 +114,6 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 
 	// Perform non-maximum suppression.
 	var bboxesRes [][]Bbox
-	fmt.Printf("Num of bboxes: %v\n", len(bboxes))
 	for _, bboxesForClass := range bboxes {
 		// 1. Sort by confidence
 		sort.Sort(ByConfBbox(bboxesForClass))
@@ -139,18 +136,16 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 				currentIndex += 1
 			}
 		}
-		// 3. Truncate currentIndex
+		// 3. Truncate at currentIndex (exclusive)
 		if currentIndex < len(bboxesForClass) {
-			bboxesForClass = append(bboxesForClass[:currentIndex], bboxesForClass[currentIndex+1:]...)
+			// bboxesForClass = append(bboxesForClass[:currentIndex], bboxesForClass[currentIndex+1:]...)
+			bboxesForClass = append(bboxesForClass[:currentIndex])
 		}
 
 		bboxesRes = append(bboxesRes, bboxesForClass)
 	}
 
-	fmt.Printf("Num of bboxesRes: %v\n", len(bboxesRes))
-
 	// Annotate the original image and print boxes information.
-	fmt.Printf("img shape: %v\n", img.MustSize())
 	size3, err := img.Size3()
 	if err != nil {
 		log.Fatal(err)
@@ -164,9 +159,6 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 	var wRatio float64 = float64(initialW) / float64(w)
 	var hRatio float64 = float64(initialH) / float64(h)
 
-	// fmt.Printf("wRatio: %v\n", wRatio)
-	// fmt.Printf("hRatio: %v\n", hRatio)
-
 	for classIndex, bboxesForClass := range bboxesRes {
 		for _, b := range bboxesForClass {
 			fmt.Printf("%v: %v\n", CocoClasses[classIndex], b)
@@ -175,8 +167,6 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 			ymin := min(max(int64(b.ymin*hRatio), 0), (initialH - 1))
 			xmax := min(max(int64(b.xmax*wRatio), 0), (initialW - 1))
 			ymax := min(max(int64(b.ymax*hRatio), 0), (initialH - 1))
-
-			// fmt.Printf("xmin: %v\t ymin: %v\t xmax: %v\t ymax: %v\n", xmin, ymin, xmax, ymax)
 
 			// draw rect
 			drawRect(image, xmin, xmax, ymin, min(ymax, ymin+2))
@@ -218,13 +208,8 @@ func main() {
 
 	var darknet Darknet = ParseConfig(configPath)
 
-	fmt.Printf("darknet number of parameters: %v\n", len(darknet.Parameters))
-	fmt.Printf("darknet number of blocks: %v\n", len(darknet.Blocks))
-
 	vs := nn.NewVarStore(gotch.CPU)
 	model := darknet.BuildModel(vs.Root())
-	fmt.Printf("Model: %v\n", model)
-	fmt.Printf("Image path: %v\n", imagePath)
 
 	err = vs.Load(modelPath)
 	if err != nil {
@@ -253,6 +238,7 @@ func main() {
 	imgTmp2 := imgTmp1.MustTotype(gotch.Float, true)
 	img := imgTmp2.MustDiv1(ts.FloatScalar(255.0), true)
 	predictTmp := model.ForwardT(img, false)
+
 	predictions := predictTmp.MustSqueeze(true)
 
 	imgRes := report(predictions, originalImage, netWidth, netHeight)
