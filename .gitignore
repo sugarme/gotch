@@ -12,6 +12,7 @@
 *.txt
 *.json
 *.pt
+*.ot
 *.jpg
 
 target/
