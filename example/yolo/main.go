@@ -139,7 +139,6 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 		}
 		// 3. Truncate at currentIndex (exclusive)
 		if currentIndex < len(bboxesForClass) {
-			// bboxesForClass = append(bboxesForClass[:currentIndex], bboxesForClass[currentIndex+1:]...)
 			bboxesForClass = append(bboxesForClass[:currentIndex])
 		}
 
@@ -168,6 +167,9 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 			ymin := min(max(int64(b.ymin*hRatio), 0), (initialH - 1))
 			xmax := min(max(int64(b.xmax*wRatio), 0), (initialW - 1))
 			ymax := min(max(int64(b.ymax*hRatio), 0), (initialH - 1))
+
+			fmt.Printf("xmin: %v\n", xmin)
+			fmt.Printf("ymin: %v\n", ymin)
 
 			// draw rect
 			drawRect(image, xmin, xmax, ymin, min(ymax, ymin+2))
@@ -255,6 +257,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// TODO: write label/confidence val next to bouding boxes.
+	// Naive way is write 'write text on image' rather than on tensor.
+	// See this: https://stackoverflow.com/questions/38299930
 }
 
 func max(v1, v2 int64) (retVal int64) {
