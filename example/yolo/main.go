@@ -168,15 +168,11 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 			xmax := min(max(int64(b.xmax*wRatio), 0), (initialW - 1))
 			ymax := min(max(int64(b.ymax*hRatio), 0), (initialH - 1))
 
-			fmt.Printf("xmin: %v\n", xmin)
-			fmt.Printf("ymin: %v\n", ymin)
-
 			// draw rect
 			drawRect(image, xmin, xmax, ymin, min(ymax, ymin+2))
 			drawRect(image, xmin, xmax, max(ymin, ymax-2), ymax)
 			drawRect(image, xmin, min(xmax, xmin+2), ymin, ymax)
 			drawRect(image, max(xmin, xmax-2), xmax, ymin, ymax)
-
 		}
 	}
 
