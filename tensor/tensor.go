@@ -1033,6 +1033,8 @@ func (ts Tensor) Values() []float64 {
 		values = append(values, val)
 	}
 
+	flat.MustDrop()
+
 	return values
 }
 
