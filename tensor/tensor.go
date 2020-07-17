@@ -1024,33 +1024,33 @@ func (r Reduction) ToInt() (retVal int) {
 
 // Values returns values of tensor in a slice of float64.
 func (ts Tensor) Values() []float64 {
-
-	clone := ts.MustShallowClone()
-	dt := clone.MustDetach()
-	clone.MustDrop()
-	flat := dt.MustView([]int64{-1}, true)
-	n := flat.MustSize()[0]
-
-	var values []float64
-	for i := 0; i < int(n); i++ {
-		val := flat.MustFloat64Value([]int64{int64(i)})
-		values = append(values, val)
-	}
-
-	flat.MustDrop()
-
-	return values
-
 	/*
-	 *   numel := ts.Numel()
-	 *   vec := make([]float64, numel)
+	 *   clone := ts.MustShallowClone()
+	 *   dt := clone.MustDetach()
+	 *   clone.MustDrop()
+	 *   flat := dt.MustView([]int64{-1}, true)
+	 *   n := flat.MustSize()[0]
 	 *
-	 *   float64Ts := ts.MustTotype(gotch.Double, false)
+	 *   var values []float64
+	 *   for i := 0; i < int(n); i++ {
+	 *     val := flat.MustFloat64Value([]int64{int64(i)})
+	 *     values = append(values, val)
+	 *   }
 	 *
-	 *   float64Ts.MustCopyData(vec, numel)
-	 *   float64Ts.MustDrop()
+	 *   flat.MustDrop()
 	 *
-	 *   return vec */
+	 *   return values
+	 *  */
+
+	numel := ts.Numel()
+	vec := make([]float64, numel)
+
+	float64Ts := ts.MustTotype(gotch.Double, false)
+
+	float64Ts.MustCopyData(vec, numel)
+	float64Ts.MustDrop()
+
+	return vec
 }
 
 // Vals returns tensor values in a slice
