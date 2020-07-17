@@ -88,6 +88,8 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 	for index := 0; index < int(npreds); index++ {
 		predIdx := pred.MustGet(index)
 		var predVals []float64 = predIdx.Values()
+		predIdx.MustDrop()
+
 		confidence := predVals[4]
 		if confidence > confidenceThreshold {
 			classIndex := 0
@@ -111,6 +113,7 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 				bboxes[classIndex] = append(bboxes[classIndex], bbox)
 			}
 		}
+
 	}
 
 	// Perform non-maximum suppression.
@@ -154,7 +157,7 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 	initialW := size3[2]
 
 	imageTmp := img.MustTotype(gotch.Float, false)
-	image := imageTmp.MustDiv1(ts.FloatScalar(255.0), false)
+	image := imageTmp.MustDiv1(ts.FloatScalar(255.0), true)
 
 	var wRatio float64 = float64(initialW) / float64(w)
 	var hRatio float64 = float64(initialH) / float64(h)
@@ -176,8 +179,8 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 		}
 	}
 
-	imgTmp := image.MustMul1(ts.FloatScalar(255.0), false)
-	retVal = imgTmp.MustTotype(gotch.Uint8, false)
+	imgTmp := image.MustMul1(ts.FloatScalar(255.0), true)
+	retVal = imgTmp.MustTotype(gotch.Uint8, true)
 
 	return retVal
 }
