@@ -1042,6 +1042,9 @@ func (ts Tensor) Values() []float64 {
 	 *   return values
 	 *  */
 
+	// TODO: there still memory leak here!!!
+	// Need to setup a huge tensor and for loop to expose the leak.
+	// Much faster with `tensor.CopyData()`
 	numel := ts.Numel()
 	vec := make([]float64, numel)
 
