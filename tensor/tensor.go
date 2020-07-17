@@ -1042,7 +1042,7 @@ func (ts Tensor) Values() []float64 {
 	numel := ts.Numel()
 	vec := make([]float64, numel)
 
-	float64Ts := ts.MustTotype(gotch.Float, false)
+	float64Ts := ts.MustTotype(gotch.Double, false)
 
 	float64Ts.MustCopyData(vec, numel)
 	float64Ts.MustDrop()
