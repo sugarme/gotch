@@ -1024,27 +1024,6 @@ func (r Reduction) ToInt() (retVal int) {
 
 // Values returns values of tensor in a slice of float64.
 func (ts Tensor) Values() []float64 {
-	/*
-	 *   clone := ts.MustShallowClone()
-	 *   dt := clone.MustDetach()
-	 *   clone.MustDrop()
-	 *   flat := dt.MustView([]int64{-1}, true)
-	 *   n := flat.MustSize()[0]
-	 *
-	 *   var values []float64
-	 *   for i := 0; i < int(n); i++ {
-	 *     val := flat.MustFloat64Value([]int64{int64(i)})
-	 *     values = append(values, val)
-	 *   }
-	 *
-	 *   flat.MustDrop()
-	 *
-	 *   return values
-	 *  */
-
-	// TODO: there still memory leak here!!!
-	// Need to setup a huge tensor and for loop to expose the leak.
-	// Much faster with `tensor.CopyData()`
 	numel := ts.Numel()
 	vec := make([]float64, numel)
 
