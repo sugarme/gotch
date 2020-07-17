@@ -540,6 +540,9 @@ func (ts Tensor) MustCopyDataUint8(dst []uint8, numel uint) {
 // `dst` should be a slice of Go type equivalent to tensor type.
 //
 // NOTE: `dst` located in Go memory. Should it be?
+// We will render Go pointer of first element of `dst` slice
+// and number of elements to C land. This may break in the future
+// if Go policy changes.
 func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
 
 	gotype, dlen, err := DataCheck(dst)
@@ -553,7 +556,7 @@ func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
 	}
 
 	if dlen < int(numel) {
-		err = fmt.Errorf("CopyDataUint8 Error: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", dlen, numel)
+		err = fmt.Errorf("CopyData Error: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", dlen, numel)
 		return err
 	}
 
@@ -1021,33 +1024,33 @@ func (r Reduction) ToInt() (retVal int) {
 
 // Values returns values of tensor in a slice of float64.
 func (ts Tensor) Values() []float64 {
+
+	clone := ts.MustShallowClone()
+	dt := clone.MustDetach()
+	clone.MustDrop()
+	flat := dt.MustView([]int64{-1}, true)
+	n := flat.MustSize()[0]
+
+	var values []float64
+	for i := 0; i < int(n); i++ {
+		val := flat.MustFloat64Value([]int64{int64(i)})
+		values = append(values, val)
+	}
+
+	flat.MustDrop()
+
+	return values
+
 	/*
-	 *   clone := ts.MustShallowClone()
-	 *   dt := clone.MustDetach()
-	 *   clone.MustDrop()
-	 *   flat := dt.MustView([]int64{-1}, true)
-	 *   n := flat.MustSize()[0]
+	 *   numel := ts.Numel()
+	 *   vec := make([]float64, numel)
 	 *
-	 *   var values []float64
-	 *   for i := 0; i < int(n); i++ {
-	 *     val := flat.MustFloat64Value([]int64{int64(i)})
-	 *     values = append(values, val)
-	 *   }
+	 *   float64Ts := ts.MustTotype(gotch.Double, false)
 	 *
-	 *   flat.MustDrop()
+	 *   float64Ts.MustCopyData(vec, numel)
+	 *   float64Ts.MustDrop()
 	 *
-	 *   return values
-	 *  */
-
-	numel := ts.Numel()
-	vec := make([]float64, numel)
-
-	float64Ts := ts.MustTotype(gotch.Double, false)
-
-	float64Ts.MustCopyData(vec, numel)
-	float64Ts.MustDrop()
-
-	return vec
+	 *   return vec */
 }
 
 // Vals returns tensor values in a slice
