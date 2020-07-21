@@ -40,6 +40,12 @@ func NewTensor() Ctensor {
 	return C.at_new_tensor()
 }
 
+// int at_device(tensor);
+func AtDevice(ts Ctensor) int {
+	cint := C.at_device(ts)
+	return *(*int)(unsafe.Pointer(&cint))
+}
+
 // tensor at_tensor_of_data(void *vs, int64_t *dims, size_t ndims, size_t element_size_in_bytes, int type);
 func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_bytes uint, kind int) Ctensor {
 

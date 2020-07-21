@@ -25,12 +25,6 @@ func AtgTo(ptr *Ctensor, self Ctensor, device int) {
 	C.atg_to(ptr, self, cdevice)
 }
 
-// int at_device(tensor);
-func AtDevice(ts Ctensor) int {
-	cint := C.at_device(ts)
-	return *(*int)(unsafe.Pointer(&cint))
-}
-
 // void atg_grad(tensor *, tensor self);
 func AtgGrad(ptr *Ctensor, self Ctensor) {
 	C.atg_grad(ptr, self)
