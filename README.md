@@ -190,7 +190,7 @@ GoTch is Apache 2.0 licensed.
 
 ## Acknowledgement
 
-- This projects has been inspired and used many concepts from [tch-rs](https://github.com/LaurentMazare/tch-rs)
+- This project has been inspired and used many concepts from [tch-rs](https://github.com/LaurentMazare/tch-rs)
     Libtorch Rust binding. 
 
 
