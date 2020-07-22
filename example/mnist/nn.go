@@ -46,9 +46,9 @@ func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer
 
 	testLogits := m.Forward(testX)
 	testAccuracy := testLogits.AccuracyForLogits(testY)
-	accuracy := testAccuracy.Values()[0] * 100
+	accuracy := testAccuracy.Float64Values()[0] * 100
 	testAccuracy.MustDrop()
-	lossVal := loss.Values()[0]
+	lossVal := loss.Float64Values()[0]
 	loss.MustDrop()
 
 	fmt.Printf("Epoch: %v \t Loss: %.3f \t Test accuracy: %.2f%%\n", epoch, lossVal, accuracy)

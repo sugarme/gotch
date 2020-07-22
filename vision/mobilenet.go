@@ -109,7 +109,7 @@ func MobileNetV2(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 	classifier := nn.SeqT()
 
 	classifier.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.MustDropout(0.5, train, false)
+		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	classifier.Add(nn.NewLinear(cp.Sub("1"), 1280, nclasses, nn.DefaultLinearConfig()))

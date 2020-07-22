@@ -59,7 +59,7 @@ func TestModuleForwardTs(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	got := int(res.Values()[0])
+	got := int(res.Float64Values()[0])
 
 	want := 1421
 

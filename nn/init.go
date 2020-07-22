@@ -30,12 +30,12 @@ func NewConstInit(v float64) constInit {
 
 func (c constInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
 	var err error
-	kind := gotch.Float.CInt()
+	kind := gotch.Float
 	switch {
 	case c.value == 0.0:
-		retVal = ts.MustZeros(dims, kind, device.CInt())
+		retVal = ts.MustZeros(dims, kind, device)
 	case c.value == 1.0:
-		retVal = ts.MustOnes(dims, kind, device.CInt())
+		retVal = ts.MustOnes(dims, kind, device)
 	default:
 		data := make([]float64, ts.FlattenDim(dims))
 		for i := range data {
@@ -127,8 +127,8 @@ func NewUniformInit(lo, up float64) uniformInit {
 
 func (u uniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
 	var err error
-	kind := gotch.Float.CInt()
-	retVal = ts.MustZeros(dims, kind, device.CInt())
+	kind := gotch.Float
+	retVal = ts.MustZeros(dims, kind, device)
 	retVal.Uniform_(u.lo, u.up)
 	if err != nil {
 		log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
@@ -158,8 +158,8 @@ func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVa
 	}
 
 	bound := math.Sqrt(1.0 / float64(fanIn))
-	kind := gotch.Float.CInt()
-	retVal = ts.MustZeros(dims, kind, device.CInt())
+	kind := gotch.Float
+	retVal = ts.MustZeros(dims, kind, device)
 	retVal.Uniform_(-bound, bound)
 
 	return retVal

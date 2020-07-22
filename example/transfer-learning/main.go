@@ -78,6 +78,6 @@ func main() {
 		loss.MustDrop()
 
 		testAccuracy := testImages.Apply(linear).AccuracyForLogits(dataset.TestLabels)
-		fmt.Printf("Epoch %v\t Accuracy: %5.2f%%\n", epoch, testAccuracy.Values()[0]*100)
+		fmt.Printf("Epoch %v\t Accuracy: %5.2f%%\n", epoch, testAccuracy.Float64Values()[0]*100)
 	}
 }

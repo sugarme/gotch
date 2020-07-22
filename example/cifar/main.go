@@ -143,7 +143,7 @@ func main() {
 			loss := logits.CrossEntropyForLogits(devicedLabel)
 			opt.BackwardStep(loss)
 
-			lossVal = loss.Values()[0]
+			lossVal = loss.Float64Values()[0]
 
 			devicedData.MustDrop()
 			devicedLabel.MustDrop()

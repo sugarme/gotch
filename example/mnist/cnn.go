@@ -133,7 +133,7 @@ func runCNN1() {
 		vs.Freeze()
 		testAccuracy := nn.BatchAccuracyForLogits(vs, net, testImages, testLabels, vs.Device(), 1024)
 		vs.Unfreeze()
-		fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss.Values()[0], testAccuracy*100.0)
+		fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss.Float64Values()[0], testAccuracy*100.0)
 		if testAccuracy > bestAccuracy {
 			bestAccuracy = testAccuracy
 		}

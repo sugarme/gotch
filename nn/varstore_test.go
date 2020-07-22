@@ -74,10 +74,10 @@ func TestSaveLoad(t *testing.T) {
 	wantU2 := float64(0.0)
 	wantV2 := float64(1.0)
 
-	gotU1 := u1.MustMean(gotch.Float.CInt(), false).Values()[0]
-	gotV1 := v1.MustMean(gotch.Float.CInt(), false).Values()[0]
-	gotU2 := u2.MustMean(gotch.Float.CInt(), false).Values()[0]
-	gotV2 := v2.MustMean(gotch.Float.CInt(), false).Values()[0]
+	gotU1 := u1.MustMean(gotch.Float, false).Float64Values()[0]
+	gotV1 := v1.MustMean(gotch.Float, false).Float64Values()[0]
+	gotU2 := u2.MustMean(gotch.Float, false).Float64Values()[0]
+	gotV2 := v2.MustMean(gotch.Float, false).Float64Values()[0]
 
 	if !reflect.DeepEqual(wantU1, gotU1) {
 		t.Errorf("Expected u1: %v\n", wantU1)
@@ -109,8 +109,8 @@ func TestSaveLoad(t *testing.T) {
 
 	wantU2 = float64(42.0)
 	wantV2 = float64(2.0)
-	gotU2 = u2.MustMean(gotch.Float.CInt(), false).Values()[0]
-	gotV2 = v2.MustMean(gotch.Float.CInt(), false).Values()[0]
+	gotU2 = u2.MustMean(gotch.Float, false).Float64Values()[0]
+	gotV2 = v2.MustMean(gotch.Float, false).Float64Values()[0]
 
 	if !reflect.DeepEqual(wantU1, gotU1) {
 		t.Errorf("Expected u1: %v\n", wantU1)

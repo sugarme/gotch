@@ -101,7 +101,7 @@ func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.Sequ
 	}))
 
 	seq.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.MustDropout(0.5, train, false)
+		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("3")), 4096, 4096, nn.DefaultLinearConfig()))
@@ -111,7 +111,7 @@ func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.Sequ
 	}))
 
 	seq.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.MustDropout(0.5, train, false)
+		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("6")), 4096, nclasses, nn.DefaultLinearConfig()))

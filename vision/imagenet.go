@@ -236,7 +236,7 @@ func (in ImageNet) LoadFromDir(path string) (retVal Dataset, err error) {
 		ntrainTs := trainTs.MustSize()[0]
 		trainImages = append(trainImages, trainTs)
 
-		trainLabelOnes := ts.MustOnes([]int64{ntrainTs}, gotch.Int64.CInt(), gotch.CPU.CInt())
+		trainLabelOnes := ts.MustOnes([]int64{ntrainTs}, gotch.Int64, gotch.CPU)
 		trainLabels = append(trainLabels, trainLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
 
 		// test
@@ -249,15 +249,15 @@ func (in ImageNet) LoadFromDir(path string) (retVal Dataset, err error) {
 		ntestTs := testTs.MustSize()[0]
 		testImages = append(testImages, testTs)
 
-		testLabelOnes := ts.MustOnes([]int64{ntestTs}, gotch.Int64.CInt(), gotch.CPU.CInt())
+		testLabelOnes := ts.MustOnes([]int64{ntestTs}, gotch.Int64, gotch.CPU)
 		testLabels = append(testLabels, testLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
 	}
 
 	return Dataset{
-		TrainImages: ts.MustCat(trainImages, 0, true),
-		TrainLabels: ts.MustCat(trainLabels, 0, true),
-		TestImages:  ts.MustCat(testImages, 0, true),
-		TestLabels:  ts.MustCat(testLabels, 0, true),
+		TrainImages: ts.MustCat(trainImages, 0),
+		TrainLabels: ts.MustCat(trainLabels, 0),
+		TestImages:  ts.MustCat(testImages, 0),
+		TestLabels:  ts.MustCat(testLabels, 0),
 		Labels:      int64(len(classes)),
 	}, nil
 }
@@ -1301,8 +1301,8 @@ func (in ImageNet) Top(input ts.Tensor, k int64) (retVal []TopItem) {
 
 	var topItems []TopItem
 
-	vals := valsTs.Values()
-	idxs := idxsTs.Values()
+	vals := valsTs.Float64Values()
+	idxs := idxsTs.Float64Values()
 
 	for i := 0; i < int(k); i++ {
 		val := vals[i]

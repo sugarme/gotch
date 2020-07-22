@@ -17,7 +17,7 @@ func anConv2d(p nn.Path, cIn, cOut, ksize, padding, stride int64) (retVal nn.Con
 }
 
 func anMaxPool2d(xs ts.Tensor, ksize, stride int64) (retVal ts.Tensor) {
-	return xs.MustMaxPool2D([]int64{ksize, ksize}, []int64{stride, stride}, []int64{0, 0}, []int64{1, 1}, false, false)
+	return xs.MustMaxPool2d([]int64{ksize, ksize}, []int64{stride, stride}, []int64{0, 0}, []int64{1, 1}, false, false)
 }
 
 func features(p nn.Path) (retVal ts.ModuleT) {
@@ -68,7 +68,7 @@ func classifier(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 	seq := nn.SeqT()
 
 	seq.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.MustDropout(0.5, train, false)
+		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	seq.Add(nn.NewLinear(p.Sub("1"), 256*6*6, 4096, nn.DefaultLinearConfig()))
@@ -78,7 +78,7 @@ func classifier(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 	}))
 
 	seq.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.MustDropout(0.5, train, false)
+		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	seq.Add(nn.NewLinear(p.Sub("4"), 4096, 4096, nn.DefaultLinearConfig()))
@@ -98,7 +98,7 @@ func AlexNet(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 	seq.Add(features(p.Sub("features")))
 
 	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
-		tmp1 := xs.MustAdaptiveAvgPool2D([]int64{6, 6})
+		tmp1 := xs.MustAdaptiveAvgPool2d([]int64{6, 6}, false)
 		res := tmp1.FlatView()
 		tmp1.MustDrop()
 		return res

@@ -8,10 +8,12 @@ import (
 
 // CrossEntropyForLogits computes the cross-entropy loss based on some logits and targets.
 func (ts Tensor) CrossEntropyForLogits(targets Tensor) (retVal Tensor) {
-	// return ts.MustLogSoftmax(-1, gotch.Float.CInt(), true).MustNllLoss(targets, true)
+	weight := NewTensor()
+	reduction := int64(1) // Mean of loss
+	ignoreIndex := int64(-100)
 
-	logSm := ts.MustLogSoftmax(-1, gotch.Float.CInt(), true)
-	return logSm.MustNllLoss(targets, true)
+	logSm := ts.MustLogSoftmax(-1, gotch.Float, true)
+	return logSm.MustNllLoss(targets, weight, reduction, ignoreIndex, true)
 }
 
 // AccuracyForLogits returns the average accuracy for some given logits assuming that
@@ -19,11 +21,11 @@ func (ts Tensor) CrossEntropyForLogits(targets Tensor) (retVal Tensor) {
 func (ts Tensor) AccuracyForLogits(targets Tensor) (retVal Tensor) {
 	argmax := ts.MustArgmax(-1, false, true)
 	eq1 := argmax.MustEq1(targets, true)
-	return eq1.MustTotype(gotch.Float, true).MustMean(gotch.Float.CInt(), true)
+	return eq1.MustTotype(gotch.Float, true).MustMean(gotch.Float, true)
 }
 
 func (ts Tensor) MaxPool2DDefault(ksize int64, del bool) (retVal Tensor) {
-	return ts.MustMaxPool2D([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, []int64{1, 1}, false, del)
+	return ts.MustMaxPool2d([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, []int64{1, 1}, false, del)
 }
 
 // TODO: continue

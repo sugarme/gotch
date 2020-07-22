@@ -55,6 +55,7 @@ func (ts Tensor) Size() (retVal []int64, err error) {
 	}
 
 	retVal = decodeSize(szPtr, dim)
+
 	return retVal, nil
 }
 
@@ -63,6 +64,7 @@ func (ts Tensor) MustSize() (retVal []int64) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return retVal
 }
 
@@ -295,33 +297,34 @@ func (ts Tensor) Device() (retVal gotch.Device, err error) {
 	return device.OfCInt(int32(cInt)), nil
 }
 
-func (ts Tensor) Eq1(other Tensor, del bool) (retVal Tensor, err error) {
-
-	// Get a C null pointer
-	// https://stackoverflow.com/a/2022369
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	if del {
-		defer ts.MustDrop()
-	}
-
-	lib.AtgEq1(ptr, ts.ctensor, other.ctensor)
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-
-	return Tensor{ctensor: *ptr}, nil
-
-}
-
-func (ts Tensor) MustEq1(other Tensor, del bool) (retVal Tensor) {
-	retVal, err := ts.Eq1(other, del)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return retVal
-}
-
+/*
+ * func (ts Tensor) Eq1(other Tensor, del bool) (retVal Tensor, err error) {
+ *
+ *   // Get a C null pointer
+ *   // https://stackoverflow.com/a/2022369
+ *   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+ *   if del {
+ *     defer ts.MustDrop()
+ *   }
+ *
+ *   lib.AtgEq1(ptr, ts.ctensor, other.ctensor)
+ *   if err = TorchErr(); err != nil {
+ *     return retVal, err
+ *   }
+ *
+ *   return Tensor{ctensor: *ptr}, nil
+ *
+ * }
+ *
+ * func (ts Tensor) MustEq1(other Tensor, del bool) (retVal Tensor) {
+ *   retVal, err := ts.Eq1(other, del)
+ *   if err != nil {
+ *     log.Fatal(err)
+ *   }
+ *
+ *   return retVal
+ * }
+ *  */
 // Float64Value returns a float value on tensors holding a single element.
 // An error is returned otherwise.
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
@@ -440,7 +443,7 @@ func (ts Tensor) IsSparse() (retVal bool, err error) {
 
 // ZeroGrad zeroes the gradient tensor attached to this tensor if defined.
 func (ts Tensor) ZeroGrad() {
-	grad := ts.MustGrad()
+	grad := ts.MustGrad(false)
 	if grad.MustDefined() {
 		grad.Detach_()
 		grad.Zero_()
@@ -1022,8 +1025,8 @@ func (r Reduction) ToInt() (retVal int) {
 	return
 }
 
-// Values returns values of tensor in a slice of float64.
-func (ts Tensor) Values() []float64 {
+// Float64Values returns values of tensor in a slice of float64.
+func (ts Tensor) Float64Values() []float64 {
 	numel := ts.Numel()
 	vec := make([]float64, numel)
 
@@ -1102,5 +1105,5 @@ func (ts Tensor) Swish() (retVal Tensor) {
 }
 
 func (ts Tensor) AvgPool2DDefault(ksize int64, del bool) (retVal Tensor) {
-	return ts.MustAvgPool2D([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, false, true, 1, del)
+	return ts.MustAvgPool2d([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, false, true, 1, del)
 }

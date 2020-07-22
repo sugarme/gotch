@@ -239,7 +239,7 @@ func (vs *VarStore) Freeze() {
 	defer vs.Vars.mutex.Unlock()
 
 	for _, v := range vs.Vars.TrainableVariables {
-		_, err := v.SetRequiresGrad(false)
+		_, err := v.SetRequiresGrad(false, false)
 		if err != nil {
 			log.Fatalf("Freeze() Error: %v\n", err)
 		}
@@ -254,7 +254,7 @@ func (vs *VarStore) Unfreeze() {
 	defer vs.Vars.mutex.Unlock()
 
 	for _, v := range vs.Vars.TrainableVariables {
-		_, err := v.SetRequiresGrad(true)
+		_, err := v.SetRequiresGrad(true, false)
 		if err != nil {
 			log.Fatalf("Unfreeze() Error: %v\n", err)
 		}
@@ -349,7 +349,7 @@ func (p *Path) add(name string, newTs ts.Tensor, trainable bool) (retVal ts.Tens
 		err    error
 	)
 	if trainable {
-		tensor, err = newTs.MustShallowClone().SetRequiresGrad(true)
+		tensor, err = newTs.MustShallowClone().SetRequiresGrad(true, false)
 		if err != nil {
 			log.Fatalf("Path 'add' method error: %v\n", err)
 		}
@@ -378,7 +378,7 @@ func (p *Path) getOrAddWithLock(name string, tensor ts.Tensor, trainable bool, v
 	var err error
 	var ttensor ts.Tensor
 	if trainable {
-		ttensor, err = tensor.SetRequiresGrad(true)
+		ttensor, err = tensor.SetRequiresGrad(true, false)
 		if err != nil {
 			log.Fatalf("Path - call method 'getOrAddWithLock' error: %v\n", err)
 		}
@@ -403,9 +403,8 @@ func (p *Path) getOrAddWithLock(name string, tensor ts.Tensor, trainable bool, v
 // The variable uses a float tensor initialized with zeros.
 func (p *Path) ZerosNoTrain(name string, dims []int64) (retVal ts.Tensor) {
 
-	dtype, err := gotch.DType2CInt(gotch.Float) // DType Float
-	device := p.Device().CInt()
-	z, err := ts.Zeros(dims, dtype, device)
+	device := p.Device()
+	z, err := ts.Zeros(dims, gotch.Float, device)
 	if err != nil {
 		log.Fatalf("Path - 'ZerosNoTrain' method call error: %v\n", err)
 	}
@@ -421,9 +420,8 @@ func (p *Path) ZerosNoTrain(name string, dims []int64) (retVal ts.Tensor) {
 // The variable uses a float tensor initialized with ones.
 func (p *Path) OnesNoTrain(name string, dims []int64) (retVal ts.Tensor) {
 
-	dtype, err := gotch.DType2CInt(gotch.Float) // DType Float
-	device := p.Device().CInt()
-	z, err := ts.Ones(dims, dtype, device)
+	device := p.Device()
+	z, err := ts.Ones(dims, gotch.Float, device)
 	if err != nil {
 		log.Fatalf("Path - 'OnesNoTrain' method call error: %v\n", err)
 	}
@@ -610,7 +608,7 @@ func (e *Entry) OrOnes(dims []int64) (retVal ts.Tensor) {
 // OrOnesNoTrain returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrOnesNoTrain(dims []int64) (retVal ts.Tensor) {
 
-	o := ts.MustOnes(dims, gotch.Float.CInt(), e.path.Device().CInt())
+	o := ts.MustOnes(dims, gotch.Float, e.path.Device())
 	return e.path.getOrAddWithLock(e.name, o, true, *e.variables)
 }
 
@@ -641,7 +639,7 @@ func (e *Entry) OrZeros(dims []int64) (retVal ts.Tensor) {
 // OrZerosNoTrain returns the existing entry if, otherwise create a new variable.
 func (e *Entry) OrZerosNoTrain(dims []int64) (retVal ts.Tensor) {
 
-	z := ts.MustZeros(dims, gotch.Float.CInt(), e.path.Device().CInt())
+	z := ts.MustZeros(dims, gotch.Float, e.path.Device())
 	return e.path.getOrAddWithLock(e.name, z, true, *e.variables)
 }
 

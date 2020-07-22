@@ -127,12 +127,12 @@ func NewConvTranspose3D(vs *Path, inDim, outDim int64, ksizes []int64, cfg ConvT
 // ============================================
 
 func (c ConvTranspose1D) Forward(xs ts.Tensor) ts.Tensor {
-	return ts.MustConvTranspose1D(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.OutputPadding, c.Config.Dilation, c.Config.Groups)
+	return ts.MustConvTranspose1d(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.OutputPadding, c.Config.Groups, c.Config.Dilation)
 }
 
 func (c ConvTranspose2D) Forward(xs ts.Tensor) ts.Tensor {
-	return ts.MustConvTranspose2D(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.OutputPadding, c.Config.Dilation, c.Config.Groups)
+	return ts.MustConvTranspose2d(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.OutputPadding, c.Config.Groups, c.Config.Dilation)
 }
 func (c ConvTranspose3D) Forward(xs ts.Tensor) ts.Tensor {
-	return ts.MustConvTranspose3D(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.OutputPadding, c.Config.Dilation, c.Config.Groups)
+	return ts.MustConvTranspose3d(xs, c.Ws, c.Bs, c.Config.Stride, c.Config.Padding, c.Config.OutputPadding, c.Config.Groups, c.Config.Dilation)
 }

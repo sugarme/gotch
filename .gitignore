@@ -20,6 +20,7 @@ _build/
 data/
 example/testdata/
 tmp/
+bak/
 gen/.merlin
 **/*.rs.bk
 Cargo.lock

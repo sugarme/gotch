@@ -87,7 +87,7 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 	// Extract the bounding boxes for which confidence is above the threshold.
 	for index := 0; index < int(npreds); index++ {
 		predIdx := pred.MustGet(index)
-		var predVals []float64 = predIdx.Values()
+		var predVals []float64 = predIdx.Float64Values()
 		predIdx.MustDrop()
 
 		confidence := predVals[4]
@@ -229,7 +229,7 @@ func main() {
 	netHeight := darknet.Height()
 	netWidth := darknet.Width()
 
-	imgClone := originalImage.MustShallowClone().MustDetach()
+	imgClone := originalImage.MustShallowClone().MustDetach(false)
 
 	imageTs, err := vision.Resize(imgClone, netWidth, netHeight)
 	if err != nil {

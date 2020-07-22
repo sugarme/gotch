@@ -39,7 +39,7 @@ func denseLayer(p nn.Path, cIn, bnSize, growth int64) (retVal ts.ModuleT) {
 		ys := ys5.Apply(conv2)
 		ys5.MustDrop()
 
-		res := ts.MustCat([]ts.Tensor{xs, ys}, 1, false)
+		res := ts.MustCat([]ts.Tensor{xs, ys}, 1)
 		ys.MustDrop()
 
 		return res
@@ -84,7 +84,7 @@ func densenet(p nn.Path, cIn, cOut, bnSize int64, blockConfig []int64, growth in
 
 	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		tmp := xs.MustRelu(false)
-		return tmp.MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true)
+		return tmp.MustMaxPool2d([]int64{3, 3}, []int64{2, 2}, []int64{1, 1}, []int64{1, 1}, false, true)
 	}))
 
 	nfeat := cIn
@@ -103,7 +103,7 @@ func densenet(p nn.Path, cIn, cOut, bnSize int64, blockConfig []int64, growth in
 
 	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		tmp1 := xs.MustRelu(false)
-		tmp2 := tmp1.MustAvgPool2D([]int64{7, 7}, []int64{1, 1}, []int64{0, 0}, false, true, 1, true)
+		tmp2 := tmp1.MustAvgPool2d([]int64{7, 7}, []int64{1, 1}, []int64{0, 0}, false, true, 1, true)
 		res := tmp2.FlatView()
 		tmp2.MustDrop()
 		return res

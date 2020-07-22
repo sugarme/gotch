@@ -1,6 +1,6 @@
-(* Automatically generate the C++ -> C -> rust bindings.
+(* Automatically generate the C++ -> C -> Go bindings.
    This takes as input the Descriptions.yaml file that gets generated when
- (Func.c_go_args_list func)  building PyTorch from source.
+func (Func.c_go_args_list func)  building PyTorch from source.
 
    Run with: dune exec gen/gen.exe
  *)
@@ -42,11 +42,12 @@ let no_tensor_options =
     ; "randint_like"
     ; "randn_like" ]
 
-let prefixed_functions =
-  Set.of_list
-    (module String)
-    ["add"; "add_"; "div"; "div_"; "mul"; "mul_"; "sub"; "sub_"; "nll_loss"]
-
+(* 
+ * let prefixed_functions =
+ *   Set.of_list
+ *     (module String)
+ *     ["add"; "add_"; "div"; "div_"; "mul"; "mul_"; "sub"; "sub_"; "nll_loss"]
+ *  *)
 let excluded_prefixes = ["_thnn_"; "_th_"; "thnn_"; "th_"]
 
 let excluded_suffixes = ["_forward"; "_forward_out"]
@@ -178,153 +179,291 @@ module Func = struct
           Printf.failwithf "Method calls should have at least one argument %s"
             t.name () )
 
-  let replace_map =
-    Map.of_alist_exn
-      (module String)
-      [ ("t", "tr")
-      ; ("where", "where_")
-      ; ("view", "view_")
-      ; ("unsafe", "unsafe_") ]
+  (* 
+ *   let replace_map =
+ *     Map.of_alist_exn
+ *       (module String)
+ *       [ ("t", "tr")
+ *       ; ("where", "where_")
+ *       ; ("view", "view_")
+ *       ; ("unsafe", "unsafe_") ]
+ *  *)
+
+  let is_method t =
+    List.exists t.args ~f:(fun arg ->
+        match arg.arg_name with "self" -> true | _ -> false )
 
   let go_name name =
-    let name =
-      Map.find replace_map name |> Option.value ~default:name
-      |> String.capitalize
-      |> String.substr_replace_all ~pattern:"__" ~with_:""
+    let last_underscore name = Str.string_match (Str.regexp ".*_$") name 0 in
+    let words = Str.split (Str.regexp "_") name in
+    if last_underscore name then
+      let cap_words = List.map words ~f:(fun word -> String.capitalize word) in
+      String.concat ~sep:"" cap_words ^ "_"
+    else
+      let cap_words = List.map words ~f:(fun word -> String.capitalize word) in
+      String.concat ~sep:"" cap_words
+
+  let go_variable name =
+    let goname = go_name name in
+    (* NOTE: Deal with Go namespace conflict *)
+    let safe_name =
+      match goname with
+      | "Var" -> "vari"
+      | "Unsafe" -> "unsafety"
+      | _ -> goname
     in
-    if String.is_prefix name ~prefix:"_" then
-      "Internal" ^ (name |> String.capitalize)
-    else name |> String.capitalize
+    String.uncapitalize safe_name
 
   let c_go_args_list t =
     List.map t.args ~f:(fun arg ->
-        let an = arg.arg_name in
+        let an = go_variable arg.arg_name in
         let single_param = Printf.sprintf "%s %s" an in
         match arg.arg_type with
-        | Bool -> single_param "C.int"
-        | Int64 -> single_param "C.long"
-        | Double -> single_param "C.double"
+        | Bool -> single_param "int32"
+        | Int64 -> single_param "int64"
+        | Double -> single_param "float64"
         | Tensor -> single_param "Ctensor"
         | TensorOption -> single_param "Ctensor"
         | Scalar -> single_param "Cscalar"
-        | ScalarType -> single_param "C.int"
-        | Device -> single_param "C.int"
-        | String -> Printf.sprintf "%s_ptr C.int, %s_len C.int" an an
-        | IntList -> Printf.sprintf "%s_data C.long, %s_len C.int" an an
-        | TensorList -> Printf.sprintf "%s_data Ctensor, %s_len C.int" an an
-        | TensorOptions ->
-            Printf.sprintf "%s_kind C.int, %s_device C.int" an an )
+        | ScalarType -> single_param "int32"
+        | Device -> single_param "int32"
+        | String -> single_param "string"
+        | IntList -> Printf.sprintf "%sData []int64, %sLen int" an an
+        | TensorList -> Printf.sprintf "%sData []Ctensor, %sLen int" an an
+        | TensorOptions -> Printf.sprintf "%sKind int32, %sDevice int32" an an
+    )
     |> String.concat ~sep:", "
 
   let c_go_args_list_notype t =
     List.map t.args ~f:(fun arg ->
-        let an = arg.arg_name in
+        let an = go_variable arg.arg_name in
+        let an = match an with "var" -> "vari" | _ -> an in
         let single_param = Printf.sprintf "%s %s" an in
         match arg.arg_type with
-        | Bool -> single_param ""
-        | Int64 -> single_param ""
-        | Double -> single_param ""
-        | Tensor -> single_param ""
-        | TensorOption -> single_param ""
+        | Bool -> Printf.sprintf "c%s" an
+        | Int64 -> Printf.sprintf "c%s" an
+        | Double -> Printf.sprintf "c%s" an
+        | Tensor -> Printf.sprintf "%s" an
+        | TensorOption -> Printf.sprintf "%s" an
         | Scalar -> single_param ""
-        | ScalarType -> single_param ""
-        | Device -> single_param ""
-        | String -> Printf.sprintf "%s_ptr, %s_len" an an
-        | IntList -> Printf.sprintf "%s_data, %s_len" an an
-        | TensorList -> Printf.sprintf "%s_data, %s_len" an an
-        | TensorOptions -> Printf.sprintf "%s_kind, %s_device" an an )
+        | ScalarType -> Printf.sprintf "c%s" an
+        | Device -> Printf.sprintf "c%s" an
+        | String -> Printf.sprintf "c%s, c%sLen" an an
+        | IntList -> Printf.sprintf "c%sDataPtr, c%sLen" an an
+        | TensorList -> Printf.sprintf "c%sDataPtr, c%sLen" an an
+        | TensorOptions -> Printf.sprintf "c%sKind, c%sDevice" an an )
     |> String.concat ~sep:", "
 
-  let self_name = "self"
+  (* TODO: convert Go pointer to C pointer *)
+  let c_go_args_list_body t =
+    List.map t.args ~f:(fun arg ->
+        let an = go_variable arg.arg_name in
+        (* let single_param = Printf.sprintf "%s %s" an in *)
+        match arg.arg_type with
+        | Bool ->
+            Printf.sprintf "\nc%s := *(*C.int)(unsafe.Pointer(&%s))" an an
+        | Int64 ->
+            Printf.sprintf "\nc%s := *(*C.int64_t)(unsafe.Pointer(&%s))" an an
+        | Double ->
+            Printf.sprintf "\nc%s := *(*C.double)(unsafe.Pointer(&%s))" an an
+        | Tensor -> ""
+        | TensorOption -> ""
+        | Scalar -> ""
+        | ScalarType ->
+            Printf.sprintf "\nc%s := *(*C.int)(unsafe.Pointer(&%s))" an an
+        | Device ->
+            Printf.sprintf "\nc%s := *(*C.int)(unsafe.Pointer(&%s))" an an
+        | String ->
+            Printf.sprintf
+              "\n\
+               c%s := C.CString(%s)\n\
+               %sLen := len(%s)\n\
+               c%sLen := *(*C.int)(unsafe.Pointer(&%sLen))"
+              an an an an an an
+        | IntList ->
+            Printf.sprintf
+              "\n\
+               c%sDataPtr := (*C.int64_t)(unsafe.Pointer(&%sData[0]))\n\
+               c%sLen := *(*C.int)(unsafe.Pointer(&%sLen))"
+              an an an an
+        | TensorList ->
+            Printf.sprintf
+              "\n\
+               c%sDataPtr := (*Ctensor)(unsafe.Pointer(&%sData[0]))\n\
+               c%sLen := *(*C.int)(unsafe.Pointer(&%sLen))"
+              an an an an
+        | TensorOptions ->
+            Printf.sprintf
+              "\n\
+               c%sKind := *(*C.int)(unsafe.Pointer(&%sKind))\n\
+               c%sDevice := *(*C.int)(unsafe.Pointer(&%sDevice))"
+              an an an an )
+    |> String.concat ~sep:""
 
-  (* let input_name = "input" *)
+  let self_name = "self"
 
   let self_tensor arg =
     match arg.arg_type with
     | Tensor -> String.( = ) arg.arg_name self_name
     | _ -> false
 
-  let type_parameters t =
-    let needs_scalar_parameter =
-      List.exists t.args ~f:(fun arg ->
-          match arg.arg_type with Scalar -> true | _ -> false )
-    in
-    let needs_type_parameter =
-      List.exists t.args ~f:(fun arg ->
-          match arg.arg_type with
-          | TensorList | TensorOption -> true
-          | _ -> false )
-    in
-    if needs_type_parameter && needs_scalar_parameter then "Tensor, Scalar"
-    else if needs_type_parameter then "Tensor"
-    else if needs_scalar_parameter then "Scalar"
-    else ""
+  (* 
+ *   let type_parameters t =
+ *     let needs_scalar_parameter =
+ *       List.exists t.args ~f:(fun arg ->
+ *           match arg.arg_type with Scalar -> true | _ -> false )
+ *     in
+ *     let needs_type_parameter =
+ *       List.exists t.args ~f:(fun arg ->
+ *           match arg.arg_type with
+ *           | TensorList | TensorOption -> true
+ *           | _ -> false )
+ *     in
+ *     if needs_type_parameter && needs_scalar_parameter then "Tensor, Scalar"
+ *     else if needs_type_parameter then "Tensor"
+ *     else if needs_scalar_parameter then "Scalar"
+ *     else ""
+ *  *)
+  
+  (* 
+ *   let go_args_list t =
+ *     (* https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/List/#val-partition_tf *)
+ *     (* TODO. implement special cases - TensorOptions, ... *)
+ *     match List.partition_tf t.args ~f:self_tensor with _, args_list ->
+ *       args_list
+ *  *)
 
-  let go_args_list t =
-    (* https://ocaml.janestreet.com/ocaml-core/latest/doc/base/Base/List/#val-partition_tf *)
-    match List.partition_tf t.args ~f:self_tensor with _, args_list ->
-      args_list
+  let is_inplace t =
+    match Str.string_match (Str.regexp ".*_$") t.name 0 with
+    | true -> true
+    | _ -> false
 
   let go_typed_args_list t =
     let to_string args =
-      List.map args ~f:(fun arg ->
-          let go_arg_type =
+      let args_list =
+        List.map args ~f:(fun arg ->
+            let go_arg_type =
+              match arg.arg_type with
+              | Bool -> "bool"
+              | Int64 -> "int64"
+              | Double -> "float64"
+              | Tensor -> "Tensor"
+              | TensorOption -> "Tensor"
+              | IntList -> "[]int64"
+              | TensorList -> "[]Tensor"
+              | String -> "string"
+              (* TODO. Struct{Kind gotch.DType Device gotch.Device} *)
+              (* E.g. `type KindDevice struct{}` *)
+              | TensorOptions -> "gotch.KindDevice"
+              | Scalar -> "Scalar"
+              | ScalarType -> "gotch.DType"
+              | Device -> "gotch.Device"
+            in
             match arg.arg_type with
-            | Bool -> "bool"
-            | Int64 -> "int64"
-            | Double -> "float64"
-            | Tensor -> "Tensor"
-            | TensorOption -> "TensorOption"
-            | IntList -> "[]int64"
-            | TensorList -> "[]Tensor"
-            | String -> "string"
-            | TensorOptions -> "(Kind, Device)"
-            | Scalar -> "Scalar"
-            | ScalarType -> "Kind"
-            | Device -> "Device"
-          in
-          Printf.sprintf "%s %s" (go_name arg.arg_name) go_arg_type )
-      |> String.concat ~sep:", "
+            | TensorOptions ->
+                Printf.sprintf "%sKind gotch.DType, %sDevice gotch.Device"
+                  (go_variable arg.arg_name) (go_variable arg.arg_name)
+            | _ ->
+                Printf.sprintf "%s %s" (go_variable arg.arg_name) go_arg_type
+        )
+      in
+      if is_method t && not (is_inplace t) then
+        args_list @ ["del bool"] |> String.concat ~sep:", "
+      else args_list |> String.concat ~sep:", "
     in
-    let self_arg =
-      "self Tensor"
-      (* if String.is_suffix t.name ~suffix:"_" then "self" else "&self" *)
+    (* let self_arg = "self Tensor" in *)
+    match List.partition_tf t.args ~f:self_tensor with _, args_list ->
+      Printf.sprintf "%s" (to_string args_list)
+
+  let go_notype_args_list t =
+    let to_string args =
+      let args_list =
+        List.map args ~f:(fun arg ->
+            match arg.arg_type with
+            | TensorOptions ->
+                Printf.sprintf "%sKind, %sDevice" (go_variable arg.arg_name)
+                  (go_variable arg.arg_name)
+            | _ -> Printf.sprintf "%s" (go_variable arg.arg_name) )
+      in
+      if is_method t && not (is_inplace t) then
+        args_list @ ["del"] |> String.concat ~sep:", "
+      else args_list |> String.concat ~sep:", "
     in
     match List.partition_tf t.args ~f:self_tensor with _, args_list ->
-      Printf.sprintf "%s, %s" self_arg (to_string args_list)
+      Printf.sprintf "%s" (to_string args_list)
 
   let go_return_type t ~fallible =
+    (* printf "t name: %s\n" t.name ; *)
     let returns =
       match t.returns with
-      | `fixed 1 -> "Tensor"
+      | `fixed 1 -> "retVal Tensor"
       | `fixed v ->
-          List.init v ~f:(fun _ -> "Tensor")
-          |> String.concat ~sep:", " |> Printf.sprintf "(%s)"
-      | `dynamic -> "[]Tensor"
+          List.init v ~f:(fun i -> Printf.sprintf "retVal%d Tensor" i)
+          |> String.concat ~sep:", " |> Printf.sprintf "%s"
+      | `dynamic -> "retVal []Tensor"
     in
-    if fallible then Printf.sprintf "(error, %s)" returns
-    else Printf.sprintf " %s" returns
+    if is_inplace t then
+      if fallible then Printf.sprintf "err error" else Printf.sprintf ""
+    else if fallible then Printf.sprintf "%s, err error" returns
+    else Printf.sprintf "%s" returns
+
+  let go_return_notype t ~fallible =
+    let returns =
+      match t.returns with
+      | `fixed 1 -> "retVal"
+      | `fixed v ->
+          List.init v ~f:(fun i -> Printf.sprintf "retVal%d" i)
+          |> String.concat ~sep:", " |> Printf.sprintf "%s"
+      | `dynamic -> "retVal"
+    in
+    if is_inplace t then
+      if fallible then Printf.sprintf "err" else Printf.sprintf ""
+    else if fallible then Printf.sprintf "%s, err" returns
+    else Printf.sprintf "%s" returns
 
   let go_binding_args t =
     List.map t.args ~f:(fun arg ->
-        let name = go_name arg.arg_name in
+        let name = go_variable arg.arg_name in
         match arg.arg_type with
-        | Tensor -> Printf.sprintf "%s.c_tensor" name
-        | Scalar -> Printf.sprintf "%s.c_scalar" name
-        | Bool -> Printf.sprintf "if %s { 1 } else { 0 }" name
-        | ScalarType -> Printf.sprintf "%s.c_int()" name
-        | Device -> Printf.sprintf "%s.c_int()" name
+        | Tensor ->
+            if String.( = ) name "self" then "ts.ctensor"
+            else Printf.sprintf "%s.ctensor" name
+        | Scalar -> Printf.sprintf "%s.cscalar" name
+        | Bool -> Printf.sprintf "c%s" name
+        | ScalarType -> Printf.sprintf "%s.CInt()" name
+        | Device -> Printf.sprintf "%s.CInt()" name
         | TensorOptions ->
-            Printf.sprintf "%s.0.c_int(), %s.1.c_int()" name name
-        | String -> Printf.sprintf "%s.as_ptr(), %s.len() int32" name name
-        | IntList -> Printf.sprintf "%s.as_ptr(), %s.len() int32" name name
-        | TensorList ->
-            Printf.sprintf "ptr_list(%s).as_ptr(), %s.len() int32" name name
-        | TensorOption -> Printf.sprintf "%s.c_tensor)" name
-        | Int64 when String.( = ) name "reduction" -> "reduction.to_int()"
+            Printf.sprintf "%sKind.CInt(), %sDevice.CInt()" name name
+        | String -> Printf.sprintf "%s" name
+        | IntList -> Printf.sprintf "%s, len(%s)" name name
+        | TensorList -> Printf.sprintf "c%s, len(c%s)" name name
+        | TensorOption -> Printf.sprintf "%s.ctensor" name
         | _ -> name )
-    (* |> String.concat ~sep:",\n                " *)
     |> String.concat ~sep:", "
+
+  let go_binding_body t =
+    List.map t.args ~f:(fun arg ->
+        let an = go_variable arg.arg_name in
+        match arg.arg_type with
+        | Bool ->
+            Printf.sprintf "c%s := int32(0)\n if %s { c%s = int32(1) }\n" an an
+              an
+        | Int64 -> ""
+        | Double -> ""
+        | Tensor -> ""
+        | TensorOption -> ""
+        | Scalar -> ""
+        | ScalarType -> ""
+        | Device -> ""
+        | String -> ""
+        | IntList -> ""
+        | TensorList ->
+            Printf.sprintf
+              " var c%s []lib.Ctensor\n\
+              \  for _, t := range %s {c%s = append(c%s, t.ctensor)}\n"
+              an an an an
+        | TensorOptions -> "" )
+    |> String.concat ~sep:""
 end
 
 exception Not_a_simple_arg
@@ -494,110 +633,280 @@ let write_cpp funcs filename =
                   ph "tensor *atg_%s(%s);" exported_name c_typed_args_list ) )
   )
 
-let write_fallible_wrapper funcs filename =
-  Out_channel.with_file filename ~f:(fun out_ml ->
-      let pm s = print_inline out_ml s in
-      pm "/* THIS FILE IS AUTOMATICALLY GENERATED, DO NOT EDIT BY HAND! */" ;
-      pm "\n" ;
-      pm "package libtch" ;
-      pm "\n\n" ;
-      pm "func ptr_list(l []Tensor) []*C_tensor {\n" ;
-      pm "    var retVal []*C_tensor \n" ;
-      pm "    for _, x := range l{ \n" ;
-      pm "      retVal = append(retVal, x) \n" ;
-      pm "    } \n" ;
-      pm "} \n" ;
-      pm "\n" ;
-      (* Implement Tensor  *)
-      Map.iteri funcs ~f:(fun ~key:exported_name ~data:(func : Func.t) ->
-          let go_name = Func.go_name exported_name in
-          let go_args_list = Func.go_typed_args_list func in
-          pm "\n" ;
-          pm "func f_%s%s(" go_name (Func.type_parameters func) ;
-          pm "%s" go_args_list ;
-          pm ")%s { \n" (Func.go_return_type func ~fallible:true) ;
-          match func.returns with
-          | `dynamic ->
-              pm "        c_tensors := unsafe_torch_err!({" ;
-              pm "atg_%s(" exported_name ;
-              pm "%s)}) \n" (Func.go_binding_args func) ;
-              pm "        var r__ []Tensor \n" ;
-              pm "        i := 0 \n" ;
-              pm "        for { \n" ;
-              pm "            c__ := unsafe{*c_tensors.add(i)} \n" ;
-              pm "            if c__.is_null() { break } \n" ;
-              pm "            r__ = append(r__, Tensor {C_tensor: c__}) \n" ;
-              pm "            i += 1 \n" ;
-              pm "        } \n" ;
-              (* pm "        // unsafe{libc::free(c_tensors as *mut libc::c_void)}" ; *)
-              pm "        return r__ \n" ;
-              pm "} \n"
-          | `fixed ntensors ->
-              pm "    var c_tensors []C_tensor = make([]C_tensor, %d) \n"
-                ntensors ;
-              pm "    unsafe_torch_err({ \n" ;
-              pm "        atg_%s(c_tensors, " exported_name ;
-              pm "%s) \n" (Func.go_binding_args func) ;
-              pm "    }) \n" ;
-              let returns =
-                if ntensors = 1 then "Tensor { C_tensor: c_tensors[0] }"
-                else
-                  List.init ntensors
-                    ~f:(Printf.sprintf "Tensor { C_tensor: c_tensors[%d] }")
-                  |> String.concat ~sep:", " |> Printf.sprintf "(%s)"
-              in
-              pm "        return %s \n" returns ;
-              pm "} \n" ) )
-
 let write_wrapper funcs filename =
   Out_channel.with_file filename ~f:(fun out_ml ->
       let pm s = print_inline out_ml s in
-      pm "/* THIS FILE IS AUTOMATICALLY GENERATED, DO NOT EDIT BY HAND! */" ;
+      pm "package tensor" ;
       pm "\n\n" ;
-      pm "package libtch" ;
+      pm "// NOTE. THIS FILE IS AUTOMATICALLY GENERATED, DO NOT EDIT BY HAND!" ;
       pm "\n\n" ;
-      Map.iteri funcs ~f:(fun ~key:exported_name ~data:(func : Func.t) ->
-          let go_name = Func.go_name exported_name in
-          let go_name, fallible_go_name =
-            if Set.mem prefixed_functions func.name then
-              ("g_" ^ go_name, "f_" ^ go_name)
-            else (go_name, "f_" ^ go_name)
+      pm "// #include \"stdlib.h\"\n" ;
+      pm "import \"C\"" ;
+      pm "" ;
+      pm "\n\n" ;
+      pm "import(\n" ;
+      pm "  \"unsafe\"\n" ;
+      pm "\n" ;
+      pm "  \"github.com/sugarme/gotch\"\n" ;
+      pm "  lib \"github.com/sugarme/gotch/libtch\"\n" ;
+      pm ")" ;
+      pm "\n\n" ;
+      Map.iteri funcs ~f:(fun ~key:exported_name ~data:func ->
+          let is_method = Func.is_method func in
+          let is_inplace = Func.is_inplace func in
+          (* NOTE. `torch.__PATTERN` *)
+          let prefix_2underscore exported_name =
+            Str.string_match (Str.regexp "^__") exported_name 0
           in
-          pm "\n" ;
-          pm "func %s%s(" go_name (Func.type_parameters func) ;
+          (* NOTE. `torch._PATTERN` *)
+          let prefix_1underscore exported_name =
+            Str.string_match (Str.regexp "^_") exported_name 0
+          in
+          (* NOTE. `torch.PATTERN_1` *)
+          let suffix_1 exported_name =
+            Str.string_match (Str.regexp ".*_1$") exported_name 0
+          in
+          let gofunc_name =
+            if prefix_2underscore exported_name then
+              "__" ^ Func.go_name exported_name
+            else if prefix_1underscore exported_name then
+              "_" ^ Func.go_name exported_name
+            else if suffix_1 exported_name then
+              Func.go_name exported_name ^ "_"
+            else Func.go_name exported_name
+          in
+          let cfunc_name = "lib.Atg" ^ gofunc_name in
           let go_args_list = Func.go_typed_args_list func in
-          pm "%s" go_args_list ;
-          pm ")%s {\n" (Func.go_return_type func ~fallible:false) ;
-          let go_args_list = Func.go_args_list func in
-          let go_args_list =
-            List.map go_args_list ~f:(fun arg -> Func.go_name arg.Func.arg_name)
-            |> String.concat ~sep:", "
+          (* NOTE. temporarily excluding these functions as not implemented at FFI *)
+          (* TODO. implement multiple tensors return function []Tensor *)
+          let excluded_funcs =
+            [ "Chunk"
+            ; "AlignTensors"
+            ; "BroadcastTensors"
+            ; "Meshgrid"
+            ; "NonzeroNumpy"
+            ; "Split"
+            ; "SplitWithSizes"
+            ; "Unbind"
+            ; "Where" ]
           in
-          pm "    %s(%s)\n" fallible_go_name go_args_list ;
-          pm "}\n" ) ;
+          if
+            List.exists excluded_funcs ~f:(fun name ->
+                String.( = ) name gofunc_name )
+          then pm ""
+          else
+            match func.returns with
+            | `dynamic ->
+                pm "\n" ;
+                if is_method then pm "func(ts Tensor) %s(" gofunc_name
+                else pm "func %s(" gofunc_name ;
+                pm "%s" go_args_list ;
+                pm ")(%s) { \n" (Func.go_return_type func ~fallible:true) ;
+                if is_method && not is_inplace then
+                  pm "if del { defer ts.MustDrop() }\n" ;
+                pm "  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))\n" ;
+                pm "  \n" ;
+                pm "  %s" (Func.go_binding_body func) ;
+                pm "%s(ptr, %s)\n" cfunc_name (Func.go_binding_args func) ;
+                pm "  if err = TorchErr(); err != nil {\n" ;
+                pm "    return %s\n"
+                  (Func.go_return_notype func ~fallible:true) ;
+                pm "  }\n" ;
+                (* NOTE. if in_place method, no retVal return *)
+                if not (Func.is_inplace func) then
+                  pm "  retVal = Tensor{ctensor: *ptr}\n" ;
+                pm "  \n" ;
+                pm "  return %s\n" (Func.go_return_notype func ~fallible:true) ;
+                pm "} \n"
+            | `fixed 1 ->
+                pm "\n" ;
+                if is_method then pm "func(ts Tensor) %s(" gofunc_name
+                else pm "func %s(" gofunc_name ;
+                pm "%s" go_args_list ;
+                pm ")(%s) { \n" (Func.go_return_type func ~fallible:true) ;
+                if is_method && not is_inplace then
+                  pm "if del { defer ts.MustDrop() }\n" ;
+                pm "  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))\n" ;
+                pm "  \n" ;
+                pm "  %s" (Func.go_binding_body func) ;
+                pm "%s(ptr, %s)\n" cfunc_name (Func.go_binding_args func) ;
+                pm "  if err = TorchErr(); err != nil {\n" ;
+                pm "    return %s\n"
+                  (Func.go_return_notype func ~fallible:true) ;
+                pm "  }\n" ;
+                (* NOTE. if in_place method, no retVal return *)
+                if not (Func.is_inplace func) then
+                  pm "  retVal = Tensor{ctensor: *ptr}\n" ;
+                pm "  \n" ;
+                pm "  return %s\n" (Func.go_return_notype func ~fallible:true) ;
+                pm "} \n"
+            | `fixed _ -> pm "" ) ;
+      (* TODO. implement for return multiple tensor - []Tensor *)
+      pm "// End of implementing Tensor ================================= \n"
+  )
+
+let write_must_wrapper funcs filename =
+  Out_channel.with_file filename ~f:(fun out_ml ->
+      let pm s = print_inline out_ml s in
+      pm "package tensor" ;
+      pm "\n\n" ;
+      pm "// NOTE. THIS FILE IS AUTOMATICALLY GENERATED, DO NOT EDIT BY HAND!" ;
+      pm "\n\n" ;
+      pm "import(\n" ;
+      pm "  \"log\"\n" ;
+      pm "\n" ;
+      pm "  \"github.com/sugarme/gotch\"\n" ;
+      pm ")" ;
+      pm "\n\n" ;
+      Map.iteri funcs ~f:(fun ~key:exported_name ~data:func ->
+          let is_method = Func.is_method func in
+          (* NOTE. `torch.__PATTERN` *)
+          let prefix_2underscore exported_name =
+            Str.string_match (Str.regexp "^__") exported_name 0
+          in
+          (* NOTE. `torch._PATTERN` *)
+          let prefix_1underscore exported_name =
+            Str.string_match (Str.regexp "^_") exported_name 0
+          in
+          (* NOTE. `torch.PATTERN_1` *)
+          let suffix_1 exported_name =
+            Str.string_match (Str.regexp ".*_1$") exported_name 0
+          in
+          let gofunc_name =
+            if prefix_2underscore exported_name then
+              "__" ^ Func.go_name exported_name
+            else if prefix_1underscore exported_name then
+              "_" ^ Func.go_name exported_name
+            else if suffix_1 exported_name then
+              Func.go_name exported_name ^ "_"
+            else Func.go_name exported_name
+          in
+          let go_args_list = Func.go_typed_args_list func in
+          let go_args_list_notype = Func.go_notype_args_list func in
+          (* NOTE. temporarily excluding these functions as not implemented at FFI *)
+          (* TODO. implement multiple tensors return function []Tensor *)
+          let excluded_funcs =
+            [ "Chunk"
+            ; "AlignTensors"
+            ; "BroadcastTensors"
+            ; "Meshgrid"
+            ; "NonzeroNumpy"
+            ; "Split"
+            ; "SplitWithSizes"
+            ; "Unbind"
+            ; "Where" ]
+          in
+          if
+            List.exists excluded_funcs ~f:(fun name ->
+                String.( = ) name gofunc_name )
+          then pm ""
+          else
+            match func.returns with
+            | `dynamic ->
+                pm "\n" ;
+                if is_method then pm "func(ts Tensor) %s(" gofunc_name
+                else pm "func Must%s(" gofunc_name ;
+                pm "%s" go_args_list ;
+                pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;
+                pm "  \n" ;
+                if is_method then
+                  pm "  retVal, err := ts.%s(%s)\n" gofunc_name
+                    go_args_list_notype
+                else
+                  pm "  retVal, err := %s(%s)\n" gofunc_name
+                    go_args_list_notype ;
+                pm "  if err != nil { log.Fatal(err) }\n" ;
+                pm "  \n" ;
+                pm "  return %s\n" (Func.go_return_notype func ~fallible:false) ;
+                pm "} \n"
+            | `fixed 1 ->
+                pm "\n" ;
+                if is_method then pm "func(ts Tensor) Must%s(" gofunc_name
+                else pm "func Must%s(" gofunc_name ;
+                pm "%s" go_args_list ;
+                pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;
+                pm "  \n" ;
+                (* NOTE. No return retVal for in_place method *)
+                if Func.is_inplace func then
+                  if is_method then
+                    pm "  err := ts.%s(%s)\n" gofunc_name go_args_list_notype
+                  else pm "  err := %s(%s)\n" gofunc_name go_args_list_notype
+                else if is_method then
+                  pm "  retVal, err := ts.%s(%s)\n" gofunc_name
+                    go_args_list_notype
+                else
+                  pm "  retVal, err := %s(%s)\n" gofunc_name
+                    go_args_list_notype ;
+                pm "  if err != nil { log.Fatal(err) }\n" ;
+                pm "  \n" ;
+                pm "  return %s\n" (Func.go_return_notype func ~fallible:false) ;
+                pm "} \n"
+            | `fixed _ -> pm "" ) ;
+      (* TODO. implement for return multiple tensor - []Tensor *)
       pm "// End of implementing Tensor ================================= \n"
   )
 
 let write_ffi funcs filename =
   Out_channel.with_file filename ~f:(fun out_ml ->
       let pm s = p out_ml s in
-      pm "/* THIS FILE IS AUTOMATICALLY GENERATED, DO NOT EDIT BY HAND! */" ;
       pm "package libtch" ;
       pm "" ;
-      pm "// #include \"stdbool.h\" " ;
-      pm "// #include \"torch_api.h\" " ;
+      pm "// NOTE. THIS FILE IS AUTOMATICALLY GENERATED, DO NOT EDIT BY HAND!" ;
+      pm "" ;
+      pm "//#include \"stdbool.h\" " ;
+      pm "//#include \"torch_api.h\" " ;
       pm "import \"C\"" ;
       pm "" ;
+      pm "import \"unsafe\"" ;
+      pm "" ;
       Map.iteri funcs ~f:(fun ~key:exported_name ~data:func ->
+          (* let is_method = *)
+          (* match func.Func.kind with `method_ -> true | `function_ -> false *)
+          (* in *)
+          (* let is_inplace = *)
+          (* Func.is_inplace func *)
+          (* 
+ *             match exported_name with
+ *             | "add_1" -> true
+ *             | "sub_1" -> true
+ *             | "div_1" -> true
+ *             | "mul_1" -> true
+ *             | _ -> false
+ *  *)
+          (* in *)
+          (* NOTE. `torch.__PATTERN` *)
+          let prefix_2underscore exported_name =
+            Str.string_match (Str.regexp "^__") exported_name 0
+          in
+          (* NOTE. `torch._PATTERN` *)
+          let prefix_1underscore exported_name =
+            Str.string_match (Str.regexp "^_") exported_name 0
+          in
+          (* NOTE. `torch.PATTERN_1` *)
+          let suffix_1 exported_name =
+            Str.string_match (Str.regexp ".*_1$") exported_name 0
+          in
+          let ffifunc_name =
+            if prefix_2underscore exported_name then
+              "__" ^ Func.go_name exported_name
+            else if prefix_1underscore exported_name then
+              "_" ^ Func.go_name exported_name
+            else if suffix_1 exported_name then
+              Func.go_name exported_name ^ "_"
+            else Func.go_name exported_name
+          in
           match func.Func.returns with
           | `fixed _ ->
-              pm "func Atg_%s(ptr *Ctensor, %s){C.atg_%s(ptr, %s)}"
-                (Func.go_name exported_name)
-                (Func.c_go_args_list func) exported_name
+              pm "func Atg%s(ptr *Ctensor, %s){%s \nC.atg_%s(ptr, %s)\n}"
+                ffifunc_name (Func.c_go_args_list func)
+                (Func.c_go_args_list_body func)
+                exported_name
                 (Func.c_go_args_list_notype func)
-          | `dynamic ->
-              pm "func Atg_%s(%s)(*Ctensor)" exported_name
-                (Func.c_go_args_list func) ) )
+          | `dynamic -> pm ""
+          (* TODO: need more implement here *)
+          (* pm "func Atg%s(%s)(retValPtr *Ctensor)" *)
+          (* (Func.go_name exported_name) *)
+          (* (Func.c_go_args_list func)  *) ) )
 
 let methods =
   let c name args = {Func.name; args; returns= `fixed 1; kind= `method_} in
@@ -607,8 +916,8 @@ let methods =
   ; c "toType" [ca "self" Tensor; ca "scalar_type" ScalarType]
   ; c "to" [ca "self" Tensor; ca "device" Device] ]
 
-let run ~yaml_filename ~cpp_filename ~ffi_filename ~wrapper_filename
-    ~fallible_wrapper_filename =
+let run ~yaml_filename ~cpp_filename ~ffi_filename ~must_wrapper_filename
+    ~wrapper_filename =
   let funcs = read_yaml yaml_filename in
   let funcs = methods @ funcs in
   printf "Generating code for %d functions.\n%!" (List.length funcs) ;
@@ -631,11 +940,12 @@ let run ~yaml_filename ~cpp_filename ~ffi_filename ~wrapper_filename
   in
   write_cpp funcs cpp_filename ;
   write_ffi funcs ffi_filename ;
-  write_wrapper funcs wrapper_filename ;
-  write_fallible_wrapper funcs fallible_wrapper_filename
+  write_must_wrapper funcs must_wrapper_filename ;
+  write_wrapper funcs wrapper_filename
 
 let () =
-  run ~yaml_filename:"third_party/pytorch/Declarations-v1.5.0.yaml"
-    ~cpp_filename:"tmp/torch_api_generated" ~ffi_filename:"tmp/c_generated.go"
-    ~wrapper_filename:"tmp/tensor_generated.go"
-    ~fallible_wrapper_filename:"tmp/tensor_fallible_generated.go"
+  run ~yaml_filename:"gen/pytorch/Declarations-v1.5.0.yaml"
+    ~cpp_filename:"libtch/torch_api_generated"
+    ~ffi_filename:"libtch/c-generated.go"
+    ~must_wrapper_filename:"tensor/must-tensor-generated.go"
+    ~wrapper_filename:"tensor/tensor-generated.go"

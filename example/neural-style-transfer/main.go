@@ -46,7 +46,7 @@ func gramMatrix(m ts.Tensor) (retVal ts.Tensor) {
 
 	mview := m.MustView([]int64{a * b, c * d}, false)
 	mviewT := mview.MustT(false)
-	gram := mview.MustMatMul(mviewT, true)
+	gram := mview.MustMatmul(mviewT, true)
 	mviewT.MustDrop()
 
 	return gram.MustDiv1(ts.IntScalar(a*b*c*d), true)
@@ -57,7 +57,7 @@ func styleLoss(m1 ts.Tensor, m2 ts.Tensor) (retVal ts.Tensor) {
 	// m1.MustDrop()
 	gram2 := gramMatrix(m2)
 	// m2.MustDrop()
-	loss := gram1.MustMseLoss(gram2, ts.ReductionMean.ToInt(), true)
+	loss := gram1.MustMseLoss(gram2, int64(ts.ReductionMean), true)
 	gram2.MustDrop()
 	return loss
 }
@@ -89,8 +89,8 @@ func main() {
 
 	cuda := gotch.CudaBuilder(0)
 	device := cuda.CudaIfAvailable()
-
 	// device := gotch.CPU
+
 	netVS := nn.NewVarStore(device)
 	in := vision.NewImageNet()
 	net := vision.VGG16(netVS.Root(), in.ClassCount())
@@ -150,8 +150,8 @@ func main() {
 		inputLayers := net.ForwardAllT(inputVar, false, maxLayer)
 
 		// var sLoss ts.Tensor
-		sLoss := ts.MustZeros([]int64{1}, gotch.Float.CInt(), device.CInt())
-		cLoss := ts.MustZeros([]int64{1}, gotch.Float.CInt(), device.CInt())
+		sLoss := ts.MustZeros([]int64{1}, gotch.Float, device)
+		cLoss := ts.MustZeros([]int64{1}, gotch.Float, device)
 		for _, idx := range StyleIndexes {
 			l := styleLoss(inputLayers[idx], styleLayers[idx])
 			sLoss = sLoss.MustAdd(l, true)
@@ -159,7 +159,7 @@ func main() {
 		}
 		for _, idx := range ContentIndexes {
 			// NOTE: set `del` = true called panic at GPU train (tested on Colab)
-			l := inputLayers[idx].MustMseLoss(contentLayers[idx], ts.ReductionMean.ToInt(), false)
+			l := inputLayers[idx].MustMseLoss(contentLayers[idx], int64(ts.ReductionMean), false)
 			cLoss = cLoss.MustAdd(l, true)
 			l.MustDrop()
 		}
@@ -174,7 +174,7 @@ func main() {
 
 		if (stepIdx % 1000) == 0 {
 			clone := inputVar.MustShallowClone()
-			img := clone.MustDetach()
+			img := clone.MustDetach(false)
 			imageTs := img.MustTo(gotch.CPU, true)
 			clone.MustDrop()
 			err := in.SaveImage(imageTs, fmt.Sprintf("../../data/neural-style-transfer/out%v.jpg", stepIdx))
@@ -184,7 +184,7 @@ func main() {
 			imageTs.MustDrop()
 		}
 
-		fmt.Printf("Step %v ... Done. Loss %10.1f\n", stepIdx, loss.Values()[0])
+		fmt.Printf("Step %v ... Done. Loss %10.1f\n", stepIdx, loss.Float64Values()[0])
 		cLoss.MustDrop()
 		loss.MustDrop()
 	}

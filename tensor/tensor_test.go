@@ -8,12 +8,26 @@ import (
 	ts "github.com/sugarme/gotch/tensor"
 )
 
+func TestTensorInit(t *testing.T) {
+	tensor := ts.MustArange1(ts.IntScalar(1), ts.IntScalar(5), gotch.Int64, gotch.CPU)
+
+	tensor.Print()
+
+	want := []float64{1, 2, 3, 4}
+	got := tensor.Float64Values()
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("Expected tensor values: %v\n", want)
+		t.Errorf("Got tensor values: %v\n", got)
+	}
+}
+
 func TestInplaceAssign(t *testing.T) {
 	tensor := ts.MustOfSlice([]int64{3, 1, 4, 1, 5})
 
-	tensor.Add1_(ts.IntScalar(1))
-	tensor.Mul1_(ts.IntScalar(2))
-	tensor.Sub1_(ts.IntScalar(1))
+	tensor.MustAdd1_(ts.IntScalar(1))
+	tensor.MustMul1_(ts.IntScalar(2))
+	tensor.MustSub1_(ts.IntScalar(1))
 
 	want := []int64{7, 3, 9, 3, 11}
 	got := tensor.Vals()
@@ -83,5 +97,3 @@ func TestIter(t *testing.T) {
 		t.Errorf("Got tensor values: %v\n", got1)
 	}
 }
-
-// TODO: more tests

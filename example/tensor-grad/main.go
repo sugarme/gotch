@@ -9,7 +9,7 @@ import (
 
 func main() {
 	x := tensor.TensorFrom([]float64{2.0})
-	x = x.MustSetRequiresGrad(true)
+	x = x.MustSetRequiresGrad(true, false)
 	x.ZeroGrad()
 
 	xy := tensor.TensorFrom([]float64{2.0})
@@ -19,10 +19,10 @@ func main() {
 	z := x.MustMul(xz, false)
 
 	y.Backward()
-	xgrad := x.MustGrad()
+	xgrad := x.MustGrad(false)
 	xgrad.Print() // [2.0]
 	z.Backward()
-	xgrad = x.MustGrad()
+	xgrad = x.MustGrad(false)
 	xgrad.Print() // [5.0] due to accumulated 2.0 + 3.0
 
 	isGradEnabled := tensor.MustGradSetEnabled(false)

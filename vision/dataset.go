@@ -57,7 +57,7 @@ func RandomFlip(t ts.Tensor) (retVal ts.Tensor) {
 		if rand.Float64() == 1.0 {
 			src = tView
 		} else {
-			src = tView.MustFlip([]int64{2})
+			src = tView.MustFlip([]int64{2}, false)
 		}
 
 		tView.MustDrop()
@@ -82,7 +82,7 @@ func RandomCrop(t ts.Tensor, pad int64) (retVal ts.Tensor) {
 
 	szH := size[2]
 	szW := size[3]
-	padded := t.MustReflectionPad2d([]int64{pad, pad, pad, pad})
+	padded := t.MustReflectionPad2d([]int64{pad, pad, pad, pad}, false)
 	output, err := t.ZerosLike(false)
 	if err != nil {
 		log.Fatal(err)

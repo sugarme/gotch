@@ -218,7 +218,7 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 		if args.SeRatio == 0 {
 			ys4 = ys3
 		} else {
-			tmp1 := ys3.MustAdaptiveAvgPool2D([]int64{1, 1})
+			tmp1 := ys3.MustAdaptiveAvgPool2d([]int64{1, 1}, false)
 			tmp2 := tmp1.ApplyT(se, train)
 			tmp1.MustDrop()
 			tmp3 := tmp2.MustSigmoid(true)
@@ -288,7 +288,7 @@ func efficientnet(p nn.Path, params params, nclasses int64) (retVal ts.ModuleT) 
 	classifier := nn.SeqT()
 
 	classifier.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.MustDropout(0.2, train, false)
+		return ts.MustDropout(xs, 0.2, train)
 	}))
 
 	classifier.Add(nn.NewLinear(p.Sub("_fc"), outC, nclasses, nn.DefaultLinearConfig()))
@@ -306,7 +306,7 @@ func efficientnet(p nn.Path, params params, nclasses int64) (retVal ts.ModuleT) 
 		tmp5.MustDrop()
 		tmp7 := tmp6.Swish()
 		tmp6.MustDrop()
-		tmp8 := tmp7.MustAdaptiveAvgPool2D([]int64{1, 1})
+		tmp8 := tmp7.MustAdaptiveAvgPool2d([]int64{1, 1}, false)
 		tmp7.MustDrop()
 		tmp9 := tmp8.MustSqueeze1(-1, true)
 		tmp10 := tmp9.MustSqueeze1(-1, true)

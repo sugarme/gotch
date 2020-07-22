@@ -8,7 +8,7 @@ import (
 )
 
 func snMaxPool2D(xs ts.Tensor) (retVal ts.Tensor) {
-	return xs.MustMaxPool2D([]int64{3, 3}, []int64{2, 2}, []int64{0, 0}, []int64{1, 1}, true, false)
+	return xs.MustMaxPool2d([]int64{3, 3}, []int64{2, 2}, []int64{0, 0}, []int64{1, 1}, true, false)
 }
 
 func fire(p nn.Path, cIn int64, cSqueeze int64, cExp1 int64, cExp3 int64) (retVal ts.ModuleT) {
@@ -31,7 +31,7 @@ func fire(p nn.Path, cIn int64, cSqueeze int64, cExp1 int64, cExp3 int64) (retVa
 		exp3Tmp := tmp2.Apply(exp3)
 		exp3Ts := exp3Tmp.MustRelu(true)
 
-		return ts.MustCat([]ts.Tensor{exp1Ts, exp3Ts}, 1, true)
+		return ts.MustCat([]ts.Tensor{exp1Ts, exp3Ts}, 1)
 	})
 }
 
@@ -119,14 +119,14 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 	}
 
 	features.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		return xs.MustDropout(0.5, train, false)
+		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	features.Add(nn.NewConv2D(cp.Sub("1"), 512, nclasses, 1, finalConvConfig))
 
 	features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
 		tmp1 := xs.MustRelu(false)
-		tmp2 := tmp1.MustAdaptiveAvgPool2D([]int64{1, 1})
+		tmp2 := tmp1.MustAdaptiveAvgPool2d([]int64{1, 1}, false)
 		tmp1.MustDrop()
 		res := tmp2.FlatView()
 		tmp2.MustDrop()

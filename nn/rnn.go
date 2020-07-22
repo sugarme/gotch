@@ -131,7 +131,7 @@ func (l LSTM) ZeroState(batchDim int64) (retVal State) {
 
 	layerDim := l.config.NumLayers * numDirections
 	shape := []int64{layerDim, batchDim, l.hiddenDim}
-	zeros := ts.MustZeros(shape, gotch.Float.CInt(), l.device.CInt())
+	zeros := ts.MustZeros(shape, gotch.Float, l.device)
 
 	return LSTMState{
 		Tensor1: zeros.MustShallowClone(),
@@ -157,7 +157,7 @@ func (l LSTM) Seq(input ts.Tensor) (ts.Tensor, State) {
 
 func (l LSTM) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
 
-	output, h, c := input.MustLSTM([]ts.Tensor{inState.(LSTMState).Tensor1, inState.(LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
+	output, h, c := input.MustLstm([]ts.Tensor{inState.(LSTMState).Tensor1, inState.(LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
 
 	return output, LSTMState{
 		Tensor1: h,
@@ -229,7 +229,7 @@ func (g GRU) ZeroState(batchDim int64) (retVal State) {
 	layerDim := g.config.NumLayers * numDirections
 	shape := []int64{layerDim, batchDim, g.hiddenDim}
 
-	tensor := ts.MustZeros(shape, gotch.Float.CInt(), g.device.CInt())
+	tensor := ts.MustZeros(shape, gotch.Float, g.device)
 
 	return GRUState{Tensor: tensor}
 }
@@ -252,7 +252,7 @@ func (g GRU) Seq(input ts.Tensor) (ts.Tensor, State) {
 
 func (g GRU) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
 
-	output, h := input.MustGRU(inState.(GRUState).Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
+	output, h := input.MustGru(inState.(GRUState).Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
 
 	return output, GRUState{Tensor: h}
 }

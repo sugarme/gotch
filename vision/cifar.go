@@ -45,8 +45,8 @@ func readFile(filename string) (imagesTs ts.Tensor, labelsTs ts.Tensor) {
 		log.Fatal(err)
 	}
 
-	images := ts.MustZeros([]int64{samplesPerFile, cfC, cfH, cfW}, gotch.Float.CInt(), gotch.CPU.CInt())
-	labels := ts.MustZeros([]int64{samplesPerFile}, gotch.Int64.CInt(), gotch.CPU.CInt())
+	images := ts.MustZeros([]int64{samplesPerFile, cfC, cfH, cfW}, gotch.Float, gotch.CPU)
+	labels := ts.MustZeros([]int64{samplesPerFile}, gotch.Int64, gotch.CPU)
 
 	for idx := 0; idx < int(samplesPerFile); idx++ {
 		contentOffset := int(bytesPerImage) * idx
@@ -101,8 +101,8 @@ func CFLoadDir(dir string) (retVal Dataset) {
 	}
 
 	return Dataset{
-		TrainImages: ts.MustCat(trainImages, 0, true),
-		TrainLabels: ts.MustCat(trainLabels, 0, true),
+		TrainImages: ts.MustCat(trainImages, 0),
+		TrainLabels: ts.MustCat(trainLabels, 0),
 		TestImages:  testImages,
 		TestLabels:  testLabels,
 		Labels:      10,

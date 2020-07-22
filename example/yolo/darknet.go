@@ -270,7 +270,7 @@ func upsample(prevChannels int64) (retVal1 int64, retVal2 interface{}) {
 		h := res[2]
 		w := res[3]
 
-		return xs.MustUpsampleNearest2d([]int64{h * 2, w * 2}, 2.0, 2.0)
+		return xs.MustUpsampleNearest2d([]int64{h * 2, w * 2}, 2.0, 2.0, false)
 	})
 
 	return prevChannels, Layer{Val: layer}
@@ -396,7 +396,7 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 
 	xOffset := a.MustView([]int64{-1, 1}, true)
 	yOffset := b.MustView([]int64{-1, 1}, true)
-	xyOffsetTmp1 := ts.MustCat([]ts.Tensor{xOffset, yOffset}, 1, false)
+	xyOffsetTmp1 := ts.MustCat([]ts.Tensor{xOffset, yOffset}, 1)
 	xyOffsetTmp2 := xyOffsetTmp1.MustRepeat([]int64{1, nanchors}, true)
 	xyOffsetTmp3 := xyOffsetTmp2.MustView([]int64{-1, 2}, true)
 	xyOffset := xyOffsetTmp3.MustUnsqueeze(0, true)
@@ -512,7 +512,7 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 				for _, i := range route.TsIdxs {
 					layers = append(layers, prevYs[int(i)])
 				}
-				ysTs = ts.MustCat(layers, 1, false)
+				ysTs = ts.MustCat(layers, 1)
 
 			case "Shortcut":
 				from := b.Bl.(Shortcut).TsIdx
@@ -540,7 +540,7 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 			prevYs = append(prevYs, ysTs)
 		} // end of For loop
 
-		res = ts.MustCat(detections, 1, true)
+		res = ts.MustCat(detections, 1)
 
 		// Now, free-up memory held up by prevYs
 		for _, t := range prevYs {
