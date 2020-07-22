@@ -181,6 +181,10 @@ func DTypeFromData(data interface{}) (retVal DType, err error) {
 		return retVal, err
 	}
 
+	if typ.Kind() == reflect.Slice {
+		return ToDType(typ.Elem())
+	}
+
 	return ToDType(typ)
 }
 

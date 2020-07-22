@@ -274,6 +274,16 @@ func FlattenDim(shape []int64) int {
 // FlattenData flattens data to 1D array ([]T)
 func FlattenData(data interface{}) (fData interface{}, err error) {
 
+	// If data is 1D already, just return it.
+	dataVal := reflect.ValueOf(data)
+	dataTyp := reflect.TypeOf(data)
+	if dataVal.Kind() == reflect.Slice {
+		eleVal := dataTyp.Elem()
+		if eleVal.Kind() != reflect.Slice {
+			return data, nil
+		}
+	}
+
 	flat, err := flattenData(reflect.ValueOf(data).Interface(), 0, []interface{}{})
 	if err != nil {
 		return nil, err
