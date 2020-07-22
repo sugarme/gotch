@@ -1,4 +1,4 @@
-# GoTch - Libtorch Go Binding
+# GoTch [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0)[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc)[![Travis CI](https://api.travis-ci.org/sugarme/gotch.svg?branch=master)](https://travis-ci.org/sugarme/gotch)[![Go Report Card](https://goreportcard.com/badge/sugarme/gotch)](https://goreportcard.com/report/github.com/sugarme/gotch) 
 
 
 ## Overview
@@ -67,6 +67,10 @@
     go run [EXAMPLE FILES]
 
 ```
+
+## License
+
+GoTch is Apache 2.0 licensed.
 
 
 ## Acknowledgement
