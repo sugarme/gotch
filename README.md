@@ -17,33 +17,8 @@
 
 - **Libtorch** C++ library of [Pytorch](https://pytorch.org/)
 
-## How to use
-
-### 1. Libtorch installation
-
 - Make sure that a libtorch version 1.5.0 (either CPU or CUDA support) is
     installed in your system (default at "/opt/libtorch" in Linux/Mac OS). 
-
-### 2. Import **GoTch** package
-
-```go
-    package main
-
-    import(
-        "fmt"
-        
-        "github.com/sugarme/gotch"
-    )
-
-    func main(){
-        
-        var d gotch.Cuda
-        fmt.Printf("Cuda device count: %v\n", d.DeviceCount())
-        fmt.Printf("Cuda is available: %v\n", d.IsAvailable())
-        fmt.Printf("Cudnn is available: %v\n", d.CudnnIsAvailable())
-
-    }
-```
 
 ## Examples
 
@@ -199,28 +174,14 @@ func basicOps() {
 
 ```
 
-- Real application examples can be found at `example` folder
+- Real application examples can be found at [example folder](example/README.md) 
 
-## [Documentations](docs/README.md)
+## Getting Started
 
-## [Examples](example/README.md)
+- [Documentations](docs/README.md)
 
+- See [pkg.go.dev](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc) for detail APIs 
 
-### 3. Notes on running examples
-
-- Clean Cgo cache to get a fresh build as [mention here](https://github.com/golang/go/issues/24355)
-
-```bash
-    # Either
-    go clean -cache -testcache .
-    go run [EXAMPLE FILES]
-
-    # Or
-    go build -a
-
-    go run [EXAMPLE FILES]
-
-```
 
 ## License
 
