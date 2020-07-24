@@ -29,5 +29,8 @@
 
 - Accuracy should be about **99.3%**.
 
+## Run on Cloud
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sugarme/gotch/blob/master/example/mnist/gotch_mnist.ipynb)
 
 
