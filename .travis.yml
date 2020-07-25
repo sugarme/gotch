@@ -6,6 +6,10 @@ go:
 env:
   - GO111MODULE=on
 
+branches:
+  only:
+    - cpu
+
 dist: bionic
 
 before_install:
