@@ -11,8 +11,6 @@ import (
 func TestTensorInit(t *testing.T) {
 	tensor := ts.MustArange1(ts.IntScalar(1), ts.IntScalar(5), gotch.Int64, gotch.CPU)
 
-	tensor.Print()
-
 	want := []float64{1, 2, 3, 4}
 	got := tensor.Float64Values()
 
