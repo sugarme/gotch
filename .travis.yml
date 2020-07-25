@@ -34,4 +34,6 @@ before_install:
   - sudo mv libtorch /opt
   - LD_LIBRARY_PATH=/opt/libtorch/lib:/usr/lib64-nvidia:/usr/local/cuda-10.1/lib64:${LD_LIBRARY_PATH}
 script:
-  - go test -v -tags integration ./...
+  - go test -v github.com/sugarme/gotch/tensor
+  - go test -v github.com/sugarme/gotch/nn
+  - go test -v github.com/sugarme/gotch/vision
