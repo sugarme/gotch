@@ -6,8 +6,10 @@ go:
 env:
   - GO111MODULE=on
 
+dist: bionic
+
 before_install:
-  - go get -v golang.org/x/lint/golint
+  - sudo apt-get install clang-tools-9
   - wget -O /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1+cpu.zip https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.5.1%2Bcpu.zip
   - unzip /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1+cpu.zip -d /opt
   - LIBTORCH=/opt/libtorch
