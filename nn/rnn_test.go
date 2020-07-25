@@ -87,7 +87,7 @@ func lstmTest(rnnConfig nn.RNNConfig, t *testing.T) {
 	vs := nn.NewVarStore(gotch.CPU)
 	path := vs.Root()
 
-	lstm := nn.NewLSTM(&path, inputDim, outputDim, rnnConfig)
+	lstm := nn.NewLSTM(path, inputDim, outputDim, rnnConfig)
 
 	numDirections := int64(1)
 	if rnnConfig.Bidirectional {

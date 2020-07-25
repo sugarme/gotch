@@ -1038,6 +1038,19 @@ func (ts Tensor) Float64Values() []float64 {
 	return vec
 }
 
+// Int64Values returns values of tensor in a slice of int64.
+func (ts Tensor) Int64Values() []int64 {
+	numel := ts.Numel()
+	vec := make([]int64, numel)
+
+	int64Ts := ts.MustTotype(gotch.Int64, false)
+
+	int64Ts.MustCopyData(vec, numel)
+	int64Ts.MustDrop()
+
+	return vec
+}
+
 // Vals returns tensor values in a slice
 // NOTE: need a type insersion to get runtime type
 // E.g. res := xs.Vals().([]int64)

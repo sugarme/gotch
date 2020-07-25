@@ -86,7 +86,7 @@ type LSTM struct {
 }
 
 // NewLSTM creates a LSTM layer.
-func NewLSTM(vs *Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal LSTM) {
+func NewLSTM(vs Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal LSTM) {
 
 	var numDirections int64 = 1
 	if cfg.Bidirectional {
