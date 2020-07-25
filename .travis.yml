@@ -1,0 +1,37 @@
+language: go
+
+go:
+  - 1.14.x
+
+matrix:
+  include:
+    - name: CUDA 10
+      env:
+      - CUDA=10.1.105-1
+      - CUDA_SHORT=10.1
+      - UBUNTU_VERSION=ubuntu1804
+      dist: bionic
+
+env:
+  - GO111MODULE=on
+
+before_install:
+  - go get -v golang.org/x/lint/golint
+  - INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+  - wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+  - sudo dpkg -i ${INSTALLER}
+  - wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+  - sudo apt-key add 7fa2af80.pub
+  - sudo apt update -qq
+  - sudo apt install -y cuda-core-${CUDA_SHORT/./-} cuda-cudart-dev-${CUDA_SHORT/./-} cuda-cufft-dev-${CUDA_SHORT/./-}
+  - sudo apt clean
+  - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+  - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+  - PATH=${CUDA_HOME}/bin:${PATH}
+  - cd /tmp
+  - wget https://download.pytorch.org/libtorch/cu101/libtorch-cxx11-abi-shared-with-deps-1.5.1%2Bcu101.zip
+  - unzip libtorch-cxx11-abi-shared-with-deps-1.5.1+cu101.zip
+  - sudo mv libtorch /opt
+  - LD_LIBRARY_PATH=/opt/libtorch/lib:/usr/lib64-nvidia:/usr/local/cuda-10.1/lib64:${LD_LIBRARY_PATH}
+script:
+  - go test -v -tags integration ./...
