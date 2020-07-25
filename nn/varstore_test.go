@@ -37,7 +37,8 @@ func TestVarStoreEntry(t *testing.T) {
 }
 
 func TestSaveLoad(t *testing.T) {
-	filename := "/tmp/vsload.test"
+	// filename := "/tmp/vsload.test"
+	filename := "vsload.test" // for Travis to work
 	filenameAbs, err := filepath.Abs(filename)
 	if err != nil {
 		panic(err)
