@@ -12,8 +12,8 @@ before_install:
   - sudo apt-get install clang-tools-9
   - wget -O /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1+cpu.zip https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.5.1%2Bcpu.zip
   - unzip /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1+cpu.zip -d /opt
-  - LIBTORCH=/opt/libtorch
-  - LD_LIBRARY_PATH=${LIBTORCH}/lib:$LD_LIBRARY_PATH
+  - export LIBTORCH=/opt/libtorch
+  - export LD_LIBRARY_PATH=${LIBTORCH}/lib:$LD_LIBRARY_PATH
 script:
   - go test -v github.com/sugarme/gotch/tensor
   - go test -v github.com/sugarme/gotch/nn
