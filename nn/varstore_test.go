@@ -1,14 +1,14 @@
 package nn_test
 
 import (
-	"os"
-	"path/filepath"
+	// "os"
+	// "path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	// ts "github.com/sugarme/gotch/tensor"
 )
 
 func TestVarStoreEntry(t *testing.T) {
