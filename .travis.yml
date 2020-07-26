@@ -16,10 +16,10 @@ before_install:
   - export LD_LIBRARY_PATH=${LIBTORCH}/lib:$LD_LIBRARY_PATH
   - printenv
   - ls
-  - rm libtorch/dummy_cuda_dependency.cpp
-  - mv libtorch/fake_cuda_dependency.cpp.cpu libtorch/fake_cuda_dependency.cpp
-  - mv libtorch/lib.go
-  - mv libtorch/lib.go.cpu lib.go
+  - rm libtch/dummy_cuda_dependency.cpp
+  - mv libtch/fake_cuda_dependency.cpp.cpu libtch/fake_cuda_dependency.cpp
+  - rm libtch/lib.go
+  - mv libtch/lib.go.cpu lib.go
 script:
   - go test -v github.com/sugarme/gotch/tensor
   - go test -v github.com/sugarme/gotch/nn
