@@ -15,10 +15,46 @@
 
 ## Dependencies
 
-- **Libtorch** C++ library of [Pytorch](https://pytorch.org/)
+- **Libtorch** C++ v1.5.0 library of [Pytorch](https://pytorch.org/)
 
 - Make sure that a libtorch version 1.5.0 (either CPU or CUDA support) is
     installed in your system (default at "/opt/libtorch" in Linux/Mac OS). 
+
+- Alternatively, just execute corresponding command to setup Libtorch C++
+
+    + **CPU**
+
+    ```bash
+
+    curl https://drive.google.com/file/d/1z7jwA2Zg4Qqw5BZS72V4k8vbPdxaQvqv/view?usp=sharing -sSf | bash
+
+    ```
+
+    + **GPU Cuda 10.1**
+
+    ```bash
+
+    curl https://drive.google.com/file/d/1DQNF7kzhsj7T63WPyogOl0wc_gC1sf6x/view?usp=sharing -sSf | bash
+
+    ```
+
+## How to use
+
+- **CPU**
+
+    ```bash
+
+    go get -u github.com/sugarme/gotch@cpu
+
+    ```
+
+- **GPU**
+
+    ```bash
+
+    go get -u github.com/sugarme/gotch
+
+    ```
 
 ## Examples
 
