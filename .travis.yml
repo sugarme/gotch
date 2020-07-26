@@ -8,7 +8,7 @@ env:
 
 branches:
   only:
-    - cpu
+    - master
 
 dist: bionic
 
@@ -18,6 +18,12 @@ before_install:
   - unzip /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1+cpu.zip -d /opt
   - export LIBTORCH=/opt/libtorch
   - export LD_LIBRARY_PATH=${LIBTORCH}/lib:$LD_LIBRARY_PATH
+  - printenv
+  - ls
+  - rm libtch/dummy_cuda_dependency.cpp
+  - mv libtch/fake_cuda_dependency.cpp.cpu libtch/fake_cuda_dependency.cpp
+  - rm libtch/lib.go
+  - mv libtch/lib.go.cpu libtch/lib.go
 script:
   - go test -v github.com/sugarme/gotch/tensor
   - go test -v github.com/sugarme/gotch/nn

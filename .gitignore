@@ -25,3 +25,9 @@ gen/.merlin
 **/*.rs.bk
 Cargo.lock
 __pycache__
+
+libtch/fake_cuda_dependency.cpp
+libtch/dummy_cuda_dependency.cpp
+libtch/fake_cuda_dependency.cpp.cpu
+libtch/lib.go
+libtch/lib.go.cpu
