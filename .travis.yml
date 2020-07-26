@@ -23,7 +23,7 @@ before_install:
   - rm libtch/dummy_cuda_dependency.cpp
   - mv libtch/fake_cuda_dependency.cpp.cpu libtch/fake_cuda_dependency.cpp
   - rm libtch/lib.go
-  - mv libtch/lib.go.cpu lib.go
+  - mv libtch/lib.go.cpu libtch/lib.go
 script:
   - go test -v github.com/sugarme/gotch/tensor
   - go test -v github.com/sugarme/gotch/nn
