@@ -95,3 +95,26 @@ func TestIter(t *testing.T) {
 		t.Errorf("Got tensor values: %v\n", got1)
 	}
 }
+
+func TestOnehot(t *testing.T) {
+	xs := ts.MustOfSlice([]int64{0, 1, 2, 3}).MustView([]int64{2, 2}, true)
+	onehot := xs.Onehot(4)
+
+	want := []float64{1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+	got := onehot.Float64Values()
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("Expected onehot tensor values: %v\n", want)
+		t.Errorf("Got onehot tensor values: %v\n", got)
+	}
+
+}
+
+/*
+ *     let xs = Tensor::of_slice(&[0, 1, 2, 3]);
+ *     let onehot = xs.onehot(4);
+ *     assert_eq!(
+ *         Vec::<f64>::from(&onehot),
+ *         vec![1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+ *     );
+ *     assert_eq!(onehot.size(), vec![4, 4]) */

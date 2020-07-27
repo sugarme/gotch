@@ -173,10 +173,10 @@ type TextDataIter struct {
 // NewTextData creates a text dataset from a file
 //
 // It reads text input from file to `[]byte` buffer
-// - Loops over each byte and counts its occurence
+// - Loops over each byte
 // - first byte will be labelled `0`
-// - next byte if exist will be labelled same as previous, otherwise
-// will labelled `previous + 1`
+// - next byte if exist will be labelled with existing label (index), otherwise
+// will labelled with new label(index)
 // Data: tensor of labels
 // CharForLabel: []rune (unique runes from text input)
 func NewTextData(filename string) (retVal TextData, err error) {
@@ -194,29 +194,27 @@ func NewTextData(filename string) (retVal TextData, err error) {
 
 	var labelForChar map[byte]uint8 = make(map[byte]uint8, 0)
 	var charForLabel []rune
-	var mutBuffer []byte
+	var dataIndexes []uint8
 
-	for idx, runeVal := range buffer {
-		if idx == 0 {
-			mutBuffer = append(mutBuffer, 0)
-			labelForChar[runeVal] = 1
+	for _, runeVal := range buffer {
+		if len(labelForChar) == 0 {
+			labelForChar[runeVal] = 0
+			dataIndexes = append(dataIndexes, 0)
 			charForLabel = append(charForLabel, rune(runeVal))
 		} else {
 			label, ok := labelForChar[runeVal]
-			pos := len(labelForChar)
 			if !ok {
-				mutBuffer = append(mutBuffer, uint8(pos))
-				labelForChar[runeVal] = uint8(1)
+				newLabel := uint8(len(labelForChar))
+				labelForChar[runeVal] = newLabel
+				dataIndexes = append(dataIndexes, newLabel)
 				charForLabel = append(charForLabel, rune(runeVal))
 			} else {
-				labelForChar[runeVal] = label + uint8(1)
-				mutBuffer = append(mutBuffer, uint8(pos-1))
+				dataIndexes = append(dataIndexes, label)
 			}
-
 		}
 	}
 
-	data := MustOfSlice(mutBuffer)
+	data := MustOfSlice(dataIndexes)
 
 	return TextData{
 		Data:         data,
@@ -256,38 +254,38 @@ func (td TextData) IterShuffle(seqLen int64, batchSize int64) (retVal TextDataIt
 	}
 }
 
-// TODO: implement iterator for TextDataIter
+// Next implements iterator for TextDataIter
 func (tdi *TextDataIter) Next() (retVal Tensor, ok bool) {
 	start := tdi.BatchIndex * tdi.BatchSize
-	size := tdi.BatchSize
-	if (tdi.IndexesLen - start) < size {
-		size = tdi.IndexesLen - start
-	}
+	size := min(tdi.BatchSize, tdi.IndexesLen-start)
 
 	if size < tdi.BatchSize {
 		return retVal, false
 	}
 
 	tdi.BatchIndex += 1
+
 	narrowIdx := NewNarrow(start, start+size)
 	indexesTs := tdi.Indexes.Idx(narrowIdx)
 
-	values := indexesTs.Float64Values()
-	var indexes []int64
-	for _, v := range values {
-		indexes = append(indexes, int64(v))
-	}
+	indexes := indexesTs.Int64Values()
 
 	var batch []Tensor
 
 	for _, idx := range indexes {
 		narrowIdx := NewNarrow(idx, idx+tdi.SeqLen)
-		idxTs := tdi.Indexes.Idx(narrowIdx)
+		idxTs := tdi.Data.Idx(narrowIdx)
 		batch = append(batch, idxTs)
 	}
 
 	retVal = MustStack(batch, 0)
 
 	return retVal, true
+}
 
+func min(v1, v2 int64) (retVal int64) {
+	if v1 < v2 {
+		return v1
+	}
+	return v2
 }
