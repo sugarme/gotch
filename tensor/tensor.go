@@ -1110,6 +1110,24 @@ func (ts Tensor) MustZeroPad2d(left, right, top, bottom int64, del bool) (retVal
 	return retVal
 }
 
+// Onehot converts a tensor to a one-hot encoded version.
+//
+// If the input has a size [N1, N2, ..., Nk], the returned tensor has a size
+// [N1, ..., Nk, labels]. The returned tensor uses float values.
+// Elements of the input vector are expected to be between 0 and labels-1.
+//
+// NOTE: There's other `ts.OneHot` and `ts.MustOneHot` generated from Atg C++ API
+func (ts Tensor) Onehot(labels int64) (retVal Tensor) {
+	dims := ts.MustSize()
+	dims = append(dims, labels)
+	unsqueezeTs := ts.MustUnsqueeze(-1, false).MustTotype(gotch.Int64, true)
+	zerosTs := MustZeros(dims, gotch.Float, gotch.CPU)
+	fmt.Printf("zeroTs shape: %v\n", zerosTs.MustSize())
+	fmt.Printf("unsqueezeTs shape: %v\n", unsqueezeTs.MustSize())
+	zerosTs.MustScatter1_(-1, unsqueezeTs, FloatScalar(1.0))
+	return zerosTs
+}
+
 func (ts Tensor) Swish() (retVal Tensor) {
 	sig := ts.MustSigmoid(false)
 	retVal = ts.MustMul(sig, false)
