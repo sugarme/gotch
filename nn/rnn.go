@@ -111,6 +111,14 @@ func NewLSTM(vs Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal LSTM) {
 		}
 	}
 
+	// if vs.Device().IsCuda() && gotch.Cuda.CudnnIsAvailable() {
+	// TODO: check if Cudnn is available here!!!
+	if vs.Device().IsCuda() {
+		// NOTE. 2 is for LSTM
+		// ref. rnn.cpp in Pytorch
+		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 2, hiddenDim, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
+	}
+
 	return LSTM{
 		flatWeights: flatWeights,
 		hiddenDim:   hiddenDim,

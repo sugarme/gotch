@@ -1122,8 +1122,6 @@ func (ts Tensor) Onehot(labels int64) (retVal Tensor) {
 	dims = append(dims, labels)
 	unsqueezeTs := ts.MustUnsqueeze(-1, false).MustTotype(gotch.Int64, true)
 	zerosTs := MustZeros(dims, gotch.Float, gotch.CPU)
-	fmt.Printf("zeroTs shape: %v\n", zerosTs.MustSize())
-	fmt.Printf("unsqueezeTs shape: %v\n", unsqueezeTs.MustSize())
 	zerosTs.MustScatter1_(-1, unsqueezeTs, FloatScalar(1.0))
 	return zerosTs
 }

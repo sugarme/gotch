@@ -105,3 +105,12 @@ func (d Device) CudaIfAvailable() Device {
 		return CPU
 	}
 }
+
+// IsCuda returns whether device is a Cuda device
+func (d Device) IsCuda() bool {
+	if d.Name == "CPU" {
+		return false
+	}
+
+	return true
+}
