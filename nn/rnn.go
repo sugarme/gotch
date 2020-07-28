@@ -267,8 +267,7 @@ func (g GRU) Seq(input ts.Tensor) (output ts.Tensor, state State) {
 	output, state = g.SeqInit(input, inState)
 
 	// Delete intermediate tensors in inState
-	inState.(LSTMState).Tensor1.MustDrop()
-	inState.(LSTMState).Tensor2.MustDrop()
+	inState.(GRUState).Tensor.MustDrop()
 
 	return output, state
 }
