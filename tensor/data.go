@@ -269,6 +269,7 @@ func (tdi *TextDataIter) Next() (retVal Tensor, ok bool) {
 	indexesTs := tdi.Indexes.Idx(narrowIdx)
 
 	indexes := indexesTs.Int64Values()
+	indexesTs.MustDrop()
 
 	var batch []Tensor
 
@@ -279,6 +280,11 @@ func (tdi *TextDataIter) Next() (retVal Tensor, ok bool) {
 	}
 
 	retVal = MustStack(batch, 0)
+
+	// Delete intermediate tensors
+	for _, xs := range batch {
+		xs.MustDrop()
+	}
 
 	return retVal, true
 }

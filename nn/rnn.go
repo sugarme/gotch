@@ -29,13 +29,6 @@ type RNN interface {
 	SeqInit(input ts.Tensor, inState State) (ts.Tensor, State)
 }
 
-func defaultSeq(self interface{}, input ts.Tensor) (ts.Tensor, State) {
-	batchDim := input.MustSize()[0]
-	inState := self.(RNN).ZeroState(batchDim)
-
-	return self.(RNN).SeqInit(input, inState)
-}
-
 // The state for a LSTM network, this contains two tensors.
 type LSTMState struct {
 	Tensor1 ts.Tensor
@@ -111,6 +104,14 @@ func NewLSTM(vs Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal LSTM) {
 		}
 	}
 
+	// if vs.Device().IsCuda() && gotch.Cuda.CudnnIsAvailable() {
+	// TODO: check if Cudnn is available here!!!
+	if vs.Device().IsCuda() {
+		// NOTE. 2 is for LSTM
+		// ref. rnn.cpp in Pytorch
+		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 2, hiddenDim, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
+	}
+
 	return LSTM{
 		flatWeights: flatWeights,
 		hiddenDim:   hiddenDim,
@@ -133,10 +134,14 @@ func (l LSTM) ZeroState(batchDim int64) (retVal State) {
 	shape := []int64{layerDim, batchDim, l.hiddenDim}
 	zeros := ts.MustZeros(shape, gotch.Float, l.device)
 
-	return LSTMState{
+	retVal = LSTMState{
 		Tensor1: zeros.MustShallowClone(),
 		Tensor2: zeros.MustShallowClone(),
 	}
+
+	zeros.MustDrop()
+
+	return retVal
 }
 
 func (l LSTM) Step(input ts.Tensor, inState State) (retVal State) {
@@ -151,8 +156,17 @@ func (l LSTM) Step(input ts.Tensor, inState State) (retVal State) {
 	return state
 }
 
-func (l LSTM) Seq(input ts.Tensor) (ts.Tensor, State) {
-	return defaultSeq(l, input)
+func (l LSTM) Seq(input ts.Tensor) (output ts.Tensor, state State) {
+	batchDim := input.MustSize()[0]
+	inState := l.ZeroState(batchDim)
+
+	output, state = l.SeqInit(input, inState)
+
+	// Delete intermediate tensors in inState
+	inState.(LSTMState).Tensor1.MustDrop()
+	inState.(LSTMState).Tensor2.MustDrop()
+
+	return output, state
 }
 
 func (l LSTM) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
@@ -246,8 +260,16 @@ func (g GRU) Step(input ts.Tensor, inState State) (retVal State) {
 	return state
 }
 
-func (g GRU) Seq(input ts.Tensor) (ts.Tensor, State) {
-	return defaultSeq(g, input)
+func (g GRU) Seq(input ts.Tensor) (output ts.Tensor, state State) {
+	batchDim := input.MustSize()[0]
+	inState := g.ZeroState(batchDim)
+
+	output, state = g.SeqInit(input, inState)
+
+	// Delete intermediate tensors in inState
+	inState.(GRUState).Tensor.MustDrop()
+
+	return output, state
 }
 
 func (g GRU) SeqInit(input ts.Tensor, inState State) (ts.Tensor, State) {
