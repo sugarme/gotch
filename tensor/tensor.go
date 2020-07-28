@@ -621,7 +621,7 @@ func (ts Tensor) Numel() (retVal uint) {
 	return uint(FlattenDim(shape))
 }
 
-// ShallowCopy returns a new tensor that share storage with the input tensor.
+// ShallowClone returns a new tensor that share storage with the input tensor.
 func (ts Tensor) ShallowClone() (retVal Tensor, err error) {
 
 	ctensor := lib.AtShallowClone(ts.ctensor)
@@ -1120,10 +1120,14 @@ func (ts Tensor) MustZeroPad2d(left, right, top, bottom int64, del bool) (retVal
 func (ts Tensor) Onehot(labels int64) (retVal Tensor) {
 	dims := ts.MustSize()
 	dims = append(dims, labels)
-	unsqueezeTs := ts.MustUnsqueeze(-1, false).MustTotype(gotch.Int64, true)
+	unsqueezeTs := ts.MustUnsqueeze(-1, false)
+	inputTs := unsqueezeTs.MustTotype(gotch.Int64, true)
+
 	zerosTs := MustZeros(dims, gotch.Float, gotch.CPU)
-	zerosTs.MustScatter1_(-1, unsqueezeTs, FloatScalar(1.0))
-	return zerosTs
+	retVal = zerosTs.MustScatter1(-1, inputTs, FloatScalar(1.0), true)
+	inputTs.MustDrop()
+
+	return retVal
 }
 
 func (ts Tensor) Swish() (retVal Tensor) {

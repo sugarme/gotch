@@ -21,27 +21,41 @@ const (
 func sample(data ts.TextData, lstm nn.LSTM, linear nn.Linear, device gotch.Device) (retVal string) {
 
 	labels := data.Labels()
-	state := lstm.ZeroState(1)
+	inState := lstm.ZeroState(1)
 	lastLabel := int64(0)
-	var result string
+	var runes []rune
 
 	for i := 0; i < int(SamplingLen); i++ {
-
 		input := ts.MustZeros([]int64{1, labels}, gotch.Float, device)
-		input.MustNarrow(1, lastLabel, 1, false).MustFill_(ts.FloatScalar(1.0))
-		state = lstm.Step(input, state)
+		// NOTE. `Narrow` creates tensor that shares same storage
+		inputView := input.MustNarrow(1, lastLabel, 1, false)
+		inputView.MustFill_(ts.FloatScalar(1.0))
 
-		forwardTs := linear.Forward(state.(nn.LSTMState).H())
-		squeeze1Ts := forwardTs.MustSqueeze1(0, false)
-		softmaxTs := squeeze1Ts.MustSoftmax(-1, gotch.Float, false)
-		sampledY := softmaxTs.MustMultinomial(1, false, false)
+		state := lstm.Step(input, inState)
 
+		// 1. Delete inState tensors (from C land memory)
+		inState.(nn.LSTMState).Tensor1.MustDrop()
+		inState.(nn.LSTMState).Tensor2.MustDrop()
+		// 2. Then update with current state
+		inState = state
+		// 3. Delete intermediate tensors
+		input.MustDrop()
+		inputView.MustDrop()
+
+		forwardTs := linear.Forward(state.(nn.LSTMState).H()).MustSqueeze1(0, true).MustSoftmax(-1, gotch.Float, true)
+		sampledY := forwardTs.MustMultinomial(1, false, true)
 		lastLabel = sampledY.Int64Values()[0]
+		sampledY.MustDrop()
+		char := data.LabelForChar(lastLabel)
 
-		result += fmt.Sprintf("%v", lastLabel)
+		runes = append(runes, char)
 	}
 
-	return result
+	// Delete the last state
+	inState.(nn.LSTMState).Tensor1.MustDrop()
+	inState.(nn.LSTMState).Tensor2.MustDrop()
+
+	return string(runes)
 }
 
 func main() {
@@ -59,6 +73,7 @@ func main() {
 
 	lstm := nn.NewLSTM(vs.Root(), labels, HiddenSize, nn.DefaultRNNConfig())
 	linear := nn.NewLinear(vs.Root(), HiddenSize, labels, nn.DefaultLinearConfig())
+
 	optConfig := nn.DefaultAdamConfig()
 	opt, err := optConfig.Build(vs, LearningRate)
 	if err != nil {
@@ -86,7 +101,12 @@ func main() {
 			ysTmp3 := ysTmp2.MustTo(device, true)
 			ys := ysTmp3.MustView([]int64{BatchSize * SeqLen}, true)
 
-			lstmOut, _ := lstm.Seq(xsOnehot)
+			lstmOut, outState := lstm.Seq(xsOnehot)
+			// NOTE. Although outState will not be used. There a hidden memory usage
+			// on C land memory that is needed to free up. Don't use `_`
+			outState.(nn.LSTMState).Tensor1.MustDrop()
+			outState.(nn.LSTMState).Tensor2.MustDrop()
+
 			logits := linear.Forward(lstmOut)
 			lossView := logits.MustView([]int64{BatchSize * SeqLen, labels}, true)
 
@@ -96,18 +116,26 @@ func main() {
 			sumLoss += loss.Float64Values()[0]
 			cntLoss += 1.0
 
+			batchTs.MustDrop()
+			batchNarrow.MustDrop()
+			xsOnehotTmp.MustDrop()
 			xsOnehot.MustDrop()
-			lstmOut.MustDrop()
 			ys.MustDrop()
+			lstmOut.MustDrop()
 			loss.MustDrop()
 
 			batchCount++
-			fmt.Printf("Batch %v - sumLoss: %v - cntLoss %v\n", batchCount, sumLoss, cntLoss)
+			if batchCount%500 == 0 {
+				fmt.Printf("Epoch %v - Batch %v \n", epoch, batchCount)
+			}
 		}
 
-		fmt.Printf("Epoch %v - Loss: %v", epoch, sumLoss/cntLoss)
-		fmt.Printf("Sample: %v", sample(data, lstm, linear, device))
+		sampleStr := sample(data, lstm, linear, device)
+		fmt.Printf("Epoch %v - Loss: %v \n", epoch, sumLoss/cntLoss)
+		fmt.Println(sampleStr)
 
+		dataIter.Data.MustDrop()
+		dataIter.Indexes.MustDrop()
 	}
 
 }
