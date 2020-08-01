@@ -1,8 +1,6 @@
 package nn
 
 import (
-	"fmt"
-
 	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
 )
@@ -228,6 +226,12 @@ func NewGRU(vs Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal GRU) {
 		}
 	}
 
+	if vs.Device().IsCuda() {
+		// NOTE. 3 is for GRU
+		// ref. rnn.cpp in Pytorch
+		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 3, hiddenDim, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
+	}
+
 	return GRU{
 		flatWeights: flatWeights,
 		hiddenDim:   hiddenDim,
@@ -256,14 +260,12 @@ func (g GRU) ZeroState(batchDim int64) (retVal State) {
 func (g GRU) Step(input ts.Tensor, inState State) (retVal State) {
 	unsqueezedInput := input.MustUnsqueeze(1, false)
 
-	fmt.Printf("unsqueezed input shape: %v\n", unsqueezedInput.MustSize())
-	fmt.Printf("inState Ts size: %v\n", inState.(GRUState).Tensor.MustSize())
-
 	output, state := g.SeqInit(unsqueezedInput, inState)
 
 	// NOTE: though we won't use `output`, it is a Ctensor created in C land, so
 	// it should be cleaned up here to prevent memory hold-up.
 	output.MustDrop()
+	unsqueezedInput.MustDrop()
 
 	return state
 }

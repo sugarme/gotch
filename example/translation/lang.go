@@ -88,5 +88,5 @@ func (l *Lang) SeqToString(seq []int) (retVal string) {
 		words = append(words, w)
 	}
 
-	return strings.Join(words, "")
+	return strings.Join(words, " ")
 }
