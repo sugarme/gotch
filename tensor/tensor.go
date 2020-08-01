@@ -297,6 +297,15 @@ func (ts Tensor) Device() (retVal gotch.Device, err error) {
 	return device.OfCInt(int32(cInt)), nil
 }
 
+func (ts Tensor) MustDevice() (retVal gotch.Device) {
+	retVal, err := ts.Device()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
 /*
  * func (ts Tensor) Eq1(other Tensor, del bool) (retVal Tensor, err error) {
  *

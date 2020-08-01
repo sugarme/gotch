@@ -75,15 +75,18 @@ func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tens
 	var err error
 	rand.Seed(86)
 
-	data := make([]float64, ts.FlattenDim(dims))
+	data := make([]float32, ts.FlattenDim(dims))
 	for i := range data {
-		data[i] = rand.NormFloat64()*r.mean + r.stdev
+		// NOTE. tensor will have DType = Float (float32)
+		data[i] = float32(rand.NormFloat64()*r.mean + r.stdev)
 	}
 
-	retVal, err = ts.NewTensorFromData(data, dims)
+	newTs, err := ts.NewTensorFromData(data, dims)
 	if err != nil {
 		log.Fatalf("randInit - InitTensor method call error: %v\n", err)
 	}
+
+	retVal = newTs.MustTo(device, true)
 
 	return retVal
 
