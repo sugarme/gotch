@@ -259,7 +259,6 @@ func (g GRU) ZeroState(batchDim int64) (retVal State) {
 
 func (g GRU) Step(input ts.Tensor, inState State) (retVal State) {
 	unsqueezedInput := input.MustUnsqueeze(1, false)
-
 	output, state := g.SeqInit(unsqueezedInput, inState)
 
 	// NOTE: though we won't use `output`, it is a Ctensor created in C land, so
