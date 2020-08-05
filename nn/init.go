@@ -163,7 +163,6 @@ func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVa
 	}
 
 	bound := math.Sqrt(1.0 / float64(fanIn))
-	log.Println(fanIn)
 	kind := gotch.Float
 	retVal = ts.MustZeros(dims, kind, device)
 	retVal.Uniform_(-bound, bound)
