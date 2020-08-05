@@ -19,6 +19,7 @@ target/
 _build/
 data/
 example/testdata/
+example/test/
 tmp/
 bak/
 gen/.merlin
@@ -32,3 +33,4 @@ libtch/dummy_cuda_dependency.cpp
 libtch/fake_cuda_dependency.cpp.cpu
 libtch/lib.go.cpu
 libtch/lib.go
+
