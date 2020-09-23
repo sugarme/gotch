@@ -60,7 +60,7 @@ func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_byt
 
 ## Function Return
 
-### `void *`
+### `void *CFUNC(...)`
 
 ```c
 void *at_data_ptr(tensor);
@@ -83,6 +83,69 @@ then in the return of function body
     // Return
 	return &C_tensor{private: unsafe.Pointer(t)}
 ```
+
+### `tensor *CFUNC(...)`
+
+The pattern of **return tensor pointer**: `tensor *atg_FUNCTION_NAME()`.
+The returning tensor pointer actually is the FIRST element of a vector of C tensor pointers. 
+Next pointer will be calculated from the first. In C land, verifying a valid pointer is 
+to check whether it points to **NULL**.
+
+```c
+
+tensor *atg_split(tensor self, int64_t split_size, int64_t dim);
+
+```
+
+```go
+
+// Wrapper
+func AtgSplit(self Ctensor, splitSize int64, dim int64) *Ctensor {
+
+	csplitSize := *(*C.int64_t)(unsafe.Pointer(&splitSize))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+
+	return C.atg_split(self, csplitSize, cdim)
+}
+
+// API
+
+// Split splits tensor into chunks
+//
+// Parameters:
+//  - splitSize – size of a single chunk or list of sizes for each chunk
+//  - dim – dimension along which to split the tensor.
+// Ref. https://pytorch.org/docs/stable/generated/torch.split.html
+func (ts Tensor) Split(splitSize, dim int64) (retVal []Tensor, err error) {
+
+	ctensorsPtr := lib.AtgSplit(ts.ctensor, splitSize, dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	// NOTE: ctensorsPtr is a c-pointer to a vector of tensors. The first
+	// C tensor is the `ctensorsPtr` value. The next pointer will be
+	// calculated from there. The vector of tensors will end if the calculated
+	// pointer value is `null`.
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		// calculate the next pointer value
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+
+```
+
 
 ### C types e.g. `C_ulong` -> Go equivalent types `uint64`
 
