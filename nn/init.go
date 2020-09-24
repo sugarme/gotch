@@ -75,15 +75,18 @@ func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tens
 	var err error
 	rand.Seed(86)
 
-	data := make([]float64, ts.FlattenDim(dims))
+	data := make([]float32, ts.FlattenDim(dims))
 	for i := range data {
-		data[i] = rand.NormFloat64()*r.mean + r.stdev
+		// NOTE. tensor will have DType = Float (float32)
+		data[i] = float32(rand.NormFloat64()*r.mean + r.stdev)
 	}
 
-	retVal, err = ts.NewTensorFromData(data, dims)
+	newTs, err := ts.NewTensorFromData(data, dims)
 	if err != nil {
 		log.Fatalf("randInit - InitTensor method call error: %v\n", err)
 	}
+
+	retVal = newTs.MustTo(device, true)
 
 	return retVal
 
@@ -151,8 +154,10 @@ func NewKaimingUniformInit() kaimingUniformInit {
 
 func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
 	var fanIn int64
-	if len(dims) == 1 {
-		log.Fatalf("KaimingUniformInit method call: dims (%v) should have length > 1", dims)
+	if len(dims) == 0 {
+		log.Fatalf("KaimingUniformInit method call: dims (%v) should have length >= 1", dims)
+	} else if len(dims) == 1 {
+		fanIn = factorial(dims[0])
 	} else {
 		fanIn = product(dims[1:])
 	}
@@ -167,7 +172,6 @@ func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVa
 
 // product calculates product by multiplying elements
 func product(dims []int64) (retVal int64) {
-
 	for i, v := range dims {
 		if i == 0 {
 			retVal = v
@@ -179,7 +183,7 @@ func product(dims []int64) (retVal int64) {
 	return retVal
 }
 
-func factorial(n uint64) (result uint64) {
+func factorial(n int64) (result int64) {
 	if n > 0 {
 		result = n * factorial(n-1)
 		return result
@@ -194,8 +198,10 @@ func (k kaimingUniformInit) Set(tensor ts.Tensor) {
 	}
 
 	var fanIn int64
-	if len(dims) == 1 {
-		log.Fatalf("KaimingUniformInit Set method call: Tensor (%v) should have length > 1", tensor.MustSize())
+	if len(dims) == 0 {
+		log.Fatalf("KaimingUniformInit Set method call: Tensor (%v) should have length >= 1", tensor.MustSize())
+	} else if len(dims) == 1 {
+		fanIn = factorial(dims[0])
 	} else {
 		fanIn = product(dims[1:])
 	}

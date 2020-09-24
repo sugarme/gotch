@@ -22,7 +22,7 @@ func gruTest(rnnConfig nn.RNNConfig, t *testing.T) {
 	vs := nn.NewVarStore(gotch.CPU)
 	path := vs.Root()
 
-	gru := nn.NewGRU(&path, inputDim, outputDim, rnnConfig)
+	gru := nn.NewGRU(path, inputDim, outputDim, rnnConfig)
 
 	numDirections := int64(1)
 	if rnnConfig.Bidirectional {

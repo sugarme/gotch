@@ -199,7 +199,7 @@ type GRU struct {
 }
 
 // NewGRU create a new GRU layer
-func NewGRU(vs *Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal GRU) {
+func NewGRU(vs Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal GRU) {
 	var numDirections int64 = 1
 	if cfg.Bidirectional {
 		numDirections = 2
@@ -210,17 +210,26 @@ func NewGRU(vs *Path, inDim, hiddenDim int64, cfg RNNConfig) (retVal GRU) {
 
 	for i := 0; i < int(cfg.NumLayers); i++ {
 		for n := 0; n < int(numDirections); n++ {
-			if i != 0 {
-				inDim = hiddenDim * numDirections
+			var inputDim int64
+			if i == 0 {
+				inputDim = inDim
+			} else {
+				inputDim = hiddenDim * numDirections
 			}
 
-			wIh := vs.KaimingUniform("w_ih", []int64{gateDim, inDim})
+			wIh := vs.KaimingUniform("w_ih", []int64{gateDim, inputDim})
 			wHh := vs.KaimingUniform("w_hh", []int64{gateDim, hiddenDim})
 			bIh := vs.Zeros("b_ih", []int64{gateDim})
 			bHh := vs.Zeros("b_hh", []int64{gateDim})
 
 			flatWeights = append(flatWeights, wIh, wHh, bIh, bHh)
 		}
+	}
+
+	if vs.Device().IsCuda() {
+		// NOTE. 3 is for GRU
+		// ref. rnn.cpp in Pytorch
+		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 3, hiddenDim, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
 	}
 
 	return GRU{
@@ -249,13 +258,13 @@ func (g GRU) ZeroState(batchDim int64) (retVal State) {
 }
 
 func (g GRU) Step(input ts.Tensor, inState State) (retVal State) {
-	ip := input.MustUnsqueeze(1, false)
-
-	output, state := g.SeqInit(ip, inState)
+	unsqueezedInput := input.MustUnsqueeze(1, false)
+	output, state := g.SeqInit(unsqueezedInput, inState)
 
 	// NOTE: though we won't use `output`, it is a Ctensor created in C land, so
 	// it should be cleaned up here to prevent memory hold-up.
 	output.MustDrop()
+	unsqueezedInput.MustDrop()
 
 	return state
 }

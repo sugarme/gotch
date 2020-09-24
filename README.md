@@ -18,7 +18,17 @@
 - **Libtorch** C++ v1.5.0 library of [Pytorch](https://pytorch.org/)
 
 - Make sure that a libtorch version 1.5.0 (either CPU or CUDA support) is
-    installed in your system (default at "/opt/libtorch" in Linux/Mac OS). 
+    installed in your system (at "/opt/libtorch" in Linux/Mac OS). 
+
+- Update  `.bashrc` file to include `libtorch` in `LD_LIBRARY_PATH`
+
+```bash
+# .bashrc file
+
+export LIBTORCH=/opt/libtorch
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/include:${LIBTORCH}:${LIBTORCH}/lib:${LIBTORCH}/include:${LIBTORCH}/include/torch/csrc/api/include
+
+```
 
 - Alternatively, just execute corresponding command to setup Libtorch C++
 

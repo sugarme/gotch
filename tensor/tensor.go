@@ -21,6 +21,11 @@ type Tensor struct {
 	ctensor lib.Ctensor
 }
 
+// None is an undefined tensor.
+// It can be used in optional tensor parameter where 'None' value used.
+// `ts.MustDefined()` function is used for checking 'null'
+var None = NewTensor()
+
 // NewTensor creates a new tensor
 func NewTensor() Tensor {
 	ctensor := lib.AtNewTensor()
@@ -295,6 +300,15 @@ func (ts Tensor) Device() (retVal gotch.Device, err error) {
 	var device gotch.Device
 
 	return device.OfCInt(int32(cInt)), nil
+}
+
+func (ts Tensor) MustDevice() (retVal gotch.Device) {
+	retVal, err := ts.Device()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
 
 /*
