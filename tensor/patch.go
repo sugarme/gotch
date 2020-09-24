@@ -7,7 +7,6 @@ import (
 	"log"
 	"unsafe"
 
-	// "github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
 )
 
@@ -177,6 +176,384 @@ func (ts Tensor) NLLLoss(target Tensor, del bool) (retVal Tensor, err error) {
 
 func (ts Tensor) MustNLLLoss(target Tensor, del bool) (retVal Tensor) {
 	retVal, err := ts.NLLLoss(target, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// NOTE: the following 9 APIs are missing from `tensor-generated.go` with
+// pattern of **return tensor pointer**: `tensor *atg_FUNCTION_NAME()`.
+// The returning tensor pointer actually is the FIRST element of a vector
+// of C tensor pointers. Next pointer will be calculated from the first.
+// In C land, verifying a valid pointer is to check whether it points to **NULL**.
+//
+// tensor *atg_align_tensors(tensor *tensors_data, int tensors_len);
+// tensor *atg_broadcast_tensors(tensor *tensors_data, int tensors_len);
+// tensor *atg_chunk(tensor self, int64_t chunks, int64_t dim);
+// tensor *atg_meshgrid(tensor *tensors_data, int tensors_len);
+// tensor *atg_nonzero_numpy(tensor self);
+// tensor *atg_split(tensor self, int64_t split_size, int64_t dim);
+// tensor *atg_split_with_sizes(tensor self, int64_t *split_sizes_data, int split_sizes_len, int64_t dim);
+// tensor *atg_unbind(tensor self, int64_t dim);
+// tensor *atg_where(tensor condition);
+
+// tensor *atg_align_tensors(tensor *tensors_data, int tensors_len);
+func AlignTensors(tensors []Tensor) (retVal []Tensor, err error) {
+
+	var ctensors []lib.Ctensor
+	for _, t := range tensors {
+		ctensors = append(ctensors, t.ctensor)
+	}
+
+	ctensorsPtr := lib.AtgAlignTensors(ctensors, len(ctensors))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func MustAlignTensors(tensors []Tensor, del bool) (retVal []Tensor) {
+	if del {
+		for _, t := range tensors {
+			defer t.MustDrop()
+		}
+	}
+	retVal, err := AlignTensors(tensors)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// tensor *atg_broadcast_tensors(tensor *tensors_data, int tensors_len);
+func BroadcastTensors(tensors []Tensor) (retVal []Tensor, err error) {
+
+	var ctensors []lib.Ctensor
+	for _, t := range tensors {
+		ctensors = append(ctensors, t.ctensor)
+	}
+
+	ctensorsPtr := lib.AtgBroadcastTensors(ctensors, len(ctensors))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func MustBroadcastTensors(tensors []Tensor, del bool) (retVal []Tensor) {
+	if del {
+		for _, t := range tensors {
+			defer t.MustDrop()
+		}
+	}
+
+	retVal, err := BroadcastTensors(tensors)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// tensor *atg_chunk(tensor self, int64_t chunks, int64_t dim);
+func (ts Tensor) Chunk(chunks int64, dim int64) (retVal []Tensor, err error) {
+	ctensorsPtr := lib.AtgChunk(ts.ctensor, chunks, dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		// calculate the next pointer value
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustChunk(chunks int64, dim int64, del bool) (retVal []Tensor) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	retVal, err := ts.Chunk(chunks, dim)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// tensor *atg_meshgrid(tensor *tensors_data, int tensors_len);
+func (ts Tensor) Meshgrid(tensors []Tensor) (retVal []Tensor, err error) {
+
+	var ctensors []lib.Ctensor
+	for _, t := range tensors {
+		ctensors = append(ctensors, t.ctensor)
+	}
+
+	ctensorsPtr := lib.AtgMeshgrid(ctensors, len(ctensors))
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustMeshgrid(tensors []Tensor, del bool) (retVal []Tensor) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	retVal, err := ts.Meshgrid(tensors)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// tensor *atg_nonzero_numpy(tensor self);
+func (ts Tensor) NonzeroNumpy() (retVal []Tensor, err error) {
+
+	ctensorsPtr := lib.AtgNonzeroNumpy(ts.ctensor)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustNonzeroNumpy(del bool) (retVal []Tensor) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	retVal, err := ts.NonzeroNumpy()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// Split splits tensor into chunks
+//
+// Parameters:
+//  - splitSize – size of a single chunk
+//  - dim – dimension along which to split the tensor.
+// Ref. https://pytorch.org/docs/stable/generated/torch.split.html
+func (ts Tensor) Split(splitSize, dim int64) (retVal []Tensor, err error) {
+
+	ctensorsPtr := lib.AtgSplit(ts.ctensor, splitSize, dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	// NOTE: ctensorsPtr is a c-pointer to a vector of tensors. The first
+	// C tensor is the `ctensorsPtr` value. The next pointer will be
+	// calculated from there. The vector of tensors will end if the calculated
+	// pointer value is `null`.
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		// calculate the next pointer value
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSplit(splitSize, dim int64, del bool) (retVal []Tensor) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	retVal, err := ts.Split(splitSize, dim)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// SplitWithSizes splits tensor into chunks
+//
+// Parameters:
+//  - splitSizes – slice of sizes for each chunk
+//  - dim – dimension along which to split the tensor.
+// Ref. https://pytorch.org/docs/stable/generated/torch.split.html
+func (ts Tensor) SplitWithSizes(splitSizes []int64, dim int64) (retVal []Tensor, err error) {
+
+	ctensorsPtr := lib.AtgSplitWithSizes(ts.ctensor, splitSizes, len(splitSizes), dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	// NOTE: ctensorsPtr is a c-pointer to a vector of tensors. The first
+	// C tensor is the `ctensorsPtr` value. The next pointer will be
+	// calculated from there. The vector of tensors will end if the calculated
+	// pointer value is `null`.
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		// calculate the next pointer value
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustSplitWithSizes(splitSizes []int64, dim int64, del bool) (retVal []Tensor) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	retVal, err := ts.SplitWithSizes(splitSizes, dim)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// tensor *atg_unbind(tensor self, int64_t dim);
+func (ts Tensor) Unbind(dim int64) (retVal []Tensor, err error) {
+
+	ctensorsPtr := lib.AtgUnbind(ts.ctensor, dim)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func (ts Tensor) MustUnbind(dim int64, del bool) (retVal []Tensor) {
+	if del {
+		defer ts.MustDrop()
+	}
+
+	retVal, err := ts.Unbind(dim)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// tensor *atg_where(tensor condition);
+func Where(condition Tensor) (retVal []Tensor, err error) {
+
+	ctensorsPtr := lib.AtgWhere(condition.ctensor)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+
+	currentPtr := ctensorsPtr
+	retVal = append(retVal, Tensor{ctensor: *currentPtr})
+	for {
+		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
+			break
+		}
+
+		retVal = append(retVal, Tensor{ctensor: *nextPtr})
+		currentPtr = nextPtr
+	}
+
+	return retVal, nil
+}
+
+func MustWhere(condition Tensor, del bool) (retVal []Tensor) {
+	if del {
+		defer condition.MustDrop()
+	}
+
+	retVal, err := Where(condition)
 	if err != nil {
 		log.Fatal(err)
 	}
