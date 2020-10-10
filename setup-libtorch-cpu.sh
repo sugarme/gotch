@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Env
-export GOTCH_VERSION="v0.1.0"
+export GOTCH_VERSION="v0.1.1"
 export LIBTORCH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION/libtch"
 export LIBRARY_PATH=$LIBTORCH/lib
 export CPATH=$CPATH:$LIBTORCH/lib:$LIBTORCH/include:$LIBTORCH/include/torch/csrc:$LIBTORCH/include/torch/csrc/api/include
