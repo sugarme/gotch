@@ -3,66 +3,29 @@
 
 ## Overview
 
-- **GoTch** is a C++ Libtorch Go binding for developing and implementing deep
-    learning projects in Go.
-
-- It is currently in heavy development mode and is considered **unstable** until
-    version v1.0.0 is marked. Hence, one can use it with own risk. 
-
-- This package is to create a thin wrapper of Libtorch to make use of
-    its tensor APIs and CUDA support while implementing as much
-    idiomatic Go as possible. 
+- **GoTch** is a C++ Libtorch Go binding for developing and implementing deep learning projects in Go.
+- This package is to create a thin wrapper of Libtorch to make use of its tensor APIs and CUDA support while implementing as much idiomatic Go as possible. 
 
 ## Dependencies
 
 - **Libtorch** C++ v1.5.0 library of [Pytorch](https://pytorch.org/)
 
-- Make sure that a libtorch version 1.5.0 (either CPU or CUDA support) is
-    installed in your system (at "/opt/libtorch" in Linux/Mac OS). 
 
-- Update  `.bashrc` file to include `libtorch` in `LD_LIBRARY_PATH`
-
-```bash
-# .bashrc file
-
-export LIBTORCH=/opt/libtorch
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/include:${LIBTORCH}:${LIBTORCH}/lib:${LIBTORCH}/include:${LIBTORCH}/include/torch/csrc/api/include
-
-```
-
-- Alternatively, just execute corresponding command to setup Libtorch C++
-
-    + **CPU**
-
-    ```bash
-
-    curl https://drive.google.com/file/d/1z7jwA2Zg4Qqw5BZS72V4k8vbPdxaQvqv/view?usp=sharing -sSf | bash
-
-    ```
-
-    + **GPU Cuda 10.1**
-
-    ```bash
-
-    curl https://drive.google.com/file/d/1DQNF7kzhsj7T63WPyogOl0wc_gC1sf6x/view?usp=sharing -sSf | bash
-
-    ```
-
-## How to use
+## Installation
 
 - **CPU**
 
     ```bash
-
-    go get -u github.com/sugarme/gotch@cpu
+    go get -u github.com/sugarme/gotch@latest
+    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@latest/setup-libtorch-cpu.sh
 
     ```
 
 - **GPU**
 
     ```bash
-
-    go get -u github.com/sugarme/gotch
+    go get -u github.com/sugarme/gotch@latest
+    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@latest/setup-libtorch-gpu-cu101.sh
 
     ```
 

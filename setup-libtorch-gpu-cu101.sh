@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GOTCH_VERSION="v0.1.3"
+GOTCH_VERSION="latest"
 GOTCH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION"
 LIBTORCH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION/libtch/libtorch"
 LIBRARY_PATH="$LIBTORCH/lib"
@@ -11,7 +11,7 @@ sudo rm -rf $LIBTORCH
 sudo mkdir -p $LIBTORCH
 
 wget -O /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1%2Bcu101.zip https://download.pytorch.org/libtorch/cu101/libtorch-cxx11-abi-shared-with-deps-1.5.1%2Bcu101.zip
-sudo unzip /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1%2Bcu101.zip -d $LIBTORCH
+sudo unzip /tmp/libtorch-cxx11-abi-shared-with-deps-1.5.1%2Bcu101.zip -d $GOTCH/libtch
 
 # update .bashrc
 FILE="$HOME/.bashrc"
