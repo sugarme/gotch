@@ -15,17 +15,21 @@
 
 - **CPU**
 
+    Default values: `LIBTORCH_VER=1.5.1` and `GOTCH_VER=latest`
+
     ```bash
     go get -u github.com/sugarme/gotch@latest
-    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@latest/setup-libtorch-cpu.sh
+    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@latest/setup-cpu.sh
 
     ```
 
 - **GPU**
 
+    Default values: `LIBTORCH_VER=1.5.1`, `CUDA_VER=10.1` and `GOTCH_VER=latest`
+
     ```bash
     go get -u github.com/sugarme/gotch@latest
-    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@latest/setup-libtorch-gpu-cu101.sh
+    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@latest/setup-gpu.sh
 
     ```
 
