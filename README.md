@@ -15,7 +15,7 @@
 
 - **CPU**
 
-    Default values: `LIBTORCH_VER=1.5.1` and `GOTCH_VER=latest`
+    Default values: `LIBTORCH_VER=1.5.1` and `GOTCH_VER=v0.1.5`
 
     ```bash
     go get -u github.com/sugarme/gotch@latest
@@ -25,7 +25,7 @@
 
 - **GPU**
 
-    Default values: `LIBTORCH_VER=1.5.1`, `CUDA_VER=10.1` and `GOTCH_VER=latest`
+    Default values: `LIBTORCH_VER=1.5.1`, `CUDA_VER=10.1` and `GOTCH_VER=v0.1.5`
 
     ```bash
     go get -u github.com/sugarme/gotch@latest
