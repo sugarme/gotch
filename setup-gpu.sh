@@ -15,7 +15,7 @@ sudo rm -rf $LIBTORCH
 sudo mkdir -p $LIBTORCH
 
 
-wget -O /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2B${CUDA_VERSION}.zip https://download.pytorch.org/libtorch/cu${CU_VERSION}/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcu${CU_VERSION}.zip
+wget -O /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2B$cu{CU_VERSION}.zip https://download.pytorch.org/libtorch/cu${CU_VERSION}/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcu${CU_VERSION}.zip
 sudo unzip /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcu${CU_VERSION}.zip -d $GOTCH/libtch
 
 # update .bashrc
