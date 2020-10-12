@@ -14,7 +14,7 @@ dist: bionic
 
 before_install:
   - sudo apt-get install clang-tools-9
-  - GOTCH="$HOME/sugarme/gotch"
+  - GOTCH="./"
   - LIBTORCH_VERSION="${LIBTORCH_VER:-1.5.1}"
   - LIBTORCH="$GOTCH/libtch/libtorch"
   - LIBRARY_PATH="$LIBTORCH/lib"
