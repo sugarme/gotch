@@ -15,7 +15,7 @@ dist: bionic
 before_install:
   - ls -la
   - sudo apt-get install clang-tools-9
-  - GOTCH=${HOME}/sugarme/gotch
+  - export GOTCH=$TRAVIS_BUILD_DIR
   - export LIBTORCH_VERSION=${LIBTORCH_VER:-1.5.1}
   - export LIBTORCH=${GOTCH}/libtch/libtorch
   - export LIBRARY_PATH=${LIBTORCH}/lib
@@ -35,7 +35,7 @@ before_install:
   - go install
 script:
   - printenv
-  - GOTCH=${HOME}/sugarme/gotch
+  - export GOTCH=$TRAVIS_BUILD_DIR
   - export LIBTORCH_VERSION=${LIBTORCH_VER:-1.5.1}
   - export LIBTORCH=${GOTCH}/libtch/libtorch
   - export LIBRARY_PATH=${LIBTORCH}/lib
