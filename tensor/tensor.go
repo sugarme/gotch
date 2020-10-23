@@ -873,10 +873,21 @@ func (ts Tensor) MustToString(lw int64) (retVal string) {
 
 // Drop drops (frees) the tensor
 func (ts Tensor) Drop() (err error) {
+
+	if !ts.MustDefined() {
+		return nil
+	}
+
 	lib.AtFree(ts.ctensor)
 	if err = TorchErr(); err != nil {
 		return err
 	}
+
+	// NOTE. assign to a new undefined tensor, then check `ts.MustDefined`
+	// before deleting at C land. Hence `Drop` method can be called
+	// multiple times without worrying about double C memory delete panic.
+	// Other pattern is `defer ts.MustDrop()` whenever a tensor is created.
+	ts = NewTensor()
 
 	return nil
 }
