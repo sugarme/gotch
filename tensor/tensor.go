@@ -1154,3 +1154,23 @@ func (ts Tensor) Swish() (retVal Tensor) {
 func (ts Tensor) AvgPool2DDefault(ksize int64, del bool) (retVal Tensor) {
 	return ts.MustAvgPool2d([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, false, true, 1, del)
 }
+
+// SaveMultiNew saves a slice of named tensors to the given file path.
+func SaveMultiNew(namedTensors []NamedTensor, path string) (err error) {
+	var (
+		tensors []lib.Ctensor
+		names   []string
+	)
+
+	for _, nts := range namedTensors {
+		tensors = append(tensors, nts.Tensor.ctensor)
+		names = append(names, nts.Name)
+	}
+
+	lib.AtSaveMultiNew(tensors, names, path)
+	if err = TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -143,7 +143,8 @@ func (vs *VarStore) Save(filepath string) (err error) {
 		})
 	}
 
-	return ts.SaveMulti(namedTensors, filepath)
+	// return ts.SaveMulti(namedTensors, filepath)
+	return ts.SaveMultiNew(namedTensors, filepath)
 }
 
 // Load loads the var-store variable values from a file.

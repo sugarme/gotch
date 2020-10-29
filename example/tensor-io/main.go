@@ -31,7 +31,11 @@ func main() {
 
 	pathMulti := "file_multi.pt"
 
-	err = tensor.SaveMulti(namedTensors, pathMulti)
+	// err = tensor.SaveMulti(namedTensors, pathMulti)
+	// if err != nil {
+	// panic(err)
+	// }
+	err = tensor.SaveMultiNew(namedTensors, pathMulti)
 	if err != nil {
 		panic(err)
 	}

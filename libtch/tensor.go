@@ -235,6 +235,34 @@ func AtSaveMulti(tensors []Ctensor, tensor_names []string, ntensors int, filenam
 	C.at_save_multi(&ctensors[0], cnamesPtr[0], cntensors, cfilename)
 }
 
+// void at_save_multi(tensor *tensors, char **tensor_names, int ntensors, char *filename);
+func AtSaveMultiNew(tensors []Ctensor, names []string, filename string) {
+	// NOTE. namedTensors is slice of tensors which wrap Ctensor pointer.
+	// However, they are not neccessary consecutive Ctensor pointer.
+	// The following code will create 2 arrays to contain ctensors and cnames
+	// 1. Calculate memory size for the array.
+	// 2. Copy C pointer values to the arrays.
+
+	ntensors := len(tensors)
+	// number of bytes for each array of pointers.
+	nbytes := C.size_t(ntensors) * C.size_t(unsafe.Sizeof(uintptr(0)))
+
+	cnamesPtr := (*[1 << 30]**C.char)(C.malloc(nbytes))
+	for i, name := range names {
+		cname := C.CString(name)
+		cnamesPtr[i] = &cname
+	}
+	ctensorsPtr := (*[1 << 30]C.tensor)(C.malloc(nbytes))
+	for i, ctensor := range tensors {
+		ctensorsPtr[i] = (C.tensor)(ctensor)
+	}
+
+	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
+	cfilename := C.CString(filename)
+
+	C.at_save_multi(&ctensorsPtr[0], cnamesPtr[0], cntensors, cfilename)
+}
+
 /* [at_load_multi] takes as input an array of nullptr for [tensors]. */
 // void at_load_multi(tensor *tensors, char **tensor_names, int ntensors, char *filename);
 func AtLoadMulti(tensors []Ctensor, tensor_names []string, ntensors int, filename string) {
