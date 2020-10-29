@@ -26,5 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Reverse changes [#10] to original.
 
+## [0.1.10]
+
+### Added
+- Added `tensor.SaveMultiNew`
+
 [#10]: https://github.com/sugarme/gotch/issues/10
 
