@@ -23,21 +23,21 @@ const (
 
 var l nn.Linear
 
-func netInit(vs nn.Path) ts.Module {
+func netInit(vs *nn.Path) ts.Module {
 	n := nn.Seq()
 
 	n.Add(nn.NewLinear(vs, ImageDimNN, HiddenNodesNN, nn.DefaultLinearConfig()))
 
-	n.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	n.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustRelu(false)
 	}))
 
 	n.Add(nn.NewLinear(vs, HiddenNodesNN, LabelNN, nn.DefaultLinearConfig()))
 
-	return &n
+	return n
 }
 
-func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer, epoch int) {
+func train(trainX, trainY, testX, testY *ts.Tensor, m ts.Module, opt *nn.Optimizer, epoch int) {
 
 	logits := m.Forward(trainX)
 	loss := logits.CrossEntropyForLogits(trainY)
@@ -56,7 +56,7 @@ func train(trainX, trainY, testX, testY ts.Tensor, m ts.Module, opt nn.Optimizer
 
 func runNN() {
 
-	var ds vision.Dataset
+	var ds *vision.Dataset
 	ds = vision.LoadMNISTDir(MnistDirNN)
 	vs := nn.NewVarStore(gotch.CPU)
 	net := netInit(vs.Root())

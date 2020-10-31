@@ -96,7 +96,7 @@ type Conv2D struct {
 	Config *Conv2DConfig
 }
 
-func NewConv2D(vs Path, inDim, outDim int64, k int64, cfg *Conv2DConfig) *Conv2D {
+func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg *Conv2DConfig) *Conv2D {
 	var (
 		ws *ts.Tensor
 		bs *ts.Tensor
@@ -190,7 +190,7 @@ func buildConvConfig(ksizes []int64) interface{} {
 
 // NewConv is a generic builder to build Conv1D, Conv2D, Conv3D. It returns
 // an interface Conv which might need a type assertion for further use.
-func NewConv(vs Path, inDim, outDim int64, ksizes []int64, config interface{}) Conv {
+func NewConv(vs *Path, inDim, outDim int64, ksizes []int64, config interface{}) Conv {
 
 	configT := reflect.TypeOf(config)
 	var (

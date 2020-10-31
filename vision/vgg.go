@@ -11,7 +11,7 @@ import (
 
 // NOTE: each list element contains multiple convolutions with some specified number
 // of features followed by a single max-pool layer.
-func layersA() (retVal [][]int64) {
+func layersA() [][]int64 {
 	return [][]int64{
 		{64},
 		{128},
@@ -21,7 +21,7 @@ func layersA() (retVal [][]int64) {
 	}
 }
 
-func layersB() (retVal [][]int64) {
+func layersB() [][]int64 {
 	return [][]int64{
 		{64, 64},
 		{128, 128},
@@ -31,7 +31,7 @@ func layersB() (retVal [][]int64) {
 	}
 }
 
-func layersD() (retVal [][]int64) {
+func layersD() [][]int64 {
 	return [][]int64{
 		{64, 64},
 		{128, 128},
@@ -41,7 +41,7 @@ func layersD() (retVal [][]int64) {
 	}
 }
 
-func layersE() (retVal [][]int64) {
+func layersE() [][]int64 {
 	return [][]int64{
 		{64, 64},
 		{128, 128},
@@ -51,7 +51,7 @@ func layersE() (retVal [][]int64) {
 	}
 }
 
-func vggConv2d(path nn.Path, cIn, cOut int64) (retVal nn.Conv2D) {
+func vggConv2d(path *nn.Path, cIn, cOut int64) *nn.Conv2D {
 
 	config := nn.DefaultConv2DConfig()
 	config.Stride = []int64{1, 1}
@@ -60,7 +60,7 @@ func vggConv2d(path nn.Path, cIn, cOut int64) (retVal nn.Conv2D) {
 	return nn.NewConv2D(path, cIn, cOut, 3, config)
 }
 
-func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.SequentialT {
+func vgg(path *nn.Path, config [][]int64, nclasses int64, batchNorm bool) *nn.SequentialT {
 
 	c := path.Sub("classifier")
 	seq := nn.SeqT()
@@ -77,40 +77,40 @@ func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.Sequ
 				seq.Add(nn.BatchNorm2D(f.Sub(fmt.Sprintf("%v", bnLen)), cOut, nn.DefaultBatchNormConfig()))
 			}
 
-			seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+			seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 				return xs.MustRelu(false)
 			}))
 
 			cIn = cOut
 		} // end of inner For loop
 
-		seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return xs.MaxPool2DDefault(2, false)
 		}))
 
 	} // end of outer For loop
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.FlatView()
 	}))
 
 	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("0")), 512*7*7, 4096, nn.DefaultLinearConfig()))
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustRelu(false)
 	}))
 
-	seq.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	seq.AddFn(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	seq.Add(nn.NewLinear(c.Sub(fmt.Sprint("3")), 4096, 4096, nn.DefaultLinearConfig()))
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustRelu(false)
 	}))
 
-	seq.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	seq.AddFn(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		return ts.MustDropout(xs, 0.5, train)
 	}))
 
@@ -119,34 +119,34 @@ func vgg(path nn.Path, config [][]int64, nclasses int64, batchNorm bool) nn.Sequ
 	return seq
 }
 
-func VGG11(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG11(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersA(), nclasses, false)
 }
 
-func VGG11BN(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG11BN(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersA(), nclasses, true)
 }
 
-func VGG13(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG13(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersB(), nclasses, false)
 }
 
-func VGG13BN(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG13BN(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersB(), nclasses, true)
 }
 
-func VGG16(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG16(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersD(), nclasses, false)
 }
 
-func VGG16BN(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG16BN(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersD(), nclasses, true)
 }
 
-func VGG19(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG19(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersE(), nclasses, false)
 }
 
-func VGG19BN(path nn.Path, nclasses int64) (retVal nn.SequentialT) {
+func VGG19BN(path *nn.Path, nclasses int64) *nn.SequentialT {
 	return vgg(path, layersE(), nclasses, true)
 }

@@ -17,7 +17,7 @@ const (
 )
 
 func runLinear() {
-	var ds vision.Dataset
+	var ds *vision.Dataset
 	ds = vision.LoadMNISTDir(MnistDir)
 
 	device := gotch.CPU

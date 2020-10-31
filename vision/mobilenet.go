@@ -12,7 +12,7 @@ import (
 )
 
 // Conv2D + BatchNorm2D + ReLU6
-func cbr(p nn.Path, cIn, cOut, ks, stride, g int64) (retVal ts.ModuleT) {
+func cbr(p *nn.Path, cIn, cOut, ks, stride, g int64) ts.ModuleT {
 	config := nn.DefaultConv2DConfig()
 	config.Stride = []int64{stride, stride}
 	pad := (ks - 1) / 2
@@ -26,7 +26,7 @@ func cbr(p nn.Path, cIn, cOut, ks, stride, g int64) (retVal ts.ModuleT) {
 
 	seq.Add(nn.BatchNorm2D(p.Sub("1"), cOut, nn.DefaultBatchNormConfig()))
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		tmp := xs.MustRelu(false)
 		res := tmp.MustClampMax(ts.FloatScalar(6.0), true)
 		return res
@@ -36,7 +36,7 @@ func cbr(p nn.Path, cIn, cOut, ks, stride, g int64) (retVal ts.ModuleT) {
 }
 
 // Inverted Residual block.
-func inv(p nn.Path, cIn, cOut, stride, er int64) (retVal ts.ModuleT) {
+func inv(p *nn.Path, cIn, cOut, stride, er int64) ts.ModuleT {
 	cHidden := er * cIn
 	seq := nn.SeqT()
 
@@ -54,7 +54,7 @@ func inv(p nn.Path, cIn, cOut, stride, er int64) (retVal ts.ModuleT) {
 
 	seq.Add(nn.BatchNorm2D(p.Sub(fmt.Sprintf("%v", id+2)), cOut, nn.DefaultBatchNormConfig()))
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		ys := xs.ApplyT(seq, train)
 		if stride == 1 && cIn == cOut {
 			res := ys.MustAdd(xs, true)
@@ -75,7 +75,7 @@ var invertedResidualSettings [][]int64 = [][]int64{
 	{6, 320, 1, 1},
 }
 
-func MobileNetV2(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func MobileNetV2(p *nn.Path, nclasses int64) ts.ModuleT {
 	fp := p.Sub("features")
 	cp := p.Sub("classifier")
 	cIn := int64(32)
@@ -108,13 +108,13 @@ func MobileNetV2(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 
 	classifier := nn.SeqT()
 
-	classifier.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	classifier.AddFnT(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	classifier.Add(nn.NewLinear(cp.Sub("1"), 1280, nclasses, nn.DefaultLinearConfig()))
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		tmp1 := xs.ApplyT(features, train)
 
 		tmp2 := tmp1.MustMean1([]int64{2}, false, gotch.Float, true)

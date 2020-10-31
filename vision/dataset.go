@@ -12,10 +12,10 @@ import (
 )
 
 type Dataset struct {
-	TrainImages ts.Tensor
-	TrainLabels ts.Tensor
-	TestImages  ts.Tensor
-	TestLabels  ts.Tensor
+	TrainImages *ts.Tensor
+	TrainLabels *ts.Tensor
+	TestImages  *ts.Tensor
+	TestLabels  *ts.Tensor
 	Labels      int64
 }
 
@@ -23,20 +23,20 @@ type Dataset struct {
 //=================
 
 // TrainIter creates an iterator of Iter type for train images and labels
-func (ds Dataset) TrainIter(batchSize int64) (retVal ts.Iter2) {
+func (ds *Dataset) TrainIter(batchSize int64) *ts.Iter2 {
 	return ts.MustNewIter2(ds.TrainImages, ds.TrainLabels, batchSize)
 
 }
 
 // TestIter creates an iterator of Iter type for test images and labels
-func (ds Dataset) TestIter(batchSize int64) (retVal ts.Iter2) {
+func (ds *Dataset) TestIter(batchSize int64) *ts.Iter2 {
 	return ts.MustNewIter2(ds.TestImages, ds.TestLabels, batchSize)
 }
 
 // RandomFlip randomly applies horizontal flips
 // This expects a 4 dimension NCHW tensor and returns a tensor with
 // an identical shape.
-func RandomFlip(t ts.Tensor) (retVal ts.Tensor) {
+func RandomFlip(t *ts.Tensor) *ts.Tensor {
 
 	size := t.MustSize()
 
@@ -53,7 +53,7 @@ func RandomFlip(t ts.Tensor) (retVal ts.Tensor) {
 		outputView := output.Idx(ts.NewSelect(int64(batchIdx)))
 		tView := t.Idx(ts.NewSelect(int64(batchIdx)))
 
-		var src ts.Tensor
+		var src *ts.Tensor
 		if rand.Float64() == 1.0 {
 			src = tView
 		} else {
@@ -72,7 +72,7 @@ func RandomFlip(t ts.Tensor) (retVal ts.Tensor) {
 // Pad the image using reflections and take some random crops.
 // This expects a 4 dimension NCHW tensor and returns a tensor with
 // an identical shape.
-func RandomCrop(t ts.Tensor, pad int64) (retVal ts.Tensor) {
+func RandomCrop(t *ts.Tensor, pad int64) *ts.Tensor {
 
 	size := t.MustSize()
 
@@ -115,7 +115,7 @@ func RandomCrop(t ts.Tensor, pad int64) (retVal ts.Tensor) {
 
 // Applies cutout: randomly remove some square areas in the original images.
 // https://arxiv.org/abs/1708.04552
-func RandomCutout(t ts.Tensor, sz int64) (retVal ts.Tensor) {
+func RandomCutout(t *ts.Tensor, sz int64) *ts.Tensor {
 
 	size := t.MustSize()
 
@@ -168,11 +168,11 @@ func RandomCutout(t ts.Tensor, sz int64) (retVal ts.Tensor) {
 	return output
 }
 
-func Augmentation(t ts.Tensor, flip bool, crop int64, cutout int64) (retVal ts.Tensor) {
+func Augmentation(t *ts.Tensor, flip bool, crop int64, cutout int64) *ts.Tensor {
 
 	tclone := t.MustShallowClone()
 
-	var flipTs ts.Tensor
+	var flipTs *ts.Tensor
 	if flip {
 		flipTs = RandomFlip(tclone)
 		tclone.MustDrop()
@@ -180,7 +180,7 @@ func Augmentation(t ts.Tensor, flip bool, crop int64, cutout int64) (retVal ts.T
 		flipTs = tclone
 	}
 
-	var cropTs ts.Tensor
+	var cropTs *ts.Tensor
 	if crop > 0 {
 		cropTs = RandomCrop(flipTs, crop)
 		flipTs.MustDrop()
@@ -188,12 +188,13 @@ func Augmentation(t ts.Tensor, flip bool, crop int64, cutout int64) (retVal ts.T
 		cropTs = flipTs
 	}
 
+	var output *ts.Tensor
 	if cutout > 0 {
-		retVal = RandomCutout(cropTs, cutout)
+		output = RandomCutout(cropTs, cutout)
 		cropTs.MustDrop()
 	} else {
-		retVal = cropTs
+		output = cropTs
 	}
 
-	return retVal
+	return output
 }

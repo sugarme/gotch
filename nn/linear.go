@@ -37,7 +37,7 @@ type Linear struct {
 // inDim - input dimension (x) [input features - columns]
 // outDim - output dimension (y) [output features - columns]
 // NOTE: w will have shape{outDim, inDim}; b will have shape{outDim}
-func NewLinear(vs Path, inDim, outDim int64, c *LinearConfig) *Linear {
+func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 
 	var bs *ts.Tensor
 	// bs has size of output dimension

@@ -17,71 +17,71 @@ import (
 
 type ImageNet struct {
 	mutex *sync.Mutex
-	mean  ts.Tensor
-	std   ts.Tensor
+	mean  *ts.Tensor
+	std   *ts.Tensor
 }
 
-func NewImageNet() ImageNet {
-	return ImageNet{
+func NewImageNet() *ImageNet {
+	return &ImageNet{
 		mutex: &sync.Mutex{},
 		mean:  ts.MustOfSlice([]float32{0.485, 0.456, 0.406}).MustView([]int64{3, 1, 1}, true),
 		std:   ts.MustOfSlice([]float32{0.229, 0.224, 0.225}).MustView([]int64{3, 1, 1}, true),
 	}
 }
 
-func (in ImageNet) Normalize(tensor ts.Tensor) (retVal ts.Tensor, err error) {
+func (in *ImageNet) Normalize(tensor *ts.Tensor) (*ts.Tensor, error) {
 	in.mutex.Lock()
 	defer in.mutex.Unlock()
 
 	res, err := tensor.Totype(gotch.Float, false)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	resDiv1, err := res.Div1(ts.FloatScalar(float64(255.0)), true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	resMean, err := resDiv1.Sub(in.mean, true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	resStd, err := resMean.Div(in.std, true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	return resStd, nil
 }
 
-func (in ImageNet) UnNormalize(tensor ts.Tensor) (retVal ts.Tensor, err error) {
+func (in *ImageNet) UnNormalize(tensor *ts.Tensor) (*ts.Tensor, error) {
 	in.mutex.Lock()
 	defer in.mutex.Unlock()
 
 	resMul, err := tensor.Mul(in.std, true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 	resAdd, err := resMul.Add(in.mean, true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	resMul1, err := resAdd.Mul1(ts.FloatScalar(float64(255.0)), true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	resClamp, err := resMul1.Clamp(ts.FloatScalar(float64(0.0)), ts.FloatScalar(float64(255.0)), true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	res, err := resClamp.Totype(gotch.Uint8, true)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	return res, nil
@@ -90,7 +90,7 @@ func (in ImageNet) UnNormalize(tensor ts.Tensor) (retVal ts.Tensor, err error) {
 // SaveImage saves a tensor image to a path.
 //
 // NOTE: This will carry out the ImageNet unnormalization.
-func (in ImageNet) SaveImage(tensor ts.Tensor, path string) (err error) {
+func (in *ImageNet) SaveImage(tensor *ts.Tensor, path string) error {
 	unnormTs, err := in.UnNormalize(tensor)
 	if err != nil {
 		err = fmt.Errorf("ImageNet - SaveImage method call: %v", err)
@@ -101,11 +101,11 @@ func (in ImageNet) SaveImage(tensor ts.Tensor, path string) (err error) {
 }
 
 // Load loads an image from a file and applies the ImageNet normalization.
-func (in ImageNet) LoadImage(path string) (retVal ts.Tensor, err error) {
+func (in *ImageNet) LoadImage(path string) (*ts.Tensor, error) {
 	tensor, err := Load(path)
 	if err != nil {
 		err = fmt.Errorf("ImageNet - LoadImage method call: %v", err)
-		return retVal, err
+		return nil, err
 	}
 
 	return in.Normalize(tensor)
@@ -114,11 +114,11 @@ func (in ImageNet) LoadImage(path string) (retVal ts.Tensor, err error) {
 // LoadImageAndResize loads an image from a file and resize it to the specified width and height.
 //
 // NOTE: This will apply the ImageNet normalization.
-func (in ImageNet) LoadImageAndResize(path string, w, h int64) (retVal ts.Tensor, err error) {
+func (in *ImageNet) LoadImageAndResize(path string, w, h int64) (*ts.Tensor, error) {
 	tensor, err := LoadAndResize(path, w, h)
 	if err != nil {
 		err = fmt.Errorf("ImageNet - LoadImageAndResize method call: %v", err)
-		return retVal, err
+		return nil, err
 	}
 
 	return tensor, nil
@@ -127,17 +127,17 @@ func (in ImageNet) LoadImageAndResize(path string, w, h int64) (retVal ts.Tensor
 // LoadImageAndResize224 loads an image from a file and resize it to 224x224.
 //
 // NOTE: This will apply the ImageNet normalization.
-func (in ImageNet) LoadImageAndResize224(path string) (retVal ts.Tensor, err error) {
+func (in *ImageNet) LoadImageAndResize224(path string) (*ts.Tensor, error) {
 	tensor, err := in.LoadImageAndResize(path, int64(224), int64(224))
 	if err != nil {
 		err = fmt.Errorf("ImageNet - LoadImageAndResize224/LoadImageAndResize method call: %v", err)
-		return retVal, err
+		return nil, err
 	}
 
 	return in.Normalize(tensor)
 }
 
-func (in ImageNet) hasSuffix(path string) (retVal bool) {
+func (in *ImageNet) hasSuffix(path string) bool {
 
 	ext := filepath.Ext(path)
 
@@ -149,13 +149,13 @@ func (in ImageNet) hasSuffix(path string) (retVal bool) {
 	}
 }
 
-func (in ImageNet) loadImageFromDir(dir string) (retVal ts.Tensor, err error) {
+func (in *ImageNet) loadImageFromDir(dir string) (*ts.Tensor, error) {
 	var images []ts.Tensor
 
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		err = fmt.Errorf("ImageNet - loadImageFromDir method call: %v", err)
-		return retVal, err
+		return nil, err
 	}
 
 	for _, file := range files {
@@ -166,15 +166,15 @@ func (in ImageNet) loadImageFromDir(dir string) (retVal ts.Tensor, err error) {
 		img, err := in.LoadImageAndResize224(fmt.Sprintf("%v/%v", dir, file.Name()))
 		if err != nil {
 			err = fmt.Errorf("ImageNet - loadImageFromDir method call: %v", err)
-			return retVal, err
+			return nil, err
 		}
 
-		images = append(images, img)
+		images = append(images, *img)
 	}
 
 	if len(images) == 0 {
 		err = fmt.Errorf("There no supported image files in specified directory (%v)", dir)
-		return retVal, err
+		return nil, err
 	}
 
 	return ts.Stack(images, int64(0))
@@ -186,7 +186,7 @@ func (in ImageNet) loadImageFromDir(dir string) (retVal ts.Tensor, err error) {
 // In each of these datasets, there should be a subdirectory per class named
 // in the same way.
 // The ImageNet normalization is applied, image are resized to 224x224.
-func (in ImageNet) LoadFromDir(path string) (retVal Dataset, err error) {
+func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -203,7 +203,7 @@ func (in ImageNet) LoadFromDir(path string) (retVal Dataset, err error) {
 	subs, err := ioutil.ReadDir(validPath)
 	if err != nil {
 		err := fmt.Errorf("ImageNet - LoadFromDir method call: %v\n", err)
-		return retVal, err
+		return nil, err
 	}
 
 	for _, sub := range subs {
@@ -230,30 +230,30 @@ func (in ImageNet) LoadFromDir(path string) (retVal Dataset, err error) {
 		trainTs, err := in.loadImageFromDir(trainDir)
 		if err != nil {
 			err := fmt.Errorf("ImageNet - LoadFromDir method call - Err at classes iterating: %v\n", err)
-			return retVal, err
+			return nil, err
 		}
 
 		ntrainTs := trainTs.MustSize()[0]
-		trainImages = append(trainImages, trainTs)
+		trainImages = append(trainImages, *trainTs)
 
 		trainLabelOnes := ts.MustOnes([]int64{ntrainTs}, gotch.Int64, gotch.CPU)
-		trainLabels = append(trainLabels, trainLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
+		trainLabels = append(trainLabels, *trainLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
 
 		// test
 		testDir := fmt.Sprintf("%v/%v", validPath, labelDir)
 		testTs, err := in.loadImageFromDir(testDir)
 		if err != nil {
 			err := fmt.Errorf("ImageNet - LoadFromDir method call - Err at classes interating: %v\n", err)
-			return retVal, err
+			return nil, err
 		}
 		ntestTs := testTs.MustSize()[0]
-		testImages = append(testImages, testTs)
+		testImages = append(testImages, *testTs)
 
 		testLabelOnes := ts.MustOnes([]int64{ntestTs}, gotch.Int64, gotch.CPU)
-		testLabels = append(testLabels, testLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
+		testLabels = append(testLabels, *testLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
 	}
 
-	return Dataset{
+	return &Dataset{
 		TrainImages: ts.MustCat(trainImages, 0),
 		TrainLabels: ts.MustCat(trainLabels, 0),
 		TestImages:  ts.MustCat(testImages, 0),
@@ -264,7 +264,7 @@ func (in ImageNet) LoadFromDir(path string) (retVal Dataset, err error) {
 
 const imagenetClassCount int64 = 1000
 
-func (in ImageNet) ClassCount() (retVal int64) {
+func (in *ImageNet) ClassCount() int64 {
 	return imagenetClassCount
 }
 
@@ -1271,7 +1271,7 @@ var imagenetClasses []string = []string{
 	"toilet tissue, toilet paper, bathroom tissue",
 }
 
-func (in ImageNet) Classes() (retVal []string) {
+func (in *ImageNet) Classes() []string {
 	return imagenetClasses
 }
 
@@ -1281,9 +1281,9 @@ type TopItem struct {
 }
 
 // Returns the top k classes as well as the associated scores.
-func (in ImageNet) Top(input ts.Tensor, k int64) (retVal []TopItem) {
+func (in *ImageNet) Top(input ts.Tensor, k int64) []TopItem {
 
-	var tensor ts.Tensor
+	var tensor *ts.Tensor
 	shape := input.MustSize()
 
 	switch {

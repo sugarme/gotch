@@ -38,7 +38,7 @@ type BatchNorm struct {
 }
 
 // NewBatchNorm creates a new BatchNorm layer
-func NewBatchNorm(vs Path, nd uint, outDim int64, config *BatchNormConfig) *BatchNorm {
+func NewBatchNorm(vs *Path, nd uint, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return &BatchNorm{
 		config:      config,
 		RunningMean: vs.ZerosNoTrain("running_mean", []int64{outDim}),
@@ -52,7 +52,7 @@ func NewBatchNorm(vs Path, nd uint, outDim int64, config *BatchNormConfig) *Batc
 //
 // The input shape is assumed to be (N, C, L). Normalization
 // is performed over the first batch dimension N.
-func BatchNorm1D(vs Path, outDim int64, config *BatchNormConfig) *BatchNorm {
+func BatchNorm1D(vs *Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return NewBatchNorm(vs, 1, outDim, config)
 }
 
@@ -60,7 +60,7 @@ func BatchNorm1D(vs Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 //
 // The input shape is assumed to be (N, C, H, W). Normalization
 // is performed over the first batch dimension N.
-func BatchNorm2D(vs Path, outDim int64, config *BatchNormConfig) *BatchNorm {
+func BatchNorm2D(vs *Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return NewBatchNorm(vs, 2, outDim, config)
 }
 
@@ -68,7 +68,7 @@ func BatchNorm2D(vs Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 //
 // The input shape is assumed to be (N, C, D, H, W). Normalization
 // is performed over the first batch dimension N.
-func BatchNorm3D(vs Path, outDim int64, config *BatchNormConfig) *BatchNorm {
+func BatchNorm3D(vs *Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return NewBatchNorm(vs, 3, outDim, config)
 }
 

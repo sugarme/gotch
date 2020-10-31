@@ -7,7 +7,7 @@ import (
 	ts "github.com/sugarme/gotch/tensor"
 )
 
-func convBn(p nn.Path, cIn, cOut, ksize, pad, stride int64) (retVal ts.ModuleT) {
+func convBn(p *nn.Path, cIn, cOut, ksize, pad, stride int64) ts.ModuleT {
 
 	convConfig := nn.DefaultConv2DConfig()
 	convConfig.Stride = []int64{stride, stride}
@@ -24,14 +24,14 @@ func convBn(p nn.Path, cIn, cOut, ksize, pad, stride int64) (retVal ts.ModuleT) 
 
 	seq.Add(nn.BatchNorm2D(p.Sub("bn"), cOut, bnConfig))
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustRelu(false)
 	}))
 
 	return seq
 }
 
-func convBn2(p nn.Path, cIn, cOut int64, ksize []int64, pad []int64) (retVal ts.ModuleT) {
+func convBn2(p *nn.Path, cIn, cOut int64, ksize []int64, pad []int64) ts.ModuleT {
 	convConfig := nn.DefaultConv2DConfig()
 	convConfig.Padding = pad
 	convConfig.Bias = false
@@ -41,22 +41,22 @@ func convBn2(p nn.Path, cIn, cOut int64, ksize []int64, pad []int64) (retVal ts.
 
 	seq := nn.SeqT()
 
-	seq.Add(nn.NewConv(p.Sub("conv"), cIn, cOut, ksize, convConfig).(nn.Conv2D))
+	seq.Add(nn.NewConv(p.Sub("conv"), cIn, cOut, ksize, convConfig).(*nn.Conv2D))
 
 	seq.Add(nn.BatchNorm2D(p.Sub("bn"), cOut, bnConfig))
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustRelu(false)
 	}))
 
 	return seq
 }
 
-func inMaxPool2D(xs ts.Tensor, ksize, stride int64) (retVal ts.Tensor) {
+func inMaxPool2D(xs *ts.Tensor, ksize, stride int64) *ts.Tensor {
 	return xs.MustMaxPool2d([]int64{ksize, ksize}, []int64{stride, stride}, []int64{0, 0}, []int64{1, 1}, false, false)
 }
 
-func inceptionA(p nn.Path, cIn, cPool int64) (retVal ts.ModuleT) {
+func inceptionA(p *nn.Path, cIn, cPool int64) ts.ModuleT {
 	b1 := convBn(p.Sub("branch1x1"), cIn, 64, 1, 0, 1)
 	b21 := convBn(p.Sub("branch5x5_1"), cIn, 48, 1, 0, 1)
 	b22 := convBn(p.Sub("branch5x5_2"), 48, 64, 5, 2, 1)
@@ -65,7 +65,7 @@ func inceptionA(p nn.Path, cIn, cPool int64) (retVal ts.ModuleT) {
 	b33 := convBn(p.Sub("branch3x3dbl_3"), 96, 96, 3, 1, 1)
 	bpool := convBn(p.Sub("branch_pool"), cIn, cPool, 1, 0, 1)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		b1Ts := xs.ApplyT(b1, train)
 
 		b2Tmp := xs.ApplyT(b21, train)
@@ -81,19 +81,19 @@ func inceptionA(p nn.Path, cIn, cPool int64) (retVal ts.ModuleT) {
 		bpoolTmp := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
 		bpoolTs := bpoolTmp.ApplyT(bpool, train)
 
-		res := ts.MustCat([]ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1)
+		res := ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
 
 		return res
 	})
 }
 
-func inceptionB(p nn.Path, cIn int64) (retVal ts.ModuleT) {
+func inceptionB(p *nn.Path, cIn int64) ts.ModuleT {
 	b1 := convBn(p.Sub("branch3x3"), cIn, 384, 3, 0, 2)
 	b21 := convBn(p.Sub("branch3x3dbl_1"), cIn, 64, 1, 0, 1)
 	b22 := convBn(p.Sub("branch3x3dbl_2"), 64, 96, 3, 1, 1)
 	b23 := convBn(p.Sub("branch3x3dbl_3"), 96, 96, 3, 0, 2)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		b1Ts := xs.ApplyT(b1, train)
 
 		b2Tmp1 := xs.ApplyT(b21, train)
@@ -104,13 +104,13 @@ func inceptionB(p nn.Path, cIn int64) (retVal ts.ModuleT) {
 
 		bpoolTs := inMaxPool2D(xs, 3, 2)
 
-		res := ts.MustCat([]ts.Tensor{b1Ts, b2Ts, bpoolTs}, 1)
+		res := ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *bpoolTs}, 1)
 
 		return res
 	})
 }
 
-func inceptionC(p nn.Path, cIn int64, c7 int64) (retVal ts.ModuleT) {
+func inceptionC(p *nn.Path, cIn int64, c7 int64) ts.ModuleT {
 
 	b1 := convBn(p.Sub("branch1x1"), cIn, 192, 1, 0, 1)
 
@@ -126,7 +126,7 @@ func inceptionC(p nn.Path, cIn int64, c7 int64) (retVal ts.ModuleT) {
 
 	bpool := convBn(p.Sub("branch_pool"), cIn, 192, 1, 0, 1)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) (res ts.Tensor) {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		b1Ts := xs.ApplyT(b1, train)
 
 		b2Tmp1 := xs.ApplyT(b21, train)
@@ -148,14 +148,11 @@ func inceptionC(p nn.Path, cIn int64, c7 int64) (retVal ts.ModuleT) {
 		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
 		bpoolTs := bpTmp1.ApplyT(bpool, train)
 
-		res = ts.MustCat([]ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1)
-
-		return res
-
+		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
 	})
 }
 
-func inceptionD(p nn.Path, cIn int64) (retVal ts.ModuleT) {
+func inceptionD(p *nn.Path, cIn int64) ts.ModuleT {
 
 	b11 := convBn(p.Sub("branch3x3_1"), cIn, 192, 1, 0, 1)
 	b12 := convBn(p.Sub("branch3x3_2"), 192, 320, 3, 0, 2)
@@ -165,7 +162,7 @@ func inceptionD(p nn.Path, cIn int64) (retVal ts.ModuleT) {
 	b23 := convBn2(p.Sub("branch7x7x3_3"), 192, 192, []int64{7, 1}, []int64{3, 0})
 	b24 := convBn(p.Sub("branch7x7x3_4"), 192, 192, 3, 0, 2)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		b1Tmp := xs.ApplyT(b11, train)
 		b1Ts := b1Tmp.ApplyT(b12, train)
 		b1Tmp.MustDrop()
@@ -180,12 +177,12 @@ func inceptionD(p nn.Path, cIn int64) (retVal ts.ModuleT) {
 
 		bpoolTs := inMaxPool2D(xs, 3, 2)
 
-		return ts.MustCat([]ts.Tensor{b1Ts, b2Ts, bpoolTs}, 1)
+		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *bpoolTs}, 1)
 
 	})
 }
 
-func inceptionE(p nn.Path, cIn int64) (retVal ts.ModuleT) {
+func inceptionE(p *nn.Path, cIn int64) ts.ModuleT {
 	b1 := convBn(p.Sub("branch1x1"), cIn, 320, 1, 0, 1)
 
 	b21 := convBn(p.Sub("branch3x3_1"), cIn, 384, 1, 0, 1)
@@ -199,37 +196,37 @@ func inceptionE(p nn.Path, cIn int64) (retVal ts.ModuleT) {
 
 	bpool := convBn(p.Sub("branch_pool"), cIn, 192, 1, 0, 1)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		b1Ts := xs.ApplyT(b1, train)
 
 		b2Tmp := xs.ApplyT(b21, train)
 		b2aTs := b2Tmp.ApplyT(b22a, train)
 		b2bTs := b2Tmp.ApplyT(b22b, train)
-		b2Ts := ts.MustCat([]ts.Tensor{b2aTs, b2bTs}, 1)
+		b2Ts := ts.MustCat([]ts.Tensor{*b2aTs, *b2bTs}, 1)
 
 		b3Tmp1 := xs.ApplyT(b31, train)
 		b3Tmp2 := b3Tmp1.ApplyT(b32, train)
 		b3Tmp1.MustDrop()
 		b3aTs := b3Tmp2.ApplyT(b33a, train)
 		b3bTs := b3Tmp2.ApplyT(b33b, train)
-		b3Ts := ts.MustCat([]ts.Tensor{b3aTs, b3bTs}, 1)
+		b3Ts := ts.MustCat([]ts.Tensor{*b3aTs, *b3bTs}, 1)
 
 		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
 		bpoolTs := bpTmp1.ApplyT(bpool, train)
 
-		return ts.MustCat([]ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1)
+		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
 	})
 
 }
 
-func InceptionV3(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func InceptionV3(p *nn.Path, nclasses int64) ts.ModuleT {
 	seq := nn.SeqT()
 
 	seq.Add(convBn(p.Sub("Conv2d_1a_3x3"), 3, 32, 3, 0, 2))
 	seq.Add(convBn(p.Sub("Conv2d_2a_3x3"), 32, 32, 3, 0, 1))
 	seq.Add(convBn(p.Sub("Conv2d_2b_3x3"), 32, 64, 3, 1, 1))
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		tmp := xs.MustRelu(false)
 		res := inMaxPool2D(tmp, 3, 2)
 		tmp.MustDrop()
@@ -239,7 +236,7 @@ func InceptionV3(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 	seq.Add(convBn(p.Sub("Conv2d_3b_1x1"), 64, 80, 1, 0, 1))
 	seq.Add(convBn(p.Sub("Conv2d_4a_3x3"), 80, 192, 3, 0, 1))
 
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		tmp := xs.MustRelu(false)
 		res := inMaxPool2D(tmp, 3, 2)
 		tmp.MustDrop()
@@ -262,7 +259,7 @@ func InceptionV3(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
 	seq.Add(inceptionE(p.Sub("Mixed_7b"), 1280))
 	seq.Add(inceptionE(p.Sub("Mixed_7c"), 2048))
 
-	seq.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	seq.AddFnT(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		tmp1 := xs.MustAdaptiveAvgPool2d([]int64{1, 1}, false)
 		tmp2 := ts.MustDropout(tmp1, 0.5, train)
 		tmp1.MustDrop()

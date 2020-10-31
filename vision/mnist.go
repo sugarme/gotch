@@ -52,7 +52,7 @@ func checkMagicNumber(f *os.File, wantNumber int) (err error) {
 	return nil
 }
 
-func readLabels(filename string) (retVal ts.Tensor) {
+func readLabels(filename string) *ts.Tensor {
 
 	f, err := os.Open(filename)
 	if err != nil {
@@ -82,12 +82,10 @@ func readLabels(filename string) (retVal ts.Tensor) {
 		log.Fatal(err)
 	}
 
-	retVal = labelsTs.MustTotype(gotch.Int64, true)
-
-	return retVal
+	return labelsTs.MustTotype(gotch.Int64, true)
 }
 
-func readImages(filename string) (retVal ts.Tensor) {
+func readImages(filename string) *ts.Tensor {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("readImages errors: %v\n", err)
@@ -125,13 +123,12 @@ func readImages(filename string) (retVal ts.Tensor) {
 		err = fmt.Errorf("create images tensor err.")
 		log.Fatal(err)
 	}
-	retVal = imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}, true).MustTotype(gotch.Float, true).MustDiv1(ts.FloatScalar(255.0), true)
 
-	return retVal
+	return imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}, true).MustTotype(gotch.Float, true).MustDiv1(ts.FloatScalar(255.0), true)
 }
 
 // LoadMNISTDir loads all MNIST data from a given directory to Dataset
-func LoadMNISTDir(dir string) (retVal Dataset) {
+func LoadMNISTDir(dir string) *Dataset {
 	const (
 		trainLabels = "train-labels-idx1-ubyte"
 		trainImages = "train-images-idx3-ubyte"
@@ -149,7 +146,7 @@ func LoadMNISTDir(dir string) (retVal Dataset) {
 	testImagesTs := readImages(testImagesFile)
 	testLabelsTs := readLabels(testLabelsFile)
 
-	return Dataset{
+	return &Dataset{
 		TrainImages: trainImagesTs,
 		TrainLabels: trainLabelsTs,
 		TestImages:  testImagesTs,
