@@ -124,7 +124,7 @@ func NewLSTM(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) *LSTM {
 // Implement RNN interface for LSTM:
 // =================================
 
-func (l *LSTM) ZeroState(batchDim int64) (retVal State) {
+func (l *LSTM) ZeroState(batchDim int64) State {
 	var numDirections int64 = 1
 	if l.config.Bidirectional {
 		numDirections = 2
@@ -134,7 +134,7 @@ func (l *LSTM) ZeroState(batchDim int64) (retVal State) {
 	shape := []int64{layerDim, batchDim, l.hiddenDim}
 	zeros := ts.MustZeros(shape, gotch.Float, l.device)
 
-	retVal = LSTMState{
+	retVal := &LSTMState{
 		Tensor1: zeros.MustShallowClone(),
 		Tensor2: zeros.MustShallowClone(),
 	}
@@ -144,7 +144,7 @@ func (l *LSTM) ZeroState(batchDim int64) (retVal State) {
 	return retVal
 }
 
-func (l *LSTM) Step(input *ts.Tensor, inState State) (retVal State) {
+func (l *LSTM) Step(input *ts.Tensor, inState State) State {
 	ip := input.MustUnsqueeze(1, false)
 
 	output, state := l.SeqInit(ip, inState)
@@ -156,24 +156,24 @@ func (l *LSTM) Step(input *ts.Tensor, inState State) (retVal State) {
 	return state
 }
 
-func (l *LSTM) Seq(input *ts.Tensor) (output *ts.Tensor, state State) {
+func (l *LSTM) Seq(input *ts.Tensor) (*ts.Tensor, State) {
 	batchDim := input.MustSize()[0]
 	inState := l.ZeroState(batchDim)
 
-	output, state = l.SeqInit(input, inState)
+	output, state := l.SeqInit(input, inState)
 
 	// Delete intermediate tensors in inState
-	inState.(LSTMState).Tensor1.MustDrop()
-	inState.(LSTMState).Tensor2.MustDrop()
+	inState.(*LSTMState).Tensor1.MustDrop()
+	inState.(*LSTMState).Tensor2.MustDrop()
 
 	return output, state
 }
 
 func (l *LSTM) SeqInit(input *ts.Tensor, inState State) (*ts.Tensor, State) {
 
-	output, h, c := input.MustLstm([]ts.Tensor{*inState.(LSTMState).Tensor1, *inState.(LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
+	output, h, c := input.MustLstm([]ts.Tensor{*inState.(*LSTMState).Tensor1, *inState.(*LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
 
-	return output, LSTMState{
+	return output, &LSTMState{
 		Tensor1: h,
 		Tensor2: c,
 	}
@@ -243,7 +243,7 @@ func NewGRU(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) (retVal *GRU) {
 // Implement RNN interface for GRU:
 // ================================
 
-func (g *GRU) ZeroState(batchDim int64) (retVal State) {
+func (g *GRU) ZeroState(batchDim int64) State {
 	var numDirections int64 = 1
 	if g.config.Bidirectional {
 		numDirections = 2
@@ -254,10 +254,10 @@ func (g *GRU) ZeroState(batchDim int64) (retVal State) {
 
 	tensor := ts.MustZeros(shape, gotch.Float, g.device)
 
-	return GRUState{Tensor: tensor}
+	return &GRUState{Tensor: tensor}
 }
 
-func (g *GRU) Step(input *ts.Tensor, inState State) (retVal State) {
+func (g *GRU) Step(input *ts.Tensor, inState State) State {
 	unsqueezedInput := input.MustUnsqueeze(1, false)
 	output, state := g.SeqInit(unsqueezedInput, inState)
 
@@ -269,21 +269,21 @@ func (g *GRU) Step(input *ts.Tensor, inState State) (retVal State) {
 	return state
 }
 
-func (g *GRU) Seq(input *ts.Tensor) (output *ts.Tensor, state State) {
+func (g *GRU) Seq(input *ts.Tensor) (*ts.Tensor, State) {
 	batchDim := input.MustSize()[0]
 	inState := g.ZeroState(batchDim)
 
-	output, state = g.SeqInit(input, inState)
+	output, state := g.SeqInit(input, inState)
 
 	// Delete intermediate tensors in inState
-	inState.(GRUState).Tensor.MustDrop()
+	inState.(*GRUState).Tensor.MustDrop()
 
 	return output, state
 }
 
 func (g *GRU) SeqInit(input *ts.Tensor, inState State) (*ts.Tensor, State) {
 
-	output, h := input.MustGru(inState.(GRUState).Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
+	output, h := input.MustGru(inState.(*GRUState).Tensor, g.flatWeights, g.config.HasBiases, g.config.NumLayers, g.config.Dropout, g.config.Train, g.config.Bidirectional, g.config.BatchFirst)
 
-	return output, GRUState{Tensor: h}
+	return output, &GRUState{Tensor: h}
 }

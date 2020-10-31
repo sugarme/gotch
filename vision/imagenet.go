@@ -1281,7 +1281,7 @@ type TopItem struct {
 }
 
 // Returns the top k classes as well as the associated scores.
-func (in *ImageNet) Top(input ts.Tensor, k int64) []TopItem {
+func (in *ImageNet) Top(input *ts.Tensor, k int64) []TopItem {
 
 	var tensor *ts.Tensor
 	shape := input.MustSize()
