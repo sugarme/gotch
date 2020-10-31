@@ -18,8 +18,8 @@ type LinearConfig struct {
 
 // DefaultLinearConfig creates default LinearConfig with
 // weights initiated using KaimingUniform and Bias is set to true
-func DefaultLinearConfig() LinearConfig {
-	return LinearConfig{
+func DefaultLinearConfig() *LinearConfig {
+	return &LinearConfig{
 		WsInit: NewKaimingUniformInit(),
 		BsInit: nil,
 		Bias:   true,
@@ -28,8 +28,8 @@ func DefaultLinearConfig() LinearConfig {
 
 // Linear is a linear fully-connected layer
 type Linear struct {
-	Ws ts.Tensor
-	Bs ts.Tensor
+	Ws *ts.Tensor
+	Bs *ts.Tensor
 }
 
 // NewLinear creates a new linear layer
@@ -37,9 +37,9 @@ type Linear struct {
 // inDim - input dimension (x) [input features - columns]
 // outDim - output dimension (y) [output features - columns]
 // NOTE: w will have shape{outDim, inDim}; b will have shape{outDim}
-func NewLinear(vs Path, inDim, outDim int64, c LinearConfig) Linear {
+func NewLinear(vs Path, inDim, outDim int64, c *LinearConfig) *Linear {
 
-	var bs ts.Tensor
+	var bs *ts.Tensor
 	// bs has size of output dimension
 	switch c.Bias {
 	case false:
@@ -55,7 +55,7 @@ func NewLinear(vs Path, inDim, outDim int64, c LinearConfig) Linear {
 		}
 	}
 
-	return Linear{
+	return &Linear{
 		Ws: vs.NewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false),
 		Bs: bs,
 	}
@@ -89,7 +89,7 @@ func NewLinear(vs Path, inDim, outDim int64, c LinearConfig) Linear {
 // 	  1 1 1
 // 	  1 1 1
 // 		1 1 1 ]
-func (l Linear) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+func (l *Linear) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
 
 	mul := xs.MustMatmul(l.Ws, false)
 	return mul.MustAdd(l.Bs, true)
@@ -98,7 +98,7 @@ func (l Linear) Forward(xs ts.Tensor) (retVal ts.Tensor) {
 // ForwardT implements ModuleT interface for Linear layer.
 //
 // NOTE: train param will not be used.
-func (l Linear) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+func (l *Linear) ForwardT(xs *ts.Tensor, train bool) (retVal *ts.Tensor) {
 
 	mul := xs.MustMatmul(l.Ws, false)
 	return mul.MustAdd(l.Bs, true)

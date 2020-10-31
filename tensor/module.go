@@ -9,7 +9,7 @@ package tensor
 // be registered, and will have their parameters converted too when you call .cuda(), etc.
 type Module interface {
 	// ModuleT
-	Forward(xs Tensor) Tensor
+	Forward(xs *Tensor) *Tensor
 }
 
 // ModuleT is a `Module` with an additional train parameter
@@ -17,7 +17,7 @@ type Module interface {
 // between training and evaluation. E.g. When using dropout or batch-normalization.
 type ModuleT interface {
 	// Forward(xs Tensor) Tensor
-	ForwardT(xs Tensor, train bool) Tensor
+	ForwardT(xs *Tensor, train bool) *Tensor
 }
 
 /*
@@ -99,18 +99,18 @@ type ModuleT interface {
 // ======================================
 
 // Apply forwards tensor itself through a module.
-func (ts Tensor) Apply(m Module) (retVal Tensor) {
+func (ts *Tensor) Apply(m Module) (retVal *Tensor) {
 	return m.Forward(ts)
 }
 
 // Apply forwards tensor itself through a module T.
-func (ts Tensor) ApplyT(m ModuleT, train bool) (retVal Tensor) {
+func (ts *Tensor) ApplyT(m ModuleT, train bool) (retVal *Tensor) {
 	return m.ForwardT(ts, train)
 }
 
 // ApplyOpt forwards a tensor itself through a module if given, shallow-copies
 // the tensor otherwise.
-func (ts Tensor) ApplyOpt(opts ...ModuleOption) (retVal Tensor) {
+func (ts *Tensor) ApplyOpt(opts ...ModuleOption) (retVal *Tensor) {
 
 	switch {
 	case len(opts) > 0:
@@ -131,7 +131,7 @@ func WithModule(m Module) ModuleOption {
 
 // ApplyOptT forwards a tensor itself through a module T if given, shallow-copies
 // the tensor otherwise.
-func (ts Tensor) ApplyOptT(train bool, opts ...ModuleTOption) (retVal Tensor) {
+func (ts *Tensor) ApplyOptT(train bool, opts ...ModuleTOption) (retVal *Tensor) {
 
 	switch {
 	case len(opts) > 0:

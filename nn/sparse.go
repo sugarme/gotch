@@ -14,8 +14,8 @@ type EmbeddingConfig struct {
 	PaddingIdx      int64
 }
 
-func DefaultEmbeddingConfig() EmbeddingConfig {
-	return EmbeddingConfig{
+func DefaultEmbeddingConfig() *EmbeddingConfig {
+	return &EmbeddingConfig{
 		Sparse:          false,
 		ScaleGradByFreq: false,
 		WsInit:          NewRandnInit(0.0, 1.0),
@@ -28,13 +28,13 @@ func DefaultEmbeddingConfig() EmbeddingConfig {
 // An embedding layer acts as a simple lookup table that stores embeddings.
 // This is commonly used to store word embeddings.
 type Embedding struct {
-	Ws     ts.Tensor
-	config EmbeddingConfig
+	Ws     *ts.Tensor
+	config *EmbeddingConfig
 }
 
 // NewEmbedding creates a new Embedding
-func NewEmbedding(vs Path, numEmbeddings int64, embeddingDim int64, config EmbeddingConfig) Embedding {
-	return Embedding{
+func NewEmbedding(vs *Path, numEmbeddings int64, embeddingDim int64, config *EmbeddingConfig) *Embedding {
+	return &Embedding{
 		Ws:     vs.NewVar("weight", []int64{numEmbeddings, embeddingDim}, config.WsInit),
 		config: config,
 	}
@@ -44,11 +44,11 @@ func NewEmbedding(vs Path, numEmbeddings int64, embeddingDim int64, config Embed
 // =========================================
 
 // Forward implements Module interface for Embedding
-func (e Embedding) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+func (e *Embedding) Forward(xs *ts.Tensor) *ts.Tensor {
 	return ts.MustEmbedding(e.Ws, xs, e.config.PaddingIdx, e.config.ScaleGradByFreq, e.config.Sparse)
 }
 
 // ForwardT implements ModuleT interface for Embedding
-func (e Embedding) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+func (e *Embedding) ForwardT(xs *ts.Tensor, train bool) *ts.Tensor {
 	return ts.MustEmbedding(e.Ws, xs, e.config.PaddingIdx, e.config.ScaleGradByFreq, e.config.Sparse)
 }

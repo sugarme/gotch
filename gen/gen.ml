@@ -1,7 +1,6 @@
 (* Automatically generate the C++ -> C -> Go bindings.
    This takes as input the Descriptions.yaml file that gets generated when
 func (Func.c_go_args_list func)  building PyTorch from source.
-
    Run with: dune exec gen/gen.exe
  *)
 open Base
@@ -347,15 +346,15 @@ module Func = struct
               | Bool -> "bool"
               | Int64 -> "int64"
               | Double -> "float64"
-              | Tensor -> "Tensor"
-              | TensorOption -> "Tensor"
+              | Tensor -> "*Tensor"
+              | TensorOption -> "*Tensor"
               | IntList -> "[]int64"
               | TensorList -> "[]Tensor"
               | String -> "string"
               (* TODO. Struct{Kind gotch.DType Device gotch.Device} *)
               (* E.g. `type KindDevice struct{}` *)
               | TensorOptions -> "gotch.KindDevice"
-              | Scalar -> "Scalar"
+              | Scalar -> "*Scalar"
               | ScalarType -> "gotch.DType"
               | Device -> "gotch.Device"
             in
@@ -396,9 +395,9 @@ module Func = struct
     (* printf "t name: %s\n" t.name ; *)
     let returns =
       match t.returns with
-      | `fixed 1 -> "retVal Tensor"
+      | `fixed 1 -> "retVal *Tensor"
       | `fixed v ->
-          List.init v ~f:(fun i -> Printf.sprintf "retVal%d Tensor" i)
+          List.init v ~f:(fun i -> Printf.sprintf "retVal%d *Tensor" i)
           |> String.concat ~sep:", " |> Printf.sprintf "%s"
       | `dynamic -> "retVal []Tensor"
     in
@@ -698,7 +697,7 @@ let write_wrapper funcs filename =
             match func.returns with
             | `dynamic ->
                 pm "\n" ;
-                if is_method then pm "func(ts Tensor) %s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) %s(" gofunc_name
                 else pm "func %s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:true) ;
@@ -714,13 +713,13 @@ let write_wrapper funcs filename =
                 pm "  }\n" ;
                 (* NOTE. if in_place method, no retVal return *)
                 if not (Func.is_inplace func) then
-                  pm "  retVal = Tensor{ctensor: *ptr}\n" ;
+                  pm "  retVal = &Tensor{ctensor: *ptr}\n" ;
                 pm "  \n" ;
                 pm "  return %s\n" (Func.go_return_notype func ~fallible:true) ;
                 pm "} \n"
             | `fixed 1 ->
                 pm "\n" ;
-                if is_method then pm "func(ts Tensor) %s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) %s(" gofunc_name
                 else pm "func %s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:true) ;
@@ -736,7 +735,7 @@ let write_wrapper funcs filename =
                 pm "  }\n" ;
                 (* NOTE. if in_place method, no retVal return *)
                 if not (Func.is_inplace func) then
-                  pm "  retVal = Tensor{ctensor: *ptr}\n" ;
+                  pm "  retVal = &Tensor{ctensor: *ptr}\n" ;
                 pm "  \n" ;
                 pm "  return %s\n" (Func.go_return_notype func ~fallible:true) ;
                 pm "} \n"
@@ -804,7 +803,7 @@ let write_must_wrapper funcs filename =
             match func.returns with
             | `dynamic ->
                 pm "\n" ;
-                if is_method then pm "func(ts Tensor) %s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) %s(" gofunc_name
                 else pm "func Must%s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;
@@ -821,7 +820,7 @@ let write_must_wrapper funcs filename =
                 pm "} \n"
             | `fixed 1 ->
                 pm "\n" ;
-                if is_method then pm "func(ts Tensor) Must%s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) Must%s(" gofunc_name
                 else pm "func Must%s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;

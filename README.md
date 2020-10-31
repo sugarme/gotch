@@ -5,6 +5,7 @@
 
 - **GoTch** is a C++ Libtorch Go binding for developing and implementing deep learning projects in Go.
 - This package is to create a thin wrapper of Libtorch to make use of its tensor APIs and CUDA support while implementing as much idiomatic Go as possible. 
+- There are about **1129** auto-generated tensor APIs.
 
 ## Dependencies
 

@@ -59,7 +59,7 @@ func TestModuleForwardTs(t *testing.T) {
 	ts1 := ts.TensorFrom([]int64{42})
 	ts2 := ts.TensorFrom([]int64{1337})
 
-	res, err := foo.ForwardTs([]ts.Tensor{ts1, ts2})
+	res, err := foo.ForwardTs([]ts.Tensor{*ts1, *ts2})
 	if err != nil {
 		t.Error(err)
 	}
@@ -83,8 +83,8 @@ func TestModuleForwardIValue(t *testing.T) {
 	ts1 := ts.TensorFrom([]int64{42})
 	ts2 := ts.TensorFrom([]int64{1337})
 
-	iv1 := ts.NewIValue(ts1)
-	iv2 := ts.NewIValue(ts2)
+	iv1 := ts.NewIValue(*ts1)
+	iv2 := ts.NewIValue(*ts2)
 
 	got, err := foo.ForwardIs([]ts.IValue{iv1, iv2})
 	if err != nil {
@@ -93,7 +93,7 @@ func TestModuleForwardIValue(t *testing.T) {
 
 	expectedTs1 := ts.TensorFrom([]int64{1421})
 	expectedTs2 := ts.TensorFrom([]int64{-1295})
-	want := ts.NewIValue([]ts.Tensor{expectedTs1, expectedTs2})
+	want := ts.NewIValue([]ts.Tensor{*expectedTs1, *expectedTs2})
 
 	if !reflect.DeepEqual(want.Name(), got.Name()) {
 		t.Errorf("Expected Ivalue Name: %v\n", want.Name())

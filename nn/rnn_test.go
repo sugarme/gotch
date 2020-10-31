@@ -10,7 +10,7 @@ import (
 	ts "github.com/sugarme/gotch/tensor"
 )
 
-func gruTest(rnnConfig nn.RNNConfig, t *testing.T) {
+func gruTest(rnnConfig *nn.RNNConfig, t *testing.T) {
 
 	var (
 		batchDim  int64 = 5
@@ -47,7 +47,7 @@ func gruTest(rnnConfig nn.RNNConfig, t *testing.T) {
 	input = ts.MustRandn([]int64{batchDim, seqLen, inputDim}, gotch.Float, gotch.CPU)
 	output, _ = gru.Seq(input)
 	wantSeq := []int64{batchDim, seqLen, outputDim * numDirections}
-	gotSeq := output.(ts.Tensor).MustSize()
+	gotSeq := output.(*ts.Tensor).MustSize()
 
 	if !reflect.DeepEqual(wantSeq, gotSeq) {
 		fmt.Println("Seq test:")
@@ -75,7 +75,7 @@ func TestGRU(t *testing.T) {
 	gruTest(cfg, t)
 }
 
-func lstmTest(rnnConfig nn.RNNConfig, t *testing.T) {
+func lstmTest(rnnConfig *nn.RNNConfig, t *testing.T) {
 
 	var (
 		batchDim  int64 = 5
@@ -121,7 +121,7 @@ func lstmTest(rnnConfig nn.RNNConfig, t *testing.T) {
 	output, _ = lstm.Seq(input)
 
 	wantSeq := []int64{batchDim, seqLen, outputDim * numDirections}
-	gotSeq := output.(ts.Tensor).MustSize()
+	gotSeq := output.(*ts.Tensor).MustSize()
 
 	if !reflect.DeepEqual(wantSeq, gotSeq) {
 		fmt.Println("Seq test:")

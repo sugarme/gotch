@@ -14,8 +14,8 @@ type LayerNormConfig struct {
 	BsInit            Init
 }
 
-func DefaultLayerNormConfig() LayerNormConfig {
-	return LayerNormConfig{
+func DefaultLayerNormConfig() *LayerNormConfig {
+	return &LayerNormConfig{
 		CudnnEnable:       true,
 		Eps:               1e-5,
 		ElementwiseAffine: true,
@@ -26,30 +26,30 @@ func DefaultLayerNormConfig() LayerNormConfig {
 
 // A layer-normalization layer.
 type LayerNorm struct {
-	Config          LayerNormConfig
-	Ws              ts.Tensor // optional
-	Bs              ts.Tensor // optional
+	Config          *LayerNormConfig
+	Ws              *ts.Tensor // optional
+	Bs              *ts.Tensor // optional
 	NormalizedShape []int64
 }
 
-func NewLayerNorm(vs Path, normalizedShape []int64, config LayerNormConfig) LayerNorm {
+func NewLayerNorm(vs Path, normalizedShape []int64, config *LayerNormConfig) *LayerNorm {
 
 	var (
-		ws ts.Tensor
-		bs ts.Tensor
+		ws *ts.Tensor
+		bs *ts.Tensor
 	)
 	if config.ElementwiseAffine {
 		ws = vs.NewVar("weight", normalizedShape, config.WsInit)
 		bs = vs.NewVar("bias", normalizedShape, config.BsInit)
 	}
 
-	return LayerNorm{config, ws, bs, normalizedShape}
+	return &LayerNorm{config, ws, bs, normalizedShape}
 }
 
 // Implement Module interface for LayerNorm:
 // =========================================
 
-func (ln LayerNorm) Forward(xs ts.Tensor) (retVal ts.Tensor) {
+func (ln *LayerNorm) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
 
 	return ts.MustLayerNorm(xs, ln.NormalizedShape, ln.Ws, ln.Bs, ln.Config.Eps, ln.Config.CudnnEnable)
 }

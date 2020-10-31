@@ -46,7 +46,7 @@ func TestSaveLoad(t *testing.T) {
 		panic(err)
 	}
 
-	add := func(vs nn.Path) (ts.Tensor, ts.Tensor) {
+	add := func(vs *nn.Path) (*ts.Tensor, *ts.Tensor) {
 		subA := vs.Sub("a")
 		subB := subA.Sub("b")
 		v := subB.Ones("t2", []int64{3})

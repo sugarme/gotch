@@ -12,19 +12,19 @@ type Scalar struct {
 }
 
 // IntScalar creates a integer scalar
-func IntScalar(v int64) Scalar {
+func IntScalar(v int64) *Scalar {
 	cscalar := lib.AtsInt(v)
-	return Scalar{cscalar}
+	return &Scalar{cscalar}
 }
 
 // FloatScalar creates a float scalar
-func FloatScalar(v float64) Scalar {
+func FloatScalar(v float64) *Scalar {
 	cscalar := lib.AtsFloat(v)
-	return Scalar{cscalar}
+	return &Scalar{cscalar}
 }
 
 // ToInt returns a integer value
-func (sc Scalar) ToInt() (retVal int64, err error) {
+func (sc *Scalar) ToInt() (retVal int64, err error) {
 	retVal = lib.AtsToInt(sc.cscalar)
 	err = TorchErr()
 	if err != nil {
@@ -35,7 +35,7 @@ func (sc Scalar) ToInt() (retVal int64, err error) {
 }
 
 // ToFloat returns a float value
-func (sc Scalar) ToFloat() (retVal float64, err error) {
+func (sc *Scalar) ToFloat() (retVal float64, err error) {
 	retVal = lib.AtsToFloat(sc.cscalar)
 	err = TorchErr()
 	if err != nil {
@@ -46,7 +46,7 @@ func (sc Scalar) ToFloat() (retVal float64, err error) {
 }
 
 // ToString returns a string representation of scalar value
-func (sc Scalar) ToString() (retVal string, err error) {
+func (sc *Scalar) ToString() (retVal string, err error) {
 	retVal = lib.AtsToString(sc.cscalar)
 	err = TorchErr()
 	if err != nil {
@@ -60,12 +60,12 @@ func (sc Scalar) ToString() (retVal string, err error) {
 //
 // TODO: Really? after running s.Drop() and s.ToInt()
 // it returns Zero.
-func (sc Scalar) Drop() (err error) {
+func (sc *Scalar) Drop() (err error) {
 	lib.AtsFree(sc.cscalar)
 	return TorchErr()
 }
 
-func (sc Scalar) MustDrop() {
+func (sc *Scalar) MustDrop() {
 	lib.AtsFree(sc.cscalar)
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
