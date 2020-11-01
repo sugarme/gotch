@@ -2,7 +2,7 @@
 
 This is an example of implementing YOLO v3 model. 
 
-The model weights can be [download here](https://drive.google.com/file/d/16eO9o4rclD929LHweCPW_-7HjKfNKVnA/view?usp=sharing).
+The model weights can be [downloaded here](https://drive.google.com/file/d/16eO9o4rclD929LHweCPW_-7HjKfNKVnA/view?usp=sharing).
 
 Here is an example of image inference using Yolo v3 model.
 
