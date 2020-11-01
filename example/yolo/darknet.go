@@ -19,7 +19,7 @@ type Block struct {
 	Parameters map[string]string
 }
 
-func (b *Block) get(key string) (retVal string) {
+func (b *Block) get(key string) string {
 	val, ok := b.Parameters[key]
 	if !ok {
 		log.Fatalf("Cannot find %v in Block parameters.\n", key)
@@ -33,7 +33,7 @@ type Darknet struct {
 	Parameters map[string]string
 }
 
-func (d Darknet) get(key string) (retVal string) {
+func (d *Darknet) get(key string) string {
 	val, ok := d.Parameters[key]
 	if !ok {
 		log.Fatalf("Cannot find %v in Darknet parameters.\n", key)
@@ -44,16 +44,16 @@ func (d Darknet) get(key string) (retVal string) {
 
 type Accumulator struct {
 	Parameters map[string]string
-	Net        Darknet
+	Net        *Darknet
 	BlockType  *string // optional
 }
 
-func newAccumulator() (retVal Accumulator) {
+func newAccumulator() *Accumulator {
 
-	return Accumulator{
+	return &Accumulator{
 		BlockType:  nil,
 		Parameters: make(map[string]string, 0),
-		Net: Darknet{
+		Net: &Darknet{
 			Blocks:     make([]Block, 0),
 			Parameters: make(map[string]string, 0),
 		},
@@ -79,7 +79,7 @@ func (acc *Accumulator) finishBlock() {
 	acc.BlockType = nil
 }
 
-func ParseConfig(path string) (retVal Darknet) {
+func ParseConfig(path string) *Darknet {
 
 	acc := newAccumulator()
 
@@ -166,7 +166,7 @@ type (
 	}
 )
 
-func conv(vs nn.Path, index uint, p int64, b Block) (retVal1 int64, retVal2 interface{}) {
+func conv(vs *nn.Path, index uint, p int64, b *Block) (retVal1 int64, retVal2 interface{}) {
 
 	activation := b.get("activation")
 
@@ -209,7 +209,7 @@ func conv(vs nn.Path, index uint, p int64, b Block) (retVal1 int64, retVal2 inte
 		if p != 0 {
 			sub := vs.Sub(fmt.Sprintf("batch_norm_%v", index))
 			bnVal := nn.BatchNorm2D(sub, filters, nn.DefaultBatchNormConfig())
-			bn = &bnVal
+			bn = bnVal
 			bias = false
 		}
 	} else {
@@ -234,18 +234,19 @@ func conv(vs nn.Path, index uint, p int64, b Block) (retVal1 int64, retVal2 inte
 		log.Fatalf("Unsupported activation(%v)\n", activation)
 	}
 
-	fn := nn.NewFuncT(func(xs ts.Tensor, train bool) (res ts.Tensor) {
+	fn := nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		tmp1 := xs.Apply(conv)
 
-		var tmp2 ts.Tensor
+		var tmp2 *ts.Tensor
 
 		if bn != nil {
-			tmp2 = tmp1.ApplyT(*bn, train)
+			tmp2 = tmp1.ApplyT(bn, train)
 			tmp1.MustDrop()
 		} else {
 			tmp2 = tmp1
 		}
 
+		var res *ts.Tensor
 		if leaky {
 			tmp2Mul := tmp2.MustMul1(ts.FloatScalar(0.1), false)
 			res = tmp2.MustMax1(tmp2Mul, true)
@@ -261,7 +262,7 @@ func conv(vs nn.Path, index uint, p int64, b Block) (retVal1 int64, retVal2 inte
 }
 
 func upsample(prevChannels int64) (retVal1 int64, retVal2 interface{}) {
-	layer := nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	layer := nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		// []int64{n, c, h, w}
 		res, err := xs.Size4()
 		if err != nil {
@@ -276,7 +277,8 @@ func upsample(prevChannels int64) (retVal1 int64, retVal2 interface{}) {
 	return prevChannels, Layer{Val: layer}
 }
 
-func intListOfString(s string) (retVal []int64) {
+func intListOfString(s string) []int64 {
+	var retVal []int64
 	strs := strings.Split(s, ",")
 	for _, str := range strs {
 		str = strings.TrimSpace(str)
@@ -290,7 +292,7 @@ func intListOfString(s string) (retVal []int64) {
 	return retVal
 }
 
-func uintOfIndex(index uint, i int64) (retVal uint) {
+func uintOfIndex(index uint, i int64) uint {
 	if i >= 0 {
 		return uint(i)
 	} else {
@@ -298,7 +300,7 @@ func uintOfIndex(index uint, i int64) (retVal uint) {
 	}
 }
 
-func route(index uint, p []ChannelsBl, blk Block) (retVal1 int64, retVal2 interface{}) {
+func route(index uint, p []ChannelsBl, blk *Block) (retVal1 int64, retVal2 interface{}) {
 	intLayers := intListOfString(blk.get("layers"))
 
 	var layers []uint
@@ -314,7 +316,7 @@ func route(index uint, p []ChannelsBl, blk Block) (retVal1 int64, retVal2 interf
 	return channels, Route{TsIdxs: layers}
 }
 
-func shortcut(index uint, p int64, blk Block) (retVal1 int64, retVal2 interface{}) {
+func shortcut(index uint, p int64, blk *Block) (retVal1 int64, retVal2 interface{}) {
 	fromStr := blk.get("from")
 
 	from, err := strconv.ParseInt(fromStr, 10, 64)
@@ -325,7 +327,7 @@ func shortcut(index uint, p int64, blk Block) (retVal1 int64, retVal2 interface{
 	return p, Shortcut{TsIdx: uintOfIndex(index, from)}
 }
 
-func yolo(p int64, blk Block) (retVal1 int64, retVal2 interface{}) {
+func yolo(p int64, blk *Block) (retVal1 int64, retVal2 interface{}) {
 	classesStr := blk.get("classes")
 	classes, err := strconv.ParseInt(classesStr, 10, 64)
 	if err != nil {
@@ -356,7 +358,7 @@ func yolo(p int64, blk Block) (retVal1 int64, retVal2 interface{}) {
 }
 
 // Apply f to a slice of tensor xs and replace xs values with f output.
-func sliceApplyAndSet(xs ts.Tensor, start int64, len int64, f func(ts.Tensor) ts.Tensor) {
+func sliceApplyAndSet(xs *ts.Tensor, start int64, len int64, f func(*ts.Tensor) *ts.Tensor) {
 	slice := xs.MustNarrow(2, start, len, false)
 	src := f(slice)
 
@@ -365,7 +367,7 @@ func sliceApplyAndSet(xs ts.Tensor, start int64, len int64, f func(ts.Tensor) ts
 	slice.MustDrop()
 }
 
-func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (retVal ts.Tensor) {
+func detect(xs *ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) *ts.Tensor {
 
 	device, err := xs.Device()
 
@@ -396,7 +398,7 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 
 	xOffset := a.MustView([]int64{-1, 1}, true)
 	yOffset := b.MustView([]int64{-1, 1}, true)
-	xyOffsetTmp1 := ts.MustCat([]ts.Tensor{xOffset, yOffset}, 1)
+	xyOffsetTmp1 := ts.MustCat([]ts.Tensor{*xOffset, *yOffset}, 1)
 	xyOffsetTmp2 := xyOffsetTmp1.MustRepeat([]int64{1, nanchors}, true)
 	xyOffsetTmp3 := xyOffsetTmp2.MustView([]int64{-1, 2}, true)
 	xyOffset := xyOffsetTmp3.MustUnsqueeze(0, true)
@@ -417,23 +419,21 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 	anchorsTmp3 := anchorsTmp2.MustRepeat([]int64{gridSize * gridSize, 1}, true)
 	anchorsTs := anchorsTmp3.MustUnsqueeze(0, true).MustTo(device, true)
 
-	sliceApplyAndSet(xsTs, 0, 2, func(xs ts.Tensor) (res ts.Tensor) {
+	sliceApplyAndSet(xsTs, 0, 2, func(xs *ts.Tensor) *ts.Tensor {
 		tmp := xs.MustSigmoid(false)
-		res = tmp.MustAdd(xyOffset, true)
-		return res
+		return tmp.MustAdd(xyOffset, true)
 	})
 
-	sliceApplyAndSet(xsTs, 4, classes+1, func(xs ts.Tensor) (res ts.Tensor) {
+	sliceApplyAndSet(xsTs, 4, classes+1, func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustSigmoid(false)
 	})
 
-	sliceApplyAndSet(xsTs, 2, 2, func(xs ts.Tensor) (res ts.Tensor) {
+	sliceApplyAndSet(xsTs, 2, 2, func(xs *ts.Tensor) *ts.Tensor {
 		tmp := xs.MustExp(false)
-		res = tmp.MustMul(anchorsTs, true)
-		return res
+		return tmp.MustMul(anchorsTs, true)
 	})
 
-	sliceApplyAndSet(xsTs, 0, 4, func(xs ts.Tensor) (res ts.Tensor) {
+	sliceApplyAndSet(xsTs, 0, 4, func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustMul1(ts.IntScalar(stride), false)
 	})
 
@@ -441,7 +441,7 @@ func detect(xs ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) (r
 	return xsTs
 }
 
-func (dn *Darknet) Height() (retVal int64) {
+func (dn *Darknet) Height() int64 {
 	imageHeightStr := dn.get("height")
 	retVal, err := strconv.ParseInt(imageHeightStr, 10, 64)
 	if err != nil {
@@ -451,7 +451,7 @@ func (dn *Darknet) Height() (retVal int64) {
 	return retVal
 }
 
-func (dn *Darknet) Width() (retVal int64) {
+func (dn *Darknet) Width() int64 {
 	imageWidthStr := dn.get("width")
 	retVal, err := strconv.ParseInt(imageWidthStr, 10, 64)
 	if err != nil {
@@ -461,7 +461,7 @@ func (dn *Darknet) Width() (retVal int64) {
 	return retVal
 }
 
-func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
+func (dn *Darknet) BuildModel(vs *nn.Path) nn.FuncT {
 	var blocks []ChannelsBl // Param is a struct{int64, interface{}}
 	var prevChannels int64 = 3
 
@@ -471,15 +471,15 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 
 		switch *blk.BlockType {
 		case "convolutional":
-			channels, bl = conv(vs.Sub(fmt.Sprintf("%v", index)), uint(index), prevChannels, blk)
+			channels, bl = conv(vs.Sub(fmt.Sprintf("%v", index)), uint(index), prevChannels, &blk)
 		case "upsample":
 			channels, bl = upsample(prevChannels)
 		case "shortcut":
-			channels, bl = shortcut(uint(index), prevChannels, blk)
+			channels, bl = shortcut(uint(index), prevChannels, &blk)
 		case "route":
-			channels, bl = route(uint(index), blocks, blk)
+			channels, bl = route(uint(index), blocks, &blk)
 		case "yolo":
-			channels, bl = yolo(prevChannels, blk)
+			channels, bl = yolo(prevChannels, &blk)
 		default:
 			log.Fatalf("Unsupported block type: %v\n", *blk.BlockType)
 		}
@@ -489,7 +489,7 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 
 	imageHeight := dn.Height()
 
-	retVal = nn.NewFuncT(func(xs ts.Tensor, train bool) (res ts.Tensor) {
+	retVal := nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 
 		var prevYs []ts.Tensor = make([]ts.Tensor, 0)
 		var detections []ts.Tensor = make([]ts.Tensor, 0)
@@ -497,13 +497,13 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 		// NOTE: we will delete all tensors in prevYs after looping
 		for _, b := range blocks {
 			blkTyp := reflect.TypeOf(b.Bl)
-			var ysTs ts.Tensor
+			var ysTs *ts.Tensor
 			switch blkTyp.Name() {
 			case "Layer":
 				layer := b.Bl.(Layer)
 				xsTs := xs
 				if len(prevYs) > 0 {
-					xsTs = prevYs[len(prevYs)-1] // last prevYs element
+					xsTs = &prevYs[len(prevYs)-1] // last prevYs element
 				}
 				ysTs = layer.Val.ForwardT(xsTs, train)
 			case "Route":
@@ -516,7 +516,7 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 
 			case "Shortcut":
 				from := b.Bl.(Shortcut).TsIdx
-				addTs := prevYs[int(from)]
+				addTs := &prevYs[int(from)]
 				last := prevYs[len(prevYs)-1]
 				ysTs = last.MustAdd(addTs, false)
 			case "Yolo":
@@ -524,12 +524,12 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 				anchors := b.Bl.(Yolo).Anchors
 				xsTs := xs
 				if len(prevYs) > 0 {
-					xsTs = prevYs[len(prevYs)-1]
+					xsTs = &prevYs[len(prevYs)-1]
 				}
 
 				dt := detect(xsTs, imageHeight, classes, anchors)
 
-				detections = append(detections, dt)
+				detections = append(detections, *dt)
 
 				ysTs = ts.NewTensor()
 
@@ -537,10 +537,10 @@ func (dn *Darknet) BuildModel(vs nn.Path) (retVal nn.FuncT) {
 				// log.Fatalf("BuildModel - FuncT - Unsupported block type: %v\n", blkTyp.Name())
 			} // end of Switch
 
-			prevYs = append(prevYs, ysTs)
+			prevYs = append(prevYs, *ysTs)
 		} // end of For loop
 
-		res = ts.MustCat(detections, 1)
+		res := ts.MustCat(detections, 1)
 
 		// Now, free-up memory held up by prevYs
 		for _, t := range prevYs {

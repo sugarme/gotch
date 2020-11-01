@@ -74,7 +74,7 @@ type Conv1D struct {
 func NewConv1D(vs *Path, inDim, outDim, k int64, cfg *Conv1DConfig) *Conv1D {
 	var (
 		ws *ts.Tensor
-		bs *ts.Tensor
+		bs *ts.Tensor = ts.NewTensor()
 	)
 	if cfg.Bias {
 		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
@@ -99,7 +99,7 @@ type Conv2D struct {
 func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg *Conv2DConfig) *Conv2D {
 	var (
 		ws *ts.Tensor
-		bs *ts.Tensor
+		bs *ts.Tensor = ts.NewTensor()
 	)
 	if cfg.Bias {
 		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
@@ -124,7 +124,7 @@ type Conv3D struct {
 func NewConv3D(vs *Path, inDim, outDim, k int64, cfg *Conv3DConfig) *Conv3D {
 	var (
 		ws *ts.Tensor
-		bs *ts.Tensor
+		bs *ts.Tensor = ts.NewTensor()
 	)
 	if cfg.Bias {
 		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
@@ -195,12 +195,12 @@ func NewConv(vs *Path, inDim, outDim int64, ksizes []int64, config interface{}) 
 	configT := reflect.TypeOf(config)
 	var (
 		ws *ts.Tensor
-		bs *ts.Tensor
+		bs *ts.Tensor = ts.NewTensor()
 	)
 
 	switch {
-	case len(ksizes) == 1 && configT.Name() == "Conv1DConfig":
-		cfg := config.(Conv1DConfig)
+	case len(ksizes) == 1 && configT.String() == "*nn.Conv1DConfig":
+		cfg := config.(*Conv1DConfig)
 		if cfg.Bias {
 			bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
 		}
@@ -210,23 +210,23 @@ func NewConv(vs *Path, inDim, outDim int64, ksizes []int64, config interface{}) 
 		return &Conv1D{
 			Ws:     ws,
 			Bs:     bs,
-			Config: &cfg,
+			Config: cfg,
 		}
-	case len(ksizes) == 2 && configT.Name() == "Conv2DConfig":
-		cfg := config.(Conv2DConfig)
+	case len(ksizes) == 2 && configT.String() == "*nn.Conv2DConfig":
+		cfg := config.(*Conv2DConfig)
 		if cfg.Bias {
 			bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
 		}
 		weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 		weightSize = append(weightSize, ksizes...)
-		ws = vs.NewVar("weight", weightSize, config.(Conv2DConfig).WsInit)
+		ws = vs.NewVar("weight", weightSize, cfg.WsInit)
 		return &Conv2D{
 			Ws:     ws,
 			Bs:     bs,
-			Config: &cfg,
+			Config: cfg,
 		}
-	case len(ksizes) == 3 && configT.Name() == "Conv3DConfig":
-		cfg := config.(Conv3DConfig)
+	case len(ksizes) == 3 && configT.String() == "*nn.Conv3DConfig":
+		cfg := config.(*Conv3DConfig)
 		if cfg.Bias {
 			bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
 		}
@@ -236,10 +236,10 @@ func NewConv(vs *Path, inDim, outDim int64, ksizes []int64, config interface{}) 
 		return &Conv3D{
 			Ws:     ws,
 			Bs:     bs,
-			Config: &cfg,
+			Config: cfg,
 		}
 	default:
-		err := fmt.Errorf("Expected nd length from 1 to 3. Got %v\n", len(ksizes))
+		err := fmt.Errorf("Expected nd length from 1 to 3. Got %v - configT name: '%v'\n", len(ksizes), configT.String())
 		panic(err)
 	}
 }

@@ -154,7 +154,7 @@ func (ts *Tensor) MustTopK(k int64, dim int64, largest bool, sorted bool) (ts1, 
 
 // NOTE. `NLLLoss` is a version of `NllLoss` in tensor-generated
 // with default weight, reduction and ignoreIndex
-func (ts *Tensor) NLLLoss(target Tensor, del bool) (retVal *Tensor, err error) {
+func (ts *Tensor) NLLLoss(target *Tensor, del bool) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	if del {
 		defer ts.MustDrop()
@@ -174,7 +174,7 @@ func (ts *Tensor) NLLLoss(target Tensor, del bool) (retVal *Tensor, err error) {
 	return retVal, nil
 }
 
-func (ts *Tensor) MustNLLLoss(target Tensor, del bool) (retVal *Tensor) {
+func (ts *Tensor) MustNLLLoss(target *Tensor, del bool) (retVal *Tensor) {
 	retVal, err := ts.NLLLoss(target, del)
 	if err != nil {
 		log.Fatal(err)

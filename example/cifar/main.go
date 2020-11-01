@@ -18,7 +18,7 @@ import (
 	"github.com/sugarme/gotch/vision"
 )
 
-func convBn(p nn.Path, cIn, cOut int64) (retVal nn.SequentialT) {
+func convBn(p *nn.Path, cIn, cOut int64) *nn.SequentialT {
 	config := nn.DefaultConv2DConfig()
 	config.Padding = []int64{1, 1}
 	config.Bias = false
@@ -27,19 +27,19 @@ func convBn(p nn.Path, cIn, cOut int64) (retVal nn.SequentialT) {
 
 	seq.Add(nn.NewConv2D(p, cIn, cOut, 3, config))
 	seq.Add(nn.BatchNorm2D(p, cOut, nn.DefaultBatchNormConfig()))
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustRelu(false)
 	}))
 
 	return seq
 }
 
-func layer(p nn.Path, cIn, cOut int64) (retVal nn.FuncT) {
+func layer(p *nn.Path, cIn, cOut int64) nn.FuncT {
 	pre := convBn(p.Sub("pre"), cIn, cOut)
 	block1 := convBn(p.Sub("b1"), cOut, cOut)
 	block2 := convBn(p.Sub("b2"), cOut, cOut)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		tmp1 := xs.ApplyT(pre, train)
 		preTs := tmp1.MaxPool2DDefault(2, true)
 		tmp2 := preTs.ApplyT(block1, train)
@@ -53,17 +53,17 @@ func layer(p nn.Path, cIn, cOut int64) (retVal nn.FuncT) {
 	})
 }
 
-func fastResnet(p nn.Path) (retVal nn.SequentialT) {
+func fastResnet(p *nn.Path) *nn.SequentialT {
 	seq := nn.SeqT()
 
 	seq.Add(convBn(p.Sub("pre"), 3, 64))
 	seq.Add(layer(p.Sub("layer1"), 64, 128))
 	seq.Add(convBn(p.Sub("inter"), 128, 256))
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MaxPool2DDefault(2, false)
 	}))
 	seq.Add(layer(p.Sub("layer2"), 256, 512))
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		tmp := xs.MaxPool2DDefault(4, false)
 		res := tmp.FlatView()
 		tmp.MustDrop()
@@ -72,7 +72,7 @@ func fastResnet(p nn.Path) (retVal nn.SequentialT) {
 	}))
 
 	seq.Add(nn.NewLinear(p.Sub("linear"), 512, 10, nn.DefaultLinearConfig()))
-	seq.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		return xs.MustMul1(ts.FloatScalar(0.125), false)
 	}))
 
@@ -89,8 +89,8 @@ func main() {
 	fmt.Printf("TestLabel shape: %v\n", ds.TestLabels.MustSize())
 	fmt.Printf("Number of labels: %v\n", ds.Labels)
 
-	cuda := gotch.CudaBuilder(0)
-	device := cuda.CudaIfAvailable()
+	// device := gotch.CPU
+	device := gotch.NewCuda().CudaIfAvailable()
 
 	vs := nn.NewVarStore(device)
 
@@ -104,7 +104,7 @@ func main() {
 	for epoch := 0; epoch < 150; epoch++ {
 		optConfig := nn.NewSGDConfig(0.9, 0.0, 5e-4, true)
 		var (
-			opt nn.Optimizer
+			opt *nn.Optimizer
 			err error
 		)
 		switch {

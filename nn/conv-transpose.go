@@ -68,7 +68,7 @@ func NewConvTranspose1D(vs *Path, inDim, outDim int64, ksizes []int64, cfg *Conv
 
 	var (
 		ws *ts.Tensor
-		bs *ts.Tensor
+		bs *ts.Tensor = ts.NewTensor()
 	)
 
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
@@ -100,7 +100,7 @@ func NewConvTranspose2D(vs *Path, inDim, outDim int64, ksizes []int64, cfg *Conv
 
 	var (
 		ws *ts.Tensor
-		bs *ts.Tensor
+		bs *ts.Tensor = ts.NewTensor()
 	)
 
 	if cfg.Bias {
@@ -130,7 +130,7 @@ func NewConvTranspose3D(vs *Path, inDim, outDim int64, ksizes []int64, cfg *Conv
 
 	var (
 		ws *ts.Tensor
-		bs *ts.Tensor
+		bs *ts.Tensor = ts.NewTensor()
 	)
 
 	if cfg.Bias {

@@ -59,7 +59,7 @@ func Iou(b1, b2 Bbox) (retVal float64) {
 }
 
 // Assuming x1 <= x2 and y1 <= y2
-func drawRect(t ts.Tensor, x1, x2, y1, y2 int64) {
+func drawRect(t *ts.Tensor, x1, x2, y1, y2 int64) {
 	color := ts.MustOfSlice([]float64{0.0, 0.0, 1.0}).MustView([]int64{3, 1, 1}, true)
 
 	// NOTE: `narrow` will create a tensor (view) that share same storage with
@@ -71,7 +71,7 @@ func drawRect(t ts.Tensor, x1, x2, y1, y2 int64) {
 	color.MustDrop()
 }
 
-func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) {
+func report(pred *ts.Tensor, img *ts.Tensor, w int64, h int64) *ts.Tensor {
 	size2, err := pred.Size2()
 	if err != nil {
 		log.Fatal(err)
@@ -180,7 +180,7 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 	}
 
 	imgTmp := image.MustMul1(ts.FloatScalar(255.0), true)
-	retVal = imgTmp.MustTotype(gotch.Uint8, true)
+	retVal := imgTmp.MustTotype(gotch.Uint8, true)
 
 	return retVal
 }
@@ -208,7 +208,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var darknet Darknet = ParseConfig(configPath)
+	var darknet *Darknet = ParseConfig(configPath)
 
 	vs := nn.NewVarStore(gotch.CPU)
 	model := darknet.BuildModel(vs.Root())

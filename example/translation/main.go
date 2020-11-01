@@ -34,35 +34,35 @@ type Encoder struct {
 	gru       nn.GRU
 }
 
-func newEncoder(vs nn.Path, inDim, hiddenDim int64) (retVal Encoder) {
+func newEncoder(vs *nn.Path, inDim, hiddenDim int64) *Encoder {
 
 	gru := nn.NewGRU(vs, hiddenDim, hiddenDim, nn.DefaultRNNConfig())
 
 	embedding := nn.NewEmbedding(vs, inDim, hiddenDim, nn.DefaultEmbeddingConfig())
 
-	return Encoder{embedding, gru}
+	return &Encoder{*embedding, *gru}
 }
 
-func (e Encoder) forward(xs ts.Tensor, state nn.GRUState) (retTs ts.Tensor, retState nn.GRUState) {
+func (e *Encoder) forward(xs *ts.Tensor, state *nn.GRUState) (*ts.Tensor, *nn.GRUState) {
 
-	retTs = e.embedding.Forward(xs).MustView([]int64{1, -1}, true)
-	retState = e.gru.Step(retTs, state).(nn.GRUState)
+	retTs := e.embedding.Forward(xs).MustView([]int64{1, -1}, true)
+	retState := e.gru.Step(retTs, state).(*nn.GRUState)
 
 	return retTs, retState
 }
 
 type Decoder struct {
 	device      gotch.Device
-	embedding   nn.Embedding
-	gru         nn.GRU
-	attn        nn.Linear
-	attnCombine nn.Linear
-	linear      nn.Linear
+	embedding   *nn.Embedding
+	gru         *nn.GRU
+	attn        *nn.Linear
+	attnCombine *nn.Linear
+	linear      *nn.Linear
 }
 
-func newDecoder(vs nn.Path, hiddenDim, outDim int64) (retVal Decoder) {
+func newDecoder(vs *nn.Path, hiddenDim, outDim int64) *Decoder {
 
-	return Decoder{
+	return &Decoder{
 		device:      vs.Device(),
 		embedding:   nn.NewEmbedding(vs, outDim, hiddenDim, nn.DefaultEmbeddingConfig()),
 		gru:         nn.NewGRU(vs, hiddenDim, hiddenDim, nn.DefaultRNNConfig()),
@@ -72,7 +72,7 @@ func newDecoder(vs nn.Path, hiddenDim, outDim int64) (retVal Decoder) {
 	}
 }
 
-func (d Decoder) forward(xs ts.Tensor, state nn.GRUState, encOutputs ts.Tensor, isTraining bool) (retTs ts.Tensor, retState nn.GRUState) {
+func (d *Decoder) forward(xs *ts.Tensor, state *nn.GRUState, encOutputs *ts.Tensor, isTraining bool) (*ts.Tensor, *nn.GRUState) {
 
 	forwardTsTmp := d.embedding.Forward(xs)
 	forwardTsTmp.MustDropout_(0.1, isTraining)
@@ -81,7 +81,7 @@ func (d Decoder) forward(xs ts.Tensor, state nn.GRUState, encOutputs ts.Tensor, 
 	// NOTE. forwardTs shape: [1, 256] state [1, 1, 256]
 	// hence, just get state[0] of 3D tensor state
 	stateTs := state.Value().MustShallowClone().MustView([]int64{1, -1}, true)
-	catTs := ts.MustCat([]ts.Tensor{forwardTs, stateTs}, 1)
+	catTs := ts.MustCat([]ts.Tensor{*forwardTs, *stateTs}, 1)
 	stateTs.MustDrop()
 
 	// NOTE. d.attn Ws shape : [512, 10]
@@ -97,44 +97,44 @@ func (d Decoder) forward(xs ts.Tensor, state nn.GRUState, encOutputs ts.Tensor, 
 	sz2 := size3[1]
 	sz3 := size3[2]
 
-	var encOutputsTs ts.Tensor
+	var encOutputsTs *ts.Tensor
 	if sz2 == MaxLength {
 		encOutputsTs = encOutputs.MustShallowClone()
 	} else {
 		shape := []int64{sz1, MaxLength - sz2, sz3}
 		zerosTs := ts.MustZeros(shape, gotch.Float, d.device)
-		encOutputsTs = ts.MustCat([]ts.Tensor{encOutputs, zerosTs}, 1)
+		encOutputsTs = ts.MustCat([]ts.Tensor{*encOutputs, *zerosTs}, 1)
 		zerosTs.MustDrop()
 	}
 
 	attnApplied := attnWeights.MustBmm(encOutputsTs, true).MustSqueeze1(1, true)
 	encOutputsTs.MustDrop()
 
-	cTs := ts.MustCat([]ts.Tensor{forwardTs, attnApplied}, 1)
+	cTs := ts.MustCat([]ts.Tensor{*forwardTs, *attnApplied}, 1)
 	forwardTs.MustDrop()
 	attnApplied.MustDrop()
 	aTs := cTs.Apply(d.attnCombine)
 	cTs.MustDrop()
 	xsTs := aTs.MustRelu(true)
 
-	retState = d.gru.Step(xsTs, state).(nn.GRUState)
+	retState := d.gru.Step(xsTs, state).(*nn.GRUState)
 	xsTs.MustDrop()
 
-	retTs = d.linear.Forward(retState.Value()).MustLogSoftmax(-1, gotch.Float, true)
+	retTs := d.linear.Forward(retState.Value()).MustLogSoftmax(-1, gotch.Float, true)
 
 	return retTs, retState
 }
 
 type Model struct {
-	encoder      Encoder
-	decoder      Decoder
-	decoderStart ts.Tensor
+	encoder      *Encoder
+	decoder      *Decoder
+	decoderStart *ts.Tensor
 	decoderEos   int64
 	device       gotch.Device
 }
 
-func newModel(vs nn.Path, ilang Lang, olang Lang, hiddenDim int64) (retVal Model) {
-	return Model{
+func newModel(vs *nn.Path, ilang Lang, olang Lang, hiddenDim int64) *Model {
+	return &Model{
 		encoder:      newEncoder(vs.Sub("enc"), int64(ilang.Len()), hiddenDim),
 		decoder:      newDecoder(vs.Sub("dec"), hiddenDim, int64(olang.Len())),
 		decoderStart: ts.MustOfSlice([]int64{int64(olang.SosToken())}).MustTo(vs.Device(), true),
@@ -143,16 +143,16 @@ func newModel(vs nn.Path, ilang Lang, olang Lang, hiddenDim int64) (retVal Model
 	}
 }
 
-func (m *Model) trainLoss(input []int, target []int) (retVal ts.Tensor) {
+func (m *Model) trainLoss(input []int, target []int) *ts.Tensor {
 	state := m.encoder.gru.ZeroState(1)
 	var encOutputs []ts.Tensor
 
 	for _, v := range input {
 		s := ts.MustOfSlice([]int64{int64(v)}).MustTo(m.device, true)
-		outTs, outState := m.encoder.forward(s, state.(nn.GRUState))
+		outTs, outState := m.encoder.forward(s, state.(*nn.GRUState))
 		s.MustDrop()
-		encOutputs = append(encOutputs, outTs)
-		state.(nn.GRUState).Tensor.MustDrop()
+		encOutputs = append(encOutputs, *outTs)
+		state.(*nn.GRUState).Tensor.MustDrop()
 		state = outState
 	}
 
@@ -167,8 +167,8 @@ func (m *Model) trainLoss(input []int, target []int) (retVal ts.Tensor) {
 
 	for _, s := range target {
 		// TODO: fix memory leak at decoder.forward
-		outTs, outState := m.decoder.forward(prev, state.(nn.GRUState), stackTs, true)
-		state.(nn.GRUState).Tensor.MustDrop()
+		outTs, outState := m.decoder.forward(prev, state.(*nn.GRUState), stackTs, true)
+		state.(*nn.GRUState).Tensor.MustDrop()
 		state = outState
 
 		targetTs := ts.MustOfSlice([]int64{int64(s)}).MustTo(m.device, true)
@@ -195,7 +195,7 @@ func (m *Model) trainLoss(input []int, target []int) (retVal ts.Tensor) {
 		outTs.MustDrop()
 	}
 
-	state.(nn.GRUState).Tensor.MustDrop()
+	state.(*nn.GRUState).Tensor.MustDrop()
 	stackTs.MustDrop()
 	prev.MustDrop()
 
@@ -203,16 +203,16 @@ func (m *Model) trainLoss(input []int, target []int) (retVal ts.Tensor) {
 
 }
 
-func (m *Model) predict(input []int) (retVal []int) {
+func (m *Model) predict(input []int) []int {
 	state := m.encoder.gru.ZeroState(1)
 	var encOutputs []ts.Tensor
 
 	for _, v := range input {
 		s := ts.MustOfSlice([]int64{int64(v)}).MustTo(m.device, true)
-		outTs, outState := m.encoder.forward(s, state.(nn.GRUState))
+		outTs, outState := m.encoder.forward(s, state.(*nn.GRUState))
 
-		encOutputs = append(encOutputs, outTs)
-		state.(nn.GRUState).Tensor.MustDrop()
+		encOutputs = append(encOutputs, *outTs)
+		state.(*nn.GRUState).Tensor.MustDrop()
 		state = outState
 	}
 
@@ -225,7 +225,7 @@ func (m *Model) predict(input []int) (retVal []int) {
 	var outputSeq []int
 
 	for i := 0; i < int(MaxLength); i++ {
-		outTs, outState := m.decoder.forward(prev, state.(nn.GRUState), stackTs, true)
+		outTs, outState := m.decoder.forward(prev, state.(*nn.GRUState), stackTs, true)
 		_, output := outTs.MustTopK(1, -1, true, true)
 		outputVal := output.Int64Values()[0]
 		outputSeq = append(outputSeq, int(outputVal))
@@ -234,7 +234,7 @@ func (m *Model) predict(input []int) (retVal []int) {
 			break
 		}
 
-		state.(nn.GRUState).Tensor.MustDrop()
+		state.(*nn.GRUState).Tensor.MustDrop()
 		state = outState
 		prev.MustDrop()
 		prev = output
@@ -249,8 +249,8 @@ type LossStats struct {
 	samples   int
 }
 
-func newLossStats() (retVal LossStats) {
-	return LossStats{
+func newLossStats() *LossStats {
+	return &LossStats{
 		totalLoss: 0.0,
 		samples:   0,
 	}
@@ -261,7 +261,7 @@ func (ls *LossStats) update(loss float64) {
 	ls.samples += 1
 }
 
-func (ls *LossStats) avgAndReset() (retVal float64) {
+func (ls *LossStats) avgAndReset() float64 {
 	avg := ls.totalLoss / float64(ls.samples)
 	ls.totalLoss = 0.0
 	ls.samples = 0
