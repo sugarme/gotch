@@ -23,8 +23,8 @@ type BlockArgs struct {
 	Stride       int64
 }
 
-func ba(k, r, i, o, er int64, sr float64, s int64) (retVal BlockArgs) {
-	return BlockArgs{
+func ba(k, r, i, o, er int64, sr float64, s int64) *BlockArgs {
+	return &BlockArgs{
 		KernelSize:   k,
 		NumRepeat:    r,
 		InputFilters: i,
@@ -37,13 +37,13 @@ func ba(k, r, i, o, er int64, sr float64, s int64) (retVal BlockArgs) {
 
 func blockArgs() (retVal []BlockArgs) {
 	return []BlockArgs{
-		ba(3, 1, 32, 16, 1, 0.25, 1),
-		ba(3, 2, 16, 24, 6, 0.25, 2),
-		ba(5, 2, 24, 40, 6, 0.25, 2),
-		ba(3, 3, 40, 80, 6, 0.25, 2),
-		ba(5, 3, 80, 112, 6, 0.25, 1),
-		ba(5, 4, 112, 192, 6, 0.25, 2),
-		ba(3, 1, 192, 320, 6, 0.25, 1),
+		*ba(3, 1, 32, 16, 1, 0.25, 1),
+		*ba(3, 2, 16, 24, 6, 0.25, 2),
+		*ba(5, 2, 24, 40, 6, 0.25, 2),
+		*ba(3, 3, 40, 80, 6, 0.25, 2),
+		*ba(5, 3, 80, 112, 6, 0.25, 1),
+		*ba(5, 4, 112, 192, 6, 0.25, 2),
+		*ba(3, 1, 192, 320, 6, 0.25, 1),
 	}
 }
 
@@ -54,12 +54,12 @@ type params struct {
 	Dropout float64
 }
 
-func (p params) roundRepeats(repeats int64) (retVal int64) {
+func (p *params) roundRepeats(repeats int64) int64 {
 
 	return int64(math.Ceil(p.Depth * float64(repeats)))
 }
 
-func (p params) roundFilters(filters int64) (retVal int64) {
+func (p *params) roundFilters(filters int64) int64 {
 	var divisor int64 = 8
 	filF := p.Width * float64(filters)
 	filI := int64(filF + float64(divisor)/2.0)
@@ -74,11 +74,11 @@ func (p params) roundFilters(filters int64) (retVal int64) {
 }
 
 // Conv2D with same padding
-func enConv2d(vs nn.Path, i, o, k int64, c nn.Conv2DConfig, train bool) (retVal ts.ModuleT) {
+func enConv2d(vs *nn.Path, i, o, k int64, c *nn.Conv2DConfig, train bool) ts.ModuleT {
 	conv2d := nn.NewConv2D(vs, i, o, k, c)
 	s := c.Stride
 
-	return nn.NewFunc(func(xs ts.Tensor) (res ts.Tensor) {
+	return nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		size := xs.MustSize()
 		ih := size[2]
 		iw := size[3]
@@ -94,6 +94,7 @@ func enConv2d(vs nn.Path, i, o, k int64, c nn.Conv2DConfig, train bool) (retVal 
 			padW = ((ow - 1) * s[0]) + k - iw
 		}
 
+		var res *ts.Tensor
 		if padW > 0 || padH > 0 {
 			zeroP2D := xs.MustZeroPad2d(padW/2, padW-padW/2, padH/2, padH-padH/2, false)
 			res = zeroP2D.ApplyT(conv2d, train)
@@ -106,8 +107,8 @@ func enConv2d(vs nn.Path, i, o, k int64, c nn.Conv2DConfig, train bool) (retVal 
 	})
 }
 
-func newParams(width, depth float64, res int64, dropout float64) (retVal params) {
-	return params{
+func newParams(width, depth float64, res int64, dropout float64) *params {
+	return &params{
 		width,
 		depth,
 		res,
@@ -115,39 +116,39 @@ func newParams(width, depth float64, res int64, dropout float64) (retVal params)
 	}
 }
 
-func b0() (retVal params) {
+func b0() *params {
 	return newParams(1.0, 1.0, 224, 0.2)
 }
 
-func b1() (retVal params) {
+func b1() *params {
 	return newParams(1.0, 1.1, 240, 0.2)
 }
 
-func b2() (retVal params) {
+func b2() *params {
 	return newParams(1.1, 1.2, 260, 0.3)
 }
 
-func b3() (retVal params) {
+func b3() *params {
 	return newParams(1.2, 1.4, 300, 0.3)
 }
 
-func b4() (retVal params) {
+func b4() *params {
 	return newParams(1.4, 1.8, 380, 0.4)
 }
 
-func b5() (retVal params) {
+func b5() *params {
 	return newParams(1.6, 2.2, 456, 0.4)
 }
 
-func b6() (retVal params) {
+func b6() *params {
 	return newParams(1.8, 2.6, 528, 0.5)
 }
 
-func b7() (retVal params) {
+func b7() *params {
 	return newParams(2.0, 3.1, 600, 0.5)
 }
 
-func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
+func block(p *nn.Path, args BlockArgs) ts.ModuleT {
 
 	inp := args.InputFilters
 	oup := args.InputFilters * args.ExpandRatio
@@ -169,7 +170,7 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 	if args.ExpandRatio != 1 {
 		expansion.Add(enConv2d(p.Sub("_expand_conv"), inp, oup, 1, convConfigNoBias, false))
 		expansion.Add(nn.BatchNorm2D(p.Sub("_bn0"), oup, bn2d))
-		expansion.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		expansion.AddFn(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 			return xs.Swish()
 		}))
 	}
@@ -178,7 +179,7 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 	depthwiseBn := nn.BatchNorm2D(p.Sub("_bn1"), oup, bn2d)
 
 	// NOTE: args.SeRatio is optional float64. Default = 0
-	var se nn.SequentialT // se will be nil if args.SeRatio == 0
+	var se *nn.SequentialT // se will be nil if args.SeRatio == 0
 	if args.SeRatio > 0 {
 		var nsc int64 = 1
 		if (float64(inp) * args.SeRatio) > 1 {
@@ -188,7 +189,7 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 		se = nn.SeqT()
 		se.Add(enConv2d(p.Sub("_se_reduce"), oup, nsc, 1, nn.DefaultConv2DConfig(), false))
 
-		se.AddFn(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+		se.AddFn(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 			return xs.Swish()
 		}))
 
@@ -199,8 +200,8 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 
 	projectBn := nn.BatchNorm2D(p.Sub("_bn2"), finalOup, bn2d)
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
-		var ys ts.Tensor
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
+		var ys *ts.Tensor
 		if args.ExpandRatio == 1 {
 			ys = xs.MustShallowClone()
 		} else {
@@ -213,7 +214,7 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 		ys3 := ys2.Swish()
 		ys2.MustDrop()
 
-		var ys4 ts.Tensor
+		var ys4 *ts.Tensor
 		// NOTE: args.SeRatio is optional value.
 		if args.SeRatio == 0 {
 			ys4 = ys3
@@ -238,7 +239,7 @@ func block(p nn.Path, args BlockArgs) (retVal ts.ModuleT) {
 	})
 }
 
-func efficientnet(p nn.Path, params params, nclasses int64) (retVal ts.ModuleT) {
+func efficientnet(p *nn.Path, params *params, nclasses int64) ts.ModuleT {
 
 	args := blockArgs()
 
@@ -287,13 +288,13 @@ func efficientnet(p nn.Path, params params, nclasses int64) (retVal ts.ModuleT) 
 
 	classifier := nn.SeqT()
 
-	classifier.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	classifier.AddFnT(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		return ts.MustDropout(xs, 0.2, train)
 	}))
 
 	classifier.Add(nn.NewLinear(p.Sub("_fc"), outC, nclasses, nn.DefaultLinearConfig()))
 
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		tmp1 := xs.ApplyT(convStem, false)
 		tmp2 := tmp1.ApplyT(bn0, train)
 		tmp1.MustDrop()
@@ -318,34 +319,34 @@ func efficientnet(p nn.Path, params params, nclasses int64) (retVal ts.ModuleT) 
 
 }
 
-func EfficientNetB0(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB0(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b0(), nclasses)
 }
 
-func EfficientNetB1(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB1(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b1(), nclasses)
 }
 
-func EfficientNetB2(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB2(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b2(), nclasses)
 }
 
-func EfficientNetB3(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB3(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b3(), nclasses)
 }
 
-func EfficientNetB4(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB4(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b4(), nclasses)
 }
 
-func EfficientNetB5(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB5(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b5(), nclasses)
 }
 
-func EfficientNetB6(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB6(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b6(), nclasses)
 }
 
-func EfficientNetB7(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func EfficientNetB7(p *nn.Path, nclasses int64) ts.ModuleT {
 	return efficientnet(p, b7(), nclasses)
 }

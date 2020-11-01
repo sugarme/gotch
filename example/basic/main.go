@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 
 	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
@@ -11,12 +11,10 @@ func main() {
 
 	// Create a tensor [2,3,4]
 	tensor := ts.MustArange(ts.IntScalar(2*3*4), gotch.Int64, gotch.CPU).MustView([]int64{2, 3, 4}, true)
-
 	tensor.Print()
 
-	fmt.Printf("tensor is nil: %v\n", tensor.IsNil())
+	mul := ts.MustOnes([]int64{4, 5}, gotch.Int64, gotch.CPU)
+	res := tensor.MustMatmul(mul, false)
 
-	tensor.MustDrop()
-
-	fmt.Printf("tensor is nil: %v\n", tensor.IsNil())
+	res.Print()
 }

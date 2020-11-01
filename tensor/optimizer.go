@@ -11,20 +11,18 @@ type COptimizer struct {
 }
 
 // Adam returns Adam optimizer
-func Adam(lr, beta1, beta2, weightDecay float64) (retVal COptimizer, err error) {
+func Adam(lr, beta1, beta2, weightDecay float64) (*COptimizer, error) {
 	coptimizer := lib.AtoAdam(lr, beta1, beta2, weightDecay)
 
-	err = TorchErr()
-	if err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
-	retVal = COptimizer{coptimizer}
-	return retVal, nil
+	return &COptimizer{coptimizer}, nil
 }
 
 // RmsProp returns RMSProp optimizer
-func RmsProp(lr, alpha, eps, wd, momentum float64, centered bool) (retVal COptimizer, err error) {
+func RmsProp(lr, alpha, eps, wd, momentum float64, centered bool) (*COptimizer, error) {
 	var centeredCInt int
 	switch centered {
 	case true:
@@ -34,19 +32,15 @@ func RmsProp(lr, alpha, eps, wd, momentum float64, centered bool) (retVal COptim
 	}
 
 	coptimizer := lib.AtoRmsProp(lr, alpha, eps, wd, momentum, centeredCInt)
-	err = TorchErr()
-	if err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
-	retVal = COptimizer{coptimizer}
-
-	return retVal, nil
-
+	return &COptimizer{coptimizer}, nil
 }
 
 // Sgd returns SGD optimizer
-func Sgd(lr, momentum, dampening, wd float64, nesterov bool) (retVal COptimizer, err error) {
+func Sgd(lr, momentum, dampening, wd float64, nesterov bool) (*COptimizer, error) {
 	var nesterovCInt int
 	switch nesterov {
 	case true:
@@ -56,18 +50,15 @@ func Sgd(lr, momentum, dampening, wd float64, nesterov bool) (retVal COptimizer,
 	}
 
 	coptimizer := lib.AtoSgd(lr, momentum, dampening, wd, nesterovCInt)
-	err = TorchErr()
-	if err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
-	retVal = COptimizer{coptimizer}
-
-	return retVal, nil
+	return &COptimizer{coptimizer}, nil
 }
 
 // AddParameters adds parameters as a slice of tensors to optimizer
-func (co COptimizer) AddParameters(tensors []Tensor) (err error) {
+func (co *COptimizer) AddParameters(tensors []Tensor) error {
 
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
@@ -82,35 +73,35 @@ func (co COptimizer) AddParameters(tensors []Tensor) (err error) {
 }
 
 // SetLeanringRate sets learning rate for the optimizer
-func (co COptimizer) SetLearningRate(lr float64) (err error) {
+func (co *COptimizer) SetLearningRate(lr float64) error {
 	lib.AtoSetLearningRate(co.coptimizer, lr)
 
 	return TorchErr()
 }
 
 // SetMomentum sets a momentum for the optimizer
-func (co COptimizer) SetMomentum(m float64) (err error) {
+func (co *COptimizer) SetMomentum(m float64) error {
 	lib.AtoSetMomentum(co.coptimizer, m)
 
 	return TorchErr()
 }
 
 // ZeroGrad sets gradients to zero
-func (co COptimizer) ZeroGrad() (err error) {
+func (co *COptimizer) ZeroGrad() error {
 	lib.AtoZeroGrad(co.coptimizer)
 
 	return TorchErr()
 }
 
 // Steps proceeds optimizer
-func (co COptimizer) Step() (err error) {
+func (co *COptimizer) Step() error {
 	lib.AtoStep(co.coptimizer)
 
 	return TorchErr()
 }
 
 // Drop removes optimizer and frees up memory.
-func (co COptimizer) Drop() {
+func (co *COptimizer) Drop() {
 	lib.AtoFree(co.coptimizer)
 
 	if err := TorchErr(); err != nil {

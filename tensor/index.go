@@ -79,7 +79,7 @@ type Narrow struct {
 	Start int64
 	End   int64
 }
-type IndexSelect struct{ Index Tensor }
+type IndexSelect struct{ Index *Tensor }
 type InsertNewAxis struct{}
 
 // NewSelect creates an tensor indexer with given index.
@@ -93,7 +93,7 @@ func NewNarrow(start, end int64) Narrow {
 	return Narrow{Start: start, End: end}
 }
 
-func NewIndexSelect(ts Tensor) IndexSelect {
+func NewIndexSelect(ts *Tensor) IndexSelect {
 	return IndexSelect{Index: ts}
 }
 
@@ -130,7 +130,7 @@ type IndexOp interface {
 //
 // NOTE:
 // - `index`: expects type `TensorIndexer` or `[]TensorIndexer`
-func (ts *Tensor) Idx(index interface{}) (retVal Tensor) {
+func (ts *Tensor) Idx(index interface{}) (retVal *Tensor) {
 
 	// indexTyp := reflect.TypeOf(index)
 	indexVal := reflect.ValueOf(index)
@@ -196,7 +196,7 @@ func (ts *Tensor) Idx(index interface{}) (retVal Tensor) {
 
 // Tensor Methods:
 // ===============
-func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
+func (ts *Tensor) indexer(indexSpec []TensorIndexer) (retVal *Tensor, err error) {
 
 	// Make sure number of non-newaxis is not exceed number of dimensions
 	var numNewAxis int = 0
@@ -221,7 +221,7 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 		// If `spec` is `IndexSelect` type and
 		if reflect.TypeOf(spec).Name() == "IndexSelect" {
 			if reflect.ValueOf(spec).Kind() == reflect.Struct {
-				inputTensor := reflect.ValueOf(spec).FieldByName("Index").Interface().(Tensor)
+				inputTensor := reflect.ValueOf(spec).FieldByName("Index").Interface().(*Tensor)
 
 				// 1. Either its input tensor has dimension > 1, throw error.
 				inputTensorShape, err := inputTensor.Size()
@@ -249,9 +249,9 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 
 	// Now, apply indexing from left to right.
 	var (
-		currTensor Tensor = ts.MustShallowClone()
-		currIdx    int64  = 0
-		nextTensor Tensor
+		currTensor *Tensor = ts.MustShallowClone()
+		currIdx    int64   = 0
+		nextTensor *Tensor
 		nextIdx    int64
 	)
 
@@ -282,8 +282,8 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 				return retVal, err
 			}
 			nextIdx = currIdx + 1
-		case "IndexSelect": // 1 field `(Index Tensor)`
-			indexTensor := reflect.ValueOf(spec).FieldByName("Index").Interface().(Tensor)
+		case "IndexSelect": // 1 field `(Index *Tensor)`
+			indexTensor := reflect.ValueOf(spec).FieldByName("Index").Interface().(*Tensor)
 			device, err := currTensor.Device()
 			if err != nil {
 				return retVal, err
@@ -307,7 +307,7 @@ func (ts Tensor) indexer(indexSpec []TensorIndexer) (retVal Tensor, err error) {
 	return retVal, nil
 }
 
-func (ts Tensor) mustIndexer(indexSpec []TensorIndexer) (retVal Tensor) {
+func (ts *Tensor) mustIndexer(indexSpec []TensorIndexer) (retVal *Tensor) {
 	retVal, err := ts.indexer(indexSpec)
 	if err != nil {
 		panic(err)

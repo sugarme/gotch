@@ -9,7 +9,7 @@ import (
 	ts "github.com/sugarme/gotch/tensor"
 )
 
-func embeddingTest(embeddingConfig nn.EmbeddingConfig, t *testing.T) {
+func embeddingTest(embeddingConfig *nn.EmbeddingConfig, t *testing.T) {
 
 	var (
 		batchDim  int64 = 5

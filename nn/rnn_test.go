@@ -10,7 +10,7 @@ import (
 	ts "github.com/sugarme/gotch/tensor"
 )
 
-func gruTest(rnnConfig nn.RNNConfig, t *testing.T) {
+func gruTest(rnnConfig *nn.RNNConfig, t *testing.T) {
 
 	var (
 		batchDim  int64 = 5
@@ -32,10 +32,10 @@ func gruTest(rnnConfig nn.RNNConfig, t *testing.T) {
 
 	// Step test
 	input := ts.MustRandn([]int64{batchDim, inputDim}, gotch.Float, gotch.CPU)
-	output := gru.Step(input, gru.ZeroState(batchDim).(nn.GRUState))
+	output := gru.Step(input, gru.ZeroState(batchDim).(*nn.GRUState))
 
 	want := []int64{layerDim, batchDim, outputDim}
-	got := output.(nn.GRUState).Tensor.MustSize()
+	got := output.(*nn.GRUState).Tensor.MustSize()
 
 	if !reflect.DeepEqual(want, got) {
 		fmt.Println("Step test:")
@@ -47,7 +47,7 @@ func gruTest(rnnConfig nn.RNNConfig, t *testing.T) {
 	input = ts.MustRandn([]int64{batchDim, seqLen, inputDim}, gotch.Float, gotch.CPU)
 	output, _ = gru.Seq(input)
 	wantSeq := []int64{batchDim, seqLen, outputDim * numDirections}
-	gotSeq := output.(ts.Tensor).MustSize()
+	gotSeq := output.(*ts.Tensor).MustSize()
 
 	if !reflect.DeepEqual(wantSeq, gotSeq) {
 		fmt.Println("Seq test:")
@@ -75,7 +75,7 @@ func TestGRU(t *testing.T) {
 	gruTest(cfg, t)
 }
 
-func lstmTest(rnnConfig nn.RNNConfig, t *testing.T) {
+func lstmTest(rnnConfig *nn.RNNConfig, t *testing.T) {
 
 	var (
 		batchDim  int64 = 5
@@ -97,12 +97,12 @@ func lstmTest(rnnConfig nn.RNNConfig, t *testing.T) {
 
 	// Step test
 	input := ts.MustRandn([]int64{batchDim, inputDim}, gotch.Float, gotch.CPU)
-	output := lstm.Step(input, lstm.ZeroState(batchDim).(nn.LSTMState))
+	output := lstm.Step(input, lstm.ZeroState(batchDim).(*nn.LSTMState))
 
 	wantH := []int64{layerDim, batchDim, outputDim}
-	gotH := output.(nn.LSTMState).Tensor1.MustSize()
+	gotH := output.(*nn.LSTMState).Tensor1.MustSize()
 	wantC := []int64{layerDim, batchDim, outputDim}
-	gotC := output.(nn.LSTMState).Tensor2.MustSize()
+	gotC := output.(*nn.LSTMState).Tensor2.MustSize()
 
 	if !reflect.DeepEqual(wantH, gotH) {
 		fmt.Println("Step test:")
@@ -121,7 +121,7 @@ func lstmTest(rnnConfig nn.RNNConfig, t *testing.T) {
 	output, _ = lstm.Seq(input)
 
 	wantSeq := []int64{batchDim, seqLen, outputDim * numDirections}
-	gotSeq := output.(ts.Tensor).MustSize()
+	gotSeq := output.(*ts.Tensor).MustSize()
 
 	if !reflect.DeepEqual(wantSeq, gotSeq) {
 		fmt.Println("Seq test:")

@@ -24,7 +24,7 @@ const (
 	samplesPerFile int64 = 10000
 )
 
-func readFile(filename string) (imagesTs ts.Tensor, labelsTs ts.Tensor) {
+func readFile(filename string) (imagesTs *ts.Tensor, labelsTs *ts.Tensor) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("readImages errors: %v\n", err)
@@ -74,7 +74,7 @@ func readFile(filename string) (imagesTs ts.Tensor, labelsTs ts.Tensor) {
 	return imagesTs, labelsTs
 }
 
-func CFLoadDir(dir string) (retVal Dataset) {
+func CFLoadDir(dir string) *Dataset {
 
 	dirAbs, err := filepath.Abs(dir)
 	if err != nil {
@@ -96,11 +96,11 @@ func CFLoadDir(dir string) (retVal Dataset) {
 
 	for _, f := range trainFiles {
 		img, l := readFile(fmt.Sprintf("%v/%v", dirAbs, f))
-		trainImages = append(trainImages, img)
-		trainLabels = append(trainLabels, l)
+		trainImages = append(trainImages, *img)
+		trainLabels = append(trainLabels, *l)
 	}
 
-	return Dataset{
+	return &Dataset{
 		TrainImages: ts.MustCat(trainImages, 0),
 		TrainLabels: ts.MustCat(trainLabels, 0),
 		TestImages:  testImages,

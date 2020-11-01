@@ -31,7 +31,7 @@ var (
 	style   string
 )
 
-func gramMatrix(m ts.Tensor) (retVal ts.Tensor) {
+func gramMatrix(m *ts.Tensor) *ts.Tensor {
 	sizes, err := m.Size4()
 	if err != nil {
 		log.Fatal(err)
@@ -52,7 +52,7 @@ func gramMatrix(m ts.Tensor) (retVal ts.Tensor) {
 	return gram.MustDiv1(ts.IntScalar(a*b*c*d), true)
 }
 
-func styleLoss(m1 ts.Tensor, m2 ts.Tensor) (retVal ts.Tensor) {
+func styleLoss(m1 *ts.Tensor, m2 *ts.Tensor) *ts.Tensor {
 	gram1 := gramMatrix(m1)
 	// m1.MustDrop()
 	gram2 := gramMatrix(m2)
@@ -87,9 +87,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cuda := gotch.CudaBuilder(0)
-	device := cuda.CudaIfAvailable()
-	// device := gotch.CPU
+	// cuda := gotch.CudaBuilder(0)
+	// device := cuda.CudaIfAvailable()
+	device := gotch.CPU
 
 	netVS := nn.NewVarStore(device)
 	in := vision.NewImageNet()
@@ -153,13 +153,13 @@ func main() {
 		sLoss := ts.MustZeros([]int64{1}, gotch.Float, device)
 		cLoss := ts.MustZeros([]int64{1}, gotch.Float, device)
 		for _, idx := range StyleIndexes {
-			l := styleLoss(inputLayers[idx], styleLayers[idx])
+			l := styleLoss(&inputLayers[idx], &styleLayers[idx])
 			sLoss = sLoss.MustAdd(l, true)
 			l.MustDrop()
 		}
 		for _, idx := range ContentIndexes {
 			// NOTE: set `del` = true called panic at GPU train (tested on Colab)
-			l := inputLayers[idx].MustMseLoss(contentLayers[idx], int64(ts.ReductionMean), false)
+			l := inputLayers[idx].MustMseLoss(&contentLayers[idx], int64(ts.ReductionMean), false)
 			cLoss = cLoss.MustAdd(l, true)
 			l.MustDrop()
 		}

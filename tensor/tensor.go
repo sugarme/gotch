@@ -27,17 +27,17 @@ type Tensor struct {
 var None = NewTensor()
 
 // NewTensor creates a new tensor
-func NewTensor() Tensor {
+func NewTensor() *Tensor {
 	ctensor := lib.AtNewTensor()
-	return Tensor{ctensor}
+	return &Tensor{ctensor}
 }
 
-func (ts Tensor) Dim() uint64 {
-	retVal := lib.AtDim(ts.ctensor)
+func (ts *Tensor) Dim() uint64 {
+	dim := lib.AtDim(ts.ctensor)
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
-	return retVal
+	return dim
 }
 
 // Size return shape of the tensor
@@ -45,89 +45,89 @@ func (ts Tensor) Dim() uint64 {
 // NOTE: C++ libtorch calls at_shape() -> t.sizes()
 // And returns a slice of sizes or shape using given pointer
 // to that slice.
-func (ts Tensor) Size() (retVal []int64, err error) {
+func (ts *Tensor) Size() ([]int64, error) {
 	dim := lib.AtDim(ts.ctensor)
 	sz := make([]int64, dim)
 	szPtr, err := DataAsPtr(sz)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 	defer C.free(unsafe.Pointer(szPtr))
 
 	lib.AtShape(ts.ctensor, szPtr)
 	if err = TorchErr(); err != nil {
-		return retVal, err
+		return nil, err
 	}
 
-	retVal = decodeSize(szPtr, dim)
+	shape := decodeSize(szPtr, dim)
 
-	return retVal, nil
+	return shape, nil
 }
 
-func (ts Tensor) MustSize() (retVal []int64) {
-	retVal, err := ts.Size()
+func (ts *Tensor) MustSize() []int64 {
+	shape, err := ts.Size()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return shape
 }
 
 // Size1 returns the tensor size for 1D tensors.
-func (ts Tensor) Size1() (retVal int64, err error) {
+func (ts *Tensor) Size1() (int64, error) {
 	shape, err := ts.Size()
 	if err != nil {
-		return retVal, err
+		return 0, err
 	}
 
 	if len(shape) != 1 {
 		err = fmt.Errorf("Expected one dim, got %v\n", len(shape))
-		return retVal, err
+		return 0, err
 	}
 
 	return shape[0], nil
 }
 
 // Size2 returns the tensor size for 2D tensors.
-func (ts Tensor) Size2() (retVal []int64, err error) {
+func (ts *Tensor) Size2() ([]int64, error) {
 	shape, err := ts.Size()
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	if len(shape) != 2 {
 		err = fmt.Errorf("Expected two dims, got %v\n", len(shape))
-		return retVal, err
+		return nil, err
 	}
 
 	return shape, nil
 }
 
 // Size3 returns the tensor size for 3D tensors.
-func (ts Tensor) Size3() (retVal []int64, err error) {
+func (ts *Tensor) Size3() ([]int64, error) {
 	shape, err := ts.Size()
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	if len(shape) != 3 {
 		err = fmt.Errorf("Expected three dims, got %v\n", len(shape))
-		return retVal, err
+		return nil, err
 	}
 
 	return shape, nil
 }
 
 // Size4 returns the tensor size for 4D tensors.
-func (ts Tensor) Size4() (retVal []int64, err error) {
+func (ts *Tensor) Size4() ([]int64, error) {
 	shape, err := ts.Size()
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	if len(shape) != 4 {
 		err = fmt.Errorf("Expected four dims, got %v\n", len(shape))
-		return retVal, err
+		return nil, err
 	}
 
 	return shape, nil
@@ -154,16 +154,16 @@ func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
 }
 
 // OfSlice creates tensor from a slice data
-func OfSlice(data interface{}) (retVal Tensor, err error) {
+func OfSlice(data interface{}) (*Tensor, error) {
 
 	typ, dataLen, err := DataCheck(data)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	dtype, err := gotch.ToDType(typ)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	shape := []int64{int64(dataLen)}
@@ -171,7 +171,7 @@ func OfSlice(data interface{}) (retVal Tensor, err error) {
 
 	eltSizeInBytes, err := gotch.DTypeSize(dtype)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	nbytes := int(eltSizeInBytes) * int(elementNum)
@@ -180,49 +180,46 @@ func OfSlice(data interface{}) (retVal Tensor, err error) {
 	defer C.free(unsafe.Pointer(dataPtr))
 
 	if err = EncodeTensor(buff, reflect.ValueOf(data), shape); err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	cint, err := gotch.DType2CInt(dtype)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
 	if err = TorchErr(); err != nil {
-		return retVal, err
+		return nil, err
 	}
 
-	retVal = Tensor{ctensor}
-
-	return retVal, nil
+	return &Tensor{ctensor}, nil
 }
 
 // MustOfSlice create a tensor from slice of data. It will be panic if error.
-func MustOfSlice(data interface{}) (retVal Tensor) {
-	retVal, err := OfSlice(data)
+func MustOfSlice(data interface{}) *Tensor {
+	ts, err := OfSlice(data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
-
+	return ts
 }
 
 // TensorFrom create a tensor from slice of data. It will be panic if error.
-func TensorFrom(data interface{}) (retVal Tensor) {
-	retVal, err := OfSlice(data)
+func TensorFrom(data interface{}) *Tensor {
+	ts, err := OfSlice(data)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return retVal
+	return ts
 }
 
 // Print prints tensor values to console.
 //
 // NOTE: it is printed from C and will print ALL elements of tensor
 // with no truncation at all.
-func (ts Tensor) Print() {
+func (ts *Tensor) Print() {
 	lib.AtPrint(ts.ctensor)
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
@@ -230,56 +227,53 @@ func (ts Tensor) Print() {
 }
 
 // NewTensorFromData creates tensor from given data and shape
-func NewTensorFromData(data interface{}, shape []int64) (retVal Tensor, err error) {
+func NewTensorFromData(data interface{}, shape []int64) (*Tensor, error) {
 	// 1. Check whether data and shape match
 	elementNum, err := DataDim(data)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	nflattend := FlattenDim(shape)
 
 	if elementNum != nflattend {
 		err = fmt.Errorf("Number of data elements (%v) and flatten shape (%v) dimension mismatched.\n", elementNum, nflattend)
-		return retVal, err
+		return nil, err
 	}
 
 	// 2. Write raw data to C memory and get C pointer
 	dataPtr, err := DataAsPtr(data)
 	defer C.free(unsafe.Pointer(dataPtr))
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	// 3. Create tensor with pointer and shape
 	dtype, err := gotch.DTypeFromData(data)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	eltSizeInBytes, err := gotch.DTypeSize(dtype)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	cint, err := gotch.DType2CInt(dtype)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
 	// defer C.free(unsafe.Pointer(ctensor))
 	if err = TorchErr(); err != nil {
-		return retVal, err
+		return nil, err
 	}
 
-	retVal = Tensor{ctensor}
-
-	return retVal, nil
-
+	return &Tensor{ctensor}, nil
 }
 
-func (ts Tensor) DType() gotch.DType {
+func (ts *Tensor) DType() gotch.DType {
 	cint := lib.AtScalarType(ts.ctensor)
 
 	dtype, err := gotch.CInt2DType(cint)
@@ -290,7 +284,11 @@ func (ts Tensor) DType() gotch.DType {
 	return dtype
 }
 
-func (ts Tensor) Device() (retVal gotch.Device, err error) {
+func (ts *Tensor) Device() (gotch.Device, error) {
+	var (
+		retVal gotch.Device
+		err    error
+	)
 	cInt := lib.AtDevice(ts.ctensor)
 
 	if err = TorchErr(); err != nil {
@@ -302,13 +300,13 @@ func (ts Tensor) Device() (retVal gotch.Device, err error) {
 	return device.OfCInt(int32(cInt)), nil
 }
 
-func (ts Tensor) MustDevice() (retVal gotch.Device) {
-	retVal, err := ts.Device()
+func (ts *Tensor) MustDevice() gotch.Device {
+	device, err := ts.Device()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return device
 }
 
 /*
@@ -342,121 +340,125 @@ func (ts Tensor) MustDevice() (retVal gotch.Device) {
 // Float64Value returns a float value on tensors holding a single element.
 // An error is returned otherwise.
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
-func (ts Tensor) Float64Value(idx []int64) (retVal float64, err error) {
+func (ts *Tensor) Float64Value(idx []int64) (float64, error) {
 
 	idxPtr, err := DataAsPtr(idx)
 	if err != nil {
-		return retVal, err
+		return 0, err
 	}
 	defer C.free(unsafe.Pointer(idxPtr))
 
-	retVal = lib.AtDoubleValueAtIndexes(ts.ctensor, idxPtr, len(idx))
+	f64Val := lib.AtDoubleValueAtIndexes(ts.ctensor, idxPtr, len(idx))
 	if err = TorchErr(); err != nil {
-		return retVal, err
+		return 0, err
 	}
 
-	return retVal, err
+	return f64Val, err
 }
 
-func (ts Tensor) MustFloat64Value(idx []int64) (retVal float64) {
-	retVal, err := ts.Float64Value(idx)
+func (ts *Tensor) MustFloat64Value(idx []int64) float64 {
+	f64Val, err := ts.Float64Value(idx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return retVal
+	return f64Val
 }
 
 // Int64Value returns an int value on tensors holding a single element. An error is
 // returned otherwise.
-func (ts Tensor) Int64Value(idx []int64) (retVal int64, err error) {
+func (ts *Tensor) Int64Value(idx []int64) (int64, error) {
 
+	var (
+		retVal int64
+		err    error
+	)
 	idxPtr, err := DataAsPtr(idx)
 	if err != nil {
 		return retVal, err
 	}
 	defer C.free(unsafe.Pointer(idxPtr))
 
-	retVal = lib.AtInt64ValueAtIndexes(ts.ctensor, idxPtr, len(idx))
+	int64Val := lib.AtInt64ValueAtIndexes(ts.ctensor, idxPtr, len(idx))
 	if err = TorchErr(); err != nil {
-		return retVal, err
+		return 0, err
 	}
 
-	return retVal, err
+	return int64Val, err
 }
 
-func (ts Tensor) MustInt64Value(idx []int64) (retVal int64) {
-	retVal, err := ts.Int64Value(idx)
+func (ts *Tensor) MustInt64Value(idx []int64) int64 {
+	int64Val, err := ts.Int64Value(idx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return retVal
+	return int64Val
 }
 
 // RequiresGrad returns true if gradient are currently tracked for this tensor.
-func (ts Tensor) RequiresGrad() (retVal bool, err error) {
-	retVal = lib.AtRequiresGrad(ts.ctensor)
+func (ts *Tensor) RequiresGrad() (bool, error) {
+	state := lib.AtRequiresGrad(ts.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return false, err
 	}
 
-	return retVal, nil
+	return state, nil
 }
 
-func (ts Tensor) MustRequiresGrad() (retVal bool) {
-	retVal, err := ts.RequiresGrad()
+func (ts *Tensor) MustRequiresGrad() bool {
+	state, err := ts.RequiresGrad()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return state
 }
 
 // DataPtr returns the address of the first element of this tensor.
-func (ts Tensor) DataPtr() (retVal unsafe.Pointer, err error) {
+func (ts *Tensor) DataPtr() (unsafe.Pointer, error) {
 
-	retVal = lib.AtDataPtr(ts.ctensor)
+	datPtr := lib.AtDataPtr(ts.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
-	return retVal, nil
+	return datPtr, nil
 }
 
 // Defined returns true is the tensor is defined.
-func (ts Tensor) Defined() (retVal bool, err error) {
-	retVal = lib.AtDefined(ts.ctensor)
+func (ts *Tensor) Defined() (bool, error) {
+	state := lib.AtDefined(ts.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return false, err
 	}
 
-	return retVal, nil
+	return state, nil
 }
 
-func (ts Tensor) MustDefined() (retVal bool) {
-	retVal, err := ts.Defined()
+func (ts *Tensor) MustDefined() bool {
+	state, err := ts.Defined()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return state
 }
 
 // IsSparse returns true is the tensor is spare.
-func (ts Tensor) IsSparse() (retVal bool, err error) {
-	retVal = lib.AtIsSparse(ts.ctensor)
+func (ts *Tensor) IsSparse() (bool, error) {
+	state := lib.AtIsSparse(ts.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return false, err
 	}
 
-	return retVal, nil
+	return state, nil
 }
 
 // ZeroGrad zeroes the gradient tensor attached to this tensor if defined.
-func (ts Tensor) ZeroGrad() {
+func (ts *Tensor) ZeroGrad() {
 	grad := ts.MustGrad(false)
 	if grad.MustDefined() {
 		grad.Detach_()
@@ -468,26 +470,38 @@ func (ts Tensor) ZeroGrad() {
 // which gradients are tracked.
 //
 // Gradients tracking can be turned on via `SetRequiresGrad`.
-func (ts Tensor) Backward() (err error) {
+func (ts *Tensor) Backward() error {
 	lib.AtBackward(ts.ctensor, 0, 0)
-	if err = TorchErr(); err != nil {
+	if err := TorchErr(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (ts Tensor) MustBackward() {
+func (ts *Tensor) MustBackward() {
 	if err := ts.Backward(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 // RunBackward runs the backward ...
-func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraphB bool) (retVal []Tensor, err error) {
+func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraphB bool) ([]Tensor, error) {
 	// NOTE: outputs is a slice of tensors with length = len(inputs)
 	var outputsPtr []*lib.Ctensor
-	// TODO: Are they allocated continouslly???
+	// Are they allocated contigously??? Definitely not.
+	// TODO. calculate C memory size = C pointer size x n pointers
+	// Then C.malloc such calculated amount
+	// NOTE. replace with the following code and test.
+	/*
+	 *   ntensors := len(inputs)
+	 *   nbytes := C.size_t(ntensors) * C.size_t(unsafe.Sizeof(uintptr(0)))
+	 *   ctensorsPtr := (*[1 << 30]lib.Ctensor)(C.malloc(nbytes))
+	 *   for i :=0; i < ntensors; i++ {
+	 *     outputPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+	 *     outputsPtr[i] = outputPtr
+	 *   }
+	 *  */
 	for i := 0; i < len(inputs); i++ {
 		outputPtr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 		defer C.free(unsafe.Pointer(outputPtr))
@@ -509,27 +523,28 @@ func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraph
 	}
 
 	lib.AtRunBackward(tensorsPtr, len(tensors), inputsPtr, len(inputs), outputsPtr[0], keepGraph, createGraph)
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
+	var oTensors []Tensor
 	for i := 0; i < len(inputs); i++ {
 		outputPtr := outputsPtr[i]
-		retVal = append(retVal, Tensor{ctensor: *outputPtr})
+		oTensors = append(oTensors, Tensor{ctensor: *outputPtr})
 	}
 
-	return retVal, nil
+	return oTensors, nil
 }
 
 // CopyDataUint8 copies `numel` elements from `self` to `dst`.
 //
 // NOTE: `dst` located in Go memory. Should it be?
-func (ts Tensor) CopyDataUint8(dst []uint8, numel uint) (err error) {
+func (ts *Tensor) CopyDataUint8(dst []uint8, numel uint) error {
 
 	// NOTE: we must make sure that `dst` has same len as `numel`. Otherwise,
 	// there will be memory leak and or out of range error.
 	if len(dst) < int(numel) {
-		err = fmt.Errorf("CopyDataUint8 Error: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", len(dst), numel)
+		err := fmt.Errorf("CopyDataUint8 Error: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", len(dst), numel)
 		return err
 	}
 
@@ -546,7 +561,7 @@ func (ts Tensor) CopyDataUint8(dst []uint8, numel uint) (err error) {
 	return nil
 }
 
-func (ts Tensor) MustCopyDataUint8(dst []uint8, numel uint) {
+func (ts *Tensor) MustCopyDataUint8(dst []uint8, numel uint) {
 	err := ts.CopyDataUint8(dst, numel)
 	if err != nil {
 		log.Fatal(err)
@@ -560,7 +575,7 @@ func (ts Tensor) MustCopyDataUint8(dst []uint8, numel uint) {
 // We will render Go pointer of first element of `dst` slice
 // and number of elements to C land. This may break in the future
 // if Go policy changes.
-func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
+func (ts *Tensor) CopyData(dst interface{}, numel uint) error {
 
 	gotype, dlen, err := DataCheck(dst)
 	if err != nil {
@@ -621,7 +636,7 @@ func (ts Tensor) CopyData(dst interface{}, numel uint) (err error) {
 //
 // NOTE: `dst` is a slice with length = numel and Go type equavalent to tensor
 // DType
-func (ts Tensor) MustCopyData(dst interface{}, numel uint) {
+func (ts *Tensor) MustCopyData(dst interface{}, numel uint) {
 	err := ts.CopyData(dst, numel)
 	if err != nil {
 		log.Fatal(err)
@@ -629,85 +644,80 @@ func (ts Tensor) MustCopyData(dst interface{}, numel uint) {
 }
 
 // Numel returns the total number of elements stored in a tensor.
-func (ts Tensor) Numel() (retVal uint) {
-	var shape []int64
-	shape = ts.MustSize()
+func (ts *Tensor) Numel() uint {
+	shape := ts.MustSize()
 	return uint(FlattenDim(shape))
 }
 
 // ShallowClone returns a new tensor that share storage with the input tensor.
-func (ts Tensor) ShallowClone() (retVal Tensor, err error) {
+func (ts *Tensor) ShallowClone() (*Tensor, error) {
 
 	ctensor := lib.AtShallowClone(ts.ctensor)
 
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
-	retVal = Tensor{ctensor}
-
-	return retVal, nil
+	return &Tensor{ctensor}, nil
 }
 
 // MustShallowClone returns a new tensor that share storage with the input
 // tensor. It will panic if error occurred
-func (ts Tensor) MustShallowClone() (retVal Tensor) {
-	retVal, err := ts.ShallowClone()
+func (ts *Tensor) MustShallowClone() *Tensor {
+	newTs, err := ts.ShallowClone()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return newTs
 }
 
 // Get gets the sub-tensor at the given index.
-func (ts Tensor) Get(index int) (retVal Tensor, err error) {
+func (ts *Tensor) Get(index int) (*Tensor, error) {
 
 	ctensor := lib.AtGet(ts.ctensor, index)
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
-	retVal = Tensor{ctensor}
 
-	return retVal, nil
+	return &Tensor{ctensor}, nil
 }
 
 // MustGet gets the sub-tensor at the given index. It will panic if error
 // occurred.
-func (ts Tensor) MustGet(index int) (retVal Tensor) {
-	retVal, err := ts.Get(index)
+func (ts *Tensor) MustGet(index int) *Tensor {
+
+	subTs, err := ts.Get(index)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return retVal
+
+	return subTs
 }
 
 // Copy_ copies in-place values from the argument tensor to the input tensor.
-func Copy_(self, src Tensor) {
-	var err error
-	lib.AtCopy_(self.ctensor, src.ctensor)
+func Copy_(self, src *Tensor) {
 
-	if err = TorchErr(); err != nil {
+	lib.AtCopy_(self.ctensor, src.ctensor)
+	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 // Copy_ copies in-place values from the argument tensor to existing tensor
-func (ts Tensor) Copy_(src Tensor) {
-	var err error
-	lib.AtCopy_(ts.ctensor, src.ctensor)
+func (ts *Tensor) Copy_(src *Tensor) {
 
-	if err = TorchErr(); err != nil {
+	lib.AtCopy_(ts.ctensor, src.ctensor)
+	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 // Save saves a tensor to a file.
-func (ts Tensor) Save(path string) (err error) {
-	lib.AtSave(ts.ctensor, path)
+func (ts *Tensor) Save(path string) error {
 
-	if err = TorchErr(); err != nil {
+	lib.AtSave(ts.ctensor, path)
+	if err := TorchErr(); err != nil {
 		return err
 	}
 
@@ -715,44 +725,43 @@ func (ts Tensor) Save(path string) (err error) {
 }
 
 // MustSave saves a tensor to a file. It will panic if error
-func (ts Tensor) MustSave(path string) {
+func (ts *Tensor) MustSave(path string) {
 	if err := ts.Save(path); err != nil {
 		log.Fatal(err)
 	}
 }
 
 // Load loads a tensor from a file.
-func Load(path string) (retVal Tensor, err error) {
-	ctensor := lib.AtLoad(path)
+func Load(path string) (*Tensor, error) {
 
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	ctensor := lib.AtLoad(path)
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
-	retVal = Tensor{ctensor}
-
-	return retVal, nil
+	return &Tensor{ctensor}, nil
 }
 
 // MustLoad loads a tensor to a file. It will panic if error
-func MustLoad(path string) (retVal Tensor) {
-	retVal, err := Load(path)
+func MustLoad(path string) *Tensor {
+	ts, err := Load(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return ts
 }
 
+// NamedTensor wraps C tensor and its name
 type NamedTensor struct {
 	Name   string
-	Tensor Tensor
+	Tensor *Tensor
 }
 
 // SaveMulti saves some named tensors to a file
 //
 // The file format is the same as the one used by the PyTorch C++ API.
-func SaveMulti(namedTensors []NamedTensor, path string) (err error) {
+func SaveMulti(namedTensors []NamedTensor, path string) error {
 	var ctensors []lib.Ctensor
 	var names []string
 
@@ -762,7 +771,7 @@ func SaveMulti(namedTensors []NamedTensor, path string) (err error) {
 	}
 
 	lib.AtSaveMulti(ctensors, names, len(namedTensors), path)
-	if err = TorchErr(); err != nil {
+	if err := TorchErr(); err != nil {
 		return err
 	}
 
@@ -780,69 +789,71 @@ func MustSaveMulti(namedTensors []NamedTensor, path string) {
 // LoadMulti loads some named tensors from a file
 //
 // The file format is the same as the one used by the PyTorch C++ API.
-func LoadMulti(path string) (retVal []NamedTensor, err error) {
+func LoadMulti(path string) ([]NamedTensor, error) {
 
 	var data lib.LoadData
 	dataPtr := lib.PStore.Set(&data)
 	lib.AtLoadCallback(path, dataPtr)
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
+	var namedTensors []NamedTensor
 	for _, v := range data.NamedCtensors {
 		namedTensor := NamedTensor{
 			Name:   v.Name,
-			Tensor: Tensor{v.Ctensor},
+			Tensor: &Tensor{v.Ctensor},
 		}
 
-		retVal = append(retVal, namedTensor)
+		namedTensors = append(namedTensors, namedTensor)
 	}
 
-	return retVal, nil
+	return namedTensors, nil
 }
 
 // MustLoadMulti loads some named tensors from a file. It will panic if error
-func MustLoadMulti(path string) (retVal []NamedTensor) {
-	retVal, err := LoadMulti(path)
+func MustLoadMulti(path string) []NamedTensor {
+	namedTensors, err := LoadMulti(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return namedTensors
 }
 
 // LoadMultiWithDevice loads some named tensors from a file to a given device
 //
 // The file format is the same as the one used by the PyTorch C++ API.
-func LoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTensor, err error) {
+func LoadMultiWithDevice(path string, device gotch.Device) ([]NamedTensor, error) {
 	var data lib.LoadData
 	dataPtr := lib.PStore.Set(&data)
 
 	lib.AtLoadCallbackWithDevice(path, dataPtr, device.CInt())
-	if err = TorchErr(); err != nil {
-		return retVal, err
+	if err := TorchErr(); err != nil {
+		return nil, err
 	}
 
+	var namedTensors []NamedTensor
 	for _, v := range data.NamedCtensors {
 		namedTensor := NamedTensor{
 			Name:   v.Name,
-			Tensor: Tensor{v.Ctensor},
+			Tensor: &Tensor{v.Ctensor},
 		}
 
-		retVal = append(retVal, namedTensor)
+		namedTensors = append(namedTensors, namedTensor)
 	}
 
-	return retVal, nil
+	return namedTensors, nil
 }
 
 // MustLoadMulti loads some named tensors from a file. It will panic if error
-func MustLoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTensor) {
-	retVal, err := LoadMultiWithDevice(path, device)
+func MustLoadMultiWithDevice(path string, device gotch.Device) []NamedTensor {
+	namedTensors, err := LoadMultiWithDevice(path, device)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return namedTensors
 }
 
 // ToString returns a string representation for the tensor.
@@ -850,31 +861,31 @@ func MustLoadMultiWithDevice(path string, device gotch.Device) (retVal []NamedTe
 // lw : line width (size)
 // NOTE: The representation will contain all the tensor element hence may be huge for
 // large tensors.
-func (ts Tensor) ToString(lw int64) (retVal string, err error) {
-	retVal = lib.AtToString(ts.ctensor, lw)
-	if err = TorchErr(); err != nil {
-		return retVal, err
+func (ts *Tensor) ToString(lw int64) (string, error) {
+	tensorStr := lib.AtToString(ts.ctensor, lw)
+	if err := TorchErr(); err != nil {
+		return "", err
 	}
 
-	return retVal, nil
+	return tensorStr, nil
 }
 
 // MustToString returns a string representation for the tensor. It will be panic
 // if error.
 // lw : line width (size)
-func (ts Tensor) MustToString(lw int64) (retVal string) {
-	retVal, err := ts.ToString(lw)
+func (ts *Tensor) MustToString(lw int64) string {
+	tensorStr, err := ts.ToString(lw)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return tensorStr
 }
 
 // Drop drops (frees) the tensor
-func (ts Tensor) Drop() (err error) {
+func (ts *Tensor) Drop() error {
 	lib.AtFree(ts.ctensor)
-	if err = TorchErr(); err != nil {
+	if err := TorchErr(); err != nil {
 		return err
 	}
 
@@ -882,7 +893,7 @@ func (ts Tensor) Drop() (err error) {
 }
 
 // MustDrop drops the tensor. It will be panic if error
-func (ts Tensor) MustDrop() {
+func (ts *Tensor) MustDrop() {
 	if err := ts.Drop(); err != nil {
 		log.Fatal(err)
 	}
@@ -890,7 +901,7 @@ func (ts Tensor) MustDrop() {
 
 // GradSetEnabled sets globally whether GradMode gradient accumulation is enable or not.
 // It returns PREVIOUS state of Grad before setting.
-func GradSetEnabled(b bool) (retVal bool, err error) {
+func GradSetEnabled(b bool) (bool, error) {
 
 	var cbool, cretVal int
 	switch b {
@@ -900,17 +911,21 @@ func GradSetEnabled(b bool) (retVal bool, err error) {
 		cbool = 0
 	}
 
+	var (
+		err   error
+		state bool
+	)
 	cretVal = lib.AtGradSetEnabled(cbool)
 	if err = TorchErr(); err != nil {
-		return retVal, err
+		return false, err
 	}
 
 	switch cretVal {
 	case 0:
-		retVal = false
+		state = false
 		break
 	case 1:
-		retVal = true
+		state = true
 		break
 		// case -1: // should be unreachable as error is captured above with TorchrErr()
 		// err = fmt.Errorf("Cannot set grad enable. \n")
@@ -920,18 +935,18 @@ func GradSetEnabled(b bool) (retVal bool, err error) {
 		// return retVal, err
 	}
 
-	return retVal, nil
+	return state, nil
 }
 
 // MustGradSetEnabled sets globally whether GradMode gradient accumuation is enable or not.
 // It returns PREVIOUS state of Grad before setting. It will be panic if error
-func MustGradSetEnabled(b bool) (retVal bool) {
-	retVal, err := GradSetEnabled(b)
+func MustGradSetEnabled(b bool) bool {
+	state, err := GradSetEnabled(b)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return retVal
+	return state
 }
 
 // NoGrad runs a closure without keeping track of gradients.
@@ -962,14 +977,14 @@ func NoGrad(fn interface{}) {
 
 }
 
-func NoGrad1(fn func() interface{}) (retVal interface{}) {
+func NoGrad1(fn func() interface{}) interface{} {
 	newTs := NewTensor()
 	newTs.Drop()
 
 	// Switch off Grad
 	prev := MustGradSetEnabled(false)
 
-	retVal = fn()
+	retVal := fn()
 
 	// Switch on Grad
 	_ = MustGradSetEnabled(prev)
@@ -990,14 +1005,14 @@ type NoGradGuard struct {
 }
 
 // Init NoGradGuard and disables gradient tracking
-func NewNoGradGuard() NoGradGuard {
+func NewNoGradGuard() *NoGradGuard {
 	return noGradGuardInit()
 }
 
 // Disables gradient tracking, this will be enabled back when the
 // returned value gets deallocated.
-func noGradGuardInit() NoGradGuard {
-	return NoGradGuard{enabled: MustGradSetEnabled(false)}
+func noGradGuardInit() *NoGradGuard {
+	return &NoGradGuard{enabled: MustGradSetEnabled(false)}
 }
 
 // Drop drops the NoGradGuard state.
@@ -1025,7 +1040,7 @@ const (
 	ReductionOther
 )
 
-func (r Reduction) ToInt() (retVal int) {
+func (r Reduction) ToInt() int {
 	switch r {
 	case ReductionNone:
 		return 0
@@ -1036,11 +1051,13 @@ func (r Reduction) ToInt() (retVal int) {
 	case ReductionOther:
 		return 3
 	}
-	return
+
+	// NOTE. should it be panic here instead of returning -1?
+	return -1
 }
 
 // Float64Values returns values of tensor in a slice of float64.
-func (ts Tensor) Float64Values() []float64 {
+func (ts *Tensor) Float64Values() []float64 {
 	numel := ts.Numel()
 	vec := make([]float64, numel)
 
@@ -1053,7 +1070,7 @@ func (ts Tensor) Float64Values() []float64 {
 }
 
 // Int64Values returns values of tensor in a slice of int64.
-func (ts Tensor) Int64Values() []int64 {
+func (ts *Tensor) Int64Values() []int64 {
 	numel := ts.Numel()
 	vec := make([]int64, numel)
 
@@ -1068,9 +1085,11 @@ func (ts Tensor) Int64Values() []int64 {
 // Vals returns tensor values in a slice
 // NOTE: need a type insersion to get runtime type
 // E.g. res := xs.Vals().([]int64)
-func (ts Tensor) Vals() (retVal interface{}) {
+func (ts *Tensor) Vals() interface{} {
 	dtype := ts.DType()
 	numel := ts.Numel()
+
+	var retVal interface{}
 
 	switch dtype.Name() {
 	case "uint8":
@@ -1101,21 +1120,21 @@ func (ts Tensor) Vals() (retVal interface{}) {
 //
 // This returns a flattened version of the given tensor. The first dimension
 // is preserved as it is assumed to be the mini-batch dimension.
-func (ts Tensor) FlatView() (retVal Tensor) {
+func (ts *Tensor) FlatView() *Tensor {
 	batchSize := ts.MustSize()[0]
 	return ts.MustView([]int64{batchSize, -1}, false)
 }
 
-func (ts Tensor) ZeroPad2d(left, right, top, bottom int64, del bool) (retVal Tensor, err error) {
+func (ts *Tensor) ZeroPad2d(left, right, top, bottom int64, del bool) (*Tensor, error) {
 	if ts.Dim() != 4 {
-		err = fmt.Errorf("Expected a 4 dimension tensor, got %v\n", ts.MustSize())
-		return retVal, err
+		err := fmt.Errorf("Expected a 4 dimension tensor, got %v\n", ts.MustSize())
+		return nil, err
 	}
 
 	return ts.ConstantPadNd([]int64{left, right, top, bottom}, del)
 }
 
-func (ts Tensor) MustZeroPad2d(left, right, top, bottom int64, del bool) (retVal Tensor) {
+func (ts *Tensor) MustZeroPad2d(left, right, top, bottom int64, del bool) *Tensor {
 	retVal, err := ts.ZeroPad2d(left, right, top, bottom, del)
 	if err != nil {
 		log.Fatal(err)
@@ -1131,32 +1150,32 @@ func (ts Tensor) MustZeroPad2d(left, right, top, bottom int64, del bool) (retVal
 // Elements of the input vector are expected to be between 0 and labels-1.
 //
 // NOTE: There's other `ts.OneHot` and `ts.MustOneHot` generated from Atg C++ API
-func (ts Tensor) Onehot(labels int64) (retVal Tensor) {
+func (ts *Tensor) Onehot(labels int64) *Tensor {
 	dims := ts.MustSize()
 	dims = append(dims, labels)
 	unsqueezeTs := ts.MustUnsqueeze(-1, false)
 	inputTs := unsqueezeTs.MustTotype(gotch.Int64, true)
 
 	zerosTs := MustZeros(dims, gotch.Float, gotch.CPU)
-	retVal = zerosTs.MustScatter1(-1, inputTs, FloatScalar(1.0), true)
+	retVal := zerosTs.MustScatter1(-1, inputTs, FloatScalar(1.0), true)
 	inputTs.MustDrop()
 
 	return retVal
 }
 
-func (ts Tensor) Swish() (retVal Tensor) {
+func (ts *Tensor) Swish() *Tensor {
 	sig := ts.MustSigmoid(false)
-	retVal = ts.MustMul(sig, false)
+	mulTs := ts.MustMul(sig, false)
 	sig.MustDrop()
-	return retVal
+	return mulTs
 }
 
-func (ts Tensor) AvgPool2DDefault(ksize int64, del bool) (retVal Tensor) {
+func (ts *Tensor) AvgPool2DDefault(ksize int64, del bool) *Tensor {
 	return ts.MustAvgPool2d([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, false, true, 1, del)
 }
 
 // SaveMultiNew saves a slice of named tensors to the given file path.
-func SaveMultiNew(namedTensors []NamedTensor, path string) (err error) {
+func SaveMultiNew(namedTensors []NamedTensor, path string) error {
 	var (
 		tensors []lib.Ctensor
 		names   []string
@@ -1168,7 +1187,7 @@ func SaveMultiNew(namedTensors []NamedTensor, path string) (err error) {
 	}
 
 	lib.AtSaveMultiNew(tensors, names, path)
-	if err = TorchErr(); err != nil {
+	if err := TorchErr(); err != nil {
 		return err
 	}
 

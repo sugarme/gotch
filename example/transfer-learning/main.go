@@ -62,22 +62,24 @@ func main() {
 
 	trainImages := ts.NoGrad1(func() (retVal interface{}) {
 		return dataset.TrainImages.ApplyT(net, true)
-	}).(ts.Tensor)
+	}).(*ts.Tensor)
 
 	testImages := ts.NoGrad1(func() (retVal interface{}) {
 		return dataset.TestImages.ApplyT(net, true)
-	}).(ts.Tensor)
+	}).(*ts.Tensor)
 
 	fmt.Println("start training...")
 
 	for epoch := 1; epoch <= 1000; epoch++ {
 
-		predicted := trainImages.Apply(linear)
+		predicted := trainImages.ApplyT(linear, true)
 		loss := predicted.CrossEntropyForLogits(dataset.TrainLabels)
 		sgd.BackwardStep(loss)
 		loss.MustDrop()
 
-		testAccuracy := testImages.Apply(linear).AccuracyForLogits(dataset.TestLabels)
-		fmt.Printf("Epoch %v\t Accuracy: %5.2f%%\n", epoch, testAccuracy.Float64Values()[0]*100)
+		ts.NoGrad(func() {
+			testAccuracy := testImages.Apply(linear).AccuracyForLogits(dataset.TestLabels)
+			fmt.Printf("Epoch %v\t Accuracy: %5.2f%%\n", epoch, testAccuracy.Float64Values()[0]*100)
+		})
 	}
 }

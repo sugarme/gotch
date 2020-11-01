@@ -14,18 +14,16 @@ import (
 )
 
 // (height, width, channel) -> (channel, height, width)
-func hwcToCHW(tensor ts.Tensor) (retVal ts.Tensor) {
-	var err error
-	retVal, err = tensor.Permute([]int64{2, 0, 1}, true)
+func hwcToCHW(tensor *ts.Tensor) *ts.Tensor {
+	retVal, err := tensor.Permute([]int64{2, 0, 1}, true)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
 	return retVal
 }
 
-func chwToHWC(tensor ts.Tensor) (retVal ts.Tensor) {
-	var err error
-	retVal, err = tensor.Permute([]int64{1, 2, 0}, true)
+func chwToHWC(tensor *ts.Tensor) *ts.Tensor {
+	retVal, err := tensor.Permute([]int64{1, 2, 0}, true)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
@@ -35,15 +33,14 @@ func chwToHWC(tensor ts.Tensor) (retVal ts.Tensor) {
 // Load loads an image from a file.
 //
 // On success returns a tensor of shape [channel, height, width].
-func Load(path string) (retVal ts.Tensor, err error) {
-	var tensor ts.Tensor
-	tensor, err = ts.LoadHwc(path)
+func Load(path string) (*ts.Tensor, error) {
+	var tensor *ts.Tensor
+	tensor, err := ts.LoadHwc(path)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
-	retVal = hwcToCHW(tensor)
-	return retVal, nil
+	return hwcToCHW(tensor), nil
 }
 
 // Save saves an image to a file.
@@ -53,7 +50,7 @@ func Load(path string) (retVal ts.Tensor, err error) {
 // are jpg, png, tga, and bmp.
 // The tensor input should be of kind UInt8 with values ranging from
 // 0 to 255.
-func Save(tensor ts.Tensor, path string) (err error) {
+func Save(tensor *ts.Tensor, path string) error {
 	t, err := tensor.Totype(gotch.Uint8, false) // false to keep the input tensor
 	if err != nil {
 		err = fmt.Errorf("Save - Tensor.Totype() error: %v\n", err)
@@ -81,21 +78,19 @@ func Save(tensor ts.Tensor, path string) (err error) {
 //
 // This expects as input a tensor of shape [channel, height, width] and returns
 // a tensor of shape [channel, out_h, out_w].
-func Resize(t ts.Tensor, outW int64, outH int64) (retVal ts.Tensor, err error) {
+func Resize(t *ts.Tensor, outW int64, outH int64) (*ts.Tensor, error) {
 	tmpTs, err := ts.ResizeHwc(chwToHWC(t), outW, outH)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
-	retVal = hwcToCHW(tmpTs)
-
-	return retVal, nil
+	return hwcToCHW(tmpTs), nil
 }
 
-func resizePreserveAspectRatioHWC(t ts.Tensor, outW int64, outH int64) (retVal ts.Tensor, err error) {
+func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Tensor, error) {
 	tsSize, err := t.Size()
 	if err != nil {
 		err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Size() method call err: %v\n", err)
-		return retVal, err
+		return nil, err
 	}
 
 	// TODO: check it
@@ -106,7 +101,7 @@ func resizePreserveAspectRatioHWC(t ts.Tensor, outW int64, outH int64) (retVal t
 		tmpTs, err := ts.ResizeHwc(t, outW, outH)
 		if err != nil {
 			err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.ResizeHwc() method call err: %v\n", err)
-			return retVal, err
+			return nil, err
 		}
 		return hwcToCHW(tmpTs), nil
 	} else {
@@ -123,18 +118,19 @@ func resizePreserveAspectRatioHWC(t ts.Tensor, outW int64, outH int64) (retVal t
 		tmpTs, err := ts.ResizeHwc(t, resizeW, resizeH)
 		tensor := hwcToCHW(tmpTs)
 
-		var tensorW ts.Tensor
-		var tensorH ts.Tensor
+		var tensorW *ts.Tensor
+		var tensorH *ts.Tensor
 		if resizeW == outW {
 			tensorW = tensor
 		} else {
 			tensorW, err = tensor.Narrow(2, (resizeW-outW)/2, outW, true)
 			if err != nil {
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
-				return retVal, err
+				return nil, err
 			}
 		}
 
+		var retVal *ts.Tensor
 		if int64(resizeH) == outH {
 			retVal = tensorW
 		} else {
@@ -153,28 +149,28 @@ func resizePreserveAspectRatioHWC(t ts.Tensor, outW int64, outH int64) (retVal t
 // ResizePreserveAspectRatio resizes an image, preserve the aspect ratio by taking a center crop.
 //
 // This expects as input a tensor of shape [channel, height, width] and returns
-func ResizePreserveAspectRatio(t ts.Tensor, outW int64, outH int64) (retVal ts.Tensor, err error) {
+func ResizePreserveAspectRatio(t *ts.Tensor, outW int64, outH int64) (*ts.Tensor, error) {
 	return resizePreserveAspectRatioHWC(chwToHWC(t), outW, outH)
 }
 
 // LoadAndResize loads and resizes an image, preserve the aspect ratio by taking a center crop.
-func LoadAndResize(path string, outW int64, outH int64) (retVal ts.Tensor, err error) {
+func LoadAndResize(path string, outW int64, outH int64) (*ts.Tensor, error) {
 	tensor, err := ts.LoadHwc(path)
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
 	return resizePreserveAspectRatioHWC(tensor, outW, outH)
 }
 
 // LoadDir loads all the images in a directory.
-func LoadDir(dir string, outW int64, outH int64) (retVal ts.Tensor, err error) {
+func LoadDir(dir string, outW int64, outH int64) (*ts.Tensor, error) {
 	var filePaths []string // "dir/filename.ext"
 	var tensors []ts.Tensor
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		err = fmt.Errorf("LoadDir - Read directory error: %v\n", err)
-		return retVal, err
+		return nil, err
 	}
 	for _, f := range files {
 		filePaths = append(filePaths, fmt.Sprintf("%v%v", dir, f.Name()))
@@ -184,9 +180,9 @@ func LoadDir(dir string, outW int64, outH int64) (retVal ts.Tensor, err error) {
 		tensor, err := LoadAndResize(path, outW, outH)
 		if err != nil {
 			err = fmt.Errorf("LoadDir - LoadAndResize method call error: %v\n", err)
-			return retVal, err
+			return nil, err
 		}
-		tensors = append(tensors, tensor)
+		tensors = append(tensors, *tensor)
 	}
 
 	return ts.Stack(tensors, 0)

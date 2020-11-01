@@ -9,22 +9,20 @@ import (
 )
 
 // LoadHwc returns a tensor of shape [height, width, channels] on success.
-func LoadHwc(path string) (retVal Tensor, err error) {
+func LoadHwc(path string) (*Tensor, error) {
 
 	ctensor := lib.AtLoadImage(path)
-	err = TorchErr()
+	err := TorchErr()
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
 
-	retVal = Tensor{ctensor}
-
-	return retVal, nil
+	return &Tensor{ctensor}, nil
 }
 
 // SaveHwc save an image from tensor. It expects a tensor of shape [height,
 // width, channels]
-func SaveHwc(ts Tensor, path string) (err error) {
+func SaveHwc(ts *Tensor, path string) error {
 
 	lib.AtSaveImage(ts.ctensor, path)
 	return TorchErr()
@@ -32,14 +30,13 @@ func SaveHwc(ts Tensor, path string) (err error) {
 
 // ResizeHwc expects a tensor of shape [height, width, channels].
 // On success returns a tensor of shape [height, width, channels].
-func ResizeHwc(ts Tensor, outWidth, outHeight int64) (retVal Tensor, err error) {
+func ResizeHwc(ts *Tensor, outWidth, outHeight int64) (*Tensor, error) {
 
 	ctensor := lib.AtResizeImage(ts.ctensor, outWidth, outHeight)
-	err = TorchErr()
+	err := TorchErr()
 	if err != nil {
-		return retVal, err
+		return nil, err
 	}
-	retVal = Tensor{ctensor}
 
-	return retVal, nil
+	return &Tensor{ctensor}, nil
 }

@@ -18,7 +18,7 @@ const (
 	SamplingLen  int64   = 1024
 )
 
-func sample(data ts.TextData, lstm nn.LSTM, linear nn.Linear, device gotch.Device) (retVal string) {
+func sample(data *ts.TextData, lstm *nn.LSTM, linear *nn.Linear, device gotch.Device) string {
 
 	labels := data.Labels()
 	inState := lstm.ZeroState(1)
@@ -34,15 +34,15 @@ func sample(data ts.TextData, lstm nn.LSTM, linear nn.Linear, device gotch.Devic
 		state := lstm.Step(input, inState)
 
 		// 1. Delete inState tensors (from C land memory)
-		inState.(nn.LSTMState).Tensor1.MustDrop()
-		inState.(nn.LSTMState).Tensor2.MustDrop()
+		inState.(*nn.LSTMState).Tensor1.MustDrop()
+		inState.(*nn.LSTMState).Tensor2.MustDrop()
 		// 2. Then update with current state
 		inState = state
 		// 3. Delete intermediate tensors
 		input.MustDrop()
 		inputView.MustDrop()
 
-		forwardTs := linear.Forward(state.(nn.LSTMState).H()).MustSqueeze1(0, true).MustSoftmax(-1, gotch.Float, true)
+		forwardTs := linear.Forward(state.(*nn.LSTMState).H()).MustSqueeze1(0, true).MustSoftmax(-1, gotch.Float, true)
 		sampledY := forwardTs.MustMultinomial(1, false, true)
 		lastLabel = sampledY.Int64Values()[0]
 		sampledY.MustDrop()
@@ -52,8 +52,8 @@ func sample(data ts.TextData, lstm nn.LSTM, linear nn.Linear, device gotch.Devic
 	}
 
 	// Delete the last state
-	inState.(nn.LSTMState).Tensor1.MustDrop()
-	inState.(nn.LSTMState).Tensor2.MustDrop()
+	inState.(*nn.LSTMState).Tensor1.MustDrop()
+	inState.(*nn.LSTMState).Tensor2.MustDrop()
 
 	return string(runes)
 }
@@ -104,8 +104,8 @@ func main() {
 			lstmOut, outState := lstm.Seq(xsOnehot)
 			// NOTE. Although outState will not be used. There a hidden memory usage
 			// on C land memory that is needed to free up. Don't use `_`
-			outState.(nn.LSTMState).Tensor1.MustDrop()
-			outState.(nn.LSTMState).Tensor2.MustDrop()
+			outState.(*nn.LSTMState).Tensor1.MustDrop()
+			outState.(*nn.LSTMState).Tensor2.MustDrop()
 
 			logits := linear.Forward(lstmOut)
 			lossView := logits.MustView([]int64{BatchSize * SeqLen, labels}, true)

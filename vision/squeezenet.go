@@ -7,11 +7,11 @@ import (
 	ts "github.com/sugarme/gotch/tensor"
 )
 
-func snMaxPool2D(xs ts.Tensor) (retVal ts.Tensor) {
+func snMaxPool2D(xs *ts.Tensor) *ts.Tensor {
 	return xs.MustMaxPool2d([]int64{3, 3}, []int64{2, 2}, []int64{0, 0}, []int64{1, 1}, true, false)
 }
 
-func fire(p nn.Path, cIn int64, cSqueeze int64, cExp1 int64, cExp3 int64) (retVal ts.ModuleT) {
+func fire(p *nn.Path, cIn int64, cSqueeze int64, cExp1 int64, cExp3 int64) ts.ModuleT {
 
 	cfg3 := nn.DefaultConv2DConfig()
 	cfg3.Padding = []int64{1, 1}
@@ -21,7 +21,7 @@ func fire(p nn.Path, cIn int64, cSqueeze int64, cExp1 int64, cExp3 int64) (retVa
 	exp3 := nn.NewConv2D(p.Sub("expand3x3"), cSqueeze, cExp3, 3, cfg3)
 
 	// NOTE: train will not be used
-	return nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		tmp1 := xs.Apply(squeeze)
 		tmp2 := tmp1.MustRelu(true)
 
@@ -31,11 +31,11 @@ func fire(p nn.Path, cIn int64, cSqueeze int64, cExp1 int64, cExp3 int64) (retVa
 		exp3Tmp := tmp2.Apply(exp3)
 		exp3Ts := exp3Tmp.MustRelu(true)
 
-		return ts.MustCat([]ts.Tensor{exp1Ts, exp3Ts}, 1)
+		return ts.MustCat([]ts.Tensor{*exp1Ts, *exp3Ts}, 1)
 	})
 }
 
-func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
+func squeezenet(p *nn.Path, v1_0 bool, nclasses int64) ts.ModuleT {
 	fp := p.Sub("features")
 	cp := p.Sub("classifier")
 
@@ -50,11 +50,11 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 	if v1_0 {
 		features.Add(nn.NewConv2D(fp.Sub("0"), 3, 96, 7, initialConvConfig))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return xs.MustRelu(false)
 		}))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return snMaxPool2D(xs)
 		}))
 
@@ -64,7 +64,7 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 
 		features.Add(fire(fp.Sub("5"), 128, 32, 128, 128))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return snMaxPool2D(xs)
 		}))
 
@@ -76,7 +76,7 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 
 		features.Add(fire(fp.Sub("10"), 384, 64, 256, 256))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return snMaxPool2D(xs)
 		}))
 
@@ -85,11 +85,11 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 	} else {
 		features.Add(nn.NewConv2D(fp.Sub("0"), 3, 64, 3, initialConvConfig))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return xs.MustRelu(false)
 		}))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return snMaxPool2D(xs)
 		}))
 
@@ -97,7 +97,7 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 
 		features.Add(fire(fp.Sub("4"), 128, 16, 64, 64))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return snMaxPool2D(xs)
 		}))
 
@@ -105,7 +105,7 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 
 		features.Add(fire(fp.Sub("7"), 256, 32, 128, 128))
 
-		features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+		features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 			return snMaxPool2D(xs)
 		}))
 
@@ -118,13 +118,13 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 		features.Add(fire(fp.Sub("12"), 512, 64, 256, 256))
 	}
 
-	features.AddFnT(nn.NewFuncT(func(xs ts.Tensor, train bool) ts.Tensor {
+	features.AddFnT(nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		return ts.MustDropout(xs, 0.5, train)
 	}))
 
 	features.Add(nn.NewConv2D(cp.Sub("1"), 512, nclasses, 1, finalConvConfig))
 
-	features.AddFn(nn.NewFunc(func(xs ts.Tensor) ts.Tensor {
+	features.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		tmp1 := xs.MustRelu(false)
 		tmp2 := tmp1.MustAdaptiveAvgPool2d([]int64{1, 1}, false)
 		tmp1.MustDrop()
@@ -136,10 +136,10 @@ func squeezenet(p nn.Path, v1_0 bool, nclasses int64) (retVal ts.ModuleT) {
 	return features
 }
 
-func SqueezeNetV1_0(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func SqueezeNetV1_0(p *nn.Path, nclasses int64) ts.ModuleT {
 	return squeezenet(p, true, nclasses)
 }
 
-func SqueezeNetV1_1(p nn.Path, nclasses int64) (retVal ts.ModuleT) {
+func SqueezeNetV1_1(p *nn.Path, nclasses int64) ts.ModuleT {
 	return squeezenet(p, false, nclasses)
 }

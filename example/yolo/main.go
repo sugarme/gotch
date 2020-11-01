@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	model string
-	image string
+	model     string
+	imageFile string
 )
 
 type Bbox struct {
@@ -59,7 +59,7 @@ func Iou(b1, b2 Bbox) (retVal float64) {
 }
 
 // Assuming x1 <= x2 and y1 <= y2
-func drawRect(t ts.Tensor, x1, x2, y1, y2 int64) {
+func drawRect(t *ts.Tensor, x1, x2, y1, y2 int64) {
 	color := ts.MustOfSlice([]float64{0.0, 0.0, 1.0}).MustView([]int64{3, 1, 1}, true)
 
 	// NOTE: `narrow` will create a tensor (view) that share same storage with
@@ -71,7 +71,39 @@ func drawRect(t ts.Tensor, x1, x2, y1, y2 int64) {
 	color.MustDrop()
 }
 
-func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) {
+func drawLabel(t *ts.Tensor, text []string, x, y int64) {
+	device, err := t.Device()
+	if err != nil {
+		log.Fatal(err)
+	}
+	label := textToImageTs(text).MustTo(device, true)
+
+	labelSize := label.MustSize()
+	height := labelSize[1]
+	width := labelSize[2]
+
+	imageSize := t.MustSize()
+	lenY := height
+	if lenY > imageSize[1] {
+		lenY = imageSize[1] - y
+	}
+
+	lenX := width
+	if lenX > imageSize[2] {
+		lenX = imageSize[2] - x
+	}
+
+	// NOTE: `narrow` will create a tensor (view) that share same storage with
+	// original one.
+
+	tmp1 := t.MustNarrow(2, x, lenX, false)
+	tmp2 := tmp1.MustNarrow(1, y, lenY, true)
+	tmp2.Copy_(label)
+	tmp2.MustDrop()
+	label.MustDrop()
+}
+
+func report(pred *ts.Tensor, img *ts.Tensor, w int64, h int64) *ts.Tensor {
 	size2, err := pred.Size2()
 	if err != nil {
 		log.Fatal(err)
@@ -176,18 +208,21 @@ func report(pred ts.Tensor, img ts.Tensor, w int64, h int64) (retVal ts.Tensor) 
 			drawRect(image, xmin, xmax, max(ymin, ymax-2), ymax)
 			drawRect(image, xmin, min(xmax, xmin+2), ymin, ymax)
 			drawRect(image, max(xmin, xmax-2), xmax, ymin, ymax)
+
+			label := fmt.Sprintf("%v; %.3f\n", CocoClasses[classIndex], b.confidence)
+			drawLabel(image, []string{label}, xmin, ymin-15)
 		}
 	}
 
 	imgTmp := image.MustMul1(ts.FloatScalar(255.0), true)
-	retVal = imgTmp.MustTotype(gotch.Uint8, true)
+	retVal := imgTmp.MustTotype(gotch.Uint8, true)
 
 	return retVal
 }
 
 func init() {
 	flag.StringVar(&model, "model", "../../data/yolo/yolo-v3.pt", "Yolo model weights file")
-	flag.StringVar(&image, "image", "../../data/yolo/bondi.jpg", "image file to infer")
+	flag.StringVar(&imageFile, "image", "../../data/yolo/bondi.jpg", "image file to infer")
 }
 
 func main() {
@@ -203,12 +238,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	imagePath, err := filepath.Abs(image)
+	imagePath, err := filepath.Abs(imageFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var darknet Darknet = ParseConfig(configPath)
+	var darknet *Darknet = ParseConfig(configPath)
 
 	vs := nn.NewVarStore(gotch.CPU)
 	model := darknet.BuildModel(vs.Root())
@@ -256,10 +291,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// TODO: write label/confidence val next to bouding boxes.
-	// Naive way is write 'write text on image' rather than on tensor.
-	// See this: https://stackoverflow.com/questions/38299930
 }
 
 func max(v1, v2 int64) (retVal int64) {

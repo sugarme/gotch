@@ -11,10 +11,10 @@ import (
 
 type Init interface {
 	// creates a new tensor with specified initiation
-	InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor)
+	InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor)
 
 	// re-initializes (in-place) an existing tensor with the specified initiation
-	Set(tensor ts.Tensor)
+	Set(tensor *ts.Tensor)
 }
 
 // constInit:
@@ -28,7 +28,7 @@ func NewConstInit(v float64) constInit {
 	return constInit{v}
 }
 
-func (c constInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
+func (c constInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
 	var err error
 	kind := gotch.Float
 	switch {
@@ -50,7 +50,7 @@ func (c constInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tens
 	return retVal
 }
 
-func (c constInit) Set(tensor ts.Tensor) {
+func (c constInit) Set(tensor *ts.Tensor) {
 	var err error
 	scalarVal := ts.FloatScalar(c.value)
 	if err != nil {
@@ -71,7 +71,7 @@ func NewRandnInit(mean, stdev float64) randnInit {
 	return randnInit{mean, stdev}
 }
 
-func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
+func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
 	var err error
 	rand.Seed(86)
 
@@ -92,9 +92,9 @@ func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tens
 
 }
 
-func (r randnInit) Set(tensor ts.Tensor) {
+func (r randnInit) Set(tensor *ts.Tensor) {
 	var (
-		randnTs ts.Tensor
+		randnTs *ts.Tensor
 		err     error
 	)
 
@@ -128,7 +128,7 @@ func NewUniformInit(lo, up float64) uniformInit {
 	return uniformInit{lo, up}
 }
 
-func (u uniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
+func (u uniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
 	var err error
 	kind := gotch.Float
 	retVal = ts.MustZeros(dims, kind, device)
@@ -139,7 +139,7 @@ func (u uniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Te
 	return retVal
 }
 
-func (u uniformInit) Set(tensor ts.Tensor) {
+func (u uniformInit) Set(tensor *ts.Tensor) {
 	tensor.Uniform_(u.lo, u.up)
 }
 
@@ -152,7 +152,7 @@ func NewKaimingUniformInit() kaimingUniformInit {
 	return kaimingUniformInit{}
 }
 
-func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
+func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
 	var fanIn int64
 	if len(dims) == 0 {
 		log.Fatalf("KaimingUniformInit method call: dims (%v) should have length >= 1", dims)
@@ -191,7 +191,7 @@ func factorial(n int64) (result int64) {
 	return 1
 }
 
-func (k kaimingUniformInit) Set(tensor ts.Tensor) {
+func (k kaimingUniformInit) Set(tensor *ts.Tensor) {
 	dims, err := tensor.Size()
 	if err != nil {
 		log.Fatalf("uniformInit - Set method call error: %v\n", err)
@@ -218,12 +218,12 @@ func NewGlorotNInit() glorotNInit {
 	return glorotNInit{}
 }
 
-func (gl glorotNInit) InitTensor(dims []int64, device gotch.Device) (retVal ts.Tensor) {
+func (gl glorotNInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
 	// TODO: implement
 
 	return
 }
 
-func (gl glorotNInit) Set(tensor ts.Tensor) {
+func (gl glorotNInit) Set(tensor *ts.Tensor) {
 	// TODO: implement
 }

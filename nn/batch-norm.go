@@ -17,8 +17,8 @@ type BatchNormConfig struct {
 	BsInit      Init
 }
 
-func DefaultBatchNormConfig() BatchNormConfig {
-	return BatchNormConfig{
+func DefaultBatchNormConfig() *BatchNormConfig {
+	return &BatchNormConfig{
 		CudnnEnable: true,
 		Eps:         1e-5,
 		Momentum:    0.1,
@@ -29,17 +29,17 @@ func DefaultBatchNormConfig() BatchNormConfig {
 
 // A batch-normalization layer.
 type BatchNorm struct {
-	config      BatchNormConfig
-	RunningMean ts.Tensor
-	RunningVar  ts.Tensor
-	Ws          ts.Tensor
-	Bs          ts.Tensor
+	config      *BatchNormConfig
+	RunningMean *ts.Tensor
+	RunningVar  *ts.Tensor
+	Ws          *ts.Tensor
+	Bs          *ts.Tensor
 	Nd          uint
 }
 
 // NewBatchNorm creates a new BatchNorm layer
-func NewBatchNorm(vs Path, nd uint, outDim int64, config BatchNormConfig) BatchNorm {
-	return BatchNorm{
+func NewBatchNorm(vs *Path, nd uint, outDim int64, config *BatchNormConfig) *BatchNorm {
+	return &BatchNorm{
 		config:      config,
 		RunningMean: vs.ZerosNoTrain("running_mean", []int64{outDim}),
 		RunningVar:  vs.OnesNoTrain("running_var", []int64{outDim}),
@@ -52,7 +52,7 @@ func NewBatchNorm(vs Path, nd uint, outDim int64, config BatchNormConfig) BatchN
 //
 // The input shape is assumed to be (N, C, L). Normalization
 // is performed over the first batch dimension N.
-func BatchNorm1D(vs Path, outDim int64, config BatchNormConfig) BatchNorm {
+func BatchNorm1D(vs *Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return NewBatchNorm(vs, 1, outDim, config)
 }
 
@@ -60,7 +60,7 @@ func BatchNorm1D(vs Path, outDim int64, config BatchNormConfig) BatchNorm {
 //
 // The input shape is assumed to be (N, C, H, W). Normalization
 // is performed over the first batch dimension N.
-func BatchNorm2D(vs Path, outDim int64, config BatchNormConfig) BatchNorm {
+func BatchNorm2D(vs *Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return NewBatchNorm(vs, 2, outDim, config)
 }
 
@@ -68,14 +68,14 @@ func BatchNorm2D(vs Path, outDim int64, config BatchNormConfig) BatchNorm {
 //
 // The input shape is assumed to be (N, C, D, H, W). Normalization
 // is performed over the first batch dimension N.
-func BatchNorm3D(vs Path, outDim int64, config BatchNormConfig) BatchNorm {
+func BatchNorm3D(vs *Path, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return NewBatchNorm(vs, 3, outDim, config)
 }
 
 // Implement ModuleT interface for BatchNorm:
 // ==========================================
 
-func (bn BatchNorm) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+func (bn *BatchNorm) ForwardT(xs *ts.Tensor, train bool) (retVal *ts.Tensor) {
 
 	dim := xs.Dim()
 

@@ -10,7 +10,7 @@ import (
 
 // Optimizer is a struct object to run gradient descent.
 type Optimizer struct {
-	opt ts.COptimizer
+	opt *ts.COptimizer
 	// variables            Variables // having embedded sync.Mutex
 	variablesInOptimizer uint8
 	config               interface{}
@@ -18,7 +18,7 @@ type Optimizer struct {
 
 // OptimizerConfig defines Optimizer configurations. These configs can be used to build optimizer.
 type OptimizerConfig interface {
-	buildCOpt(lr float64) (retVal ts.COptimizer, err error)
+	buildCOpt(lr float64) (*ts.COptimizer, error)
 
 	// Build builds an optimizer with the specified learning rate handling variables stored in `vs`.
 	//
@@ -29,11 +29,11 @@ type OptimizerConfig interface {
 	// (config AdamOptimizerConfig) Build(vs VarStore, lr float64) (retVal Optimizer, err error){
 	//		return defaultBuild(config, vs, lr)
 	// }
-	Build(vs VarStore, lr float64) (retVal Optimizer, err error)
+	Build(vs *VarStore, lr float64) (*Optimizer, error)
 }
 
 // defaultBuild is `default` Build method for OptimizerConfig interface
-func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optimizer, err error) {
+func defaultBuild(config OptimizerConfig, vs *VarStore, lr float64) (retVal *Optimizer, err error) {
 
 	opt, err := config.buildCOpt(lr)
 	if err != nil {
@@ -43,7 +43,7 @@ func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optim
 	var parameters []ts.Tensor
 	for _, v := range vs.Vars.TrainableVariables {
 		param := v.MustShallowClone()
-		parameters = append(parameters, param)
+		parameters = append(parameters, *param)
 	}
 
 	if len(vs.Vars.TrainableVariables) > 0 {
@@ -54,7 +54,7 @@ func defaultBuild(config OptimizerConfig, vs VarStore, lr float64) (retVal Optim
 
 	// TODO: should we clone or copy?
 
-	return Optimizer{
+	return &Optimizer{
 		opt: opt,
 		// variables:            vs.Vars,
 		variablesInOptimizer: uint8(len(vs.Vars.TrainableVariables)),
@@ -74,8 +74,8 @@ type SGDConfig struct {
 }
 
 // DefaultSGDConfig creates SGDConfig with default values.
-func DefaultSGDConfig() SGDConfig {
-	return SGDConfig{
+func DefaultSGDConfig() *SGDConfig {
+	return &SGDConfig{
 		Momentum:  0.0,
 		Dampening: 0.0,
 		Wd:        0.0,
@@ -84,8 +84,8 @@ func DefaultSGDConfig() SGDConfig {
 }
 
 // NewSGD creates the configuration for a SGD optimizer with specified values
-func NewSGDConfig(momentum, dampening, wd float64, nesterov bool) (retVal SGDConfig) {
-	return SGDConfig{
+func NewSGDConfig(momentum, dampening, wd float64, nesterov bool) *SGDConfig {
+	return &SGDConfig{
 		Momentum:  momentum,
 		Dampening: dampening,
 		Wd:        wd,
@@ -94,11 +94,11 @@ func NewSGDConfig(momentum, dampening, wd float64, nesterov bool) (retVal SGDCon
 }
 
 // Implement OptimizerConfig interface for SGDConfig
-func (c SGDConfig) buildCOpt(lr float64) (retVal ts.COptimizer, err error) {
+func (c *SGDConfig) buildCOpt(lr float64) (*ts.COptimizer, error) {
 	return ts.Sgd(lr, c.Momentum, c.Dampening, c.Wd, c.Nesterov)
 }
 
-func (c SGDConfig) Build(vs VarStore, lr float64) (retVal Optimizer, err error) {
+func (c *SGDConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
 	return defaultBuild(c, vs, lr)
 }
 
@@ -112,8 +112,8 @@ type AdamConfig struct {
 }
 
 // DefaultAdamConfig creates AdamConfig with default values
-func DefaultAdamConfig() AdamConfig {
-	return AdamConfig{
+func DefaultAdamConfig() *AdamConfig {
+	return &AdamConfig{
 		Beta1: 0.9,
 		Beta2: 0.999,
 		Wd:    0.0,
@@ -121,8 +121,8 @@ func DefaultAdamConfig() AdamConfig {
 }
 
 // NewAdamConfig creates AdamConfig with specified values
-func NewAdamConfig(beta1, beta2, wd float64) AdamConfig {
-	return AdamConfig{
+func NewAdamConfig(beta1, beta2, wd float64) *AdamConfig {
+	return &AdamConfig{
 		Beta1: beta1,
 		Beta2: beta2,
 		Wd:    wd,
@@ -130,11 +130,11 @@ func NewAdamConfig(beta1, beta2, wd float64) AdamConfig {
 }
 
 // Implement OptimizerConfig interface for AdamConfig
-func (c AdamConfig) buildCOpt(lr float64) (retVal ts.COptimizer, err error) {
+func (c *AdamConfig) buildCOpt(lr float64) (*ts.COptimizer, error) {
 	return ts.Adam(lr, c.Beta1, c.Beta2, c.Wd)
 }
 
-func (c AdamConfig) Build(vs VarStore, lr float64) (retVal Optimizer, err error) {
+func (c *AdamConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
 	return defaultBuild(c, vs, lr)
 }
 
@@ -150,8 +150,8 @@ type RMSPropConfig struct {
 }
 
 // DefaultAdamConfig creates AdamConfig with default values
-func DefaultRMSPropConfig() RMSPropConfig {
-	return RMSPropConfig{
+func DefaultRMSPropConfig() *RMSPropConfig {
+	return &RMSPropConfig{
 		Alpha:    0.99,
 		Eps:      1e-8,
 		Wd:       0.0,
@@ -161,8 +161,8 @@ func DefaultRMSPropConfig() RMSPropConfig {
 }
 
 // NewRMSPropConfig creates RMSPropConfig with specified values
-func NewRMSPropConfig(alpha, eps, wd, momentum float64, centered bool) RMSPropConfig {
-	return RMSPropConfig{
+func NewRMSPropConfig(alpha, eps, wd, momentum float64, centered bool) *RMSPropConfig {
+	return &RMSPropConfig{
 		Alpha:    alpha,
 		Eps:      eps,
 		Wd:       wd,
@@ -172,11 +172,11 @@ func NewRMSPropConfig(alpha, eps, wd, momentum float64, centered bool) RMSPropCo
 }
 
 // Implement OptimizerConfig interface for RMSPropConfig
-func (c RMSPropConfig) buildCOpt(lr float64) (retVal ts.COptimizer, err error) {
+func (c *RMSPropConfig) buildCOpt(lr float64) (*ts.COptimizer, error) {
 	return ts.RmsProp(lr, c.Alpha, c.Eps, c.Wd, c.Momentum, c.Centered)
 }
 
-func (c RMSPropConfig) Build(vs VarStore, lr float64) (retVal Optimizer, err error) {
+func (c *RMSPropConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
 	return defaultBuild(c, vs, lr)
 }
 
@@ -229,7 +229,7 @@ func (opt *Optimizer) Step() {
 }
 
 // BackwardStep applies a backward step pass, update the gradients, and performs an optimization step.
-func (opt *Optimizer) BackwardStep(loss ts.Tensor) {
+func (opt *Optimizer) BackwardStep(loss *ts.Tensor) {
 
 	opt.addMissingVariables()
 
@@ -250,7 +250,7 @@ func (opt *Optimizer) BackwardStep(loss ts.Tensor) {
 // BackwardStepClip applies a backward step pass, update the gradients, and performs an optimization step.
 //
 // The gradients are clipped based on `max` before being applied.
-func (opt *Optimizer) BackwardStepClip(loss ts.Tensor, max float64) {
+func (opt *Optimizer) BackwardStepClip(loss *ts.Tensor, max float64) {
 	opt.addMissingVariables()
 
 	err := opt.opt.ZeroGrad()

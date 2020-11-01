@@ -950,7 +950,7 @@ func ModuleLoadDataOnDevice(stream io.Reader, device gotch.Device) (retVal CModu
 }
 
 // Performs the forward pass for a model on some specified tensor inputs.
-func (cm CModule) ForwardTs(tensors []Tensor) (retVal Tensor, err error) {
+func (cm CModule) ForwardTs(tensors []Tensor) (retVal *Tensor, err error) {
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
 		ctensors = append(ctensors, t.ctensor)
@@ -994,7 +994,7 @@ func (cm CModule) ForwardTs(tensors []Tensor) (retVal Tensor, err error) {
 		return retVal, err
 	}
 
-	return Tensor{ctensor}, nil
+	return &Tensor{ctensor}, nil
 }
 
 // Performs the forward pass for a model on some specified ivalue input.
@@ -1066,9 +1066,9 @@ func (cm CModule) To(device gotch.Device, kind gotch.DType, nonBlocking bool) {
 // Implement Module for CModule:
 // =============================
 
-func (cm CModule) Forward(tensor Tensor) (retVal Tensor, err error) {
+func (cm CModule) Forward(tensor *Tensor) (retVal *Tensor, err error) {
 
-	var tensors []Tensor = []Tensor{tensor}
+	var tensors []Tensor = []Tensor{*tensor}
 	return cm.ForwardTs(tensors)
 }
 
@@ -1076,7 +1076,7 @@ func (cm CModule) Forward(tensor Tensor) (retVal Tensor, err error) {
 // ======================================
 
 // Apply forwards tensor itself through a module.
-func (ts Tensor) ApplyCModule(m CModule) (retVal Tensor) {
+func (ts *Tensor) ApplyCModule(m CModule) (retVal *Tensor) {
 	retVal, err := m.Forward(ts)
 	if err != nil {
 		log.Fatal(err)
