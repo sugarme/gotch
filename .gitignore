@@ -13,7 +13,6 @@
 *.json
 *.pt
 *.ot
-*.jpg
 
 target/
 _build/
