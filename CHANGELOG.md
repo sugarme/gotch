@@ -33,3 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [#10]: https://github.com/sugarme/gotch/issues/10
 
+## [0.2.0]
+
+### Changed
+- Convert all APIs to using **Pointer Receiver**
+
+### Added
+- Added drawing image label at `example/yolo` example
+- Added some example images and README files for `example/yolo` and `example/neural-style-transfer`
