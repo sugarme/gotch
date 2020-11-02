@@ -742,7 +742,16 @@ let write_wrapper funcs filename =
             ; "Split"
             ; "SplitWithSizes"
             ; "Unbind"
-            ; "Where" ]
+            ; "Where"
+            ; "Atleast1d1"
+            ; "Atleast2d1"
+            ; "Atleast3d1"
+            ; "Dequantize1"
+            ; "QuantizePerTensor1"
+            ; "UnsafeChunk"
+            ; "UnsafeSplit"
+            ; "UnsafeSplitWithSizes"
+            ; "AlignTensors" ]
           in
           if
             List.exists excluded_funcs ~f:(fun name ->
@@ -848,7 +857,16 @@ let write_must_wrapper funcs filename =
             ; "Split"
             ; "SplitWithSizes"
             ; "Unbind"
-            ; "Where" ]
+            ; "Where"
+            ; "Atleast1d1"
+            ; "Atleast2d1"
+            ; "Atleast3d1"
+            ; "Dequantize1"
+            ; "QuantizePerTensor1"
+            ; "UnsafeChunk"
+            ; "UnsafeSplit"
+            ; "UnsafeSplitWithSizes"
+            ; "AlignTensors" ]
           in
           if
             List.exists excluded_funcs ~f:(fun name ->

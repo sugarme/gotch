@@ -19,7 +19,7 @@ func (ts *Tensor) CrossEntropyForLogits(targets *Tensor) (retVal *Tensor) {
 // AccuracyForLogits returns the average accuracy for some given logits assuming that
 // targets represent ground-truth.
 func (ts *Tensor) AccuracyForLogits(targets *Tensor) (retVal *Tensor) {
-	argmax := ts.MustArgmax(-1, false, true)
+	argmax := ts.MustArgmax([]int64{-1}, false, true)
 	eq1 := argmax.MustEq1(targets, true)
 	return eq1.MustTotype(gotch.Float, true).MustMean(gotch.Float, true)
 }

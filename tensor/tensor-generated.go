@@ -3579,22 +3579,6 @@ func (ts *Tensor) Atleast1d(del bool) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func Atleast1d1(tensors []Tensor) (retVal []Tensor, err error) {
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	var ctensors []lib.Ctensor
-	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
-	}
-	lib.AtgAtleast1d1(ptr, ctensors, len(ctensors))
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
 func (ts *Tensor) Atleast2d(del bool) (retVal *Tensor, err error) {
 	if del {
 		defer ts.MustDrop()
@@ -3610,22 +3594,6 @@ func (ts *Tensor) Atleast2d(del bool) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func Atleast2d1(tensors []Tensor) (retVal []Tensor, err error) {
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	var ctensors []lib.Ctensor
-	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
-	}
-	lib.AtgAtleast2d1(ptr, ctensors, len(ctensors))
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
 func (ts *Tensor) Atleast3d(del bool) (retVal *Tensor, err error) {
 	if del {
 		defer ts.MustDrop()
@@ -3633,22 +3601,6 @@ func (ts *Tensor) Atleast3d(del bool) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	lib.AtgAtleast3d(ptr, ts.ctensor)
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
-func Atleast3d1(tensors []Tensor) (retVal []Tensor, err error) {
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	var ctensors []lib.Ctensor
-	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
-	}
-	lib.AtgAtleast3d1(ptr, ctensors, len(ctensors))
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
@@ -6069,22 +6021,6 @@ func (ts *Tensor) Dequantize(del bool) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	lib.AtgDequantize(ptr, ts.ctensor)
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
-func Dequantize1(tensors []Tensor) (retVal []Tensor, err error) {
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	var ctensors []lib.Ctensor
-	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
-	}
-	lib.AtgDequantize1(ptr, ctensors, len(ctensors))
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
@@ -14649,22 +14585,6 @@ func (ts *Tensor) QuantizePerTensor(scale float64, zeroPoint int64, dtype gotch.
 	return retVal, err
 }
 
-func QuantizePerTensor1(tensors []Tensor, scales *Tensor, zeroPoints *Tensor, dtype gotch.DType) (retVal []Tensor, err error) {
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	var ctensors []lib.Ctensor
-	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
-	}
-	lib.AtgQuantizePerTensor1(ptr, ctensors, len(ctensors), scales.ctensor, zeroPoints.ctensor, dtype.CInt())
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
 func QuantizedBatchNorm(input *Tensor, weight *Tensor, bias *Tensor, mean *Tensor, vari *Tensor, eps float64, outputScale float64, outputZeroPoint int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
@@ -18375,51 +18295,6 @@ func (ts *Tensor) Uniform_(from float64, to float64) (err error) {
 	}
 
 	return err
-}
-
-func (ts *Tensor) UnsafeChunk(chunks int64, dim int64, del bool) (retVal []Tensor, err error) {
-	if del {
-		defer ts.MustDrop()
-	}
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	lib.AtgUnsafeChunk(ptr, ts.ctensor, chunks, dim)
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
-func (ts *Tensor) UnsafeSplit(splitSize int64, dim int64, del bool) (retVal []Tensor, err error) {
-	if del {
-		defer ts.MustDrop()
-	}
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	lib.AtgUnsafeSplit(ptr, ts.ctensor, splitSize, dim)
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
-func (ts *Tensor) UnsafeSplitWithSizes(splitSizes []int64, dim int64, del bool) (retVal []Tensor, err error) {
-	if del {
-		defer ts.MustDrop()
-	}
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	lib.AtgUnsafeSplitWithSizes(ptr, ts.ctensor, splitSizes, len(splitSizes), dim)
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
 }
 
 func (ts *Tensor) Unsqueeze(dim int64, del bool) (retVal *Tensor, err error) {

@@ -1171,7 +1171,7 @@ func (ts *Tensor) Swish() *Tensor {
 }
 
 func (ts *Tensor) AvgPool2DDefault(ksize int64, del bool) *Tensor {
-	return ts.MustAvgPool2d([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, false, true, 1, del)
+	return ts.MustAvgPool2d([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, false, true, []int64{1}, del)
 }
 
 // SaveMultiNew saves a slice of named tensors to the given file path.

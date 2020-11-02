@@ -103,7 +103,7 @@ func densenet(p *nn.Path, cIn, cOut, bnSize int64, blockConfig []int64, growth i
 
 	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
 		tmp1 := xs.MustRelu(false)
-		tmp2 := tmp1.MustAvgPool2d([]int64{7, 7}, []int64{1, 1}, []int64{0, 0}, false, true, 1, true)
+		tmp2 := tmp1.MustAvgPool2d([]int64{7, 7}, []int64{1, 1}, []int64{0, 0}, false, true, []int64{1}, true)
 		res := tmp2.FlatView()
 		tmp2.MustDrop()
 		return res
