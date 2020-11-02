@@ -1,5 +1,7 @@
 #include<torch/csrc/autograd/engine.h>
+#include<torch/csrc/jit/runtime/graph_executor.h>
 #include<torch/torch.h>
+#include<ATen/autocast_mode.h>
 #include<torch/script.h>
 #include<stdexcept>
 #include<vector>
@@ -40,6 +42,15 @@ tensor at_new_tensor() {
   PROTECT(
     return new torch::Tensor();
   )
+  return nullptr;
+}
+
+tensor at_tensor_of_blob(void *data, int64_t *dims, size_t ndims, int64_t *strides, size_t nstrides, int type, int device) {
+  PROTECT(
+    at::TensorOptions blobOptions = at::TensorOptions().device(device_of_int(device)).dtype(torch::ScalarType(type));
+    return new torch::Tensor(torch::from_blob(data, torch::IntArrayRef(dims, ndims), torch::IntArrayRef(strides, nstrides), blobOptions));
+  )
+
   return nullptr;
 }
 
@@ -90,6 +101,11 @@ int at_defined(tensor t) {
   return -1;
 }
 
+int at_is_mkldnn(tensor t) {
+  PROTECT(return t->is_mkldnn();)
+  return -1;
+}
+
 int at_is_sparse(tensor t) {
   PROTECT(return t->is_sparse();)
   return -1;
@@ -107,9 +123,56 @@ void at_shape(tensor t, int64_t *dims) {
   )
 }
 
+void at_stride(tensor t, int64_t *dims) {
+  PROTECT(
+    int i = 0;
+    for (int64_t dim: t->strides()) dims[i++] = dim;
+  )
+}
+
 int at_scalar_type(tensor t) {
   PROTECT(
     return static_cast<int>(t->scalar_type());
+  )
+  return -1;
+}
+
+void at__amp_non_finite_check_and_unscale(tensor t, tensor found_inf, tensor inf_scale) {
+  PROTECT(
+    at::_amp_non_finite_check_and_unscale_(*t, *found_inf, *inf_scale);
+  )
+}
+
+void at_autocast_clear_cache() {
+  at::autocast::clear_cache();
+}
+
+int at_autocast_decrement_nesting() {
+  PROTECT(
+    return at::autocast::decrement_nesting();
+  )
+  return -1;
+}
+
+int at_autocast_increment_nesting() {
+  PROTECT(
+    return at::autocast::increment_nesting();
+  )
+  return -1;
+}
+
+bool at_autocast_is_enabled() {
+  PROTECT(
+    return at::autocast::is_enabled();
+  )
+  return -1;
+}
+
+bool at_autocast_set_enabled(bool b) {
+  PROTECT(
+    bool is_enabled = at::autocast::is_enabled();
+    at::autocast::set_enabled(b);
+    return is_enabled;
   )
   return -1;
 }
@@ -417,6 +480,20 @@ optimizer ato_adam(double learning_rate,
   return nullptr;
 }
 
+optimizer ato_adamw(double learning_rate,
+                    double beta1,
+                    double beta2,
+                    double weight_decay) {
+  PROTECT(
+    auto options =
+      torch::optim::AdamWOptions(learning_rate)
+        .betas(std::tuple<double, double>(beta1, beta2))
+        .weight_decay(weight_decay);
+    return new torch::optim::AdamW(vector<torch::Tensor>(), options);
+  )
+  return nullptr;
+}
+
 optimizer ato_rms_prop(double learning_rate,
                        double alpha,
                        double eps,
@@ -453,24 +530,55 @@ optimizer ato_sgd(double learning_rate,
   return nullptr;
 }
 
-void ato_add_parameters(optimizer t, tensor *tensors, int ntensors) {
+void ato_add_parameters(optimizer t, tensor tensor, size_t group) {
   PROTECT(
-    for (int i = 0; i < ntensors; ++i)
-      t->param_groups()[0].params().push_back(*(tensors[i]));
+    auto &groups = t->param_groups();
+    while (groups.size() <= group) {
+      groups.push_back(torch::optim::OptimizerParamGroup({}, t->defaults().clone()));
+    }
+    groups[group].params().push_back(*tensor);
   )
+}
+
+template <class T>
+void set_lr(optimizer t, double learning_rate) {
+  torch::optim::OptimizerOptions* d = &(t->defaults());
+  if (auto p = dynamic_cast<T*>(d)) {
+    p->lr(learning_rate);
+    for (auto &param_group: t->param_groups()) {
+      torch::optim::OptimizerOptions* d = &(param_group.options());
+      if (auto p2 = dynamic_cast<T*>(d)) {
+        p2->lr(learning_rate);
+      }
+      else throw std::invalid_argument("unexpected param group type");
+    }
+  }
 }
 
 void ato_set_learning_rate(optimizer t, double learning_rate) {
   PROTECT(
-    torch::optim::OptimizerOptions* d = &(t->defaults());
-    if (auto adam = dynamic_cast<torch::optim::AdamOptions*>(d))
-      adam->lr(learning_rate);
-    else if (auto rms = dynamic_cast<torch::optim::RMSpropOptions*>(d))
-      rms->lr(learning_rate);
-    else if (auto sgd = dynamic_cast<torch::optim::SGDOptions*>(d))
-      sgd->lr(learning_rate);
-    else
-      throw std::invalid_argument("unexpected optimizer");
+    set_lr<torch::optim::AdamOptions>(t, learning_rate);
+    set_lr<torch::optim::AdamWOptions>(t, learning_rate);
+    set_lr<torch::optim::RMSpropOptions>(t, learning_rate);
+    set_lr<torch::optim::SGDOptions>(t, learning_rate);
+  )
+}
+
+template <class T>
+void set_lr_group(optimizer t, size_t group, double learning_rate) {
+  auto &param_group = t->param_groups().at(group);
+  torch::optim::OptimizerOptions* d = &(param_group.options());
+  if (auto p = dynamic_cast<T*>(d)) {
+    p->lr(learning_rate);
+  }
+}
+
+void ato_set_learning_rate_group(optimizer t, size_t group, double learning_rate) {
+  PROTECT(
+    set_lr_group<torch::optim::AdamOptions>(t, group, learning_rate);
+    set_lr_group<torch::optim::AdamWOptions>(t, group, learning_rate);
+    set_lr_group<torch::optim::RMSpropOptions>(t, group, learning_rate);
+    set_lr_group<torch::optim::SGDOptions>(t, group, learning_rate);
   )
 }
 
@@ -480,13 +588,112 @@ void ato_set_momentum(optimizer t, double momentum) {
     if (auto adam = dynamic_cast<torch::optim::AdamOptions*>(d)) {
       auto betas = adam->betas();
       adam->betas(std::tuple<double, double>(momentum, get<1>(betas)));
+      for (auto &param_group: t->param_groups()) {
+          torch::optim::OptimizerOptions* d = &(param_group.options());
+          if (auto adam2 = dynamic_cast<torch::optim::AdamOptions*>(d)) {
+              adam2->betas(std::tuple<double, double>(momentum, get<1>(betas)));
+          }
+          else throw std::invalid_argument("unexpected param group type");
+      }
     }
-    else if (auto rms = dynamic_cast<torch::optim::RMSpropOptions*>(d))
-      rms->momentum(momentum);
-    else if (auto sgd = dynamic_cast<torch::optim::SGDOptions*>(d))
+    else if (auto adamw = dynamic_cast<torch::optim::AdamWOptions*>(d)) {
+        auto betas = adamw->betas();
+        adamw->betas(std::tuple<double, double>(momentum, get<1>(betas)));
+        for (auto &param_group: t->param_groups()) {
+            torch::optim::OptimizerOptions* d = &(param_group.options());
+            if (auto adamw2 = dynamic_cast<torch::optim::AdamWOptions*>(d)) {
+                adamw2->betas(std::tuple<double, double>(momentum, get<1>(betas)));
+            }
+            else throw std::invalid_argument("unexpected param group type");
+        }
+    }
+    else if (auto rms = dynamic_cast<torch::optim::RMSpropOptions*>(d)) {
+      for (auto &param_group: t->param_groups()) {
+          torch::optim::OptimizerOptions* d = &(param_group.options());
+          if (auto rms2 = dynamic_cast<torch::optim::RMSpropOptions*>(d)) {
+              rms2->momentum(momentum);
+          }
+          else throw std::invalid_argument("unexpected param group type");
+      }
+    }
+    else if (auto sgd = dynamic_cast<torch::optim::SGDOptions*>(d)) {
       sgd->momentum(momentum);
+      for (auto &param_group: t->param_groups()) {
+          torch::optim::OptimizerOptions* d = &(param_group.options());
+          if (auto sgd2 = dynamic_cast<torch::optim::SGDOptions*>(d)) {
+              sgd2->momentum(momentum);
+          }
+          else throw std::invalid_argument("unexpected param group type");
+      }
+    }
     else
      throw std::invalid_argument("unexpected optimizer");
+  )
+}
+
+void ato_set_momentum_group(optimizer t, size_t group, double momentum) {
+  PROTECT(
+    auto &param_group = t->param_groups().at(group);
+    torch::optim::OptimizerOptions* d = &(param_group.options());
+
+    if (auto adam = dynamic_cast<torch::optim::AdamOptions*>(d)) {
+        auto betas = adam->betas();
+        adam->betas(std::tuple<double, double>(momentum, get<1>(betas)));
+    }
+    else if (auto adamw = dynamic_cast<torch::optim::AdamWOptions*>(d)) {
+        auto betas = adamw->betas();
+        adamw->betas(std::tuple<double, double>(momentum, get<1>(betas)));
+    }
+    else if (auto rms = dynamic_cast<torch::optim::RMSpropOptions*>(d)) {
+        rms->momentum(momentum);
+    }
+    if (auto sgd = dynamic_cast<torch::optim::SGDOptions*>(d)) {
+        sgd->momentum(momentum);
+    }
+    else
+        throw std::invalid_argument("unexpected optimizer");
+  )
+}
+
+template <class T>
+void set_weight_decay(optimizer t, double weight_decay) {
+  torch::optim::OptimizerOptions* d = &(t->defaults());
+  if (auto p = dynamic_cast<T*>(d)) {
+    p->weight_decay(weight_decay);
+    for (auto &param_group: t->param_groups()) {
+      torch::optim::OptimizerOptions* d = &(param_group.options());
+      if (auto p2 = dynamic_cast<T*>(d)) {
+        p2->weight_decay(weight_decay);
+      }
+      else throw std::invalid_argument("unexpected param group type");
+    }
+  }
+}
+
+void ato_set_weight_decay(optimizer t, double weight_decay) {
+  PROTECT(
+    set_weight_decay<torch::optim::AdamOptions>(t, weight_decay);
+    set_weight_decay<torch::optim::AdamWOptions>(t, weight_decay);
+    set_weight_decay<torch::optim::RMSpropOptions>(t, weight_decay);
+    set_weight_decay<torch::optim::SGDOptions>(t, weight_decay);
+  )
+}
+
+template <class T>
+void set_weight_decay_group(optimizer t, size_t group, double weight_decay) {
+  auto &param_group = t->param_groups().at(group);
+  torch::optim::OptimizerOptions* d = &(param_group.options());
+  if (auto p = dynamic_cast<T*>(d)) {
+    p->weight_decay(weight_decay);
+  }
+}
+
+void ato_set_weight_decay_group(optimizer t, size_t group, double weight_decay) {
+  PROTECT(
+    set_weight_decay_group<torch::optim::AdamOptions>(t, group, weight_decay);
+    set_weight_decay_group<torch::optim::AdamWOptions>(t, group, weight_decay);
+    set_weight_decay_group<torch::optim::RMSpropOptions>(t, group, weight_decay);
+    set_weight_decay_group<torch::optim::SGDOptions>(t, group, weight_decay);
   )
 }
 
@@ -590,7 +797,7 @@ tensor atm_forward(module m, tensor *tensors, int ntensors) {
     std::vector<torch::jit::IValue> inputs;
     for (int i = 0; i < ntensors; ++i)
       inputs.push_back(*(tensors[i]));
-    torch::jit::IValue output = m->forward(inputs);
+    torch::jit::IValue output = m->forward(std::move(inputs));
     if (!output.isTensor())
       throw std::invalid_argument("forward did not return a tensor");
     return new torch::Tensor(output.toTensor());
@@ -605,7 +812,31 @@ ivalue atm_forward_(module m,
     std::vector<torch::jit::IValue> inputs;
     for (int i = 0; i < nivalues; ++i)
       inputs.push_back(*(ivalues[i]));
-    torch::jit::IValue output = m->forward(inputs);
+    torch::jit::IValue output = m->forward(std::move(inputs));
+    return new torch::jit::IValue(output);
+  )
+  return nullptr;
+}
+
+tensor atm_method(module m, char *method_name, tensor *tensors, int ntensors) {
+  PROTECT(
+    std::vector<torch::jit::IValue> inputs;
+    for (int i = 0; i < ntensors; ++i)
+      inputs.push_back(*(tensors[i]));
+    torch::jit::IValue output = m->get_method(method_name)(std::move(inputs));
+    if (!output.isTensor())
+      throw std::invalid_argument("method did not return a tensor");
+    return new torch::Tensor(output.toTensor());
+  )
+  return nullptr;
+}
+
+ivalue atm_method_(module m, char *method_name, ivalue *ivalues, int nivalues) {
+  PROTECT(
+    std::vector<torch::jit::IValue> inputs;
+    for (int i = 0; i < nivalues; ++i)
+      inputs.push_back(*(ivalues[i]));
+    torch::jit::IValue output = m->get_method(method_name)(std::move(inputs));
     return new torch::jit::IValue(output);
   )
   return nullptr;
@@ -615,9 +846,37 @@ void atm_free(module m) {
   delete(m);
 }
 
+void atm_save(module m, char *filename) {
+  PROTECT(
+    m->save(filename);
+  )
+}
+
 void atm_to(module m, int device, int dtype, bool non_blocking) {
   PROTECT(
     m->to(device_of_int(device), at::ScalarType(dtype), non_blocking);
+  )
+}
+
+int atm_get_profiling_mode() {
+  PROTECT(
+    return torch::jit::getProfilingMode();
+  )
+  return 0;
+}
+
+void atm_set_profiling_mode(int b) {
+  PROTECT(
+    torch::jit::getProfilingMode() = (bool)b;
+  )
+}
+
+void atm_named_parameters(module m, void *data, void (*f)(void *, char *, tensor)) {
+  PROTECT(
+    for (const auto &p : m->named_parameters()) {
+      auto v = p.value;
+      f(data, (char*)p.name.c_str(), new torch::Tensor(v));
+    }
   )
 }
 
@@ -713,6 +972,15 @@ ivalue ati_bool_list(char *is, int nvalues) {
   PROTECT(
     c10::List<bool> vec;
     for (int i = 0; i < nvalues; ++i) vec.push_back(is[i] != 0);
+    return new torch::jit::IValue(vec);
+  )
+  return nullptr;
+}
+
+ivalue ati_string_list(char **is, int nvalues) {
+  PROTECT(
+    c10::List<string> vec;
+    for (int i = 0; i < nvalues; ++i) vec.push_back(string(is[i]));
     return new torch::jit::IValue(vec);
   )
   return nullptr;
@@ -855,7 +1123,7 @@ void ati_to_int_list(ivalue i,
   PROTECT(
     auto vec = i->toIntList();
     if (vec.size() != noutputs) {
-      throw std::invalid_argument("unexpected list size");
+      throw std::invalid_argument("unexpected list<int> size");
     }
     for (int i = 0; i < noutputs; ++i)
       outputs[i] = vec[i];
@@ -868,7 +1136,7 @@ void ati_to_double_list(ivalue i,
   PROTECT(
     auto vec = i->toDoubleList();
     if (vec.size() != noutputs) {
-      throw std::invalid_argument("unexpected list size");
+      throw std::invalid_argument("unexpected list<double> size");
     }
     for (int i = 0; i < noutputs; ++i)
       outputs[i] = vec[i];
@@ -881,7 +1149,7 @@ void ati_to_bool_list(ivalue i,
   PROTECT(
     auto vec = i->toBoolList();
     if (vec.size() != noutputs) {
-      throw std::invalid_argument("unexpected list size");
+      throw std::invalid_argument("unexpected list<bool> size");
     }
     for (int i = 0; i < noutputs; ++i)
       outputs[i] = vec[i];
@@ -894,7 +1162,7 @@ void ati_to_tensor_list(ivalue i,
   PROTECT(
     auto vec = i->toTensorList();
     if (vec.size() != noutputs) {
-      throw std::invalid_argument("unexpected tuple size");
+      throw std::invalid_argument("unexpected list<tensor> size");
     }
     for (int i = 0; i < noutputs; ++i)
       outputs[i] = new torch::Tensor(vec[i]);

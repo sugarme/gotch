@@ -409,10 +409,10 @@ func AtoAddParameters(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
 		ctensors = append(ctensors, (C.tensor)(tensors[i]))
 	}
 
-	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
+	cntensors := *(*C.size_t)(unsafe.Pointer(&ntensors))
 
 	// Just give pointer to the first element of ctensors slice
-	C.ato_add_parameters(coptimizer, &ctensors[0], cntensors)
+	C.ato_add_parameters(coptimizer, ctensors[0], cntensors)
 }
 
 // void ato_set_learning_rate(optimizer, double learning_rate);

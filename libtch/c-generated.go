@@ -76,14 +76,30 @@ func Atg_AdaptiveAvgPool2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, o
 func Atg_AdaptiveAvgPool2dBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor) {
 	C.atg__adaptive_avg_pool2d_backward(ptr, gradOutput, self)
 }
-func Atg_Addr(ptr *Ctensor, self Ctensor, vec1 Ctensor, vec2 Ctensor) {
-	C.atg__addr(ptr, self, vec1, vec2)
+func Atg_AddBatchDim(ptr *Ctensor, self Ctensor, batchDim int64, level int64) {
+	cbatchDim := *(*C.int64_t)(unsafe.Pointer(&batchDim))
+	clevel := *(*C.int64_t)(unsafe.Pointer(&level))
+	C.atg__add_batch_dim(ptr, self, cbatchDim, clevel)
 }
-func Atg_Addr_(ptr *Ctensor, self Ctensor, vec1 Ctensor, vec2 Ctensor) {
-	C.atg__addr_(ptr, self, vec1, vec2)
+func Atg_AddRelu(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg__add_relu(ptr, self, other)
 }
-func Atg_AddrOut(ptr *Ctensor, out Ctensor, self Ctensor, vec1 Ctensor, vec2 Ctensor) {
-	C.atg__addr_out(ptr, out, self, vec1, vec2)
+func Atg_AddRelu_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg__add_relu_(ptr, self, other)
+}
+func Atg_AddReluOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg__add_relu_out(ptr, out, self, other)
+}
+func Atg_AddmvImpl_(ptr *Ctensor, self Ctensor, self2 Ctensor, mat Ctensor, vec Ctensor) {
+	C.atg__addmv_impl_(ptr, self, self2, mat, vec)
+}
+func Atg_Aminmax(ptr *Ctensor, self Ctensor) {
+	C.atg__aminmax(ptr, self)
+}
+func Atg_Aminmax1(ptr *Ctensor, self Ctensor, dim int64, keepdim int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg__aminmax1(ptr, self, cdim, ckeepdim)
 }
 func Atg_AmpUpdateScale(ptr *Ctensor, growthTracker Ctensor, currentScale Ctensor, foundInf Ctensor, scaleGrowthFactor float64, scaleBackoffFactor float64, growthInterval int64) {
 	cscaleGrowthFactor := *(*C.double)(unsafe.Pointer(&scaleGrowthFactor))
@@ -93,6 +109,14 @@ func Atg_AmpUpdateScale(ptr *Ctensor, growthTracker Ctensor, currentScale Ctenso
 }
 func Atg_BaddbmmMkl_(ptr *Ctensor, self Ctensor, batch1 Ctensor, batch2 Ctensor) {
 	C.atg__baddbmm_mkl_(ptr, self, batch1, batch2)
+}
+func Atg_Bmm(ptr *Ctensor, self Ctensor, mat2 Ctensor, deterministic int32) {
+	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
+	C.atg__bmm(ptr, self, mat2, cdeterministic)
+}
+func Atg_BmmOut(ptr *Ctensor, out Ctensor, self Ctensor, mat2 Ctensor, deterministic int32) {
+	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
+	C.atg__bmm_out(ptr, out, self, mat2, cdeterministic)
 }
 func Atg_CastByte(ptr *Ctensor, self Ctensor, nonBlocking int32) {
 	cnonBlocking := *(*C.int)(unsafe.Pointer(&nonBlocking))
@@ -154,6 +178,15 @@ func Atg_Coalesced_(ptr *Ctensor, self Ctensor, coalesced int32) {
 	ccoalesced := *(*C.int)(unsafe.Pointer(&coalesced))
 	C.atg__coalesced_(ptr, self, ccoalesced)
 }
+func Atg_ComputeLinearCombination(ptr *Ctensor, input Ctensor, coefficients Ctensor) {
+	C.atg__compute_linear_combination(ptr, input, coefficients)
+}
+func Atg_ComputeLinearCombinationOut(ptr *Ctensor, out Ctensor, input Ctensor, coefficients Ctensor) {
+	C.atg__compute_linear_combination_out(ptr, out, input, coefficients)
+}
+func Atg_Conj(ptr *Ctensor, self Ctensor) {
+	C.atg__conj(ptr, self)
+}
 func Atg_Convolution(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, transposed int32, outputPaddingData []int64, outputPaddingLen int, groups int64, benchmark int32, deterministic int32, cudnnEnabled int32) {
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
 	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
@@ -169,6 +202,23 @@ func Atg_Convolution(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, 
 	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
 	ccudnnEnabled := *(*C.int)(unsafe.Pointer(&cudnnEnabled))
 	C.atg__convolution(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, ctransposed, coutputPaddingDataPtr, coutputPaddingLen, cgroups, cbenchmark, cdeterministic, ccudnnEnabled)
+}
+func Atg_Convolution1(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, transposed int32, outputPaddingData []int64, outputPaddingLen int, groups int64, benchmark int32, deterministic int32, cudnnEnabled int32, allowTf32 int32) {
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	ctransposed := *(*C.int)(unsafe.Pointer(&transposed))
+	coutputPaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&outputPaddingData[0]))
+	coutputPaddingLen := *(*C.int)(unsafe.Pointer(&outputPaddingLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+	cbenchmark := *(*C.int)(unsafe.Pointer(&benchmark))
+	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
+	ccudnnEnabled := *(*C.int)(unsafe.Pointer(&cudnnEnabled))
+	callowTf32 := *(*C.int)(unsafe.Pointer(&allowTf32))
+	C.atg__convolution1(ptr, input, weight, bias, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, ctransposed, coutputPaddingDataPtr, coutputPaddingLen, cgroups, cbenchmark, cdeterministic, ccudnnEnabled, callowTf32)
 }
 func Atg_ConvolutionNogroup(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, transposed int32, outputPaddingData []int64, outputPaddingLen int) {
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -292,6 +342,13 @@ func Atg_EmbeddingBagDenseBackward(ptr *Ctensor, grad Ctensor, indices Ctensor, 
 	cmode := *(*C.int64_t)(unsafe.Pointer(&mode))
 	C.atg__embedding_bag_dense_backward(ptr, grad, indices, offsets, offset2bag, bagSize, maximumIndices, cnumWeights, cscaleGradByFreq, cmode, perSampleWeights)
 }
+func Atg_EmbeddingBagForwardOnly(ptr *Ctensor, weight Ctensor, indices Ctensor, offsets Ctensor, scaleGradByFreq int32, mode int64, sparse int32, perSampleWeights Ctensor, includeLastOffset int32) {
+	cscaleGradByFreq := *(*C.int)(unsafe.Pointer(&scaleGradByFreq))
+	cmode := *(*C.int64_t)(unsafe.Pointer(&mode))
+	csparse := *(*C.int)(unsafe.Pointer(&sparse))
+	cincludeLastOffset := *(*C.int)(unsafe.Pointer(&includeLastOffset))
+	C.atg__embedding_bag_forward_only(ptr, weight, indices, offsets, cscaleGradByFreq, cmode, csparse, perSampleWeights, cincludeLastOffset)
+}
 func Atg_EmbeddingBagPerSampleWeightsBackward(ptr *Ctensor, grad Ctensor, weight Ctensor, indices Ctensor, offsets Ctensor, offset2bag Ctensor, mode int64) {
 	cmode := *(*C.int64_t)(unsafe.Pointer(&mode))
 	C.atg__embedding_bag_per_sample_weights_backward(ptr, grad, weight, indices, offsets, offset2bag, cmode)
@@ -319,6 +376,31 @@ func Atg_EmptyPerChannelAffineQuantized(ptr *Ctensor, sizeData []int64, sizeLen 
 	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
 	C.atg__empty_per_channel_affine_quantized(ptr, csizeDataPtr, csizeLen, scales, zeroPoints, caxis, coptionsKind, coptionsDevice)
 }
+func Atg_EuclideanDist(ptr *Ctensor, x1 Ctensor, x2 Ctensor) {
+	C.atg__euclidean_dist(ptr, x1, x2)
+}
+func Atg_FakeQuantizeLearnablePerChannelAffine(ptr *Ctensor, self Ctensor, scale Ctensor, zeroPoint Ctensor, axis int64, quantMin int64, quantMax int64) {
+	caxis := *(*C.int64_t)(unsafe.Pointer(&axis))
+	cquantMin := *(*C.int64_t)(unsafe.Pointer(&quantMin))
+	cquantMax := *(*C.int64_t)(unsafe.Pointer(&quantMax))
+	C.atg__fake_quantize_learnable_per_channel_affine(ptr, self, scale, zeroPoint, caxis, cquantMin, cquantMax)
+}
+func Atg_FakeQuantizeLearnablePerChannelAffineBackward(ptr *Ctensor, grad Ctensor, self Ctensor, scale Ctensor, zeroPoint Ctensor, axis int64, quantMin int64, quantMax int64) {
+	caxis := *(*C.int64_t)(unsafe.Pointer(&axis))
+	cquantMin := *(*C.int64_t)(unsafe.Pointer(&quantMin))
+	cquantMax := *(*C.int64_t)(unsafe.Pointer(&quantMax))
+	C.atg__fake_quantize_learnable_per_channel_affine_backward(ptr, grad, self, scale, zeroPoint, caxis, cquantMin, cquantMax)
+}
+func Atg_FakeQuantizeLearnablePerTensorAffine(ptr *Ctensor, self Ctensor, scale Ctensor, zeroPoint Ctensor, quantMin int64, quantMax int64) {
+	cquantMin := *(*C.int64_t)(unsafe.Pointer(&quantMin))
+	cquantMax := *(*C.int64_t)(unsafe.Pointer(&quantMax))
+	C.atg__fake_quantize_learnable_per_tensor_affine(ptr, self, scale, zeroPoint, cquantMin, cquantMax)
+}
+func Atg_FakeQuantizeLearnablePerTensorAffineBackward(ptr *Ctensor, grad Ctensor, self Ctensor, scale Ctensor, zeroPoint Ctensor, quantMin int64, quantMax int64) {
+	cquantMin := *(*C.int64_t)(unsafe.Pointer(&quantMin))
+	cquantMax := *(*C.int64_t)(unsafe.Pointer(&quantMax))
+	C.atg__fake_quantize_learnable_per_tensor_affine_backward(ptr, grad, self, scale, zeroPoint, cquantMin, cquantMax)
+}
 func Atg_FftWithSize(ptr *Ctensor, self Ctensor, signalNdim int64, complexInput int32, complexOutput int32, inverse int32, checkedSignalSizesData []int64, checkedSignalSizesLen int, normalized int32, onesided int32, outputSizesData []int64, outputSizesLen int) {
 	csignalNdim := *(*C.int64_t)(unsafe.Pointer(&signalNdim))
 	ccomplexInput := *(*C.int)(unsafe.Pointer(&complexInput))
@@ -332,6 +414,19 @@ func Atg_FftWithSize(ptr *Ctensor, self Ctensor, signalNdim int64, complexInput 
 	coutputSizesLen := *(*C.int)(unsafe.Pointer(&outputSizesLen))
 	C.atg__fft_with_size(ptr, self, csignalNdim, ccomplexInput, ccomplexOutput, cinverse, ccheckedSignalSizesDataPtr, ccheckedSignalSizesLen, cnormalized, conesided, coutputSizesDataPtr, coutputSizesLen)
 }
+func Atg_FftWithSize1(ptr *Ctensor, self Ctensor, signalNdim int64, complexInput int32, complexOutput int32, inverse int32, checkedSignalSizesData []int64, checkedSignalSizesLen int, normalization int64, onesided int32, outputSizesData []int64, outputSizesLen int) {
+	csignalNdim := *(*C.int64_t)(unsafe.Pointer(&signalNdim))
+	ccomplexInput := *(*C.int)(unsafe.Pointer(&complexInput))
+	ccomplexOutput := *(*C.int)(unsafe.Pointer(&complexOutput))
+	cinverse := *(*C.int)(unsafe.Pointer(&inverse))
+	ccheckedSignalSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&checkedSignalSizesData[0]))
+	ccheckedSignalSizesLen := *(*C.int)(unsafe.Pointer(&checkedSignalSizesLen))
+	cnormalization := *(*C.int64_t)(unsafe.Pointer(&normalization))
+	conesided := *(*C.int)(unsafe.Pointer(&onesided))
+	coutputSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizesData[0]))
+	coutputSizesLen := *(*C.int)(unsafe.Pointer(&outputSizesLen))
+	C.atg__fft_with_size1(ptr, self, csignalNdim, ccomplexInput, ccomplexOutput, cinverse, ccheckedSignalSizesDataPtr, ccheckedSignalSizesLen, cnormalization, conesided, coutputSizesDataPtr, coutputSizesLen)
+}
 func Atg_FusedDropout(ptr *Ctensor, self Ctensor, p float64) {
 	cp := *(*C.double)(unsafe.Pointer(&p))
 	C.atg__fused_dropout(ptr, self, cp)
@@ -339,6 +434,18 @@ func Atg_FusedDropout(ptr *Ctensor, self Ctensor, p float64) {
 func Atg_GatherSparseBackward(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, grad Ctensor) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg__gather_sparse_backward(ptr, self, cdim, index, grad)
+}
+func Atg_GridSampler2dCpuFallback(ptr *Ctensor, input Ctensor, grid Ctensor, interpolationMode int64, paddingMode int64, alignCorners int32) {
+	cinterpolationMode := *(*C.int64_t)(unsafe.Pointer(&interpolationMode))
+	cpaddingMode := *(*C.int64_t)(unsafe.Pointer(&paddingMode))
+	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
+	C.atg__grid_sampler_2d_cpu_fallback(ptr, input, grid, cinterpolationMode, cpaddingMode, calignCorners)
+}
+func Atg_GridSampler2dCpuFallbackBackward(ptr *Ctensor, gradOutput Ctensor, input Ctensor, grid Ctensor, interpolationMode int64, paddingMode int64, alignCorners int32) {
+	cinterpolationMode := *(*C.int64_t)(unsafe.Pointer(&interpolationMode))
+	cpaddingMode := *(*C.int64_t)(unsafe.Pointer(&paddingMode))
+	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
+	C.atg__grid_sampler_2d_cpu_fallback_backward(ptr, gradOutput, input, grid, cinterpolationMode, cpaddingMode, calignCorners)
 }
 func Atg_IndexCopy_(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, source Ctensor) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
@@ -366,6 +473,14 @@ func Atg_LogSoftmaxBackwardData(ptr *Ctensor, gradOutput Ctensor, output Ctensor
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg__log_softmax_backward_data(ptr, gradOutput, output, cdim, self)
 }
+func Atg_Logcumsumexp(ptr *Ctensor, self Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg__logcumsumexp(ptr, self, cdim)
+}
+func Atg_LogcumsumexpOut(ptr *Ctensor, out Ctensor, self Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg__logcumsumexp_out(ptr, out, self, cdim)
+}
 func Atg_LuSolveHelper(ptr *Ctensor, self Ctensor, lUData Ctensor, lUPivots Ctensor) {
 	C.atg__lu_solve_helper(ptr, self, lUData, lUPivots)
 }
@@ -386,26 +501,6 @@ func Atg_MakePerTensorQuantizedTensor(ptr *Ctensor, self Ctensor, scale float64,
 func Atg_MaskedScale(ptr *Ctensor, self Ctensor, mask Ctensor, scale float64) {
 	cscale := *(*C.double)(unsafe.Pointer(&scale))
 	C.atg__masked_scale(ptr, self, mask, cscale)
-}
-func Atg_Max(ptr *Ctensor, self Ctensor, dim int64, keepdim int32) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg__max(ptr, self, cdim, ckeepdim)
-}
-func Atg_MaxOut(ptr *Ctensor, max Ctensor, maxIndices Ctensor, self Ctensor, dim int64, keepdim int32) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg__max_out(ptr, max, maxIndices, self, cdim, ckeepdim)
-}
-func Atg_Min(ptr *Ctensor, self Ctensor, dim int64, keepdim int32) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg__min(ptr, self, cdim, ckeepdim)
-}
-func Atg_MinOut(ptr *Ctensor, min Ctensor, minIndices Ctensor, self Ctensor, dim int64, keepdim int32) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg__min_out(ptr, min, minIndices, self, cdim, ckeepdim)
 }
 func Atg_MkldnnReshape(ptr *Ctensor, self Ctensor, shapeData []int64, shapeLen int) {
 	cshapeDataPtr := (*C.int64_t)(unsafe.Pointer(&shapeData[0]))
@@ -481,6 +576,12 @@ func Atg_QrHelper(ptr *Ctensor, self Ctensor, some int32) {
 	csome := *(*C.int)(unsafe.Pointer(&some))
 	C.atg__qr_helper(ptr, self, csome)
 }
+func Atg_RemoveBatchDim(ptr *Ctensor, self Ctensor, level int64, batchSize int64, outDim int64) {
+	clevel := *(*C.int64_t)(unsafe.Pointer(&level))
+	cbatchSize := *(*C.int64_t)(unsafe.Pointer(&batchSize))
+	coutDim := *(*C.int64_t)(unsafe.Pointer(&outDim))
+	C.atg__remove_batch_dim(ptr, self, clevel, cbatchSize, coutDim)
+}
 func Atg_ReshapeFromTensor(ptr *Ctensor, self Ctensor, shape Ctensor) {
 	C.atg__reshape_from_tensor(ptr, self, shape)
 }
@@ -489,6 +590,9 @@ func Atg_SWhere(ptr *Ctensor, condition Ctensor, self Ctensor, other Ctensor) {
 }
 func Atg_SampleDirichlet(ptr *Ctensor, self Ctensor) {
 	C.atg__sample_dirichlet(ptr, self)
+}
+func Atg_SaturateWeightToFp16(ptr *Ctensor, weight Ctensor) {
+	C.atg__saturate_weight_to_fp16(ptr, weight)
 }
 func Atg_ShapeAsTensor(ptr *Ctensor, self Ctensor) {
 	C.atg__shape_as_tensor(ptr, self)
@@ -554,8 +658,36 @@ func Atg_SparseCooTensorWithDimsAndTensors(ptr *Ctensor, sparseDim int64, denseD
 	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
 	C.atg__sparse_coo_tensor_with_dims_and_tensors(ptr, csparseDim, cdenseDim, csizeDataPtr, csizeLen, indices, values, coptionsKind, coptionsDevice)
 }
+func Atg_SparseLogSoftmax(ptr *Ctensor, self Ctensor, dim int64, dtype int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg__sparse_log_softmax(ptr, self, cdim, cdtype)
+}
+func Atg_SparseLogSoftmax1(ptr *Ctensor, self Ctensor, dim int64, halfToFloat int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	chalfToFloat := *(*C.int)(unsafe.Pointer(&halfToFloat))
+	C.atg__sparse_log_softmax1(ptr, self, cdim, chalfToFloat)
+}
+func Atg_SparseLogSoftmaxBackwardData(ptr *Ctensor, gradOutput Ctensor, output Ctensor, dim int64, self Ctensor) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg__sparse_log_softmax_backward_data(ptr, gradOutput, output, cdim, self)
+}
 func Atg_SparseMm(ptr *Ctensor, sparse Ctensor, dense Ctensor) {
 	C.atg__sparse_mm(ptr, sparse, dense)
+}
+func Atg_SparseSoftmax(ptr *Ctensor, self Ctensor, dim int64, dtype int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg__sparse_softmax(ptr, self, cdim, cdtype)
+}
+func Atg_SparseSoftmax1(ptr *Ctensor, self Ctensor, dim int64, halfToFloat int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	chalfToFloat := *(*C.int)(unsafe.Pointer(&halfToFloat))
+	C.atg__sparse_softmax1(ptr, self, cdim, chalfToFloat)
+}
+func Atg_SparseSoftmaxBackwardData(ptr *Ctensor, gradOutput Ctensor, output Ctensor, dim int64, self Ctensor) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg__sparse_softmax_backward_data(ptr, gradOutput, output, cdim, self)
 }
 func Atg_SparseSum(ptr *Ctensor, self Ctensor) {
 	C.atg__sparse_sum(ptr, self)
@@ -599,6 +731,19 @@ func Atg_SymeigHelper(ptr *Ctensor, self Ctensor, eigenvectors int32, upper int3
 	ceigenvectors := *(*C.int)(unsafe.Pointer(&eigenvectors))
 	cupper := *(*C.int)(unsafe.Pointer(&upper))
 	C.atg__symeig_helper(ptr, self, ceigenvectors, cupper)
+}
+func Atg_TestOptionalFilledIntlist(ptr *Ctensor, values Ctensor, addendsData []int64, addendsLen int) {
+	caddendsDataPtr := (*C.int64_t)(unsafe.Pointer(&addendsData[0]))
+	caddendsLen := *(*C.int)(unsafe.Pointer(&addendsLen))
+	C.atg__test_optional_filled_intlist(ptr, values, caddendsDataPtr, caddendsLen)
+}
+func Atg_TestOptionalIntlist(ptr *Ctensor, values Ctensor, addendsData []int64, addendsLen int) {
+	caddendsDataPtr := (*C.int64_t)(unsafe.Pointer(&addendsData[0]))
+	caddendsLen := *(*C.int)(unsafe.Pointer(&addendsLen))
+	C.atg__test_optional_intlist(ptr, values, caddendsDataPtr, caddendsLen)
+}
+func Atg_TestSerializationSubcmul(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg__test_serialization_subcmul(ptr, self, other)
 }
 func Atg_TriangularSolveHelper(ptr *Ctensor, self Ctensor, a Ctensor, upper int32, transpose int32, unitriangular int32) {
 	cupper := *(*C.int)(unsafe.Pointer(&upper))
@@ -666,6 +811,15 @@ func AtgAbs_(ptr *Ctensor, self Ctensor) {
 func AtgAbsOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_abs_out(ptr, out, self)
 }
+func AtgAbsolute(ptr *Ctensor, self Ctensor) {
+	C.atg_absolute(ptr, self)
+}
+func AtgAbsolute_(ptr *Ctensor, self Ctensor) {
+	C.atg_absolute_(ptr, self)
+}
+func AtgAbsoluteOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_absolute_out(ptr, out, self)
+}
 func AtgAcos(ptr *Ctensor, self Ctensor) {
 	C.atg_acos(ptr, self)
 }
@@ -674,6 +828,15 @@ func AtgAcos_(ptr *Ctensor, self Ctensor) {
 }
 func AtgAcosOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_acos_out(ptr, out, self)
+}
+func AtgAcosh(ptr *Ctensor, self Ctensor) {
+	C.atg_acosh(ptr, self)
+}
+func AtgAcosh_(ptr *Ctensor, self Ctensor) {
+	C.atg_acosh_(ptr, self)
+}
+func AtgAcoshOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_acosh_out(ptr, out, self)
 }
 func AtgAdaptiveAvgPool1d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
@@ -854,6 +1017,30 @@ func AtgAlphaDropout_(ptr *Ctensor, self Ctensor, p float64, train int32) {
 	ctrain := *(*C.int)(unsafe.Pointer(&train))
 	C.atg_alpha_dropout_(ptr, self, cp, ctrain)
 }
+func AtgAmax(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_amax(ptr, self, cdimDataPtr, cdimLen, ckeepdim)
+}
+func AtgAmaxOut(ptr *Ctensor, out Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_amax_out(ptr, out, self, cdimDataPtr, cdimLen, ckeepdim)
+}
+func AtgAmin(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_amin(ptr, self, cdimDataPtr, cdimLen, ckeepdim)
+}
+func AtgAminOut(ptr *Ctensor, out Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_amin_out(ptr, out, self, cdimDataPtr, cdimLen, ckeepdim)
+}
 func AtgAngle(ptr *Ctensor, self Ctensor) {
 	C.atg_angle(ptr, self)
 }
@@ -894,36 +1081,94 @@ func AtgArangeOut(ptr *Ctensor, out Ctensor, end Cscalar) {
 func AtgArangeOut1(ptr *Ctensor, out Ctensor, start Cscalar, end Cscalar) {
 	C.atg_arange_out1(ptr, out, start, end)
 }
-func AtgArgmax(ptr *Ctensor, self Ctensor, dim int64, keepdim int32) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg_argmax(ptr, self, cdim, ckeepdim)
+func AtgArccos(ptr *Ctensor, self Ctensor) {
+	C.atg_arccos(ptr, self)
 }
-func AtgArgmin(ptr *Ctensor, self Ctensor, dim int64, keepdim int32) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+func AtgArccos_(ptr *Ctensor, self Ctensor) {
+	C.atg_arccos_(ptr, self)
+}
+func AtgArccosOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_arccos_out(ptr, out, self)
+}
+func AtgArccosh(ptr *Ctensor, self Ctensor) {
+	C.atg_arccosh(ptr, self)
+}
+func AtgArccosh_(ptr *Ctensor, self Ctensor) {
+	C.atg_arccosh_(ptr, self)
+}
+func AtgArccoshOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_arccosh_out(ptr, out, self)
+}
+func AtgArcsin(ptr *Ctensor, self Ctensor) {
+	C.atg_arcsin(ptr, self)
+}
+func AtgArcsin_(ptr *Ctensor, self Ctensor) {
+	C.atg_arcsin_(ptr, self)
+}
+func AtgArcsinOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_arcsin_out(ptr, out, self)
+}
+func AtgArcsinh(ptr *Ctensor, self Ctensor) {
+	C.atg_arcsinh(ptr, self)
+}
+func AtgArcsinh_(ptr *Ctensor, self Ctensor) {
+	C.atg_arcsinh_(ptr, self)
+}
+func AtgArcsinhOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_arcsinh_out(ptr, out, self)
+}
+func AtgArctan(ptr *Ctensor, self Ctensor) {
+	C.atg_arctan(ptr, self)
+}
+func AtgArctan_(ptr *Ctensor, self Ctensor) {
+	C.atg_arctan_(ptr, self)
+}
+func AtgArctanOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_arctan_out(ptr, out, self)
+}
+func AtgArctanh(ptr *Ctensor, self Ctensor) {
+	C.atg_arctanh(ptr, self)
+}
+func AtgArctanh_(ptr *Ctensor, self Ctensor) {
+	C.atg_arctanh_(ptr, self)
+}
+func AtgArctanhOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_arctanh_out(ptr, out, self)
+}
+func AtgArgmax(ptr *Ctensor, self Ctensor, dimVal int64, dimNull int, keepdim int32) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
 	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg_argmin(ptr, self, cdim, ckeepdim)
+	C.atg_argmax(ptr, self, cdimVal, cdimNull, ckeepdim)
+}
+func AtgArgmin(ptr *Ctensor, self Ctensor, dimVal int64, dimNull int, keepdim int32) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_argmin(ptr, self, cdimVal, cdimNull, ckeepdim)
 }
 func AtgArgsort(ptr *Ctensor, self Ctensor, dim int64, descending int32) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	cdescending := *(*C.int)(unsafe.Pointer(&descending))
 	C.atg_argsort(ptr, self, cdim, cdescending)
 }
-func AtgAsStrided(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int, strideData []int64, strideLen int, storageOffset int64) {
+func AtgAsStrided(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int, strideData []int64, strideLen int, storageOffsetVal int64, storageOffsetNull int) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
 	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
 	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
-	cstorageOffset := *(*C.int64_t)(unsafe.Pointer(&storageOffset))
-	C.atg_as_strided(ptr, self, csizeDataPtr, csizeLen, cstrideDataPtr, cstrideLen, cstorageOffset)
+	cstorageOffsetVal := *(*C.int64_t)(unsafe.Pointer(&storageOffsetVal))
+	cstorageOffsetNull := *(*C.uint8_t)(unsafe.Pointer(&storageOffsetNull))
+	C.atg_as_strided(ptr, self, csizeDataPtr, csizeLen, cstrideDataPtr, cstrideLen, cstorageOffsetVal, cstorageOffsetNull)
 }
-func AtgAsStrided_(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int, strideData []int64, strideLen int, storageOffset int64) {
+func AtgAsStrided_(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int, strideData []int64, strideLen int, storageOffsetVal int64, storageOffsetNull int) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
 	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
 	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
-	cstorageOffset := *(*C.int64_t)(unsafe.Pointer(&storageOffset))
-	C.atg_as_strided_(ptr, self, csizeDataPtr, csizeLen, cstrideDataPtr, cstrideLen, cstorageOffset)
+	cstorageOffsetVal := *(*C.int64_t)(unsafe.Pointer(&storageOffsetVal))
+	cstorageOffsetNull := *(*C.uint8_t)(unsafe.Pointer(&storageOffsetNull))
+	C.atg_as_strided_(ptr, self, csizeDataPtr, csizeLen, cstrideDataPtr, cstrideLen, cstorageOffsetVal, cstorageOffsetNull)
 }
 func AtgAsin(ptr *Ctensor, self Ctensor) {
 	C.atg_asin(ptr, self)
@@ -933,6 +1178,15 @@ func AtgAsin_(ptr *Ctensor, self Ctensor) {
 }
 func AtgAsinOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_asin_out(ptr, out, self)
+}
+func AtgAsinh(ptr *Ctensor, self Ctensor) {
+	C.atg_asinh(ptr, self)
+}
+func AtgAsinh_(ptr *Ctensor, self Ctensor) {
+	C.atg_asinh_(ptr, self)
+}
+func AtgAsinhOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_asinh_out(ptr, out, self)
 }
 func AtgAtan(ptr *Ctensor, self Ctensor) {
 	C.atg_atan(ptr, self)
@@ -952,6 +1206,27 @@ func AtgAtan_(ptr *Ctensor, self Ctensor) {
 func AtgAtanOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_atan_out(ptr, out, self)
 }
+func AtgAtanh(ptr *Ctensor, self Ctensor) {
+	C.atg_atanh(ptr, self)
+}
+func AtgAtanh_(ptr *Ctensor, self Ctensor) {
+	C.atg_atanh_(ptr, self)
+}
+func AtgAtanhOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_atanh_out(ptr, out, self)
+}
+func AtgAtleast1d(ptr *Ctensor, self Ctensor) {
+	C.atg_atleast_1d(ptr, self)
+}
+
+func AtgAtleast2d(ptr *Ctensor, self Ctensor) {
+	C.atg_atleast_2d(ptr, self)
+}
+
+func AtgAtleast3d(ptr *Ctensor, self Ctensor) {
+	C.atg_atleast_3d(ptr, self)
+}
+
 func AtgAvgPool1d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
@@ -963,7 +1238,7 @@ func AtgAvgPool1d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSize
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
 	C.atg_avg_pool1d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad)
 }
-func AtgAvgPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -972,10 +1247,11 @@ func AtgAvgPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSize
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool2d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool2d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgAvgPool2dBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool2dBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -984,10 +1260,11 @@ func AtgAvgPool2dBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, kernel
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool2d_backward(ptr, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool2d_backward(ptr, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgAvgPool2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -996,10 +1273,11 @@ func AtgAvgPool2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool2d_backward_out(ptr, gradInput, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool2d_backward_out(ptr, gradInput, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgAvgPool2dOut(ptr *Ctensor, out Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool2dOut(ptr *Ctensor, out Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -1008,10 +1286,11 @@ func AtgAvgPool2dOut(ptr *Ctensor, out Ctensor, self Ctensor, kernelSizeData []i
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool2d_out(ptr, out, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool2d_out(ptr, out, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgAvgPool3d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool3d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -1020,10 +1299,11 @@ func AtgAvgPool3d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSize
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool3d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool3d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgAvgPool3dBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool3dBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -1032,10 +1312,11 @@ func AtgAvgPool3dBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, kernel
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool3d_backward(ptr, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool3d_backward(ptr, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgAvgPool3dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool3dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -1044,10 +1325,11 @@ func AtgAvgPool3dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool3d_backward_out(ptr, gradInput, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool3d_backward_out(ptr, gradInput, gradOutput, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgAvgPool3dOut(ptr *Ctensor, out Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverride int64) {
+func AtgAvgPool3dOut(ptr *Ctensor, out Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, ceilMode int32, countIncludePad int32, divisorOverrideVal int64, divisorOverrideNull int) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
 	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -1056,8 +1338,9 @@ func AtgAvgPool3dOut(ptr *Ctensor, out Ctensor, self Ctensor, kernelSizeData []i
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	ccountIncludePad := *(*C.int)(unsafe.Pointer(&countIncludePad))
-	cdivisorOverride := *(*C.int64_t)(unsafe.Pointer(&divisorOverride))
-	C.atg_avg_pool3d_out(ptr, out, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverride)
+	cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
+	cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull))
+	C.atg_avg_pool3d_out(ptr, out, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
 func AtgBaddbmm(ptr *Ctensor, self Ctensor, batch1 Ctensor, batch2 Ctensor) {
 	C.atg_baddbmm(ptr, self, batch1, batch2)
@@ -1111,12 +1394,10 @@ func AtgBatchNormGatherStats(ptr *Ctensor, input Ctensor, mean Ctensor, invstd C
 	ccount := *(*C.int64_t)(unsafe.Pointer(&count))
 	C.atg_batch_norm_gather_stats(ptr, input, mean, invstd, runningMean, runningVar, cmomentum, ceps, ccount)
 }
-func AtgBatchNormGatherStatsWithCounts(ptr *Ctensor, input Ctensor, mean Ctensor, invstd Ctensor, runningMean Ctensor, runningVar Ctensor, momentum float64, eps float64, countsData []int64, countsLen int) {
+func AtgBatchNormGatherStatsWithCounts(ptr *Ctensor, input Ctensor, mean Ctensor, invstd Ctensor, runningMean Ctensor, runningVar Ctensor, momentum float64, eps float64, counts Ctensor) {
 	cmomentum := *(*C.double)(unsafe.Pointer(&momentum))
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
-	ccountsDataPtr := (*C.int64_t)(unsafe.Pointer(&countsData[0]))
-	ccountsLen := *(*C.int)(unsafe.Pointer(&countsLen))
-	C.atg_batch_norm_gather_stats_with_counts(ptr, input, mean, invstd, runningMean, runningVar, cmomentum, ceps, ccountsDataPtr, ccountsLen)
+	C.atg_batch_norm_gather_stats_with_counts(ptr, input, mean, invstd, runningMean, runningVar, cmomentum, ceps, counts)
 }
 func AtgBatchNormStats(ptr *Ctensor, input Ctensor, eps float64) {
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
@@ -1173,6 +1454,9 @@ func AtgBinaryCrossEntropyWithLogitsBackward(ptr *Ctensor, gradOutput Ctensor, s
 func AtgBincount(ptr *Ctensor, self Ctensor, weights Ctensor, minlength int64) {
 	cminlength := *(*C.int64_t)(unsafe.Pointer(&minlength))
 	C.atg_bincount(ptr, self, weights, cminlength)
+}
+func AtgBinomial(ptr *Ctensor, count Ctensor, prob Ctensor) {
+	C.atg_binomial(ptr, count, prob)
 }
 func AtgBitwiseAnd(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_bitwise_and(ptr, self, other)
@@ -1250,6 +1534,11 @@ func AtgBlackmanWindow1(ptr *Ctensor, windowLength int64, periodic int32, option
 	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
 	C.atg_blackman_window1(ptr, cwindowLength, cperiodic, coptionsKind, coptionsDevice)
 }
+func AtgBlockDiag(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int) {
+	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	C.atg_block_diag(ptr, ctensorsDataPtr, ctensorsLen)
+}
 func AtgBmm(ptr *Ctensor, self Ctensor, mat2 Ctensor) {
 	C.atg_bmm(ptr, self, mat2)
 }
@@ -1257,6 +1546,21 @@ func AtgBmmOut(ptr *Ctensor, out Ctensor, self Ctensor, mat2 Ctensor) {
 	C.atg_bmm_out(ptr, out, self, mat2)
 }
 
+func AtgBucketize(ptr *Ctensor, self Ctensor, boundaries Ctensor, outInt32 int32, right int32) {
+	coutInt32 := *(*C.int)(unsafe.Pointer(&outInt32))
+	cright := *(*C.int)(unsafe.Pointer(&right))
+	C.atg_bucketize(ptr, self, boundaries, coutInt32, cright)
+}
+func AtgBucketize1(ptr *Ctensor, selfScalar Cscalar, boundaries Ctensor, outInt32 int32, right int32) {
+	coutInt32 := *(*C.int)(unsafe.Pointer(&outInt32))
+	cright := *(*C.int)(unsafe.Pointer(&right))
+	C.atg_bucketize1(ptr, selfScalar, boundaries, coutInt32, cright)
+}
+func AtgBucketizeOut(ptr *Ctensor, out Ctensor, self Ctensor, boundaries Ctensor, outInt32 int32, right int32) {
+	coutInt32 := *(*C.int)(unsafe.Pointer(&outInt32))
+	cright := *(*C.int)(unsafe.Pointer(&right))
+	C.atg_bucketize_out(ptr, out, self, boundaries, coutInt32, cright)
+}
 func AtgCartesianProd(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int) {
 	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
 	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
@@ -1279,10 +1583,11 @@ func AtgCauchy_(ptr *Ctensor, self Ctensor, median float64, sigma float64) {
 	csigma := *(*C.double)(unsafe.Pointer(&sigma))
 	C.atg_cauchy_(ptr, self, cmedian, csigma)
 }
-func AtgCdist(ptr *Ctensor, x1 Ctensor, x2 Ctensor, p float64, computeMode int64) {
+func AtgCdist(ptr *Ctensor, x1 Ctensor, x2 Ctensor, p float64, computeModeVal int64, computeModeNull int) {
 	cp := *(*C.double)(unsafe.Pointer(&p))
-	ccomputeMode := *(*C.int64_t)(unsafe.Pointer(&computeMode))
-	C.atg_cdist(ptr, x1, x2, cp, ccomputeMode)
+	ccomputeModeVal := *(*C.int64_t)(unsafe.Pointer(&computeModeVal))
+	ccomputeModeNull := *(*C.uint8_t)(unsafe.Pointer(&computeModeNull))
+	C.atg_cdist(ptr, x1, x2, cp, ccomputeModeVal, ccomputeModeNull)
 }
 func AtgCeil(ptr *Ctensor, self Ctensor) {
 	C.atg_ceil(ptr, self)
@@ -1303,6 +1608,10 @@ func AtgChainMatmul(ptr *Ctensor, matricesData []Ctensor, matricesLen int) {
 	cmatricesDataPtr := (*Ctensor)(unsafe.Pointer(&matricesData[0]))
 	cmatricesLen := *(*C.int)(unsafe.Pointer(&matricesLen))
 	C.atg_chain_matmul(ptr, cmatricesDataPtr, cmatricesLen)
+}
+func AtgChannelShuffle(ptr *Ctensor, self Ctensor, groups int64) {
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+	C.atg_channel_shuffle(ptr, self, cgroups)
 }
 func AtgCholesky(ptr *Ctensor, self Ctensor, upper int32) {
 	cupper := *(*C.int)(unsafe.Pointer(&upper))
@@ -1355,6 +1664,15 @@ func AtgClampMinOut(ptr *Ctensor, out Ctensor, self Ctensor, min Cscalar) {
 }
 func AtgClampOut(ptr *Ctensor, out Ctensor, self Ctensor, min Cscalar, max Cscalar) {
 	C.atg_clamp_out(ptr, out, self, min, max)
+}
+func AtgClip(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
+	C.atg_clip(ptr, self, min, max)
+}
+func AtgClip_(ptr *Ctensor, self Ctensor, min Cscalar, max Cscalar) {
+	C.atg_clip_(ptr, self, min, max)
+}
+func AtgClipOut(ptr *Ctensor, out Ctensor, self Ctensor, min Cscalar, max Cscalar) {
+	C.atg_clip_out(ptr, out, self, min, max)
 }
 func AtgCoalesce(ptr *Ctensor, self Ctensor) {
 	C.atg_coalesce(ptr, self)
@@ -1411,6 +1729,12 @@ func AtgCombinations(ptr *Ctensor, self Ctensor, r int64, withReplacement int32)
 	cr := *(*C.int64_t)(unsafe.Pointer(&r))
 	cwithReplacement := *(*C.int)(unsafe.Pointer(&withReplacement))
 	C.atg_combinations(ptr, self, cr, cwithReplacement)
+}
+func AtgComplex(ptr *Ctensor, real Ctensor, imag Ctensor) {
+	C.atg_complex(ptr, real, imag)
+}
+func AtgComplexOut(ptr *Ctensor, out Ctensor, real Ctensor, imag Ctensor) {
+	C.atg_complex_out(ptr, out, real, imag)
 }
 func AtgConj(ptr *Ctensor, self Ctensor) {
 	C.atg_conj(ptr, self)
@@ -1558,13 +1882,25 @@ func AtgCosineSimilarity(ptr *Ctensor, x1 Ctensor, x2 Ctensor, dim int64, eps fl
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
 	C.atg_cosine_similarity(ptr, x1, x2, cdim, ceps)
 }
-func AtgCross(ptr *Ctensor, self Ctensor, other Ctensor, dim int64) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	C.atg_cross(ptr, self, other, cdim)
+func AtgCountNonzero(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	C.atg_count_nonzero(ptr, self, cdimDataPtr, cdimLen)
 }
-func AtgCrossOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor, dim int64) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	C.atg_cross_out(ptr, out, self, other, cdim)
+func AtgCountNonzero1(ptr *Ctensor, self Ctensor, dimVal int64, dimNull int) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	C.atg_count_nonzero1(ptr, self, cdimVal, cdimNull)
+}
+func AtgCross(ptr *Ctensor, self Ctensor, other Ctensor, dimVal int64, dimNull int) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	C.atg_cross(ptr, self, other, cdimVal, cdimNull)
+}
+func AtgCrossOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor, dimVal int64, dimNull int) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	C.atg_cross_out(ptr, out, self, other, cdimVal, cdimNull)
 }
 func AtgCtcLoss(ptr *Ctensor, logProbs Ctensor, targets Ctensor, inputLengthsData []int64, inputLengthsLen int, targetLengthsData []int64, targetLengthsLen int, blank int64, reduction int64, zeroInfinity int32) {
 	cinputLengthsDataPtr := (*C.int64_t)(unsafe.Pointer(&inputLengthsData[0]))
@@ -1630,7 +1966,20 @@ func AtgCudnnConvolution1(ptr *Ctensor, self Ctensor, weight Ctensor, bias Ctens
 	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
 	C.atg_cudnn_convolution1(ptr, self, weight, bias, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic)
 }
-func AtgCudnnConvolutionBackwardInput(ptr *Ctensor, selfSizeData []int64, selfSizeLen int, gradOutput Ctensor, weight Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32) {
+func AtgCudnnConvolution2(ptr *Ctensor, self Ctensor, weight Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32, allowTf32 int32) {
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+	cbenchmark := *(*C.int)(unsafe.Pointer(&benchmark))
+	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
+	callowTf32 := *(*C.int)(unsafe.Pointer(&allowTf32))
+	C.atg_cudnn_convolution2(ptr, self, weight, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic, callowTf32)
+}
+func AtgCudnnConvolutionBackwardInput(ptr *Ctensor, selfSizeData []int64, selfSizeLen int, gradOutput Ctensor, weight Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32, allowTf32 int32) {
 	cselfSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&selfSizeData[0]))
 	cselfSizeLen := *(*C.int)(unsafe.Pointer(&selfSizeLen))
 	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
@@ -1642,9 +1991,10 @@ func AtgCudnnConvolutionBackwardInput(ptr *Ctensor, selfSizeData []int64, selfSi
 	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
 	cbenchmark := *(*C.int)(unsafe.Pointer(&benchmark))
 	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
-	C.atg_cudnn_convolution_backward_input(ptr, cselfSizeDataPtr, cselfSizeLen, gradOutput, weight, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic)
+	callowTf32 := *(*C.int)(unsafe.Pointer(&allowTf32))
+	C.atg_cudnn_convolution_backward_input(ptr, cselfSizeDataPtr, cselfSizeLen, gradOutput, weight, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic, callowTf32)
 }
-func AtgCudnnConvolutionBackwardWeight(ptr *Ctensor, weightSizeData []int64, weightSizeLen int, gradOutput Ctensor, self Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32) {
+func AtgCudnnConvolutionBackwardWeight(ptr *Ctensor, weightSizeData []int64, weightSizeLen int, gradOutput Ctensor, self Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32, allowTf32 int32) {
 	cweightSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&weightSizeData[0]))
 	cweightSizeLen := *(*C.int)(unsafe.Pointer(&weightSizeLen))
 	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
@@ -1656,7 +2006,8 @@ func AtgCudnnConvolutionBackwardWeight(ptr *Ctensor, weightSizeData []int64, wei
 	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
 	cbenchmark := *(*C.int)(unsafe.Pointer(&benchmark))
 	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
-	C.atg_cudnn_convolution_backward_weight(ptr, cweightSizeDataPtr, cweightSizeLen, gradOutput, self, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic)
+	callowTf32 := *(*C.int)(unsafe.Pointer(&allowTf32))
+	C.atg_cudnn_convolution_backward_weight(ptr, cweightSizeDataPtr, cweightSizeLen, gradOutput, self, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic, callowTf32)
 }
 func AtgCudnnConvolutionTranspose(ptr *Ctensor, self Ctensor, weight Ctensor, paddingData []int64, paddingLen int, outputPaddingData []int64, outputPaddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32) {
 	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
@@ -1686,7 +2037,22 @@ func AtgCudnnConvolutionTranspose1(ptr *Ctensor, self Ctensor, weight Ctensor, b
 	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
 	C.atg_cudnn_convolution_transpose1(ptr, self, weight, bias, cpaddingDataPtr, cpaddingLen, coutputPaddingDataPtr, coutputPaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic)
 }
-func AtgCudnnConvolutionTransposeBackwardInput(ptr *Ctensor, gradOutput Ctensor, weight Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32) {
+func AtgCudnnConvolutionTranspose2(ptr *Ctensor, self Ctensor, weight Ctensor, paddingData []int64, paddingLen int, outputPaddingData []int64, outputPaddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32, allowTf32 int32) {
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	coutputPaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&outputPaddingData[0]))
+	coutputPaddingLen := *(*C.int)(unsafe.Pointer(&outputPaddingLen))
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+	cbenchmark := *(*C.int)(unsafe.Pointer(&benchmark))
+	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
+	callowTf32 := *(*C.int)(unsafe.Pointer(&allowTf32))
+	C.atg_cudnn_convolution_transpose2(ptr, self, weight, cpaddingDataPtr, cpaddingLen, coutputPaddingDataPtr, coutputPaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic, callowTf32)
+}
+func AtgCudnnConvolutionTransposeBackwardInput(ptr *Ctensor, gradOutput Ctensor, weight Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32, allowTf32 int32) {
 	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
@@ -1696,9 +2062,10 @@ func AtgCudnnConvolutionTransposeBackwardInput(ptr *Ctensor, gradOutput Ctensor,
 	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
 	cbenchmark := *(*C.int)(unsafe.Pointer(&benchmark))
 	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
-	C.atg_cudnn_convolution_transpose_backward_input(ptr, gradOutput, weight, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic)
+	callowTf32 := *(*C.int)(unsafe.Pointer(&allowTf32))
+	C.atg_cudnn_convolution_transpose_backward_input(ptr, gradOutput, weight, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic, callowTf32)
 }
-func AtgCudnnConvolutionTransposeBackwardWeight(ptr *Ctensor, weightSizeData []int64, weightSizeLen int, gradOutput Ctensor, self Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32) {
+func AtgCudnnConvolutionTransposeBackwardWeight(ptr *Ctensor, weightSizeData []int64, weightSizeLen int, gradOutput Ctensor, self Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64, benchmark int32, deterministic int32, allowTf32 int32) {
 	cweightSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&weightSizeData[0]))
 	cweightSizeLen := *(*C.int)(unsafe.Pointer(&weightSizeLen))
 	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
@@ -1710,7 +2077,8 @@ func AtgCudnnConvolutionTransposeBackwardWeight(ptr *Ctensor, weightSizeData []i
 	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
 	cbenchmark := *(*C.int)(unsafe.Pointer(&benchmark))
 	cdeterministic := *(*C.int)(unsafe.Pointer(&deterministic))
-	C.atg_cudnn_convolution_transpose_backward_weight(ptr, cweightSizeDataPtr, cweightSizeLen, gradOutput, self, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic)
+	callowTf32 := *(*C.int)(unsafe.Pointer(&allowTf32))
+	C.atg_cudnn_convolution_transpose_backward_weight(ptr, cweightSizeDataPtr, cweightSizeLen, gradOutput, self, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups, cbenchmark, cdeterministic, callowTf32)
 }
 func AtgCudnnGridSampler(ptr *Ctensor, self Ctensor, grid Ctensor) {
 	C.atg_cudnn_grid_sampler(ptr, self, grid)
@@ -1726,6 +2094,10 @@ func AtgCummaxOut(ptr *Ctensor, values Ctensor, indices Ctensor, self Ctensor, d
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_cummax_out(ptr, values, indices, self, cdim)
 }
+func AtgCummaxminBackward(ptr *Ctensor, grad Ctensor, input Ctensor, indices Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg_cummaxmin_backward(ptr, grad, input, indices, cdim)
+}
 func AtgCummin(ptr *Ctensor, self Ctensor, dim int64) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_cummin(ptr, self, cdim)
@@ -1738,6 +2110,10 @@ func AtgCumprod(ptr *Ctensor, self Ctensor, dim int64, dtype int32) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
 	C.atg_cumprod(ptr, self, cdim, cdtype)
+}
+func AtgCumprodBackward(ptr *Ctensor, grad Ctensor, input Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg_cumprod_backward(ptr, grad, input, cdim)
 }
 func AtgCumprodOut(ptr *Ctensor, out Ctensor, self Ctensor, dim int64, dtype int32) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
@@ -1757,9 +2133,19 @@ func AtgCumsumOut(ptr *Ctensor, out Ctensor, self Ctensor, dim int64, dtype int3
 func AtgData(ptr *Ctensor, self Ctensor) {
 	C.atg_data(ptr, self)
 }
+func AtgDeg2rad(ptr *Ctensor, self Ctensor) {
+	C.atg_deg2rad(ptr, self)
+}
+func AtgDeg2rad_(ptr *Ctensor, self Ctensor) {
+	C.atg_deg2rad_(ptr, self)
+}
+func AtgDeg2radOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_deg2rad_out(ptr, out, self)
+}
 func AtgDequantize(ptr *Ctensor, self Ctensor) {
 	C.atg_dequantize(ptr, self)
 }
+
 func AtgDet(ptr *Ctensor, self Ctensor) {
 	C.atg_det(ptr, self)
 }
@@ -1772,6 +2158,12 @@ func AtgDetach_(ptr *Ctensor, self Ctensor) {
 func AtgDiag(ptr *Ctensor, self Ctensor, diagonal int64) {
 	cdiagonal := *(*C.int64_t)(unsafe.Pointer(&diagonal))
 	C.atg_diag(ptr, self, cdiagonal)
+}
+func AtgDiagBackward(ptr *Ctensor, grad Ctensor, inputSizesData []int64, inputSizesLen int, diagonal int64) {
+	cinputSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizesData[0]))
+	cinputSizesLen := *(*C.int)(unsafe.Pointer(&inputSizesLen))
+	cdiagonal := *(*C.int64_t)(unsafe.Pointer(&diagonal))
+	C.atg_diag_backward(ptr, grad, cinputSizesDataPtr, cinputSizesLen, cdiagonal)
 }
 func AtgDiagEmbed(ptr *Ctensor, self Ctensor, offset int64, dim1 int64, dim2 int64) {
 	coffset := *(*C.int64_t)(unsafe.Pointer(&offset))
@@ -1792,6 +2184,14 @@ func AtgDiagonal(ptr *Ctensor, self Ctensor, offset int64, dim1 int64, dim2 int6
 	cdim1 := *(*C.int64_t)(unsafe.Pointer(&dim1))
 	cdim2 := *(*C.int64_t)(unsafe.Pointer(&dim2))
 	C.atg_diagonal(ptr, self, coffset, cdim1, cdim2)
+}
+func AtgDiagonalBackward(ptr *Ctensor, grad Ctensor, inputSizesData []int64, inputSizesLen int, offset int64, dim1 int64, dim2 int64) {
+	cinputSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizesData[0]))
+	cinputSizesLen := *(*C.int)(unsafe.Pointer(&inputSizesLen))
+	coffset := *(*C.int64_t)(unsafe.Pointer(&offset))
+	cdim1 := *(*C.int64_t)(unsafe.Pointer(&dim1))
+	cdim2 := *(*C.int64_t)(unsafe.Pointer(&dim2))
+	C.atg_diagonal_backward(ptr, grad, cinputSizesDataPtr, cinputSizesLen, coffset, cdim1, cdim2)
 }
 func AtgDigamma(ptr *Ctensor, self Ctensor) {
 	C.atg_digamma(ptr, self)
@@ -1820,6 +2220,21 @@ func AtgDiv1_(ptr *Ctensor, self Ctensor, other Cscalar) {
 func AtgDivOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
 	C.atg_div_out(ptr, out, self, other)
 }
+func AtgDivide(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_divide(ptr, self, other)
+}
+func AtgDivide1(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_divide1(ptr, self, other)
+}
+func AtgDivide_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_divide_(ptr, self, other)
+}
+func AtgDivide1_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_divide_1(ptr, self, other)
+}
+func AtgDivideOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_divide_out(ptr, out, self, other)
+}
 func AtgDot(ptr *Ctensor, self Ctensor, tensor Ctensor) {
 	C.atg_dot(ptr, self, tensor)
 }
@@ -1835,6 +2250,16 @@ func AtgDropout_(ptr *Ctensor, self Ctensor, p float64, train int32) {
 	cp := *(*C.double)(unsafe.Pointer(&p))
 	ctrain := *(*C.int)(unsafe.Pointer(&train))
 	C.atg_dropout_(ptr, self, cp, ctrain)
+}
+func AtgDstack(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int) {
+	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	C.atg_dstack(ptr, ctensorsDataPtr, ctensorsLen)
+}
+func AtgDstackOut(ptr *Ctensor, out Ctensor, tensorsData []Ctensor, tensorsLen int) {
+	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	C.atg_dstack_out(ptr, out, ctensorsDataPtr, ctensorsLen)
 }
 func AtgEig(ptr *Ctensor, self Ctensor, eigenvectors int32) {
 	ceigenvectors := *(*C.int)(unsafe.Pointer(&eigenvectors))
@@ -1914,10 +2339,22 @@ func AtgEmpty(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind int32, op
 func AtgEmptyLike(ptr *Ctensor, self Ctensor) {
 	C.atg_empty_like(ptr, self)
 }
+func AtgEmptyMeta(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind int32, optionsDevice int32) {
+	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+	C.atg_empty_meta(ptr, csizeDataPtr, csizeLen, coptionsKind, coptionsDevice)
+}
 func AtgEmptyOut(ptr *Ctensor, out Ctensor, sizeData []int64, sizeLen int) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
 	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
 	C.atg_empty_out(ptr, out, csizeDataPtr, csizeLen)
+}
+func AtgEmptyQuantized(ptr *Ctensor, sizeData []int64, sizeLen int, qtensor Ctensor) {
+	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+	C.atg_empty_quantized(ptr, csizeDataPtr, csizeLen, qtensor)
 }
 func AtgEmptyStrided(ptr *Ctensor, sizeData []int64, sizeLen int, strideData []int64, strideLen int, optionsKind int32, optionsDevice int32) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
@@ -1975,6 +2412,15 @@ func AtgErfinvOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 }
 func AtgExp(ptr *Ctensor, self Ctensor) {
 	C.atg_exp(ptr, self)
+}
+func AtgExp2(ptr *Ctensor, self Ctensor) {
+	C.atg_exp2(ptr, self)
+}
+func AtgExp2_(ptr *Ctensor, self Ctensor) {
+	C.atg_exp2_(ptr, self)
+}
+func AtgExp2Out(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_exp2_out(ptr, out, self)
 }
 func AtgExp_(ptr *Ctensor, self Ctensor) {
 	C.atg_exp_(ptr, self)
@@ -2100,6 +2546,100 @@ func AtgFft(ptr *Ctensor, self Ctensor, signalNdim int64, normalized int32) {
 	cnormalized := *(*C.int)(unsafe.Pointer(&normalized))
 	C.atg_fft(ptr, self, csignalNdim, cnormalized)
 }
+func AtgFftFft(ptr *Ctensor, self Ctensor, nVal int64, nNull int, dim int64, norm string) {
+	cnVal := *(*C.int64_t)(unsafe.Pointer(&nVal))
+	cnNull := *(*C.uint8_t)(unsafe.Pointer(&nNull))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_fft(ptr, self, cnVal, cnNull, cdim, cnorm, cnormLen)
+}
+func AtgFftFftn(ptr *Ctensor, self Ctensor, sData []int64, sLen int, dimData []int64, dimLen int, norm string) {
+	csDataPtr := (*C.int64_t)(unsafe.Pointer(&sData[0]))
+	csLen := *(*C.int)(unsafe.Pointer(&sLen))
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_fftn(ptr, self, csDataPtr, csLen, cdimDataPtr, cdimLen, cnorm, cnormLen)
+}
+func AtgFftHfft(ptr *Ctensor, self Ctensor, nVal int64, nNull int, dim int64, norm string) {
+	cnVal := *(*C.int64_t)(unsafe.Pointer(&nVal))
+	cnNull := *(*C.uint8_t)(unsafe.Pointer(&nNull))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_hfft(ptr, self, cnVal, cnNull, cdim, cnorm, cnormLen)
+}
+func AtgFftIfft(ptr *Ctensor, self Ctensor, nVal int64, nNull int, dim int64, norm string) {
+	cnVal := *(*C.int64_t)(unsafe.Pointer(&nVal))
+	cnNull := *(*C.uint8_t)(unsafe.Pointer(&nNull))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_ifft(ptr, self, cnVal, cnNull, cdim, cnorm, cnormLen)
+}
+func AtgFftIfftn(ptr *Ctensor, self Ctensor, sData []int64, sLen int, dimData []int64, dimLen int, norm string) {
+	csDataPtr := (*C.int64_t)(unsafe.Pointer(&sData[0]))
+	csLen := *(*C.int)(unsafe.Pointer(&sLen))
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_ifftn(ptr, self, csDataPtr, csLen, cdimDataPtr, cdimLen, cnorm, cnormLen)
+}
+func AtgFftIhfft(ptr *Ctensor, self Ctensor, nVal int64, nNull int, dim int64, norm string) {
+	cnVal := *(*C.int64_t)(unsafe.Pointer(&nVal))
+	cnNull := *(*C.uint8_t)(unsafe.Pointer(&nNull))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_ihfft(ptr, self, cnVal, cnNull, cdim, cnorm, cnormLen)
+}
+func AtgFftIrfft(ptr *Ctensor, self Ctensor, nVal int64, nNull int, dim int64, norm string) {
+	cnVal := *(*C.int64_t)(unsafe.Pointer(&nVal))
+	cnNull := *(*C.uint8_t)(unsafe.Pointer(&nNull))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_irfft(ptr, self, cnVal, cnNull, cdim, cnorm, cnormLen)
+}
+func AtgFftIrfftn(ptr *Ctensor, self Ctensor, sData []int64, sLen int, dimData []int64, dimLen int, norm string) {
+	csDataPtr := (*C.int64_t)(unsafe.Pointer(&sData[0]))
+	csLen := *(*C.int)(unsafe.Pointer(&sLen))
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_irfftn(ptr, self, csDataPtr, csLen, cdimDataPtr, cdimLen, cnorm, cnormLen)
+}
+func AtgFftRfft(ptr *Ctensor, self Ctensor, nVal int64, nNull int, dim int64, norm string) {
+	cnVal := *(*C.int64_t)(unsafe.Pointer(&nVal))
+	cnNull := *(*C.uint8_t)(unsafe.Pointer(&nNull))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_rfft(ptr, self, cnVal, cnNull, cdim, cnorm, cnormLen)
+}
+func AtgFftRfftn(ptr *Ctensor, self Ctensor, sData []int64, sLen int, dimData []int64, dimLen int, norm string) {
+	csDataPtr := (*C.int64_t)(unsafe.Pointer(&sData[0]))
+	csLen := *(*C.int)(unsafe.Pointer(&sLen))
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	cnorm := C.CString(norm)
+	normLen := len(norm)
+	cnormLen := *(*C.int)(unsafe.Pointer(&normLen))
+	C.atg_fft_rfftn(ptr, self, csDataPtr, csLen, cdimDataPtr, cdimLen, cnorm, cnormLen)
+}
 func AtgFill_(ptr *Ctensor, self Ctensor, value Cscalar) {
 	C.atg_fill_(ptr, self, value)
 }
@@ -2110,6 +2650,15 @@ func AtgFillDiagonal_(ptr *Ctensor, self Ctensor, fillValue Cscalar, wrap int32)
 	cwrap := *(*C.int)(unsafe.Pointer(&wrap))
 	C.atg_fill_diagonal_(ptr, self, fillValue, cwrap)
 }
+func AtgFix(ptr *Ctensor, self Ctensor) {
+	C.atg_fix(ptr, self)
+}
+func AtgFix_(ptr *Ctensor, self Ctensor) {
+	C.atg_fix_(ptr, self)
+}
+func AtgFixOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_fix_out(ptr, out, self)
+}
 func AtgFlatten(ptr *Ctensor, self Ctensor, startDim int64, endDim int64) {
 	cstartDim := *(*C.int64_t)(unsafe.Pointer(&startDim))
 	cendDim := *(*C.int64_t)(unsafe.Pointer(&endDim))
@@ -2119,6 +2668,12 @@ func AtgFlip(ptr *Ctensor, self Ctensor, dimsData []int64, dimsLen int) {
 	cdimsDataPtr := (*C.int64_t)(unsafe.Pointer(&dimsData[0]))
 	cdimsLen := *(*C.int)(unsafe.Pointer(&dimsLen))
 	C.atg_flip(ptr, self, cdimsDataPtr, cdimsLen)
+}
+func AtgFliplr(ptr *Ctensor, self Ctensor) {
+	C.atg_fliplr(ptr, self)
+}
+func AtgFlipud(ptr *Ctensor, self Ctensor) {
+	C.atg_flipud(ptr, self)
 }
 func AtgFloor(ptr *Ctensor, self Ctensor) {
 	C.atg_floor(ptr, self)
@@ -2242,15 +2797,16 @@ func AtgFrobeniusNormOut(ptr *Ctensor, out Ctensor, self Ctensor, dimData []int6
 	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
 	C.atg_frobenius_norm_out(ptr, out, self, cdimDataPtr, cdimLen, ckeepdim)
 }
-func AtgFromFile(ptr *Ctensor, filename string, shared int32, size int64, optionsKind int32, optionsDevice int32) {
+func AtgFromFile(ptr *Ctensor, filename string, shared int32, sizeVal int64, sizeNull int, optionsKind int32, optionsDevice int32) {
 	cfilename := C.CString(filename)
 	filenameLen := len(filename)
 	cfilenameLen := *(*C.int)(unsafe.Pointer(&filenameLen))
 	cshared := *(*C.int)(unsafe.Pointer(&shared))
-	csize := *(*C.int64_t)(unsafe.Pointer(&size))
+	csizeVal := *(*C.int64_t)(unsafe.Pointer(&sizeVal))
+	csizeNull := *(*C.uint8_t)(unsafe.Pointer(&sizeNull))
 	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
 	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
-	C.atg_from_file(ptr, cfilename, cfilenameLen, cshared, csize, coptionsKind, coptionsDevice)
+	C.atg_from_file(ptr, cfilename, cfilenameLen, cshared, csizeVal, csizeNull, coptionsKind, coptionsDevice)
 }
 func AtgFull(ptr *Ctensor, sizeData []int64, sizeLen int, fillValue Cscalar, optionsKind int32, optionsDevice int32) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
@@ -2272,10 +2828,24 @@ func AtgGather(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, sparseGrad 
 	csparseGrad := *(*C.int)(unsafe.Pointer(&sparseGrad))
 	C.atg_gather(ptr, self, cdim, index, csparseGrad)
 }
+func AtgGatherBackward(ptr *Ctensor, grad Ctensor, self Ctensor, dim int64, index Ctensor, sparseGrad int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	csparseGrad := *(*C.int)(unsafe.Pointer(&sparseGrad))
+	C.atg_gather_backward(ptr, grad, self, cdim, index, csparseGrad)
+}
 func AtgGatherOut(ptr *Ctensor, out Ctensor, self Ctensor, dim int64, index Ctensor, sparseGrad int32) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	csparseGrad := *(*C.int)(unsafe.Pointer(&sparseGrad))
 	C.atg_gather_out(ptr, out, self, cdim, index, csparseGrad)
+}
+func AtgGcd(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_gcd(ptr, self, other)
+}
+func AtgGcd_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_gcd_(ptr, self, other)
+}
+func AtgGcdOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_gcd_out(ptr, out, self, other)
 }
 func AtgGe(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_ge(ptr, self, other)
@@ -2335,6 +2905,42 @@ func AtgGluOut(ptr *Ctensor, out Ctensor, self Ctensor, dim int64) {
 }
 func AtgGrad(ptr *Ctensor, self Ctensor) {
 	C.atg_grad(ptr, self)
+}
+func AtgGreater(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_greater(ptr, self, other)
+}
+func AtgGreater1(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_greater1(ptr, self, other)
+}
+func AtgGreater_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_greater_(ptr, self, other)
+}
+func AtgGreater1_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_greater_1(ptr, self, other)
+}
+func AtgGreaterEqual(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_greater_equal(ptr, self, other)
+}
+func AtgGreaterEqual1(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_greater_equal1(ptr, self, other)
+}
+func AtgGreaterEqual_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_greater_equal_(ptr, self, other)
+}
+func AtgGreaterEqual1_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_greater_equal_1(ptr, self, other)
+}
+func AtgGreaterEqualOut(ptr *Ctensor, out Ctensor, self Ctensor, other Cscalar) {
+	C.atg_greater_equal_out(ptr, out, self, other)
+}
+func AtgGreaterEqualOut1(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_greater_equal_out1(ptr, out, self, other)
+}
+func AtgGreaterOut(ptr *Ctensor, out Ctensor, self Ctensor, other Cscalar) {
+	C.atg_greater_out(ptr, out, self, other)
+}
+func AtgGreaterOut1(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_greater_out1(ptr, out, self, other)
 }
 func AtgGridSampler(ptr *Ctensor, input Ctensor, grid Ctensor, interpolationMode int64, paddingMode int64, alignCorners int32) {
 	cinterpolationMode := *(*C.int64_t)(unsafe.Pointer(&interpolationMode))
@@ -2475,6 +3081,18 @@ func AtgHardsigmoidBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor) {
 func AtgHardsigmoidOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_hardsigmoid_out(ptr, out, self)
 }
+func AtgHardswish(ptr *Ctensor, self Ctensor) {
+	C.atg_hardswish(ptr, self)
+}
+func AtgHardswish_(ptr *Ctensor, self Ctensor) {
+	C.atg_hardswish_(ptr, self)
+}
+func AtgHardswishBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor) {
+	C.atg_hardswish_backward(ptr, gradOutput, self)
+}
+func AtgHardswishOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_hardswish_out(ptr, out, self)
+}
 func AtgHardtanh(ptr *Ctensor, self Ctensor) {
 	C.atg_hardtanh(ptr, self)
 }
@@ -2489,6 +3107,15 @@ func AtgHardtanhBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor,
 }
 func AtgHardtanhOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_hardtanh_out(ptr, out, self)
+}
+func AtgHeaviside(ptr *Ctensor, self Ctensor, values Ctensor) {
+	C.atg_heaviside(ptr, self, values)
+}
+func AtgHeaviside_(ptr *Ctensor, self Ctensor, values Ctensor) {
+	C.atg_heaviside_(ptr, self, values)
+}
+func AtgHeavisideOut(ptr *Ctensor, out Ctensor, self Ctensor, values Ctensor) {
+	C.atg_heaviside_out(ptr, out, self, values)
 }
 func AtgHingeEmbeddingLoss(ptr *Ctensor, self Ctensor, target Ctensor, margin float64, reduction int64) {
 	cmargin := *(*C.double)(unsafe.Pointer(&margin))
@@ -2508,6 +3135,34 @@ func AtgHspmm(ptr *Ctensor, mat1 Ctensor, mat2 Ctensor) {
 }
 func AtgHspmmOut(ptr *Ctensor, out Ctensor, mat1 Ctensor, mat2 Ctensor) {
 	C.atg_hspmm_out(ptr, out, mat1, mat2)
+}
+func AtgHstack(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int) {
+	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	C.atg_hstack(ptr, ctensorsDataPtr, ctensorsLen)
+}
+func AtgHstackOut(ptr *Ctensor, out Ctensor, tensorsData []Ctensor, tensorsLen int) {
+	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	C.atg_hstack_out(ptr, out, ctensorsDataPtr, ctensorsLen)
+}
+func AtgHypot(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_hypot(ptr, self, other)
+}
+func AtgHypot_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_hypot_(ptr, self, other)
+}
+func AtgHypotOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_hypot_out(ptr, out, self, other)
+}
+func AtgI0(ptr *Ctensor, self Ctensor) {
+	C.atg_i0(ptr, self)
+}
+func AtgI0_(ptr *Ctensor, self Ctensor) {
+	C.atg_i0_(ptr, self)
+}
+func AtgI0Out(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_i0_out(ptr, out, self)
 }
 func AtgIfft(ptr *Ctensor, self Ctensor, signalNdim int64, normalized int32) {
 	csignalNdim := *(*C.int64_t)(unsafe.Pointer(&signalNdim))
@@ -2618,12 +3273,21 @@ func AtgIndexSelect(ptr *Ctensor, self Ctensor, dim int64, index Ctensor) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_index_select(ptr, self, cdim, index)
 }
+func AtgIndexSelectBackward(ptr *Ctensor, grad Ctensor, selfSizesData []int64, selfSizesLen int, dim int64, index Ctensor) {
+	cselfSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&selfSizesData[0]))
+	cselfSizesLen := *(*C.int)(unsafe.Pointer(&selfSizesLen))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg_index_select_backward(ptr, grad, cselfSizesDataPtr, cselfSizesLen, cdim, index)
+}
 func AtgIndexSelectOut(ptr *Ctensor, out Ctensor, self Ctensor, dim int64, index Ctensor) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_index_select_out(ptr, out, self, cdim, index)
 }
 func AtgIndices(ptr *Ctensor, self Ctensor) {
 	C.atg_indices(ptr, self)
+}
+func AtgInfinitelyDifferentiableGeluBackward(ptr *Ctensor, grad Ctensor, self Ctensor) {
+	C.atg_infinitely_differentiable_gelu_backward(ptr, grad, self)
 }
 func AtgInstanceNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, runningMean Ctensor, runningVar Ctensor, useInputStats int32, momentum float64, eps float64, cudnnEnabled int32) {
 	cuseInputStats := *(*C.int)(unsafe.Pointer(&useInputStats))
@@ -2664,13 +3328,65 @@ func AtgIsinf(ptr *Ctensor, self Ctensor) {
 func AtgIsnan(ptr *Ctensor, self Ctensor) {
 	C.atg_isnan(ptr, self)
 }
-func AtgKlDiv(ptr *Ctensor, self Ctensor, target Ctensor, reduction int64) {
-	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
-	C.atg_kl_div(ptr, self, target, creduction)
+func AtgIsneginf(ptr *Ctensor, self Ctensor) {
+	C.atg_isneginf(ptr, self)
 }
-func AtgKlDivBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, target Ctensor, reduction int64) {
+func AtgIsneginfOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_isneginf_out(ptr, out, self)
+}
+func AtgIsposinf(ptr *Ctensor, self Ctensor) {
+	C.atg_isposinf(ptr, self)
+}
+func AtgIsposinfOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_isposinf_out(ptr, out, self)
+}
+func AtgIsreal(ptr *Ctensor, self Ctensor) {
+	C.atg_isreal(ptr, self)
+}
+func AtgIstft(ptr *Ctensor, self Ctensor, nFft int64, hopLengthVal int64, hopLengthNull int, winLengthVal int64, winLengthNull int, window Ctensor, center int32, normalized int32, onesided int32, lengthVal int64, lengthNull int, returnComplex int32) {
+	cnFft := *(*C.int64_t)(unsafe.Pointer(&nFft))
+	chopLengthVal := *(*C.int64_t)(unsafe.Pointer(&hopLengthVal))
+	chopLengthNull := *(*C.uint8_t)(unsafe.Pointer(&hopLengthNull))
+	cwinLengthVal := *(*C.int64_t)(unsafe.Pointer(&winLengthVal))
+	cwinLengthNull := *(*C.uint8_t)(unsafe.Pointer(&winLengthNull))
+	ccenter := *(*C.int)(unsafe.Pointer(&center))
+	cnormalized := *(*C.int)(unsafe.Pointer(&normalized))
+	conesided := *(*C.int)(unsafe.Pointer(&onesided))
+	clengthVal := *(*C.int64_t)(unsafe.Pointer(&lengthVal))
+	clengthNull := *(*C.uint8_t)(unsafe.Pointer(&lengthNull))
+	creturnComplex := *(*C.int)(unsafe.Pointer(&returnComplex))
+	C.atg_istft(ptr, self, cnFft, chopLengthVal, chopLengthNull, cwinLengthVal, cwinLengthNull, window, ccenter, cnormalized, conesided, clengthVal, clengthNull, creturnComplex)
+}
+func AtgKaiserWindow(ptr *Ctensor, windowLength int64, optionsKind int32, optionsDevice int32) {
+	cwindowLength := *(*C.int64_t)(unsafe.Pointer(&windowLength))
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+	C.atg_kaiser_window(ptr, cwindowLength, coptionsKind, coptionsDevice)
+}
+func AtgKaiserWindow1(ptr *Ctensor, windowLength int64, periodic int32, optionsKind int32, optionsDevice int32) {
+	cwindowLength := *(*C.int64_t)(unsafe.Pointer(&windowLength))
+	cperiodic := *(*C.int)(unsafe.Pointer(&periodic))
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+	C.atg_kaiser_window1(ptr, cwindowLength, cperiodic, coptionsKind, coptionsDevice)
+}
+func AtgKaiserWindow2(ptr *Ctensor, windowLength int64, periodic int32, beta float64, optionsKind int32, optionsDevice int32) {
+	cwindowLength := *(*C.int64_t)(unsafe.Pointer(&windowLength))
+	cperiodic := *(*C.int)(unsafe.Pointer(&periodic))
+	cbeta := *(*C.double)(unsafe.Pointer(&beta))
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+	C.atg_kaiser_window2(ptr, cwindowLength, cperiodic, cbeta, coptionsKind, coptionsDevice)
+}
+func AtgKlDiv(ptr *Ctensor, self Ctensor, target Ctensor, reduction int64, logTarget int32) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
-	C.atg_kl_div_backward(ptr, gradOutput, self, target, creduction)
+	clogTarget := *(*C.int)(unsafe.Pointer(&logTarget))
+	C.atg_kl_div(ptr, self, target, creduction, clogTarget)
+}
+func AtgKlDivBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, target Ctensor, reduction int64, logTarget int32) {
+	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
+	clogTarget := *(*C.int)(unsafe.Pointer(&logTarget))
+	C.atg_kl_div_backward(ptr, gradOutput, self, target, creduction, clogTarget)
 }
 func AtgKthvalue(ptr *Ctensor, self Ctensor, k int64, dim int64, keepdim int32) {
 	ck := *(*C.int64_t)(unsafe.Pointer(&k))
@@ -2706,6 +3422,15 @@ func AtgLayerNorm(ptr *Ctensor, input Ctensor, normalizedShapeData []int64, norm
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
 	ccudnnEnable := *(*C.int)(unsafe.Pointer(&cudnnEnable))
 	C.atg_layer_norm(ptr, input, cnormalizedShapeDataPtr, cnormalizedShapeLen, weight, bias, ceps, ccudnnEnable)
+}
+func AtgLcm(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_lcm(ptr, self, other)
+}
+func AtgLcm_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_lcm_(ptr, self, other)
+}
+func AtgLcmOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_lcm_out(ptr, out, self, other)
 }
 func AtgLe(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_le(ptr, self, other)
@@ -2756,6 +3481,42 @@ func AtgLerpOut(ptr *Ctensor, out Ctensor, self Ctensor, end Ctensor, weight Csc
 func AtgLerpOut1(ptr *Ctensor, out Ctensor, self Ctensor, end Ctensor, weight Ctensor) {
 	C.atg_lerp_out1(ptr, out, self, end, weight)
 }
+func AtgLess(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_less(ptr, self, other)
+}
+func AtgLess1(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_less1(ptr, self, other)
+}
+func AtgLess_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_less_(ptr, self, other)
+}
+func AtgLess1_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_less_1(ptr, self, other)
+}
+func AtgLessEqual(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_less_equal(ptr, self, other)
+}
+func AtgLessEqual1(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_less_equal1(ptr, self, other)
+}
+func AtgLessEqual_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_less_equal_(ptr, self, other)
+}
+func AtgLessEqual1_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_less_equal_1(ptr, self, other)
+}
+func AtgLessEqualOut(ptr *Ctensor, out Ctensor, self Ctensor, other Cscalar) {
+	C.atg_less_equal_out(ptr, out, self, other)
+}
+func AtgLessEqualOut1(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_less_equal_out1(ptr, out, self, other)
+}
+func AtgLessOut(ptr *Ctensor, out Ctensor, self Ctensor, other Cscalar) {
+	C.atg_less_out(ptr, out, self, other)
+}
+func AtgLessOut1(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_less_out1(ptr, out, self, other)
+}
 func AtgLgamma(ptr *Ctensor, self Ctensor) {
 	C.atg_lgamma(ptr, self)
 }
@@ -2765,18 +3526,57 @@ func AtgLgamma_(ptr *Ctensor, self Ctensor) {
 func AtgLgammaOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_lgamma_out(ptr, out, self)
 }
+func AtgLinalgDet(ptr *Ctensor, self Ctensor) {
+	C.atg_linalg_det(ptr, self)
+}
+func AtgLinalgNorm(ptr *Ctensor, self Ctensor, ord Cscalar, dimData []int64, dimLen int, keepdim int32, dtype int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_linalg_norm(ptr, self, ord, cdimDataPtr, cdimLen, ckeepdim, cdtype)
+}
+func AtgLinalgNorm1(ptr *Ctensor, self Ctensor, ord string, dimData []int64, dimLen int, keepdim int32, dtype int32) {
+	cord := C.CString(ord)
+	ordLen := len(ord)
+	cordLen := *(*C.int)(unsafe.Pointer(&ordLen))
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_linalg_norm1(ptr, self, cord, cordLen, cdimDataPtr, cdimLen, ckeepdim, cdtype)
+}
+func AtgLinalgNormOut(ptr *Ctensor, out Ctensor, self Ctensor, ord Cscalar, dimData []int64, dimLen int, keepdim int32, dtype int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_linalg_norm_out(ptr, out, self, ord, cdimDataPtr, cdimLen, ckeepdim, cdtype)
+}
+func AtgLinalgNormOut1(ptr *Ctensor, out Ctensor, self Ctensor, ord string, dimData []int64, dimLen int, keepdim int32, dtype int32) {
+	cord := C.CString(ord)
+	ordLen := len(ord)
+	cordLen := *(*C.int)(unsafe.Pointer(&ordLen))
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_linalg_norm_out1(ptr, out, self, cord, cordLen, cdimDataPtr, cdimLen, ckeepdim, cdtype)
+}
 func AtgLinear(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor) {
 	C.atg_linear(ptr, input, weight, bias)
 }
-func AtgLinspace(ptr *Ctensor, start Cscalar, end Cscalar, steps int64, optionsKind int32, optionsDevice int32) {
-	csteps := *(*C.int64_t)(unsafe.Pointer(&steps))
+func AtgLinspace(ptr *Ctensor, start Cscalar, end Cscalar, stepsVal int64, stepsNull int, optionsKind int32, optionsDevice int32) {
+	cstepsVal := *(*C.int64_t)(unsafe.Pointer(&stepsVal))
+	cstepsNull := *(*C.uint8_t)(unsafe.Pointer(&stepsNull))
 	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
 	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
-	C.atg_linspace(ptr, start, end, csteps, coptionsKind, coptionsDevice)
+	C.atg_linspace(ptr, start, end, cstepsVal, cstepsNull, coptionsKind, coptionsDevice)
 }
-func AtgLinspaceOut(ptr *Ctensor, out Ctensor, start Cscalar, end Cscalar, steps int64) {
-	csteps := *(*C.int64_t)(unsafe.Pointer(&steps))
-	C.atg_linspace_out(ptr, out, start, end, csteps)
+func AtgLinspaceOut(ptr *Ctensor, out Ctensor, start Cscalar, end Cscalar, stepsVal int64, stepsNull int) {
+	cstepsVal := *(*C.int64_t)(unsafe.Pointer(&stepsVal))
+	cstepsNull := *(*C.uint8_t)(unsafe.Pointer(&stepsNull))
+	C.atg_linspace_out(ptr, out, start, end, cstepsVal, cstepsNull)
 }
 func AtgLog(ptr *Ctensor, self Ctensor) {
 	C.atg_log(ptr, self)
@@ -2836,6 +3636,26 @@ func AtgLogSoftmax(ptr *Ctensor, self Ctensor, dim int64, dtype int32) {
 	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
 	C.atg_log_softmax(ptr, self, cdim, cdtype)
 }
+func AtgLogaddexp(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_logaddexp(ptr, self, other)
+}
+func AtgLogaddexp2(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_logaddexp2(ptr, self, other)
+}
+func AtgLogaddexp2Out(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_logaddexp2_out(ptr, out, self, other)
+}
+func AtgLogaddexpOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_logaddexp_out(ptr, out, self, other)
+}
+func AtgLogcumsumexp(ptr *Ctensor, self Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg_logcumsumexp(ptr, self, cdim)
+}
+func AtgLogcumsumexpOut(ptr *Ctensor, out Ctensor, self Ctensor, dim int64) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	C.atg_logcumsumexp_out(ptr, out, self, cdim)
+}
 func AtgLogdet(ptr *Ctensor, self Ctensor) {
 	C.atg_logdet(ptr, self)
 }
@@ -2875,17 +3695,44 @@ func AtgLogicalXor_(ptr *Ctensor, self Ctensor, other Ctensor) {
 func AtgLogicalXorOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
 	C.atg_logical_xor_out(ptr, out, self, other)
 }
-func AtgLogspace(ptr *Ctensor, start Cscalar, end Cscalar, steps int64, base float64, optionsKind int32, optionsDevice int32) {
-	csteps := *(*C.int64_t)(unsafe.Pointer(&steps))
+func AtgLogit(ptr *Ctensor, self Ctensor, epsVal float64, epsNull int) {
+	cepsVal := *(*C.double)(unsafe.Pointer(&epsVal))
+	cepsNull := *(*C.uint8_t)(unsafe.Pointer(&epsNull))
+	C.atg_logit(ptr, self, cepsVal, cepsNull)
+}
+func AtgLogit_(ptr *Ctensor, self Ctensor, epsVal float64, epsNull int) {
+	cepsVal := *(*C.double)(unsafe.Pointer(&epsVal))
+	cepsNull := *(*C.uint8_t)(unsafe.Pointer(&epsNull))
+	C.atg_logit_(ptr, self, cepsVal, cepsNull)
+}
+func AtgLogitBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, epsVal float64, epsNull int) {
+	cepsVal := *(*C.double)(unsafe.Pointer(&epsVal))
+	cepsNull := *(*C.uint8_t)(unsafe.Pointer(&epsNull))
+	C.atg_logit_backward(ptr, gradOutput, self, cepsVal, cepsNull)
+}
+func AtgLogitBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, self Ctensor, epsVal float64, epsNull int) {
+	cepsVal := *(*C.double)(unsafe.Pointer(&epsVal))
+	cepsNull := *(*C.uint8_t)(unsafe.Pointer(&epsNull))
+	C.atg_logit_backward_out(ptr, gradInput, gradOutput, self, cepsVal, cepsNull)
+}
+func AtgLogitOut(ptr *Ctensor, out Ctensor, self Ctensor, epsVal float64, epsNull int) {
+	cepsVal := *(*C.double)(unsafe.Pointer(&epsVal))
+	cepsNull := *(*C.uint8_t)(unsafe.Pointer(&epsNull))
+	C.atg_logit_out(ptr, out, self, cepsVal, cepsNull)
+}
+func AtgLogspace(ptr *Ctensor, start Cscalar, end Cscalar, stepsVal int64, stepsNull int, base float64, optionsKind int32, optionsDevice int32) {
+	cstepsVal := *(*C.int64_t)(unsafe.Pointer(&stepsVal))
+	cstepsNull := *(*C.uint8_t)(unsafe.Pointer(&stepsNull))
 	cbase := *(*C.double)(unsafe.Pointer(&base))
 	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
 	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
-	C.atg_logspace(ptr, start, end, csteps, cbase, coptionsKind, coptionsDevice)
+	C.atg_logspace(ptr, start, end, cstepsVal, cstepsNull, cbase, coptionsKind, coptionsDevice)
 }
-func AtgLogspaceOut(ptr *Ctensor, out Ctensor, start Cscalar, end Cscalar, steps int64, base float64) {
-	csteps := *(*C.int64_t)(unsafe.Pointer(&steps))
+func AtgLogspaceOut(ptr *Ctensor, out Ctensor, start Cscalar, end Cscalar, stepsVal int64, stepsNull int, base float64) {
+	cstepsVal := *(*C.int64_t)(unsafe.Pointer(&stepsVal))
+	cstepsNull := *(*C.uint8_t)(unsafe.Pointer(&stepsNull))
 	cbase := *(*C.double)(unsafe.Pointer(&base))
-	C.atg_logspace_out(ptr, out, start, end, csteps, cbase)
+	C.atg_logspace_out(ptr, out, start, end, cstepsVal, cstepsNull, cbase)
 }
 func AtgLogsumexp(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32) {
 	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
@@ -2985,6 +3832,9 @@ func AtgMaskedScatter_(ptr *Ctensor, self Ctensor, mask Ctensor, source Ctensor)
 func AtgMaskedSelect(ptr *Ctensor, self Ctensor, mask Ctensor) {
 	C.atg_masked_select(ptr, self, mask)
 }
+func AtgMaskedSelectBackward(ptr *Ctensor, grad Ctensor, input Ctensor, mask Ctensor) {
+	C.atg_masked_select_backward(ptr, grad, input, mask)
+}
 func AtgMaskedSelectOut(ptr *Ctensor, out Ctensor, self Ctensor, mask Ctensor) {
 	C.atg_masked_select_out(ptr, out, self, mask)
 }
@@ -2993,6 +3843,12 @@ func AtgMatmul(ptr *Ctensor, self Ctensor, other Ctensor) {
 }
 func AtgMatmulOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
 	C.atg_matmul_out(ptr, out, self, other)
+}
+func AtgMatrixExp(ptr *Ctensor, self Ctensor) {
+	C.atg_matrix_exp(ptr, self)
+}
+func AtgMatrixExpBackward(ptr *Ctensor, self Ctensor, grad Ctensor) {
+	C.atg_matrix_exp_backward(ptr, self, grad)
 }
 func AtgMatrixPower(ptr *Ctensor, self Ctensor, n int64) {
 	cn := *(*C.int64_t)(unsafe.Pointer(&n))
@@ -3226,11 +4082,11 @@ func AtgMaxUnpool3dOut(ptr *Ctensor, out Ctensor, self Ctensor, indices Ctensor,
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
 	C.atg_max_unpool3d_out(ptr, out, self, indices, coutputSizeDataPtr, coutputSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen)
 }
-func AtgMaxValues(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32) {
-	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
-	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
-	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg_max_values(ptr, self, cdimDataPtr, cdimLen, ckeepdim)
+func AtgMaximum(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_maximum(ptr, self, other)
+}
+func AtgMaximumOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_maximum_out(ptr, out, self, other)
 }
 func AtgMean(ptr *Ctensor, self Ctensor, dtype int32) {
 	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
@@ -3283,11 +4139,11 @@ func AtgMinOut1(ptr *Ctensor, min Ctensor, minIndices Ctensor, self Ctensor, dim
 	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
 	C.atg_min_out1(ptr, min, minIndices, self, cdim, ckeepdim)
 }
-func AtgMinValues(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32) {
-	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
-	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
-	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
-	C.atg_min_values(ptr, self, cdimDataPtr, cdimLen, ckeepdim)
+func AtgMinimum(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_minimum(ptr, self, other)
+}
+func AtgMinimumOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_minimum_out(ptr, out, self, other)
 }
 func AtgMiopenBatchNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, runningMean Ctensor, runningVar Ctensor, training int32, exponentialAverageFactor float64, epsilon float64) {
 	ctraining := *(*C.int)(unsafe.Pointer(&training))
@@ -3493,6 +4349,18 @@ func AtgMkldnnMaxPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kern
 	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
 	C.atg_mkldnn_max_pool2d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cceilMode)
 }
+func AtgMkldnnMaxPool3d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, ceilMode int32) {
+	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
+	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
+	C.atg_mkldnn_max_pool3d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cceilMode)
+}
 func AtgMkldnnReorderConv2dWeight(ptr *Ctensor, self Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64) {
 	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
 	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
@@ -3502,6 +4370,16 @@ func AtgMkldnnReorderConv2dWeight(ptr *Ctensor, self Ctensor, paddingData []int6
 	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
 	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
 	C.atg_mkldnn_reorder_conv2d_weight(ptr, self, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups)
+}
+func AtgMkldnnReorderConv3dWeight(ptr *Ctensor, self Ctensor, paddingData []int64, paddingLen int, strideData []int64, strideLen int, dilationData []int64, dilationLen int, groups int64) {
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cgroups := *(*C.int64_t)(unsafe.Pointer(&groups))
+	C.atg_mkldnn_reorder_conv3d_weight(ptr, self, cpaddingDataPtr, cpaddingLen, cstrideDataPtr, cstrideLen, cdilationDataPtr, cdilationLen, cgroups)
 }
 func AtgMm(ptr *Ctensor, self Ctensor, mat2 Ctensor) {
 	C.atg_mm(ptr, self, mat2)
@@ -3518,6 +4396,18 @@ func AtgModeOut(ptr *Ctensor, values Ctensor, indices Ctensor, self Ctensor, dim
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
 	C.atg_mode_out(ptr, values, indices, self, cdim, ckeepdim)
+}
+func AtgMovedim(ptr *Ctensor, self Ctensor, sourceData []int64, sourceLen int, destinationData []int64, destinationLen int) {
+	csourceDataPtr := (*C.int64_t)(unsafe.Pointer(&sourceData[0]))
+	csourceLen := *(*C.int)(unsafe.Pointer(&sourceLen))
+	cdestinationDataPtr := (*C.int64_t)(unsafe.Pointer(&destinationData[0]))
+	cdestinationLen := *(*C.int)(unsafe.Pointer(&destinationLen))
+	C.atg_movedim(ptr, self, csourceDataPtr, csourceLen, cdestinationDataPtr, cdestinationLen)
+}
+func AtgMovedim1(ptr *Ctensor, self Ctensor, source int64, destination int64) {
+	csource := *(*C.int64_t)(unsafe.Pointer(&source))
+	cdestination := *(*C.int64_t)(unsafe.Pointer(&destination))
+	C.atg_movedim1(ptr, self, csource, cdestination)
 }
 func AtgMseLoss(ptr *Ctensor, self Ctensor, target Ctensor, reduction int64) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
@@ -3584,6 +4474,21 @@ func AtgMultinomialOut(ptr *Ctensor, out Ctensor, self Ctensor, numSamples int64
 	creplacement := *(*C.int)(unsafe.Pointer(&replacement))
 	C.atg_multinomial_out(ptr, out, self, cnumSamples, creplacement)
 }
+func AtgMultiply(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_multiply(ptr, self, other)
+}
+func AtgMultiply1(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_multiply1(ptr, self, other)
+}
+func AtgMultiply_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_multiply_(ptr, self, other)
+}
+func AtgMultiply1_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_multiply_1(ptr, self, other)
+}
+func AtgMultiplyOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_multiply_out(ptr, out, self, other)
+}
 func AtgMv(ptr *Ctensor, self Ctensor, vec Ctensor) {
 	C.atg_mv(ptr, self, vec)
 }
@@ -3597,6 +4502,50 @@ func AtgMvlgamma(ptr *Ctensor, self Ctensor, p int64) {
 func AtgMvlgamma_(ptr *Ctensor, self Ctensor, p int64) {
 	cp := *(*C.int64_t)(unsafe.Pointer(&p))
 	C.atg_mvlgamma_(ptr, self, cp)
+}
+func AtgNanquantile(ptr *Ctensor, self Ctensor, q float64, dimVal int64, dimNull int, keepdim int32) {
+	cq := *(*C.double)(unsafe.Pointer(&q))
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_nanquantile(ptr, self, cq, cdimVal, cdimNull, ckeepdim)
+}
+func AtgNanquantile1(ptr *Ctensor, self Ctensor, q Ctensor, dimVal int64, dimNull int, keepdim int32) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_nanquantile1(ptr, self, q, cdimVal, cdimNull, ckeepdim)
+}
+func AtgNanquantileOut(ptr *Ctensor, out Ctensor, self Ctensor, q float64, dimVal int64, dimNull int, keepdim int32) {
+	cq := *(*C.double)(unsafe.Pointer(&q))
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_nanquantile_out(ptr, out, self, cq, cdimVal, cdimNull, ckeepdim)
+}
+func AtgNanquantileOut1(ptr *Ctensor, out Ctensor, self Ctensor, q Ctensor, dimVal int64, dimNull int, keepdim int32) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_nanquantile_out1(ptr, out, self, q, cdimVal, cdimNull, ckeepdim)
+}
+func AtgNansum(ptr *Ctensor, self Ctensor, dtype int32) {
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_nansum(ptr, self, cdtype)
+}
+func AtgNansum1(ptr *Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32, dtype int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_nansum1(ptr, self, cdimDataPtr, cdimLen, ckeepdim, cdtype)
+}
+func AtgNansumOut(ptr *Ctensor, out Ctensor, self Ctensor, dimData []int64, dimLen int, keepdim int32, dtype int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_nansum_out(ptr, out, self, cdimDataPtr, cdimLen, ckeepdim, cdtype)
 }
 func AtgNarrow(ptr *Ctensor, self Ctensor, dim int64, start int64, length int64) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
@@ -3627,6 +4576,14 @@ func AtgNativeBatchNormOut(ptr *Ctensor, out Ctensor, saveMean Ctensor, saveInvs
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
 	C.atg_native_batch_norm_out(ptr, out, saveMean, saveInvstd, input, weight, bias, runningMean, runningVar, ctraining, cmomentum, ceps)
 }
+func AtgNativeGroupNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, n int64, c int64, hxW int64, group int64, eps float64) {
+	cn := *(*C.int64_t)(unsafe.Pointer(&n))
+	cc := *(*C.int64_t)(unsafe.Pointer(&c))
+	chxW := *(*C.int64_t)(unsafe.Pointer(&hxW))
+	cgroup := *(*C.int64_t)(unsafe.Pointer(&group))
+	ceps := *(*C.double)(unsafe.Pointer(&eps))
+	C.atg_native_group_norm(ptr, input, weight, bias, cn, cc, chxW, cgroup, ceps)
+}
 func AtgNativeLayerNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, m int64, n int64, eps float64) {
 	cm := *(*C.int64_t)(unsafe.Pointer(&m))
 	cn := *(*C.int64_t)(unsafe.Pointer(&n))
@@ -3635,6 +4592,13 @@ func AtgNativeLayerNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctenso
 }
 func AtgNativeNorm(ptr *Ctensor, self Ctensor) {
 	C.atg_native_norm(ptr, self)
+}
+func AtgNativeNorm1(ptr *Ctensor, self Ctensor, p Cscalar, dimData []int64, dimLen int, keepdim int32, dtype int32) {
+	cdimDataPtr := (*C.int64_t)(unsafe.Pointer(&dimData[0]))
+	cdimLen := *(*C.int)(unsafe.Pointer(&dimLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
+	C.atg_native_norm1(ptr, self, p, cdimDataPtr, cdimLen, ckeepdim, cdtype)
 }
 func AtgNe(ptr *Ctensor, self Ctensor, other Cscalar) {
 	C.atg_ne(ptr, self, other)
@@ -3663,6 +4627,15 @@ func AtgNeg_(ptr *Ctensor, self Ctensor) {
 func AtgNegOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_neg_out(ptr, out, self)
 }
+func AtgNegative(ptr *Ctensor, self Ctensor) {
+	C.atg_negative(ptr, self)
+}
+func AtgNegative_(ptr *Ctensor, self Ctensor) {
+	C.atg_negative_(ptr, self)
+}
+func AtgNegativeOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_negative_out(ptr, out, self)
+}
 func AtgNewEmpty(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int, optionsKind int32, optionsDevice int32) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
 	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
@@ -3683,6 +4656,15 @@ func AtgNewZeros(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int, opti
 	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
 	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
 	C.atg_new_zeros(ptr, self, csizeDataPtr, csizeLen, coptionsKind, coptionsDevice)
+}
+func AtgNextafter(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_nextafter(ptr, self, other)
+}
+func AtgNextafter_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_nextafter_(ptr, self, other)
+}
+func AtgNextafterOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_nextafter_out(ptr, out, self, other)
 }
 func AtgNllLoss(ptr *Ctensor, self Ctensor, target Ctensor, weight Ctensor, reduction int64, ignoreIndex int64) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
@@ -3792,6 +4774,24 @@ func AtgNormalOut3(ptr *Ctensor, out Ctensor, mean float64, std float64, sizeDat
 	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
 	C.atg_normal_out3(ptr, out, cmean, cstd, csizeDataPtr, csizeLen)
 }
+func AtgNotEqual(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_not_equal(ptr, self, other)
+}
+func AtgNotEqual1(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_not_equal1(ptr, self, other)
+}
+func AtgNotEqual_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_not_equal_(ptr, self, other)
+}
+func AtgNotEqual1_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_not_equal_1(ptr, self, other)
+}
+func AtgNotEqualOut(ptr *Ctensor, out Ctensor, self Ctensor, other Cscalar) {
+	C.atg_not_equal_out(ptr, out, self, other)
+}
+func AtgNotEqualOut1(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_not_equal_out1(ptr, out, self, other)
+}
 func AtgNuclearNorm(ptr *Ctensor, self Ctensor, keepdim int32) {
 	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
 	C.atg_nuclear_norm(ptr, self, ckeepdim)
@@ -3850,6 +4850,12 @@ func AtgOrmqrOut(ptr *Ctensor, out Ctensor, self Ctensor, input2 Ctensor, input3
 	ctranspose := *(*C.int)(unsafe.Pointer(&transpose))
 	C.atg_ormqr_out(ptr, out, self, input2, input3, cleft, ctranspose)
 }
+func AtgOuter(ptr *Ctensor, self Ctensor, vec2 Ctensor) {
+	C.atg_outer(ptr, self, vec2)
+}
+func AtgOuterOut(ptr *Ctensor, out Ctensor, self Ctensor, vec2 Ctensor) {
+	C.atg_outer_out(ptr, out, self, vec2)
+}
 func AtgPairwiseDistance(ptr *Ctensor, x1 Ctensor, x2 Ctensor, p float64, eps float64, keepdim int32) {
 	cp := *(*C.double)(unsafe.Pointer(&p))
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
@@ -3885,6 +4891,12 @@ func AtgPoissonNllLoss(ptr *Ctensor, input Ctensor, target Ctensor, logInput int
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
 	C.atg_poisson_nll_loss(ptr, input, target, clogInput, cfull, ceps, creduction)
+}
+func AtgPolar(ptr *Ctensor, abs Ctensor, angle Ctensor) {
+	C.atg_polar(ptr, abs, angle)
+}
+func AtgPolarOut(ptr *Ctensor, out Ctensor, abs Ctensor, angle Ctensor) {
+	C.atg_polar_out(ptr, out, abs, angle)
 }
 func AtgPolygamma(ptr *Ctensor, n int64, self Ctensor) {
 	cn := *(*C.int64_t)(unsafe.Pointer(&n))
@@ -3962,6 +4974,32 @@ func AtgQrOut(ptr *Ctensor, q Ctensor, r Ctensor, self Ctensor, some int32) {
 	csome := *(*C.int)(unsafe.Pointer(&some))
 	C.atg_qr_out(ptr, q, r, self, csome)
 }
+func AtgQuantile(ptr *Ctensor, self Ctensor, q float64, dimVal int64, dimNull int, keepdim int32) {
+	cq := *(*C.double)(unsafe.Pointer(&q))
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_quantile(ptr, self, cq, cdimVal, cdimNull, ckeepdim)
+}
+func AtgQuantile1(ptr *Ctensor, self Ctensor, q Ctensor, dimVal int64, dimNull int, keepdim int32) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_quantile1(ptr, self, q, cdimVal, cdimNull, ckeepdim)
+}
+func AtgQuantileOut(ptr *Ctensor, out Ctensor, self Ctensor, q float64, dimVal int64, dimNull int, keepdim int32) {
+	cq := *(*C.double)(unsafe.Pointer(&q))
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_quantile_out(ptr, out, self, cq, cdimVal, cdimNull, ckeepdim)
+}
+func AtgQuantileOut1(ptr *Ctensor, out Ctensor, self Ctensor, q Ctensor, dimVal int64, dimNull int, keepdim int32) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_quantile_out1(ptr, out, self, q, cdimVal, cdimNull, ckeepdim)
+}
 func AtgQuantizePerChannel(ptr *Ctensor, self Ctensor, scales Ctensor, zeroPoints Ctensor, axis int64, dtype int32) {
 	caxis := *(*C.int64_t)(unsafe.Pointer(&axis))
 	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
@@ -3973,69 +5011,32 @@ func AtgQuantizePerTensor(ptr *Ctensor, self Ctensor, scale float64, zeroPoint i
 	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
 	C.atg_quantize_per_tensor(ptr, self, cscale, czeroPoint, cdtype)
 }
+
 func AtgQuantizedBatchNorm(ptr *Ctensor, input Ctensor, weight Ctensor, bias Ctensor, mean Ctensor, vari Ctensor, eps float64, outputScale float64, outputZeroPoint int64) {
 	ceps := *(*C.double)(unsafe.Pointer(&eps))
 	coutputScale := *(*C.double)(unsafe.Pointer(&outputScale))
 	coutputZeroPoint := *(*C.int64_t)(unsafe.Pointer(&outputZeroPoint))
 	C.atg_quantized_batch_norm(ptr, input, weight, bias, mean, vari, ceps, coutputScale, coutputZeroPoint)
 }
-func AtgQuantizedGru(ptr *Ctensor, input Ctensor, hx Ctensor, paramsData []Ctensor, paramsLen int, hasBiases int32, numLayers int64, dropout float64, train int32, bidirectional int32, batchFirst int32) {
-	cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
-	cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
-	chasBiases := *(*C.int)(unsafe.Pointer(&hasBiases))
-	cnumLayers := *(*C.int64_t)(unsafe.Pointer(&numLayers))
-	cdropout := *(*C.double)(unsafe.Pointer(&dropout))
-	ctrain := *(*C.int)(unsafe.Pointer(&train))
-	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
-	cbatchFirst := *(*C.int)(unsafe.Pointer(&batchFirst))
-	C.atg_quantized_gru(ptr, input, hx, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst)
-}
-func AtgQuantizedGru1(ptr *Ctensor, data Ctensor, batchSizes Ctensor, hx Ctensor, paramsData []Ctensor, paramsLen int, hasBiases int32, numLayers int64, dropout float64, train int32, bidirectional int32) {
-	cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
-	cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
-	chasBiases := *(*C.int)(unsafe.Pointer(&hasBiases))
-	cnumLayers := *(*C.int64_t)(unsafe.Pointer(&numLayers))
-	cdropout := *(*C.double)(unsafe.Pointer(&dropout))
-	ctrain := *(*C.int)(unsafe.Pointer(&train))
-	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
-	C.atg_quantized_gru1(ptr, data, batchSizes, hx, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional)
-}
 func AtgQuantizedGruCell(ptr *Ctensor, input Ctensor, hx Ctensor, wIh Ctensor, wHh Ctensor, bIh Ctensor, bHh Ctensor, packedIh Ctensor, packedHh Ctensor, colOffsetsIh Ctensor, colOffsetsHh Ctensor, scaleIh Cscalar, scaleHh Cscalar, zeroPointIh Cscalar, zeroPointHh Cscalar) {
 	C.atg_quantized_gru_cell(ptr, input, hx, wIh, wHh, bIh, bHh, packedIh, packedHh, colOffsetsIh, colOffsetsHh, scaleIh, scaleHh, zeroPointIh, zeroPointHh)
-}
-func AtgQuantizedLstm(ptr *Ctensor, input Ctensor, hxData []Ctensor, hxLen int, paramsData []Ctensor, paramsLen int, hasBiases int32, numLayers int64, dropout float64, train int32, bidirectional int32, batchFirst int32, dtype int32, useDynamic int32) {
-	chxDataPtr := (*Ctensor)(unsafe.Pointer(&hxData[0]))
-	chxLen := *(*C.int)(unsafe.Pointer(&hxLen))
-	cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
-	cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
-	chasBiases := *(*C.int)(unsafe.Pointer(&hasBiases))
-	cnumLayers := *(*C.int64_t)(unsafe.Pointer(&numLayers))
-	cdropout := *(*C.double)(unsafe.Pointer(&dropout))
-	ctrain := *(*C.int)(unsafe.Pointer(&train))
-	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
-	cbatchFirst := *(*C.int)(unsafe.Pointer(&batchFirst))
-	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
-	cuseDynamic := *(*C.int)(unsafe.Pointer(&useDynamic))
-	C.atg_quantized_lstm(ptr, input, chxDataPtr, chxLen, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cbatchFirst, cdtype, cuseDynamic)
-}
-func AtgQuantizedLstm1(ptr *Ctensor, data Ctensor, batchSizes Ctensor, hxData []Ctensor, hxLen int, paramsData []Ctensor, paramsLen int, hasBiases int32, numLayers int64, dropout float64, train int32, bidirectional int32, dtype int32, useDynamic int32) {
-	chxDataPtr := (*Ctensor)(unsafe.Pointer(&hxData[0]))
-	chxLen := *(*C.int)(unsafe.Pointer(&hxLen))
-	cparamsDataPtr := (*Ctensor)(unsafe.Pointer(&paramsData[0]))
-	cparamsLen := *(*C.int)(unsafe.Pointer(&paramsLen))
-	chasBiases := *(*C.int)(unsafe.Pointer(&hasBiases))
-	cnumLayers := *(*C.int64_t)(unsafe.Pointer(&numLayers))
-	cdropout := *(*C.double)(unsafe.Pointer(&dropout))
-	ctrain := *(*C.int)(unsafe.Pointer(&train))
-	cbidirectional := *(*C.int)(unsafe.Pointer(&bidirectional))
-	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
-	cuseDynamic := *(*C.int)(unsafe.Pointer(&useDynamic))
-	C.atg_quantized_lstm1(ptr, data, batchSizes, chxDataPtr, chxLen, cparamsDataPtr, cparamsLen, chasBiases, cnumLayers, cdropout, ctrain, cbidirectional, cdtype, cuseDynamic)
 }
 func AtgQuantizedLstmCell(ptr *Ctensor, input Ctensor, hxData []Ctensor, hxLen int, wIh Ctensor, wHh Ctensor, bIh Ctensor, bHh Ctensor, packedIh Ctensor, packedHh Ctensor, colOffsetsIh Ctensor, colOffsetsHh Ctensor, scaleIh Cscalar, scaleHh Cscalar, zeroPointIh Cscalar, zeroPointHh Cscalar) {
 	chxDataPtr := (*Ctensor)(unsafe.Pointer(&hxData[0]))
 	chxLen := *(*C.int)(unsafe.Pointer(&hxLen))
 	C.atg_quantized_lstm_cell(ptr, input, chxDataPtr, chxLen, wIh, wHh, bIh, bHh, packedIh, packedHh, colOffsetsIh, colOffsetsHh, scaleIh, scaleHh, zeroPointIh, zeroPointHh)
+}
+func AtgQuantizedMaxPool1d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, ceilMode int32) {
+	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
+	ckernelSizeLen := *(*C.int)(unsafe.Pointer(&kernelSizeLen))
+	cstrideDataPtr := (*C.int64_t)(unsafe.Pointer(&strideData[0]))
+	cstrideLen := *(*C.int)(unsafe.Pointer(&strideLen))
+	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
+	cpaddingLen := *(*C.int)(unsafe.Pointer(&paddingLen))
+	cdilationDataPtr := (*C.int64_t)(unsafe.Pointer(&dilationData[0]))
+	cdilationLen := *(*C.int)(unsafe.Pointer(&dilationLen))
+	cceilMode := *(*C.int)(unsafe.Pointer(&ceilMode))
+	C.atg_quantized_max_pool1d(ptr, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cdilationDataPtr, cdilationLen, cceilMode)
 }
 func AtgQuantizedMaxPool2d(ptr *Ctensor, self Ctensor, kernelSizeData []int64, kernelSizeLen int, strideData []int64, strideLen int, paddingData []int64, paddingLen int, dilationData []int64, dilationLen int, ceilMode int32) {
 	ckernelSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&kernelSizeData[0]))
@@ -4054,6 +5055,15 @@ func AtgQuantizedRnnReluCell(ptr *Ctensor, input Ctensor, hx Ctensor, wIh Ctenso
 }
 func AtgQuantizedRnnTanhCell(ptr *Ctensor, input Ctensor, hx Ctensor, wIh Ctensor, wHh Ctensor, bIh Ctensor, bHh Ctensor, packedIh Ctensor, packedHh Ctensor, colOffsetsIh Ctensor, colOffsetsHh Ctensor, scaleIh Cscalar, scaleHh Cscalar, zeroPointIh Cscalar, zeroPointHh Cscalar) {
 	C.atg_quantized_rnn_tanh_cell(ptr, input, hx, wIh, wHh, bIh, bHh, packedIh, packedHh, colOffsetsIh, colOffsetsHh, scaleIh, scaleHh, zeroPointIh, zeroPointHh)
+}
+func AtgRad2deg(ptr *Ctensor, self Ctensor) {
+	C.atg_rad2deg(ptr, self)
+}
+func AtgRad2deg_(ptr *Ctensor, self Ctensor) {
+	C.atg_rad2deg_(ptr, self)
+}
+func AtgRad2degOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_rad2deg_out(ptr, out, self)
 }
 func AtgRand(ptr *Ctensor, sizeData []int64, sizeLen int, optionsKind int32, optionsDevice int32) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
@@ -4131,10 +5141,11 @@ func AtgRandom1_(ptr *Ctensor, self Ctensor, to int64) {
 	cto := *(*C.int64_t)(unsafe.Pointer(&to))
 	C.atg_random_1(ptr, self, cto)
 }
-func AtgRandom2(ptr *Ctensor, self Ctensor, from int64, to int64) {
+func AtgRandom2(ptr *Ctensor, self Ctensor, from int64, toVal int64, toNull int) {
 	cfrom := *(*C.int64_t)(unsafe.Pointer(&from))
-	cto := *(*C.int64_t)(unsafe.Pointer(&to))
-	C.atg_random_2(ptr, self, cfrom, cto)
+	ctoVal := *(*C.int64_t)(unsafe.Pointer(&toVal))
+	ctoNull := *(*C.uint8_t)(unsafe.Pointer(&toNull))
+	C.atg_random_2(ptr, self, cfrom, ctoVal, ctoNull)
 }
 func AtgRandperm(ptr *Ctensor, n int64, optionsKind int32, optionsDevice int32) {
 	cn := *(*C.int64_t)(unsafe.Pointer(&n))
@@ -4255,14 +5266,16 @@ func AtgRepeat(ptr *Ctensor, self Ctensor, repeatsData []int64, repeatsLen int) 
 func AtgRepeatInterleave(ptr *Ctensor, repeats Ctensor) {
 	C.atg_repeat_interleave(ptr, repeats)
 }
-func AtgRepeatInterleave1(ptr *Ctensor, self Ctensor, repeats Ctensor, dim int64) {
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	C.atg_repeat_interleave1(ptr, self, repeats, cdim)
+func AtgRepeatInterleave1(ptr *Ctensor, self Ctensor, repeats Ctensor, dimVal int64, dimNull int) {
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	C.atg_repeat_interleave1(ptr, self, repeats, cdimVal, cdimNull)
 }
-func AtgRepeatInterleave2(ptr *Ctensor, self Ctensor, repeats int64, dim int64) {
+func AtgRepeatInterleave2(ptr *Ctensor, self Ctensor, repeats int64, dimVal int64, dimNull int) {
 	crepeats := *(*C.int64_t)(unsafe.Pointer(&repeats))
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	C.atg_repeat_interleave2(ptr, self, crepeats, cdim)
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	C.atg_repeat_interleave2(ptr, self, crepeats, cdimVal, cdimNull)
 }
 func AtgReplicationPad1d(ptr *Ctensor, self Ctensor, paddingData []int64, paddingLen int) {
 	cpaddingDataPtr := (*C.int64_t)(unsafe.Pointer(&paddingData[0]))
@@ -4481,6 +5494,20 @@ func AtgScatter1_(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, value Cs
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_scatter_1(ptr, self, cdim, index, value)
 }
+func AtgScatter2(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, src Ctensor, reduce string) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	creduce := C.CString(reduce)
+	reduceLen := len(reduce)
+	creduceLen := *(*C.int)(unsafe.Pointer(&reduceLen))
+	C.atg_scatter_2(ptr, self, cdim, index, src, creduce, creduceLen)
+}
+func AtgScatter3(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, value Cscalar, reduce string) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	creduce := C.CString(reduce)
+	reduceLen := len(reduce)
+	creduceLen := *(*C.int)(unsafe.Pointer(&reduceLen))
+	C.atg_scatter_3(ptr, self, cdim, index, value, creduce, creduceLen)
+}
 func AtgScatterAdd(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, src Ctensor) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_scatter_add(ptr, self, cdim, index, src)
@@ -4489,10 +5516,32 @@ func AtgScatterAdd_(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, src Ct
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_scatter_add_(ptr, self, cdim, index, src)
 }
+func AtgSearchsorted(ptr *Ctensor, sortedSequence Ctensor, self Ctensor, outInt32 int32, right int32) {
+	coutInt32 := *(*C.int)(unsafe.Pointer(&outInt32))
+	cright := *(*C.int)(unsafe.Pointer(&right))
+	C.atg_searchsorted(ptr, sortedSequence, self, coutInt32, cright)
+}
+func AtgSearchsorted1(ptr *Ctensor, sortedSequence Ctensor, selfScalar Cscalar, outInt32 int32, right int32) {
+	coutInt32 := *(*C.int)(unsafe.Pointer(&outInt32))
+	cright := *(*C.int)(unsafe.Pointer(&right))
+	C.atg_searchsorted1(ptr, sortedSequence, selfScalar, coutInt32, cright)
+}
+func AtgSearchsortedOut(ptr *Ctensor, out Ctensor, sortedSequence Ctensor, self Ctensor, outInt32 int32, right int32) {
+	coutInt32 := *(*C.int)(unsafe.Pointer(&outInt32))
+	cright := *(*C.int)(unsafe.Pointer(&right))
+	C.atg_searchsorted_out(ptr, out, sortedSequence, self, coutInt32, cright)
+}
 func AtgSelect(ptr *Ctensor, self Ctensor, dim int64, index int64) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	cindex := *(*C.int64_t)(unsafe.Pointer(&index))
 	C.atg_select(ptr, self, cdim, cindex)
+}
+func AtgSelectBackward(ptr *Ctensor, grad Ctensor, inputSizesData []int64, inputSizesLen int, dim int64, index int64) {
+	cinputSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizesData[0]))
+	cinputSizesLen := *(*C.int)(unsafe.Pointer(&inputSizesLen))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cindex := *(*C.int64_t)(unsafe.Pointer(&index))
+	C.atg_select_backward(ptr, grad, cinputSizesDataPtr, cinputSizesLen, cdim, cindex)
 }
 func AtgSelu(ptr *Ctensor, self Ctensor) {
 	C.atg_selu(ptr, self)
@@ -4509,6 +5558,15 @@ func AtgSet1_(ptr *Ctensor, self Ctensor, source Ctensor) {
 func AtgSetRequiresGrad(ptr *Ctensor, self Ctensor, r int32) {
 	cr := *(*C.int)(unsafe.Pointer(&r))
 	C.atg_set_requires_grad(ptr, self, cr)
+}
+func AtgSgn(ptr *Ctensor, self Ctensor) {
+	C.atg_sgn(ptr, self)
+}
+func AtgSgn_(ptr *Ctensor, self Ctensor) {
+	C.atg_sgn_(ptr, self)
+}
+func AtgSgnOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_sgn_out(ptr, out, self)
 }
 func AtgSigmoid(ptr *Ctensor, self Ctensor) {
 	C.atg_sigmoid(ptr, self)
@@ -4534,6 +5592,24 @@ func AtgSign_(ptr *Ctensor, self Ctensor) {
 func AtgSignOut(ptr *Ctensor, out Ctensor, self Ctensor) {
 	C.atg_sign_out(ptr, out, self)
 }
+func AtgSignbit(ptr *Ctensor, self Ctensor) {
+	C.atg_signbit(ptr, self)
+}
+func AtgSignbitOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_signbit_out(ptr, out, self)
+}
+func AtgSilu(ptr *Ctensor, self Ctensor) {
+	C.atg_silu(ptr, self)
+}
+func AtgSilu_(ptr *Ctensor, self Ctensor) {
+	C.atg_silu_(ptr, self)
+}
+func AtgSiluBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor) {
+	C.atg_silu_backward(ptr, gradOutput, self)
+}
+func AtgSiluOut(ptr *Ctensor, out Ctensor, self Ctensor) {
+	C.atg_silu_out(ptr, out, self)
+}
 func AtgSin(ptr *Ctensor, self Ctensor) {
 	C.atg_sin(ptr, self)
 }
@@ -4558,6 +5634,15 @@ func AtgSlice(ptr *Ctensor, self Ctensor, dim int64, start int64, end int64, ste
 	cend := *(*C.int64_t)(unsafe.Pointer(&end))
 	cstep := *(*C.int64_t)(unsafe.Pointer(&step))
 	C.atg_slice(ptr, self, cdim, cstart, cend, cstep)
+}
+func AtgSliceBackward(ptr *Ctensor, grad Ctensor, inputSizesData []int64, inputSizesLen int, dim int64, start int64, end int64, step int64) {
+	cinputSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizesData[0]))
+	cinputSizesLen := *(*C.int)(unsafe.Pointer(&inputSizesLen))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	cstart := *(*C.int64_t)(unsafe.Pointer(&start))
+	cend := *(*C.int64_t)(unsafe.Pointer(&end))
+	cstep := *(*C.int64_t)(unsafe.Pointer(&step))
+	C.atg_slice_backward(ptr, grad, cinputSizesDataPtr, cinputSizesLen, cdim, cstart, cend, cstep)
 }
 func AtgSlogdet(ptr *Ctensor, self Ctensor) {
 	C.atg_slogdet(ptr, self)
@@ -4657,21 +5742,25 @@ func AtgSlowConvTranspose3dOut(ptr *Ctensor, out Ctensor, self Ctensor, weight C
 func AtgSmm(ptr *Ctensor, self Ctensor, mat2 Ctensor) {
 	C.atg_smm(ptr, self, mat2)
 }
-func AtgSmoothL1Loss(ptr *Ctensor, self Ctensor, target Ctensor, reduction int64) {
+func AtgSmoothL1Loss(ptr *Ctensor, self Ctensor, target Ctensor, reduction int64, beta float64) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
-	C.atg_smooth_l1_loss(ptr, self, target, creduction)
+	cbeta := *(*C.double)(unsafe.Pointer(&beta))
+	C.atg_smooth_l1_loss(ptr, self, target, creduction, cbeta)
 }
-func AtgSmoothL1LossBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, target Ctensor, reduction int64) {
+func AtgSmoothL1LossBackward(ptr *Ctensor, gradOutput Ctensor, self Ctensor, target Ctensor, reduction int64, beta float64) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
-	C.atg_smooth_l1_loss_backward(ptr, gradOutput, self, target, creduction)
+	cbeta := *(*C.double)(unsafe.Pointer(&beta))
+	C.atg_smooth_l1_loss_backward(ptr, gradOutput, self, target, creduction, cbeta)
 }
-func AtgSmoothL1LossBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, self Ctensor, target Ctensor, reduction int64) {
+func AtgSmoothL1LossBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, self Ctensor, target Ctensor, reduction int64, beta float64) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
-	C.atg_smooth_l1_loss_backward_out(ptr, gradInput, gradOutput, self, target, creduction)
+	cbeta := *(*C.double)(unsafe.Pointer(&beta))
+	C.atg_smooth_l1_loss_backward_out(ptr, gradInput, gradOutput, self, target, creduction, cbeta)
 }
-func AtgSmoothL1LossOut(ptr *Ctensor, out Ctensor, self Ctensor, target Ctensor, reduction int64) {
+func AtgSmoothL1LossOut(ptr *Ctensor, out Ctensor, self Ctensor, target Ctensor, reduction int64, beta float64) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
-	C.atg_smooth_l1_loss_out(ptr, out, self, target, creduction)
+	cbeta := *(*C.double)(unsafe.Pointer(&beta))
+	C.atg_smooth_l1_loss_out(ptr, out, self, target, creduction, cbeta)
 }
 func AtgSoftMarginLoss(ptr *Ctensor, self Ctensor, target Ctensor, reduction int64) {
 	creduction := *(*C.int64_t)(unsafe.Pointer(&reduction))
@@ -4847,13 +5936,16 @@ func AtgStdOut(ptr *Ctensor, out Ctensor, self Ctensor, dimData []int64, dimLen 
 	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
 	C.atg_std_out(ptr, out, self, cdimDataPtr, cdimLen, cunbiased, ckeepdim)
 }
-func AtgStft(ptr *Ctensor, self Ctensor, nFft int64, hopLength int64, winLength int64, window Ctensor, normalized int32, onesided int32) {
+func AtgStft(ptr *Ctensor, self Ctensor, nFft int64, hopLengthVal int64, hopLengthNull int, winLengthVal int64, winLengthNull int, window Ctensor, normalized int32, onesided int32, returnComplex int32) {
 	cnFft := *(*C.int64_t)(unsafe.Pointer(&nFft))
-	chopLength := *(*C.int64_t)(unsafe.Pointer(&hopLength))
-	cwinLength := *(*C.int64_t)(unsafe.Pointer(&winLength))
+	chopLengthVal := *(*C.int64_t)(unsafe.Pointer(&hopLengthVal))
+	chopLengthNull := *(*C.uint8_t)(unsafe.Pointer(&hopLengthNull))
+	cwinLengthVal := *(*C.int64_t)(unsafe.Pointer(&winLengthVal))
+	cwinLengthNull := *(*C.uint8_t)(unsafe.Pointer(&winLengthNull))
 	cnormalized := *(*C.int)(unsafe.Pointer(&normalized))
 	conesided := *(*C.int)(unsafe.Pointer(&onesided))
-	C.atg_stft(ptr, self, cnFft, chopLength, cwinLength, window, cnormalized, conesided)
+	creturnComplex := *(*C.int)(unsafe.Pointer(&returnComplex))
+	C.atg_stft(ptr, self, cnFft, chopLengthVal, chopLengthNull, cwinLengthVal, cwinLengthNull, window, cnormalized, conesided, creturnComplex)
 }
 func AtgSub(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_sub(ptr, self, other)
@@ -4869,6 +5961,21 @@ func AtgSub1_(ptr *Ctensor, self Ctensor, other Cscalar) {
 }
 func AtgSubOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
 	C.atg_sub_out(ptr, out, self, other)
+}
+func AtgSubtract(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_subtract(ptr, self, other)
+}
+func AtgSubtract1(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_subtract1(ptr, self, other)
+}
+func AtgSubtract_(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_subtract_(ptr, self, other)
+}
+func AtgSubtract1_(ptr *Ctensor, self Ctensor, other Cscalar) {
+	C.atg_subtract_1(ptr, self, other)
+}
+func AtgSubtractOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_subtract_out(ptr, out, self, other)
 }
 func AtgSum(ptr *Ctensor, self Ctensor, dtype int32) {
 	cdtype := *(*C.int)(unsafe.Pointer(&dtype))
@@ -4921,6 +6028,9 @@ func AtgT_(ptr *Ctensor, self Ctensor) {
 }
 func AtgTake(ptr *Ctensor, self Ctensor, index Ctensor) {
 	C.atg_take(ptr, self, index)
+}
+func AtgTakeBackward(ptr *Ctensor, grad Ctensor, input Ctensor, index Ctensor) {
+	C.atg_take_backward(ptr, grad, input, index)
 }
 func AtgTakeOut(ptr *Ctensor, out Ctensor, self Ctensor, index Ctensor) {
 	C.atg_take_out(ptr, out, self, index)
@@ -5037,6 +6147,11 @@ func AtgTotype(ptr *Ctensor, self Ctensor, scalarType int32) {
 func AtgTrace(ptr *Ctensor, self Ctensor) {
 	C.atg_trace(ptr, self)
 }
+func AtgTraceBackward(ptr *Ctensor, grad Ctensor, sizesData []int64, sizesLen int) {
+	csizesDataPtr := (*C.int64_t)(unsafe.Pointer(&sizesData[0]))
+	csizesLen := *(*C.int)(unsafe.Pointer(&sizesLen))
+	C.atg_trace_backward(ptr, grad, csizesDataPtr, csizesLen)
+}
 func AtgTranspose(ptr *Ctensor, self Ctensor, dim0 int64, dim1 int64) {
 	cdim0 := *(*C.int64_t)(unsafe.Pointer(&dim0))
 	cdim1 := *(*C.int64_t)(unsafe.Pointer(&dim1))
@@ -5144,22 +6259,37 @@ func AtgTypeAs(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_type_as(ptr, self, other)
 }
 
+func AtgUnflatten(ptr *Ctensor, self Ctensor, dim int64, sizesData []int64, sizesLen int) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	csizesDataPtr := (*C.int64_t)(unsafe.Pointer(&sizesData[0]))
+	csizesLen := *(*C.int)(unsafe.Pointer(&sizesLen))
+	C.atg_unflatten(ptr, self, cdim, csizesDataPtr, csizesLen)
+}
 func AtgUnfold(ptr *Ctensor, self Ctensor, dimension int64, size int64, step int64) {
 	cdimension := *(*C.int64_t)(unsafe.Pointer(&dimension))
 	csize := *(*C.int64_t)(unsafe.Pointer(&size))
 	cstep := *(*C.int64_t)(unsafe.Pointer(&step))
 	C.atg_unfold(ptr, self, cdimension, csize, cstep)
 }
+func AtgUnfoldBackward(ptr *Ctensor, gradIn Ctensor, inputSizesData []int64, inputSizesLen int, dim int64, size int64, step int64) {
+	cinputSizesDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizesData[0]))
+	cinputSizesLen := *(*C.int)(unsafe.Pointer(&inputSizesLen))
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	csize := *(*C.int64_t)(unsafe.Pointer(&size))
+	cstep := *(*C.int64_t)(unsafe.Pointer(&step))
+	C.atg_unfold_backward(ptr, gradIn, cinputSizesDataPtr, cinputSizesLen, cdim, csize, cstep)
+}
 func AtgUniform_(ptr *Ctensor, self Ctensor, from float64, to float64) {
 	cfrom := *(*C.double)(unsafe.Pointer(&from))
 	cto := *(*C.double)(unsafe.Pointer(&to))
 	C.atg_uniform_(ptr, self, cfrom, cto)
 }
-func AtgUniqueConsecutive(ptr *Ctensor, self Ctensor, returnInverse int32, returnCounts int32, dim int64) {
+func AtgUniqueConsecutive(ptr *Ctensor, self Ctensor, returnInverse int32, returnCounts int32, dimVal int64, dimNull int) {
 	creturnInverse := *(*C.int)(unsafe.Pointer(&returnInverse))
 	creturnCounts := *(*C.int)(unsafe.Pointer(&returnCounts))
-	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
-	C.atg_unique_consecutive(ptr, self, creturnInverse, creturnCounts, cdim)
+	cdimVal := *(*C.int64_t)(unsafe.Pointer(&dimVal))
+	cdimNull := *(*C.uint8_t)(unsafe.Pointer(&dimNull))
+	C.atg_unique_consecutive(ptr, self, creturnInverse, creturnCounts, cdimVal, cdimNull)
 }
 func AtgUniqueDim(ptr *Ctensor, self Ctensor, dim int64, sorted int32, returnInverse int32, returnCounts int32) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
@@ -5174,6 +6304,7 @@ func AtgUniqueDimConsecutive(ptr *Ctensor, self Ctensor, dim int64, returnInvers
 	creturnCounts := *(*C.int)(unsafe.Pointer(&returnCounts))
 	C.atg_unique_dim_consecutive(ptr, self, cdim, creturnInverse, creturnCounts)
 }
+
 func AtgUnsqueeze(ptr *Ctensor, self Ctensor, dim int64) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_unsqueeze(ptr, self, cdim)
@@ -5182,248 +6313,317 @@ func AtgUnsqueeze_(ptr *Ctensor, self Ctensor, dim int64) {
 	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 	C.atg_unsqueeze_(ptr, self, cdim)
 }
-func AtgUpsampleBicubic2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBicubic2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bicubic2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bicubic2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleBicubic2dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBicubic2dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
 	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bicubic2d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bicubic2d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleBicubic2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBicubic2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
 	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bicubic2d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bicubic2d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleBicubic2dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBicubic2dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bicubic2d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bicubic2d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleBilinear2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBilinear2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bilinear2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bilinear2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleBilinear2dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBilinear2dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
 	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bilinear2d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bilinear2d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleBilinear2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBilinear2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
 	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bilinear2d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bilinear2d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleBilinear2dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesH float64, scalesW float64) {
+func AtgUpsampleBilinear2dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_bilinear2d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesH, cscalesW)
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_bilinear2d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleLinear1d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scales float64) {
+func AtgUpsampleLinear1d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesVal float64, scalesNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_linear1d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscales)
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_linear1d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesVal, cscalesNull)
 }
-func AtgUpsampleLinear1dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scales float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
-	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
-	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_linear1d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscales)
-}
-func AtgUpsampleLinear1dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scales float64) {
+func AtgUpsampleLinear1dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesVal float64, scalesNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
 	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_linear1d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscales)
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_linear1d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesVal, cscalesNull)
 }
-func AtgUpsampleLinear1dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scales float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_linear1d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscales)
-}
-func AtgUpsampleNearest1d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scales float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_nearest1d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscales)
-}
-func AtgUpsampleNearest1dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scales float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
-	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_nearest1d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscales)
-}
-func AtgUpsampleNearest1dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scales float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
-	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_nearest1d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscales)
-}
-func AtgUpsampleNearest1dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scales float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cscales := *(*C.double)(unsafe.Pointer(&scales))
-	C.atg_upsample_nearest1d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, cscales)
-}
-func AtgUpsampleNearest2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscalesH, cscalesW)
-}
-func AtgUpsampleNearest2dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
-	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest2d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesH, cscalesW)
-}
-func AtgUpsampleNearest2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
-	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest2d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesH, cscalesW)
-}
-func AtgUpsampleNearest2dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest2d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, cscalesH, cscalesW)
-}
-func AtgUpsampleNearest3d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesD float64, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest3d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscalesD, cscalesH, cscalesW)
-}
-func AtgUpsampleNearest3dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesD float64, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
-	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest3d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesD, cscalesH, cscalesW)
-}
-func AtgUpsampleNearest3dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesD float64, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
-	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest3d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesD, cscalesH, cscalesW)
-}
-func AtgUpsampleNearest3dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesD float64, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_nearest3d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, cscalesD, cscalesH, cscalesW)
-}
-func AtgUpsampleTrilinear3d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesD float64, scalesH float64, scalesW float64) {
-	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
-	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
-	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_trilinear3d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesD, cscalesH, cscalesW)
-}
-func AtgUpsampleTrilinear3dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesD float64, scalesH float64, scalesW float64) {
+func AtgUpsampleLinear1dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesVal float64, scalesNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
 	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_trilinear3d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesD, cscalesH, cscalesW)
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_linear1d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesVal, cscalesNull)
 }
-func AtgUpsampleTrilinear3dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesD float64, scalesH float64, scalesW float64) {
+func AtgUpsampleLinear1dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesVal float64, scalesNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_linear1d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesVal, cscalesNull)
+}
+func AtgUpsampleNearest1d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesVal float64, scalesNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_nearest1d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscalesVal, cscalesNull)
+}
+func AtgUpsampleNearest1dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesVal float64, scalesNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
+	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_nearest1d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesVal, cscalesNull)
+}
+func AtgUpsampleNearest1dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesVal float64, scalesNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
+	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_nearest1d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesVal, cscalesNull)
+}
+func AtgUpsampleNearest1dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesVal float64, scalesNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cscalesVal := *(*C.double)(unsafe.Pointer(&scalesVal))
+	cscalesNull := *(*C.uint8_t)(unsafe.Pointer(&scalesNull))
+	C.atg_upsample_nearest1d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, cscalesVal, cscalesNull)
+}
+func AtgUpsampleNearest2d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest2d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleNearest2dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
+	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest2d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleNearest2dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
+	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest2d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleNearest2dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest2d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleNearest3d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest3d(ptr, self, coutputSizeDataPtr, coutputSizeLen, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleNearest3dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
+	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest3d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleNearest3dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
+	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest3d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleNearest3dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_nearest3d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleTrilinear3d(ptr *Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_trilinear3d(ptr, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleTrilinear3dBackward(ptr *Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
 	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_trilinear3d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesD, cscalesH, cscalesW)
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_trilinear3d_backward(ptr, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
 }
-func AtgUpsampleTrilinear3dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesD float64, scalesH float64, scalesW float64) {
+func AtgUpsampleTrilinear3dBackwardOut(ptr *Ctensor, gradInput Ctensor, gradOutput Ctensor, outputSizeData []int64, outputSizeLen int, inputSizeData []int64, inputSizeLen int, alignCorners int32, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
+	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
+	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
+	cinputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&inputSizeData[0]))
+	cinputSizeLen := *(*C.int)(unsafe.Pointer(&inputSizeLen))
+	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_trilinear3d_backward_out(ptr, gradInput, gradOutput, coutputSizeDataPtr, coutputSizeLen, cinputSizeDataPtr, cinputSizeLen, calignCorners, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgUpsampleTrilinear3dOut(ptr *Ctensor, out Ctensor, self Ctensor, outputSizeData []int64, outputSizeLen int, alignCorners int32, scalesDVal float64, scalesDNull int, scalesHVal float64, scalesHNull int, scalesWVal float64, scalesWNull int) {
 	coutputSizeDataPtr := (*C.int64_t)(unsafe.Pointer(&outputSizeData[0]))
 	coutputSizeLen := *(*C.int)(unsafe.Pointer(&outputSizeLen))
 	calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
-	cscalesD := *(*C.double)(unsafe.Pointer(&scalesD))
-	cscalesH := *(*C.double)(unsafe.Pointer(&scalesH))
-	cscalesW := *(*C.double)(unsafe.Pointer(&scalesW))
-	C.atg_upsample_trilinear3d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesD, cscalesH, cscalesW)
+	cscalesDVal := *(*C.double)(unsafe.Pointer(&scalesDVal))
+	cscalesDNull := *(*C.uint8_t)(unsafe.Pointer(&scalesDNull))
+	cscalesHVal := *(*C.double)(unsafe.Pointer(&scalesHVal))
+	cscalesHNull := *(*C.uint8_t)(unsafe.Pointer(&scalesHNull))
+	cscalesWVal := *(*C.double)(unsafe.Pointer(&scalesWVal))
+	cscalesWNull := *(*C.uint8_t)(unsafe.Pointer(&scalesWNull))
+	C.atg_upsample_trilinear3d_out(ptr, out, self, coutputSizeDataPtr, coutputSizeLen, calignCorners, cscalesDVal, cscalesDNull, cscalesHVal, cscalesHNull, cscalesWVal, cscalesWNull)
+}
+func AtgValueSelectingReductionBackward(ptr *Ctensor, grad Ctensor, dim int64, indices Ctensor, sizesData []int64, sizesLen int, keepdim int32) {
+	cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
+	csizesDataPtr := (*C.int64_t)(unsafe.Pointer(&sizesData[0]))
+	csizesLen := *(*C.int)(unsafe.Pointer(&sizesLen))
+	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
+	C.atg_value_selecting_reduction_backward(ptr, grad, cdim, indices, csizesDataPtr, csizesLen, ckeepdim)
 }
 func AtgValues(ptr *Ctensor, self Ctensor) {
 	C.atg_values(ptr, self)
+}
+func AtgVander(ptr *Ctensor, x Ctensor, nVal int64, nNull int, increasing int32) {
+	cnVal := *(*C.int64_t)(unsafe.Pointer(&nVal))
+	cnNull := *(*C.uint8_t)(unsafe.Pointer(&nNull))
+	cincreasing := *(*C.int)(unsafe.Pointer(&increasing))
+	C.atg_vander(ptr, x, cnVal, cnNull, cincreasing)
 }
 func AtgVar(ptr *Ctensor, self Ctensor, unbiased int32) {
 	cunbiased := *(*C.int)(unsafe.Pointer(&unbiased))
@@ -5454,6 +6654,12 @@ func AtgVarOut(ptr *Ctensor, out Ctensor, self Ctensor, dimData []int64, dimLen 
 	ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim))
 	C.atg_var_out(ptr, out, self, cdimDataPtr, cdimLen, cunbiased, ckeepdim)
 }
+func AtgVdot(ptr *Ctensor, self Ctensor, other Ctensor) {
+	C.atg_vdot(ptr, self, other)
+}
+func AtgVdotOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor) {
+	C.atg_vdot_out(ptr, out, self, other)
+}
 func AtgView(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int) {
 	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
 	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
@@ -5462,9 +6668,34 @@ func AtgView(ptr *Ctensor, self Ctensor, sizeData []int64, sizeLen int) {
 func AtgViewAs(ptr *Ctensor, self Ctensor, other Ctensor) {
 	C.atg_view_as(ptr, self, other)
 }
+func AtgViewAsComplex(ptr *Ctensor, self Ctensor) {
+	C.atg_view_as_complex(ptr, self)
+}
+func AtgViewAsReal(ptr *Ctensor, self Ctensor) {
+	C.atg_view_as_real(ptr, self)
+}
+func AtgVstack(ptr *Ctensor, tensorsData []Ctensor, tensorsLen int) {
+	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	C.atg_vstack(ptr, ctensorsDataPtr, ctensorsLen)
+}
+func AtgVstackOut(ptr *Ctensor, out Ctensor, tensorsData []Ctensor, tensorsLen int) {
+	ctensorsDataPtr := (*Ctensor)(unsafe.Pointer(&tensorsData[0]))
+	ctensorsLen := *(*C.int)(unsafe.Pointer(&tensorsLen))
+	C.atg_vstack_out(ptr, out, ctensorsDataPtr, ctensorsLen)
+}
 
 func AtgWhere1(ptr *Ctensor, condition Ctensor, self Ctensor, other Ctensor) {
 	C.atg_where1(ptr, condition, self, other)
+}
+func AtgWhere2(ptr *Ctensor, condition Ctensor, selfScalar Cscalar, other Ctensor) {
+	C.atg_where2(ptr, condition, selfScalar, other)
+}
+func AtgWhere3(ptr *Ctensor, condition Ctensor, self Ctensor, other Cscalar) {
+	C.atg_where3(ptr, condition, self, other)
+}
+func AtgWhere4(ptr *Ctensor, condition Ctensor, selfScalar Cscalar, other Cscalar) {
+	C.atg_where4(ptr, condition, selfScalar, other)
 }
 func AtgZero_(ptr *Ctensor, self Ctensor) {
 	C.atg_zero_(ptr, self)
