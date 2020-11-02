@@ -401,8 +401,9 @@ func AtoSgd(learningRate, momentum, dampening, weightDecay float64, nesterov int
 	return C.ato_sgd(clearningRate, cmomentum, cdampening, cweightDecay, cnesterov)
 }
 
+// NOTE. Backward compat for param group not updated (#261)
 // void ato_add_parameters(optimizer, tensor *, int ntensors);
-func AtoAddParameters(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
+func AtoAddParametersOld(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
 
 	var ctensors []C.tensor
 	for i := 0; i < len(tensors); i++ {
@@ -412,7 +413,23 @@ func AtoAddParameters(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
 	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
 
 	// Just give pointer to the first element of ctensors slice
-	C.ato_add_parameters(coptimizer, &ctensors[0], cntensors)
+	C.ato_add_parameters_old(coptimizer, &ctensors[0], cntensors)
+}
+
+// NOTE. This function is not working correctly. Need to update!!!
+// DO NOT USE!!!!!
+// TODO. updated
+func AtoAddParameters(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
+
+	var ctensors []C.tensor
+	for i := 0; i < len(tensors); i++ {
+		ctensors = append(ctensors, (C.tensor)(tensors[i]))
+	}
+
+	cntensors := *(*C.size_t)(unsafe.Pointer(&ntensors))
+
+	// Just give pointer to the first element of ctensors slice
+	C.ato_add_parameters(coptimizer, ctensors[0], cntensors)
 }
 
 // void ato_set_learning_rate(optimizer, double learning_rate);

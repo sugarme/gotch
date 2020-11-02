@@ -28,7 +28,8 @@ let excluded_functions =
     ; "_amp_non_finite_check_and_unscale_"
     ; "_cummin_helper"
     ; "_cummax_helper"
-    ; "retain_grad" ]
+    ; "retain_grad"
+    ; "_validate_sparse_coo_tensor_args" ]
 
 let no_tensor_options =
   Set.of_list
@@ -47,7 +48,7 @@ let no_tensor_options =
  *     (module String)
  *     ["add"; "add_"; "div"; "div_"; "mul"; "mul_"; "sub"; "sub_"; "nll_loss"]
  *  *)
-let excluded_prefixes = ["_thnn_"; "_th_"; "thnn_"; "th_"]
+let excluded_prefixes = ["_thnn_"; "_th_"; "thnn_"; "th_"; "_foreach"]
 
 let excluded_suffixes = ["_forward"; "_forward_out"]
 
@@ -79,7 +80,9 @@ module Func = struct
   type arg_type =
     | Bool
     | Int64
+    | Int64Option
     | Double
+    | DoubleOption
     | Tensor
     | TensorOption
     | IntList
@@ -104,8 +107,8 @@ module Func = struct
   let arg_type_of_string str ~is_nullable =
     match String.lowercase str with
     | "bool" -> Some Bool
-    | "int64_t" -> Some Int64
-    | "double" -> Some Double
+    | "int64_t" -> Some (if is_nullable then Int64Option else Int64)
+    | "double" -> Some (if is_nullable then DoubleOption else Double)
     | "booltensor" | "indextensor" | "tensor" ->
         Some (if is_nullable then TensorOption else Tensor)
     | "tensoroptions" -> Some TensorOptions
@@ -127,6 +130,10 @@ module Func = struct
         | TensorOptions ->
             Printf.sprintf "int %s_kind, int %s_device" arg_name arg_name
         | String -> Printf.sprintf "char* %s_ptr, int %s_len" arg_name arg_name
+        | Int64Option ->
+            Printf.sprintf "int64_t %s_v, uint8_t %s_null" arg_name arg_name
+        | DoubleOption ->
+            Printf.sprintf "double %s_v, uint8_t %s_null" arg_name arg_name
         | otherwise ->
             let simple_type_cstring =
               match otherwise with
@@ -138,7 +145,9 @@ module Func = struct
               | ScalarType -> "int"
               | Device -> "int"
               | Scalar -> "scalar"
-              | String | IntList | TensorList | TensorOptions -> assert false
+              | Int64Option | DoubleOption | String | IntList | TensorList
+               |TensorOptions ->
+                  assert false
             in
             Printf.sprintf "%s %s" simple_type_cstring arg_name )
     |> String.concat ~sep:", "
@@ -162,6 +171,14 @@ module Func = struct
             Printf.sprintf
               "at::device(device_of_int(%s_device)).dtype(at::ScalarType(%s_kind))"
               arg_name arg_name
+        | Int64Option ->
+            Printf.sprintf
+              "%s_null ? c10::nullopt : c10::optional<int64_t>(%s_v)" arg_name
+              arg_name
+        | DoubleOption ->
+            Printf.sprintf
+              "%s_null ? c10::nullopt : c10::optional<double>(%s_v)" arg_name
+              arg_name
         | ScalarType -> Printf.sprintf "at::ScalarType(%s)" arg_name
         | Device -> Printf.sprintf "device_of_int(%s)" arg_name
         | _ -> arg_name )
@@ -229,6 +246,8 @@ module Func = struct
         | String -> single_param "string"
         | IntList -> Printf.sprintf "%sData []int64, %sLen int" an an
         | TensorList -> Printf.sprintf "%sData []Ctensor, %sLen int" an an
+        | Int64Option -> Printf.sprintf "%sVal int64, %sNull int" an an
+        | DoubleOption -> Printf.sprintf "%sVal float64, %sNull int" an an
         | TensorOptions -> Printf.sprintf "%sKind int32, %sDevice int32" an an
     )
     |> String.concat ~sep:", "
@@ -250,6 +269,8 @@ module Func = struct
         | String -> Printf.sprintf "c%s, c%sLen" an an
         | IntList -> Printf.sprintf "c%sDataPtr, c%sLen" an an
         | TensorList -> Printf.sprintf "c%sDataPtr, c%sLen" an an
+        | Int64Option -> Printf.sprintf "c%sVal, c%sNull" an an
+        | DoubleOption -> Printf.sprintf "c%sVal, c%sNull" an an
         | TensorOptions -> Printf.sprintf "c%sKind, c%sDevice" an an )
     |> String.concat ~sep:", "
 
@@ -290,6 +311,18 @@ module Func = struct
               "\n\
                c%sDataPtr := (*Ctensor)(unsafe.Pointer(&%sData[0]))\n\
                c%sLen := *(*C.int)(unsafe.Pointer(&%sLen))"
+              an an an an
+        | Int64Option ->
+            Printf.sprintf
+              "\n\
+               c%sVal := *(*C.int64_t)(unsafe.Pointer(&%sVal))\n\
+               c%sNull := *(*C.uint8_t)(unsafe.Pointer(&%sNull))"
+              an an an an
+        | DoubleOption ->
+            Printf.sprintf
+              "\n\
+               c%sVal := *(*C.double)(unsafe.Pointer(&%sVal))\n\
+               c%sNull := *(*C.uint8_t)(unsafe.Pointer(&%sNull))"
               an an an an
         | TensorOptions ->
             Printf.sprintf
@@ -356,6 +389,8 @@ module Func = struct
               | TensorOptions -> "gotch.KindDevice"
               | Scalar -> "*Scalar"
               | ScalarType -> "gotch.DType"
+              | Int64Option -> "[]int64"
+              | DoubleOption -> "[]float64"
               | Device -> "gotch.Device"
             in
             match arg.arg_type with
@@ -436,6 +471,8 @@ module Func = struct
         | String -> Printf.sprintf "%s" name
         | IntList -> Printf.sprintf "%s, len(%s)" name name
         | TensorList -> Printf.sprintf "c%s, len(c%s)" name name
+        | Int64Option -> Printf.sprintf "c%sVal, c%sNull" name name
+        | DoubleOption -> Printf.sprintf "c%sVal, c%sNull" name name
         | TensorOption -> Printf.sprintf "%s.ctensor" name
         | _ -> name )
     |> String.concat ~sep:", "
@@ -456,6 +493,24 @@ module Func = struct
         | Device -> ""
         | String -> ""
         | IntList -> ""
+        | Int64Option ->
+            Printf.sprintf
+              "var c%sVal int64 = 0\n\
+              \ var c%sNull int = 1\n\
+              \ if len(%s) > 0 {\n\
+              \ c%sVal = %s[0]\n\
+              \ c%sNull = 0\n\
+              \ }\n"
+              an an an an an an
+        | DoubleOption ->
+            Printf.sprintf
+              "var c%sVal float64 = 0.0\n\
+              \ var c%sNull int = 1\n\
+              \ if len(%s) > 0 {\n\
+              \ c%sVal = %s[0]\n\
+              \ c%sNull = 0\n\
+              \ }\n"
+              an an an an an an
         | TensorList ->
             Printf.sprintf
               " var c%s []lib.Ctensor\n\
@@ -687,7 +742,16 @@ let write_wrapper funcs filename =
             ; "Split"
             ; "SplitWithSizes"
             ; "Unbind"
-            ; "Where" ]
+            ; "Where"
+            ; "Atleast1d1"
+            ; "Atleast2d1"
+            ; "Atleast3d1"
+            ; "Dequantize1"
+            ; "QuantizePerTensor1"
+            ; "UnsafeChunk"
+            ; "UnsafeSplit"
+            ; "UnsafeSplitWithSizes"
+            ; "AlignTensors" ]
           in
           if
             List.exists excluded_funcs ~f:(fun name ->
@@ -793,7 +857,16 @@ let write_must_wrapper funcs filename =
             ; "Split"
             ; "SplitWithSizes"
             ; "Unbind"
-            ; "Where" ]
+            ; "Where"
+            ; "Atleast1d1"
+            ; "Atleast2d1"
+            ; "Atleast3d1"
+            ; "Dequantize1"
+            ; "QuantizePerTensor1"
+            ; "UnsafeChunk"
+            ; "UnsafeSplit"
+            ; "UnsafeSplitWithSizes"
+            ; "AlignTensors" ]
           in
           if
             List.exists excluded_funcs ~f:(fun name ->
@@ -943,7 +1016,7 @@ let run ~yaml_filename ~cpp_filename ~ffi_filename ~must_wrapper_filename
   write_wrapper funcs wrapper_filename
 
 let () =
-  run ~yaml_filename:"gen/pytorch/Declarations-v1.5.0.yaml"
+  run ~yaml_filename:"gen/pytorch/Declarations-v1.7.0.yaml"
     ~cpp_filename:"libtch/torch_api_generated"
     ~ffi_filename:"libtch/c-generated.go"
     ~must_wrapper_filename:"tensor/must-tensor-generated.go"

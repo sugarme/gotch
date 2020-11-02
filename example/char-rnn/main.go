@@ -116,9 +116,9 @@ func main() {
 			sumLoss += loss.Float64Values()[0]
 			cntLoss += 1.0
 
-			batchTs.MustDrop()
-			batchNarrow.MustDrop()
-			xsOnehotTmp.MustDrop()
+			// batchTs.MustDrop()
+			// batchNarrow.MustDrop()
+			// xsOnehotTmp.MustDrop()
 			xsOnehot.MustDrop()
 			ys.MustDrop()
 			lstmOut.MustDrop()

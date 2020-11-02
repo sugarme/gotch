@@ -67,7 +67,8 @@ func (co *COptimizer) AddParameters(tensors []Tensor) error {
 
 	ntensors := len(tensors)
 
-	lib.AtoAddParameters(co.coptimizer, ctensors, ntensors)
+	// NOTE. temporary switch back as param group not updated yet!
+	lib.AtoAddParametersOld(co.coptimizer, ctensors, ntensors)
 
 	return TorchErr()
 }

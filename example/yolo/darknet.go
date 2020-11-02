@@ -271,7 +271,7 @@ func upsample(prevChannels int64) (retVal1 int64, retVal2 interface{}) {
 		h := res[2]
 		w := res[3]
 
-		return xs.MustUpsampleNearest2d([]int64{h * 2, w * 2}, 2.0, 2.0, false)
+		return xs.MustUpsampleNearest2d([]int64{h * 2, w * 2}, []float64{2.0}, []float64{2.0}, false)
 	})
 
 	return prevChannels, Layer{Val: layer}

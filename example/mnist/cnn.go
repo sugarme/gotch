@@ -117,21 +117,21 @@ func runCNN1() {
 			logits := net.ForwardT(bImages, true)
 			loss := logits.CrossEntropyForLogits(bLabels)
 
-			// loss = loss.MustSetRequiresGrad(true)
+			// loss = loss.MustSetRequiresGrad(true, false)
 			opt.BackwardStep(loss)
 
 			epocLoss = loss.MustShallowClone()
 			epocLoss.Detach_()
 
-			// fmt.Printf("completed \t %v batches\t %.2f\n", i, loss.Values()[0])
+			// fmt.Printf("completed \t %v batches\t %.2f\n", i, loss.Float64Values()[0])
 
 			bImages.MustDrop()
 			bLabels.MustDrop()
 		}
 
-		vs.Freeze()
+		// vs.Freeze()
 		testAccuracy := nn.BatchAccuracyForLogits(vs, net, testImages, testLabels, vs.Device(), 1024)
-		vs.Unfreeze()
+		// vs.Unfreeze()
 		fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss.Float64Values()[0], testAccuracy*100.0)
 		if testAccuracy > bestAccuracy {
 			bestAccuracy = testAccuracy

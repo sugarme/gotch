@@ -5,32 +5,32 @@
 
 - **GoTch** is a C++ Libtorch Go binding for developing and implementing deep learning projects in Go.
 - This package is to create a thin wrapper of Libtorch to make use of its tensor APIs and CUDA support while implementing as much idiomatic Go as possible. 
-- There are about **1129** auto-generated tensor APIs.
+- There are about **1404** auto-generated tensor APIs.
 
 ## Dependencies
 
-- **Libtorch** C++ v1.5.0 library of [Pytorch](https://pytorch.org/)
+- **Libtorch** C++ v1.7.0 library of [Pytorch](https://pytorch.org/)
 
 
 ## Installation
 
 - **CPU**
 
-    Default values: `LIBTORCH_VER=1.5.1` and `GOTCH_VER=v0.1.7`
+    Default values: `LIBTORCH_VER=1.7.0` and `GOTCH_VER=v0.3.0`
 
     ```bash
-    go get -u github.com/sugarme/gotch@v0.1.7
-    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@v0.1.7/setup-cpu.sh
+    go get -u github.com/sugarme/gotch@v0.3.0
+    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@v0.3.0/setup-cpu.sh
 
     ```
 
 - **GPU**
 
-    Default values: `LIBTORCH_VER=1.5.1`, `CUDA_VER=10.1` and `GOTCH_VER=v0.1.7`
+    Default values: `LIBTORCH_VER=1.7.0`, `CUDA_VER=10.1` and `GOTCH_VER=v0.3.0`
 
     ```bash
-    go get -u github.com/sugarme/gotch@v0.1.7
-    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@v0.1.7/setup-gpu.sh
+    go get -u github.com/sugarme/gotch@v0.3.0
+    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@v0.3.0/setup-gpu.sh
 
     ```
 

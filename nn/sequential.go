@@ -254,6 +254,40 @@ func BatchAccuracyForLogits(vs *VarStore, m ts.ModuleT, xs, ys *ts.Tensor, d got
 	return sumAccuracy / sampleCount
 }
 
+func BatchAccuracyForLogitsOld(vs *VarStore, m ts.ModuleT, xs, ys *ts.Tensor, d gotch.Device, batchSize int) (retVal float64) {
+
+	var (
+		sumAccuracy float64 = 0.0
+		sampleCount float64 = 0.0
+	)
+
+	vs.Freeze()
+	defer vs.Unfreeze()
+
+	iter2 := ts.MustNewIter2(xs, ys, int64(batchSize))
+	for {
+		item, ok := iter2.Next()
+		if !ok {
+			break
+		}
+
+		size := float64(item.Data.MustSize()[0])
+		bImages := item.Data.MustTo(d, true)
+		bLabels := item.Label.MustTo(d, true)
+
+		logits := m.ForwardT(bImages, false)
+		acc := logits.AccuracyForLogits(bLabels)
+		sumAccuracy += acc.Float64Values()[0] * size
+		sampleCount += size
+
+		bImages.MustDrop()
+		bLabels.MustDrop()
+		acc.MustDrop()
+	}
+
+	return sumAccuracy / sampleCount
+}
+
 // BatchAccuracyForLogitIdx is an alternative of BatchAccuracyForLogits to
 // calculate accuracy for specified batch on module weight. It uses tensor
 // indexing instead of Iter2

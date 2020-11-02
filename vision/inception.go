@@ -78,7 +78,7 @@ func inceptionA(p *nn.Path, cIn, cPool int64) ts.ModuleT {
 		b3Ts := b3Tmp2.ApplyT(b33, train)
 		b3Tmp2.MustDrop()
 
-		bpoolTmp := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
+		bpoolTmp := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, []int64{9}, false)
 		bpoolTs := bpoolTmp.ApplyT(bpool, train)
 
 		res := ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
@@ -145,7 +145,7 @@ func inceptionC(p *nn.Path, cIn int64, c7 int64) ts.ModuleT {
 		b3Ts := b3Tmp4.ApplyT(b35, train)
 		b3Tmp4.MustDrop()
 
-		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
+		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, []int64{9}, false)
 		bpoolTs := bpTmp1.ApplyT(bpool, train)
 
 		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
@@ -211,7 +211,7 @@ func inceptionE(p *nn.Path, cIn int64) ts.ModuleT {
 		b3bTs := b3Tmp2.ApplyT(b33b, train)
 		b3Ts := ts.MustCat([]ts.Tensor{*b3aTs, *b3bTs}, 1)
 
-		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, 9, false)
+		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, []int64{9}, false)
 		bpoolTs := bpTmp1.ApplyT(bpool, train)
 
 		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
