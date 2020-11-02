@@ -116,6 +116,9 @@ optimizer ato_rms_prop(double learning_rate, double alpha, double eps,
                        double weight_decay, double momentum, int centered);
 optimizer ato_sgd(double learning_rate, double momentum, double dampening,
                   double weight_decay, int nesterov);
+// NOTE. switch back as param group #261 not updated yet.
+// Backward compat
+void ato_add_parameters_old(optimizer, tensor *, int ntensors);
 void ato_add_parameters(optimizer, tensor, size_t group);
 void ato_set_learning_rate(optimizer, double learning_rate);
 void ato_set_momentum(optimizer, double momentum);

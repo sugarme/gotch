@@ -530,6 +530,14 @@ optimizer ato_sgd(double learning_rate,
   return nullptr;
 }
 
+// NOTE. backward compat as param group (#261) not updated yet.
+void ato_add_parameters_old(optimizer t, tensor *tensors, int ntensors) {
+  PROTECT(
+    for (int i = 0; i < ntensors; ++i)
+      t->param_groups()[0].params().push_back(*(tensors[i]));
+  )
+}
+
 void ato_add_parameters(optimizer t, tensor tensor, size_t group) {
   PROTECT(
     auto &groups = t->param_groups();
