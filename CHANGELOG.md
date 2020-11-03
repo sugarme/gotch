@@ -47,3 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated to Pytorch C++ APIs v1.7.0
 - Switched back to `lib.AtoAddParametersOld` as the `ato_add_parameters` has not been implemented correctly. Using the updated API will cause optimizer stops working.
+
+## [0.3.1]
+
+### Changed
+- Changed to use `map[string]*Tensor` at `nn/varstore.go`
+- Changed to use `*Path` argument of `NewLayerNorm` method at `nn/layer-norm.go`
+- Lots of clean-up return variables i.e. retVal, err
+

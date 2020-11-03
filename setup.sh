@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export GOTCH_VERSION="${GOTCH_VER:-v0.3.0}"
+export GOTCH_VERSION="${GOTCH_VER:-v0.3.1}"
 export LIBTORCH_VERSION="${LIBTORCH_VER:-1.7.0}"
 export CUDA_VERSION="${CUDA_VER:-10.1}"
 export CU_VERSION="${CUDA_VERSION//./}"

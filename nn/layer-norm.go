@@ -32,7 +32,7 @@ type LayerNorm struct {
 	NormalizedShape []int64
 }
 
-func NewLayerNorm(vs Path, normalizedShape []int64, config *LayerNormConfig) *LayerNorm {
+func NewLayerNorm(vs *Path, normalizedShape []int64, config *LayerNormConfig) *LayerNorm {
 
 	var (
 		ws *ts.Tensor
