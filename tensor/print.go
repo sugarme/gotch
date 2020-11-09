@@ -152,9 +152,11 @@ func (ts *Tensor) Format(s fmt.State, c rune) {
 		return
 	}
 
-	f := newFmtState(s, c, shape)
-
 	data := ts.ValueGo()
+
+	f := newFmtState(s, c, shape)
+	f.setWidth(data)
+	f.makePad()
 
 	// 0d (scalar)
 	if len(shape) == 0 {
@@ -188,15 +190,23 @@ func (ts *Tensor) Format(s fmt.State, c rune) {
 // fmtState is a struct that implements fmt.State interface
 type fmtState struct {
 	fmt.State
-	c     rune
+	c     rune   // format verb
+	pad   []byte // padding
+	w     int    // width
+	p     int    // precision
 	shape []int64
 	buf   *bytes.Buffer
 }
 
 func newFmtState(s fmt.State, c rune, shape []int64) *fmtState {
+	w, _ := s.Width()
+	p, _ := s.Precision()
+
 	return &fmtState{
 		State: s,
 		c:     c,
+		w:     w,
+		p:     p,
 		shape: shape,
 		buf:   bytes.NewBuffer(make([]byte, 0)),
 	}
@@ -270,9 +280,10 @@ func (f *fmtState) writeSlice(data interface{}) {
 		el := reflect.ValueOf(data).Index(i).Interface()
 
 		// TODO: more format options here
-		fmt.Fprintf(f.buf, format, el)
+		w, _ := fmt.Fprintf(f.buf, format, el)
 		f.Write(f.buf.Bytes())
-		f.Write([]byte(" "))
+		f.Write(f.pad[:f.w-w]) // prepad
+		f.Write(f.pad[:2])     // pad
 		f.buf.Reset()
 	}
 
@@ -297,6 +308,27 @@ func (f *fmtState) cleanFmt() string {
 	return buf.String()
 }
 
+func (f *fmtState) makePad() {
+	f.pad = make([]byte, maxInt(f.w, 4))
+	for i := range f.pad {
+		f.pad[i] = ' '
+	}
+}
+
+// setWidth determines maximal width from input data and set to `w` field
+func (f *fmtState) setWidth(data interface{}) {
+	format := f.cleanFmt()
+	f.w = 0
+	for i := 0; i < reflect.ValueOf(data).Len(); i++ {
+		el := reflect.ValueOf(data).Index(i).Interface()
+		w, _ := fmt.Fprintf(f.buf, format, el)
+		if w > f.w {
+			f.w = w
+		}
+		f.buf.Reset()
+	}
+}
+
 func shapeToSize(shape []int64) int {
 	n := 1
 	for _, v := range shape {
@@ -306,4 +338,11 @@ func shapeToSize(shape []int64) int {
 		n = n * int(v)
 	}
 	return n
+}
+
+func maxInt(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
 }
