@@ -31,7 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `tensor.SaveMultiNew`
 
-[#10]: https://github.com/sugarme/gotch/issues/10
 
 ## [0.2.0]
 
@@ -55,3 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed to use `*Path` argument of `NewLayerNorm` method at `nn/layer-norm.go`
 - Lots of clean-up return variables i.e. retVal, err
 
+## [0.3.2]
+
+### Added
+- [#6]: Go native tensor print using `fmt.Formatter` interface. Now, a tensor can be printed out like: `fmt.Printf("%.3f", tensor)` (for float type)
+
+[#10]: https://github.com/sugarme/gotch/issues/10
+[#6]: https://github.com/sugarme/gotch/issues/6

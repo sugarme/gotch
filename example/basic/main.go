@@ -1,20 +1,24 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 
 	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
 )
 
 func main() {
+	intTensor()
+	floatTensor()
+}
 
-	// Create a tensor [2,3,4]
-	tensor := ts.MustArange(ts.IntScalar(2*3*4), gotch.Int64, gotch.CPU).MustView([]int64{2, 3, 4}, true)
-	tensor.Print()
+func intTensor() {
+	xs := ts.MustArange(ts.IntScalar(7*3*4*5*6), gotch.Int64, gotch.CPU).MustView([]int64{7, 3, 4, 5, 6}, true)
+	fmt.Printf("%0.4d\n", xs)
+}
 
-	mul := ts.MustOnes([]int64{4, 5}, gotch.Int64, gotch.CPU)
-	res := tensor.MustMatmul(mul, false)
-
-	res.Print()
+func floatTensor() {
+	// xs := ts.MustRand([]int64{7, 3, 4, 5, 6}, gotch.Double, gotch.CPU)
+	xs := ts.MustRand([]int64{3, 5, 6}, gotch.Float, gotch.CPU)
+	fmt.Printf("%.3f\n", xs)
 }
