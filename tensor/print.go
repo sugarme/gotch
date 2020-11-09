@@ -3,11 +3,16 @@ package tensor
 import (
 	"bytes"
 	"fmt"
-	"github.com/sugarme/gotch"
 	"log"
 	"reflect"
+	"strconv"
 	"unsafe"
+
+	"github.com/sugarme/gotch"
 )
+
+var fmtByte = []byte("%")
+var precByte = []byte(".")
 
 func (ts *Tensor) ValueGo() interface{} {
 	dtype := ts.DType()
@@ -52,14 +57,7 @@ func (ts *Tensor) ToSlice() reflect.Value {
 		typ   reflect.Type
 	)
 	if dt.String() == "String" {
-		panic("Unsupported")
-		// strs, err := decodeOneDimString(raw, n)
-		// if err != nil {
-		// e := fmt.Errorf("unable to decode string with shape %v: %v", shape, err)
-		// panic(e)
-		// }
-		// slice = reflect.ValueOf(strs)
-		// typ = slice.Type()
+		panic("Unsupported 'String' type")
 	} else {
 		gtyp, err := gotch.ToGoType(dt)
 		if err != nil {
@@ -212,7 +210,10 @@ func (f *fmtState) writeTensor(d int, dims []int64, offset int, mSize int, mShap
 	for i := 0; i < int(dims[d]); i++ {
 		name := fmt.Sprintf("%v,%v", i+1, mName)
 		if d >= len(dims)-1 { // last dim, let's print out
-			fmt.Printf("(%v,.,.) =\n", name)
+			// write matrix name
+			nameStr := fmt.Sprintf("(%v.,.) =\n", name)
+			f.Write([]byte(nameStr))
+			// write matrix values
 			slice := reflect.ValueOf(data).Slice(offset, offset+mSize).Interface()
 			f.writeMatrix(slice, mShape)
 		} else { // recursively loop
@@ -253,25 +254,47 @@ func (f *fmtState) writeMatrix(data interface{}, shape []int64) {
 	for i := 0; i < int(shape[0]); i++ {
 		slice := reflect.ValueOf(data).Slice(currIdx, nextIdx)
 		f.writeSlice(slice.Interface())
-		// fmt.Printf("%4v\n", slice)
 		currIdx = nextIdx
 		nextIdx += stride
 	}
 
-	// 2 lines
-	fmt.Printf("\n\n")
+	// 1 line between matrix
+	f.Write([]byte("\n"))
 
 }
 
 func (f *fmtState) writeSlice(data interface{}) {
+	format := f.cleanFmt()
 	dataLen := reflect.ValueOf(data).Len()
 	for i := 0; i < dataLen; i++ {
-		el := reflect.ValueOf(data).Index(i)
+		el := reflect.ValueOf(data).Index(i).Interface()
 
 		// TODO: more format options here
-		fmt.Printf("%4v ", el)
+		fmt.Fprintf(f.buf, format, el)
+		f.Write(f.buf.Bytes())
+		f.Write([]byte(" "))
+		f.buf.Reset()
 	}
-	fmt.Println()
+
+	f.Write([]byte("\n"))
+}
+
+func (f *fmtState) cleanFmt() string {
+	buf := bytes.NewBuffer(fmtByte)
+
+	// width
+	if w, ok := f.Width(); ok {
+		buf.WriteString(strconv.Itoa(w))
+	}
+
+	// precision
+	if p, ok := f.Precision(); ok {
+		buf.Write(precByte)
+		buf.WriteString(strconv.Itoa(p))
+	}
+
+	buf.WriteRune(f.c)
+	return buf.String()
 }
 
 func shapeToSize(shape []int64) int {
