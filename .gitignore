@@ -33,3 +33,4 @@ libtch/fake_cuda_dependency.cpp.cpu
 libtch/lib.go.cpu
 libtch/lib.go
 
+.ipynb_checkpoints
