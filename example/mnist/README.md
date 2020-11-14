@@ -1,5 +1,7 @@
 # Linear Regression, NN, and CNN on MNIST dataset
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sugarme/nb/blob/master/mnist/mnist.ipynb)
+
 ## MNIST
 
 - MNIST files can be obtained from [this source](http://yann.lecun.com/exdb/mnist/) and put in `data/mnist` from
@@ -29,8 +31,6 @@
 
 - Accuracy should be about **99.3%**.
 
-## Run on Cloud
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sugarme/gotch/blob/master/example/mnist/gotch_mnist.ipynb)
 
 

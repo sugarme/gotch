@@ -53,7 +53,6 @@ func basicOps() {
 	fmt.Printf("%8.3f\n", xs)
 	fmt.Printf("%i", xs)
 
-    // output
     /*
     (1,.,.) =
        0.391     0.055     0.638     0.514     0.757     0.446  
@@ -93,46 +92,42 @@ func basicOps() {
 
 	mul := ts1.MustMatmul(ts2, false)
 	defer mul.MustDrop()
-	fmt.Println("ts1: ")
-	ts1.Print()
-	fmt.Println("ts2: ")
-	ts2.Print()
-	fmt.Println("mul tensor (ts1 x ts2): ")
-	mul.Print()
 
-    //ts1: 
-    // 0  1  2
-    // 3  4  5
-    //[ CPULongType{2,3} ]
-    //ts2: 
-    // 1  1  1  1
-    // 1  1  1  1
-    // 1  1  1  1
-    //[ CPULongType{3,4} ]
-    //mul tensor (ts1 x ts2): 
-    //  3   3   3   3
-    // 12  12  12  12
-    //[ CPULongType{2,4} ]
+	fmt.Printf("ts1:\n%2d", ts1)
+	fmt.Printf("ts2:\n%2d", ts2)
+	fmt.Printf("mul tensor (ts1 x ts2):\n%2d", mul)
+
+    /*
+    ts1:
+     0   1   2  
+     3   4   5  
+
+    ts2:
+     1   1   1   1  
+     1   1   1   1  
+     1   1   1   1  
+
+    mul tensor (ts1 x ts2):
+     3   3   3   3  
+    12  12  12  12  
+    */
 
 
 	// In-place operation
 	ts3 := ts.MustOnes([]int64{2, 3}, gotch.Float, gotch.CPU)
-	fmt.Println("Before:")
-	ts3.Print()
+	fmt.Printf("Before:\n%v", ts3)
 	ts3.MustAdd1_(ts.FloatScalar(2.0))
-	fmt.Printf("After (ts3 + 2.0): \n")
-	ts3.Print()
-	ts3.MustDrop()
+	fmt.Printf("After (ts3 + 2.0):\n%v", ts3)
 
-    //Before:
-    // 1  1  1
-    // 1  1  1
-    //[ CPUFloatType{2,3} ]
-    //After (ts3 + 2.0): 
-    // 3  3  3
-    // 3  3  3
-    //[ CPUFloatType{2,3} ]
+    /*
+    Before:
+    1  1  1  
+    1  1  1  
 
+    After (ts3 + 2.0):
+    3  3  3  
+    3  3  3  
+    */
 }
 
 ```
@@ -142,30 +137,32 @@ func basicOps() {
 ```go
 
     import (
+        "fmt"
+
         "github.com/sugarme/gotch"
         "github.com/sugarme/gotch/nn"
         ts "github.com/sugarme/gotch/tensor"
     )
 
     type Net struct {
-        conv1 nn.Conv2D
-        conv2 nn.Conv2D
-        fc    nn.Linear
+        conv1 *nn.Conv2D
+        conv2 *nn.Conv2D
+        fc    *nn.Linear
     }
 
-    func newNet(vs nn.Path) Net {
+    func newNet(vs *nn.Path) *Net {
         conv1 := nn.NewConv2D(vs, 1, 16, 2, nn.DefaultConv2DConfig())
         conv2 := nn.NewConv2D(vs, 16, 10, 2, nn.DefaultConv2DConfig())
         fc := nn.NewLinear(vs, 10, 10, nn.DefaultLinearConfig())
 
-        return Net{
+        return &Net{
             conv1,
             conv2,
             fc,
         }
     }
 
-    func (n Net) ForwardT(xs ts.Tensor, train bool) (retVal ts.Tensor) {
+    func (n Net) ForwardT(xs *ts.Tensor, train bool) *ts.Tensor {
         xs = xs.MustView([]int64{-1, 1, 8, 8}, false)
 
         outC1 := xs.Apply(n.conv1)
@@ -177,10 +174,8 @@ func basicOps() {
         outView2 := outMP2.MustView([]int64{-1, 10}, true)
         defer outView2.MustDrop()
 
-        outFC := outView2.Apply(&n.fc)
-
+        outFC := outView2.Apply(n.fc)
         return outFC.MustRelu(true)
-
     }
 
     func main() {
@@ -191,28 +186,32 @@ func basicOps() {
         xs := ts.MustOnes([]int64{8, 8}, gotch.Float, gotch.CPU)
 
         logits := net.ForwardT(xs, false)
-        logits.Print()
+        fmt.Printf("Logits: %0.3f", logits)
     }
 
-    // 0.0000  0.0000  0.0000  0.2477  0.2437  0.0000  0.0000  0.0000  0.0000  0.0171
-    //[ CPUFloatType{1,10} ]
-
-
+    //Logits: 0.000  0.000  0.000  0.225  0.321  0.147  0.000  0.207  0.000  0.000
 ```
 
 - Real application examples can be found at [example folder](example/README.md) 
 
+## Play with GoTch on Google Colab
+
+1. [Tensor Initiation](tensor/tensor-initiation.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-initiation.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+2. [Tensor Indexing](tensor/tensor-indexing.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-indexing.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+3. [MNIST](mnist) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/mnist/mnist.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+4. [Tokenizer - BPE model](tokenizer/bpe.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tokenizer/bpe.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+5. [transformer - BERT Mask Language Model](transformer/bert-mask-lm.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/transformer/bert-mask-lm.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+6. [YOLO v3 model infering](yolo/yolo.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/yolo/yolo.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+More coming soon...
+
 ## Getting Started
 
-- [Documentations](docs/README.md)
-
 - See [pkg.go.dev](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc) for detail APIs 
-
 
 ## License
 
 GoTch is Apache 2.0 licensed.
-
 
 ## Acknowledgement
 
