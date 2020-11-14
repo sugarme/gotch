@@ -14,3 +14,6 @@ Here is an example of image inference using Yolo v3 model.
 
 ![Bondi Beach - Yolo inference](yolo_bondi.jpg "Bondi Beach - YOLO v3")
 
+
+<a href="https://colab.research.google.com/github/sugarme/nb/blob/master/yolo/yolo.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a
+
