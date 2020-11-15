@@ -199,10 +199,10 @@ func main() {
 
 ## Play with GoTch on Google Colab
 
-- [Tensor Initiation](tensor/tensor-initiation.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-initiation.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-- [Tensor Indexing](tensor/tensor-indexing.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-indexing.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-- [MNIST](mnist) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/mnist/mnist.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-- [YOLO v3 model infering](yolo/yolo.ipynb) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/yolo/yolo.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+- [Tensor Initiation](example/basic) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-initiation.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+- [Tensor Indexing](example/basic) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-indexing.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+- [MNIST](example/mnist) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/mnist/mnist.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+- [YOLO v3 model infering](example/yolo) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/yolo/yolo.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 More coming soon...
 
