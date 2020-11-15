@@ -12,6 +12,9 @@ GoTch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its a
 - [x] Load pretrained Pytorch models and run inference
 - [x] Pure Go APIs to build and train neural network models with both CPU and GPU support
 - [x] Most recent image models
+- [ ] NLP Language models - [Transformer](https://github.com/sugarme/transformer) in separate package built with GoTch and [pure Go Tokenizer](https://github.com/sugarme/tokenizer).
+
+GoTch is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
 
 ## Dependencies
 
@@ -210,11 +213,9 @@ func main() {
 
 More coming soon...
 
-All contributions are welcome.
-
 ## Getting Started
 
-- See [pkg.go.dev](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc) for detail APIs 
+- See [pkg.go.dev](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc) for APIs detail.
 
 ## License
 
