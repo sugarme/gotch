@@ -195,16 +195,22 @@ func main() {
 //Logits: 0.000  0.000  0.000  0.225  0.321  0.147  0.000  0.207  0.000  0.000
 ```
 
-- Real application examples can be found at [example folder](example/README.md) 
-
-## Play with GoTch on Google Colab
+## Play with GoTch on Google Colab or locally
 
 - [Tensor Initiation](example/basic) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-initiation.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 - [Tensor Indexing](example/basic) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-indexing.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 - [MNIST](example/mnist) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/mnist/mnist.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 - [YOLO v3 model infering](example/yolo) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/yolo/yolo.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+- [RNN model training](example/char-rnn)
+- [CIFAR model training](example/cifar)
+- [JIT ResNet18 Torch Script model load and inference](example/jit)
+- [Neural style transfer](example/neural-style-transfer)
+- [Image pretrained models - inference](example/pretrained-model)
+- [Translation](example/translation)
 
 More coming soon...
+
+All contributions are welcome.
 
 ## Getting Started
 
