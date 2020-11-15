@@ -1,3 +1,0 @@
-# How to install
-
-To be updated...
