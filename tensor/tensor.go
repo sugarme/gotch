@@ -196,6 +196,23 @@ func OfSlice(data interface{}) (*Tensor, error) {
 	return &Tensor{ctensor}, nil
 }
 
+// OfDataSize creates Tensor from input byte data and specidied shape and dtype.
+func OfDataSize(data []byte, size []int64, dtype gotch.DType) (*Tensor, error) {
+	// TODO: implement
+
+}
+
+// MustOfDataSize create Tensor from input byte data and specified shape and dtype
+// or panic if error
+func MustOfDataSize(data []byte, size []int64, dtype gotch.DType) *Tensor {
+	ts, err := OfDataSize(data, size, dtype)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return ts
+}
+
 // MustOfSlice create a tensor from slice of data. It will be panic if error.
 func MustOfSlice(data interface{}) *Tensor {
 	ts, err := OfSlice(data)
