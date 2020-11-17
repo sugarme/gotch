@@ -8,7 +8,9 @@ import (
 )
 
 func main() {
-	filepath := "../../data/convert-model/bert/model.npz"
+	// filepath := "../../data/convert-model/bert/model.npz"
+	// filepath := "/home/sugarme/projects/pytorch-pretrained/bert/model.npz"
+	filepath := "/home/sugarme/rustbert/bert/model.npz"
 
 	namedTensors, err := ts.ReadNpz(filepath)
 	if err != nil {
@@ -27,8 +29,8 @@ func main() {
 
 	// fmt.Printf("%v", namedTensors[70].Tensor)
 
-	outputFile := "../../data/convert-model/bert/model.gt"
-	err = ts.SaveMulti(namedTensors, outputFile)
+	outputFile := "/home/sugarme/projects/transformer/data/bert/model.gt"
+	err = ts.SaveMultiNew(namedTensors, outputFile)
 	if err != nil {
 		log.Fatal(err)
 	}

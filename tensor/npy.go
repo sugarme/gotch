@@ -354,6 +354,10 @@ func ReadNpz(filePath string) ([]NamedTensor, error) {
 			return nil, err
 		}
 
+		if name == "bert.encoder.layer.0.attention.output.dense.weight" {
+			fmt.Printf("%4.2f", tensor)
+		}
+
 		namedTensors = append(namedTensors, NamedTensor{name, tensor})
 
 		// explicitly close before next one
