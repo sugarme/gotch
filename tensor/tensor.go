@@ -197,9 +197,67 @@ func OfSlice(data interface{}) (*Tensor, error) {
 }
 
 // OfDataSize creates Tensor from input byte data and specidied shape and dtype.
-func OfDataSize(data []byte, size []int64, dtype gotch.DType) (*Tensor, error) {
-	// TODO: implement
+func OfDataSize(data []byte, shape []int64, dtype gotch.DType) (*Tensor, error) {
 
+	elementNum := ElementCount(shape)
+	eltSizeInBytes, err := gotch.DTypeSize(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	nbytes := int(eltSizeInBytes) * int(elementNum)
+
+	if nbytes != len(data) {
+		err := fmt.Errorf("data and shape mismatched for dtype (%v): byte data (%v) - shape (%v).\n", dtype, len(data), shape)
+		return nil, err
+	}
+
+	dataPtr, buff := CMalloc(nbytes)
+	defer C.free(unsafe.Pointer(dataPtr))
+
+	typ, err := gotch.ToGoType(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	var v reflect.Value
+	switch typ.Name() {
+	case "float", "float32":
+		v = reflect.ValueOf(float32(0.1))
+	case "float64":
+		v = reflect.ValueOf(float64(0.1))
+	case "int", "int32":
+		v = reflect.ValueOf(int(1))
+	case "int64":
+		v = reflect.ValueOf(int64(1))
+	case "int8":
+		v = reflect.ValueOf(int8(1))
+	case "uint8":
+		v = reflect.ValueOf(uint8(1))
+	case "bool":
+		v = reflect.ValueOf(false)
+	default:
+		err := fmt.Errorf("unsupported dtype: %v\n", dtype)
+		return nil, err
+	}
+
+	if err = EncodeTensor(buff, v, shape); err != nil {
+		return nil, err
+	}
+
+	cint, err := gotch.DType2CInt(dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
+	if err = TorchErr(); err != nil {
+		return nil, err
+	}
+
+	buff.Reset()
+
+	return &Tensor{ctensor}, nil
 }
 
 // MustOfDataSize create Tensor from input byte data and specified shape and dtype
