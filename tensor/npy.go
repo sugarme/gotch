@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	// NpyMagicString string = `\x93NUMPY`
 	NpyMagicString string = "\x93NUMPY"
 	NpySuffix      string = ".npy"
 )
@@ -103,7 +102,7 @@ func (h *NpyHeader) ToString() (string, error) {
 
 	var descr string
 	switch h.descr.Kind().String() {
-	// case "float32":
+	// case "float16": // NOTE. No float16 in Go primary types. TODO. implement
 	// descr = "f2"
 	case "float32":
 		descr = "f4"
@@ -352,10 +351,6 @@ func ReadNpz(filePath string) ([]NamedTensor, error) {
 		tensor, err := OfDataSize(data, header.shape, header.descr)
 		if err != nil {
 			return nil, err
-		}
-
-		if name == "bert.encoder.layer.0.attention.output.dense.weight" {
-			fmt.Printf("%4.2f", tensor)
 		}
 
 		namedTensors = append(namedTensors, NamedTensor{name, tensor})

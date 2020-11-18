@@ -196,7 +196,7 @@ func OfSlice(data interface{}) (*Tensor, error) {
 	return &Tensor{ctensor}, nil
 }
 
-// OfDataSize creates Tensor from input byte data and specidied shape and dtype.
+// OfDataSize creates Tensor from input byte data, shape and dtype.
 func OfDataSize(data []byte, shape []int64, dtype gotch.DType) (*Tensor, error) {
 
 	elementNum := ElementCount(shape)
@@ -215,33 +215,7 @@ func OfDataSize(data []byte, shape []int64, dtype gotch.DType) (*Tensor, error) 
 	dataPtr, buff := CMalloc(nbytes)
 	defer C.free(unsafe.Pointer(dataPtr))
 
-	typ, err := gotch.ToGoType(dtype)
-	if err != nil {
-		return nil, err
-	}
-
-	var v reflect.Value
-	switch typ.Name() {
-	case "float", "float32":
-		v = reflect.ValueOf(float32(0.1))
-	case "float64":
-		v = reflect.ValueOf(float64(0.1))
-	case "int", "int32":
-		v = reflect.ValueOf(int(1))
-	case "int64":
-		v = reflect.ValueOf(int64(1))
-	case "int8":
-		v = reflect.ValueOf(int8(1))
-	case "uint8":
-		v = reflect.ValueOf(uint8(1))
-	case "bool":
-		v = reflect.ValueOf(false)
-	default:
-		err := fmt.Errorf("unsupported dtype: %v\n", dtype)
-		return nil, err
-	}
-
-	if err = EncodeTensor(buff, v, shape); err != nil {
+	if err := binary.Write(buff, nativeEndian, data); err != nil {
 		return nil, err
 	}
 
@@ -254,8 +228,6 @@ func OfDataSize(data []byte, shape []int64, dtype gotch.DType) (*Tensor, error) 
 	if err = TorchErr(); err != nil {
 		return nil, err
 	}
-
-	buff.Reset()
 
 	return &Tensor{ctensor}, nil
 }
@@ -836,6 +808,7 @@ type NamedTensor struct {
 // SaveMulti saves some named tensors to a file
 //
 // The file format is the same as the one used by the PyTorch C++ API.
+// NOTE. This method is depreciated and will be replaced with `SaveMultiNew`
 func SaveMulti(namedTensors []NamedTensor, path string) error {
 	var ctensors []lib.Ctensor
 	var names []string
@@ -854,6 +827,8 @@ func SaveMulti(namedTensors []NamedTensor, path string) error {
 }
 
 // MustSaveMulti saves some named tensors to a file. It will panic if error
+//
+// NOTE. This method is depreciated and will be replaced with `MustSaveMultiNew`
 func MustSaveMulti(namedTensors []NamedTensor, path string) {
 	err := SaveMulti(namedTensors, path)
 	if err != nil {
