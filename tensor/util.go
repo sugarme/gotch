@@ -56,9 +56,8 @@ func CMalloc(nbytes int) (dataPtr unsafe.Pointer, buf *bytes.Buffer) {
 	// NOTE: uncomment this cause panic!
 	// defer C.free(unsafe.Pointer(dataPtr))
 
-	// Recall: 1 << 30 = 1 * 2 * 30
-	// Ref. See more at https://stackoverflow.com/questions/48756732
-	dataSlice := (*[1 << 30]byte)(dataPtr)[:nbytes:nbytes]
+	// Recall: 1 << 30 = 1 * 2 * 30 = 1073741824
+	dataSlice := (*[1 << 32]byte)(dataPtr)[:nbytes:nbytes] // 4294967296
 	buf = bytes.NewBuffer(dataSlice[:0:nbytes])
 
 	return dataPtr, buf
