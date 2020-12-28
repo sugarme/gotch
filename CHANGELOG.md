@@ -61,3 +61,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [#10]: https://github.com/sugarme/gotch/issues/10
 [#6]: https://github.com/sugarme/gotch/issues/6
+
+## [0.3.3]
+
+### Fixed
+- nn/sequential: fixed missing case number of layers = 1 causing panic
+- nn/varstore: fixed(nn/varstore): fixed nil pointer at LoadPartial due to not break loop
+

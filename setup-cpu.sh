@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Env
-GOTCH_VERSION="${GOTCH_VER:-v0.3.2}"
+GOTCH_VERSION="${GOTCH_VER:-v0.3.3}"
 LIBTORCH_VERSION="${LIBTORCH_VER:-1.7.0}"
 
 GOTCH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION"
