@@ -59,12 +59,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [#6]: Go native tensor print using `fmt.Formatter` interface. Now, a tensor can be printed out like: `fmt.Printf("%.3f", tensor)` (for float type)
 
-[#10]: https://github.com/sugarme/gotch/issues/10
-[#6]: https://github.com/sugarme/gotch/issues/6
-
 ## [0.3.3]
 
 ### Fixed
 - nn/sequential: fixed missing case number of layers = 1 causing panic
 - nn/varstore: fixed(nn/varstore): fixed nil pointer at LoadPartial due to not break loop
+
+# [0.3.4]
+
+### Added
+- [#4] Automatically download and install Libtorch and setup environment variables.
+
+[#10]: https://github.com/sugarme/gotch/issues/10
+[#6]: https://github.com/sugarme/gotch/issues/6
+[#4]: https://github.com/sugarme/gotch/issues/4
 

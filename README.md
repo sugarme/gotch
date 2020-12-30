@@ -1,9 +1,9 @@
-# GoTch [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0)[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc)[![Travis CI](https://api.travis-ci.org/sugarme/gotch.svg?branch=master)](https://travis-ci.org/sugarme/gotch)[![Go Report Card](https://goreportcard.com/badge/github.com/sugarme/gotch)](https://goreportcard.com/report/github.com/sugarme/gotch) 
+# Gotch [![License](https://img.shields.io/:license-apache-blue.svg)](https://opensource.org/licenses/Apache-2.0)[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc)[![Travis CI](https://api.travis-ci.org/sugarme/gotch.svg?branch=master)](https://travis-ci.org/sugarme/gotch)[![Go Report Card](https://goreportcard.com/badge/github.com/sugarme/gotch)](https://goreportcard.com/report/github.com/sugarme/gotch) 
 
 
 ## Overview
 
-GoTch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ over 1400) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
+Gotch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ over 1400) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
 
 **Some features are**
 - [x] Comprehensive Pytorch tensor APIs (~ 1404) 
@@ -14,34 +14,24 @@ GoTch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its a
 - [x] Most recent image models
 - [ ] NLP Language models - [Transformer](https://github.com/sugarme/transformer) in separate package built with GoTch and [pure Go Tokenizer](https://github.com/sugarme/tokenizer).
 
-GoTch is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
+Gotch is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
 
 ## Dependencies
 
 - **Libtorch** C++ v1.7.0 library of [Pytorch](https://pytorch.org/)
 
-
 ## Installation
 
-- **CPU**
+When installing `gotch` with `go get`, it will automatically download and install corresponding `Libtorch` and cache at `$HOME/.cache/gotch/LIBTORCH_VERSION` directory.
 
-    Default values: `LIBTORCH_VER=1.7.0` and `GOTCH_VER=v0.3.2`
+- Default CUDA version is `10.1` if CUDA is available otherwise using CPU version.
+- Default Pytorch C++ API version is `1.7.0`
 
-    ```bash
-    go get -u github.com/sugarme/gotch@v0.3.2
-    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@v0.3.2/setup-cpu.sh
+```bash
 
-    ```
+    go get github.com/sugarme/gotch@v0.3.4
 
-- **GPU**
-
-    Default values: `LIBTORCH_VER=1.7.0`, `CUDA_VER=10.1` and `GOTCH_VER=v0.3.2`
-
-    ```bash
-    go get -u github.com/sugarme/gotch@v0.3.2
-    bash ${GOPATH}/pkg/mod/github.com/sugarme/gotch@v0.3.2/setup-gpu.sh
-
-    ```
+```
 
 ## Examples
 
@@ -198,7 +188,7 @@ func main() {
 //Logits: 0.000  0.000  0.000  0.225  0.321  0.147  0.000  0.207  0.000  0.000
 ```
 
-## Play with GoTch on Google Colab or locally
+## Play with `gotch` on Google Colab or locally
 
 - [Tensor Initiation](example/basic) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-initiation.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 - [Tensor Indexing](example/basic) <a href="https://colab.research.google.com/github/sugarme/nb/blob/master/tensor/tensor-indexing.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
@@ -219,7 +209,7 @@ More coming soon...
 
 ## License
 
-GoTch is Apache 2.0 licensed.
+Gotch is Apache 2.0 licensed.
 
 ## Acknowledgement
 
