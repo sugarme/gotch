@@ -27,7 +27,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 
 ```bash
 
-    wget https://github.com/sugarme/gotch/blob/v0.3.5/setup.sh
+    wget https://raw.githubusercontent.com/sugarme/gotch/v0.3.5/setup.sh
     chmod +x setup.sh
 
     # Default
