@@ -65,10 +65,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - nn/sequential: fixed missing case number of layers = 1 causing panic
 - nn/varstore: fixed(nn/varstore): fixed nil pointer at LoadPartial due to not break loop
 
-# [0.3.4]
+## [0.3.4]
 
 ### Added
 - [#4] Automatically download and install Libtorch and setup environment variables.
+
+## [0.3.5]
+
+### Added
+- Added function `gotch.CudaIfAvailable()`. NOTE that: `device := gotch.NewCuda().CudaIfAvailable()` will throw error if CUDA is not available. 
+
+### Changed
+- Switched back to install libtorch inside gotch library as go init() function is triggered after cgo called.
+
 
 [#10]: https://github.com/sugarme/gotch/issues/10
 [#6]: https://github.com/sugarme/gotch/issues/6

@@ -114,3 +114,13 @@ func (d Device) IsCuda() bool {
 
 	return true
 }
+
+// CudaIfAvailable returns a GPU device if available, else CPU.
+func CudaIfAvailable() Device {
+	switch {
+	case CUDA.IsAvailable():
+		return CudaBuilder(0)
+	default:
+		return CPU
+	}
+}
