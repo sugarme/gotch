@@ -63,7 +63,7 @@ rm "/tmp/$LIBTORCH_ZIP"
 
 # Update .bashrc
 #===============
-FILE="$HOME/.bashrc-test"
+FILE="$HOME/.bashrc"
 LN_GOTCH_LIBTORCH="export GOTCH_LIBTORCH=$LIBTORCH"
 LN_LIBRARY_PATH="export LIBRARY_PATH=$LIBRARY_PATH"
 LN_CPATH="export CPATH=$CPATH"
