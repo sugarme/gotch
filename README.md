@@ -31,13 +31,13 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     chmod +x setup.sh
 
     # Default
-    sudo bash setup.sh
+    bash setup.sh
 
     # Specify CUDA version
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && sudo bash setup.sh
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && bash setup.sh
 
     # CPU
-    export CUDA_VER=cpu && sudo bash setup.sh
+    export CUDA_VER=cpu && bash setup.sh
 
 ```
 
