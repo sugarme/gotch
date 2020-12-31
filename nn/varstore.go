@@ -228,6 +228,7 @@ func (vs *VarStore) LoadPartial(filepath string) ([]string, error) {
 		// missing variable
 		if currTs, ok = namedTensorsMap[tsName]; !ok {
 			missingVariables = append(missingVariables, tsName)
+			continue
 		}
 
 		// mismatched shape

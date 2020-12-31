@@ -131,6 +131,10 @@ func (s *SequentialT) ForwardT(xs *ts.Tensor, train bool) *ts.Tensor {
 		return xs.MustShallowClone()
 	}
 
+	if len(s.layers) == 1 {
+		return s.layers[0].ForwardT(xs, train)
+	}
+
 	// forward sequentially
 	outs := make([]ts.Tensor, len(s.layers))
 	for i := 0; i < len(s.layers); i++ {
