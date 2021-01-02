@@ -1058,6 +1058,52 @@ func (cm *CModule) To(device gotch.Device, kind gotch.DType, nonBlocking bool) {
 	}
 }
 
+// Save save CModule to a specified path.
+func (cm *CModule) Save(file string) error {
+	lib.AtmSave(cm.Cmodule, file)
+	return TorchErr()
+}
+
+// NamedParameters loads some named tensors from a module.
+func (cm *CModule) NamedParameters() ([]NamedTensor, error) {
+	var data lib.LoadData
+	dataPtr := lib.PStore.Set(&data)
+	lib.AtmNamedParameters(cm.Cmodule, dataPtr)
+	if err := TorchErr(); err != nil {
+		return nil, err
+	}
+
+	var namedTensors []NamedTensor
+	for _, v := range data.NamedCtensors {
+		namedTensor := NamedTensor{
+			Name:   v.Name,
+			Tensor: &Tensor{v.Ctensor},
+		}
+
+		namedTensors = append(namedTensors, namedTensor)
+	}
+
+	return namedTensors, nil
+}
+
+// GetProfilingMode get CModule profiling mode
+func (cm *CModule) GetProfilingMode() bool {
+	retVal := lib.AtmGetProfilingMode()
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}
+
+// SetProfilingMode set CModule profiling mode
+func (cm *CModule) SetProfilingMode(b bool) {
+	lib.AtmSetProfilingMode(b)
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Implement Module for CModule:
 // =============================
 
