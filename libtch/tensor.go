@@ -776,3 +776,13 @@ func AtmSetProfilingMode(b bool) {
 	cbool := *(*C.int)(unsafe.Pointer(&b))
 	C.atm_set_profiling_mode(cbool)
 }
+
+// void atm_eval(module);
+func AtmEval(m Cmodule) {
+	C.atm_eval(m)
+}
+
+// void atm_train(module);
+func AtmTrain(m Cmodule) {
+	C.atm_train(m)
+}

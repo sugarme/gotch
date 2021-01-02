@@ -1104,6 +1104,22 @@ func (cm *CModule) SetProfilingMode(b bool) {
 	}
 }
 
+// Train set CModule to train mode
+func (cm *CModule) Train() {
+	lib.AtmTrain()
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Eval set CModule to inference mode
+func (cm *CModule) Train() {
+	lib.AtmEval()
+	if err := TorchErr(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 // Implement Module for CModule:
 // =============================
 

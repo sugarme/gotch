@@ -157,6 +157,8 @@ int atm_get_profiling_mode();
 void atm_set_profiling_mode(int);
 void atm_named_parameters(module, void *data,
                           void (*f)(void *, char *, tensor));
+void atm_eval(module);
+void atm_train(module);
 
 ivalue ati_none();
 ivalue ati_tensor(tensor);
