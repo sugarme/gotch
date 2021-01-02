@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 
@@ -10,18 +11,44 @@ import (
 	"github.com/sugarme/gotch/vision"
 )
 
-func main() {
-	ds := vision.LoadMNISTDir("../../data/mnist")
-	dataset := &vision.Dataset{
-		TestImages:  ds.TestImages.MustView([]int64{-1, 1, 28, 28}, true),
-		TrainImages: ds.TrainImages.MustView([]int64{-1, 1, 28, 28}, true),
-		TestLabels:  ds.TestLabels,
-		TrainLabels: ds.TrainLabels,
-	}
-	device := gotch.CudaIfAvailable()
+var (
+	task      string
+	batchSize int
+	epochs    int
+	cuda      bool
+)
 
-	// runTrainAndSaveModel(dataset, device)
-	loadTrainedAndTestAcc(dataset, device)
+func init() {
+	flag.StringVar(&task, "task", "train", "specify task to run. Ie. 'train', 'infer'")
+	flag.IntVar(&batchSize, "batch", 256, "Specify batch size.")
+	flag.IntVar(&epochs, "epoch", 50, "Specify number of epochs to train.")
+	flag.BoolVar(&cuda, "cuda", true, "Specify whether using CUDA(default=true) or CPU. ")
+}
+
+func main() {
+	flag.Parse()
+
+	ds := vision.LoadMNISTDir("../../data/mnist")
+	// dataset := &vision.Dataset{
+	// TestImages:  ds.TestImages.MustView([]int64{-1, 1, 28, 28}, true),
+	// TrainImages: ds.TrainImages.MustView([]int64{-1, 1, 28, 28}, true),
+	// TestLabels:  ds.TestLabels,
+	// TrainLabels: ds.TrainLabels,
+	// }
+
+	var device gotch.Device = gotch.CPU
+	if cuda {
+		device = gotch.CudaIfAvailable()
+	}
+
+	switch task {
+	case "train":
+		runTrainAndSaveModel(ds, device)
+	case "infer":
+		loadTrainedAndTestAcc(ds, device)
+	default:
+		log.Fatalf("Invalid task: %v. Task can be 'train' or 'infer' only. ", task)
+	}
 }
 
 func runTrainAndSaveModel(ds *vision.Dataset, device gotch.Device) {
@@ -44,16 +71,14 @@ func runTrainAndSaveModel(ds *vision.Dataset, device gotch.Device) {
 	}
 
 	trainable.SetTrain()
-	initialAcc := nn.BatchAccuracyForLogits(vs, trainable, ds.TestImages, ds.TestLabels, device, 1024)
-	fmt.Printf("Initial Accuracy: %0.4f\n", initialAcc)
-	bestAccuracy := initialAcc
+	bestAccuracy := nn.BatchAccuracyForLogits(vs, trainable, ds.TestImages, ds.TestLabels, device, 1024)
+	fmt.Printf("Initial Accuracy: %0.4f\n", bestAccuracy)
 
 	opt, err := nn.DefaultAdamConfig().Build(vs, 1e-4)
 	if err != nil {
 		log.Fatal(err)
 	}
-	batchSize := 128
-	for epoch := 0; epoch < 20; epoch++ {
+	for epoch := 0; epoch < epochs; epoch++ {
 
 		totalSize := ds.TrainImages.MustSize()[0]
 		samples := int(totalSize)
@@ -88,8 +113,6 @@ func runTrainAndSaveModel(ds *vision.Dataset, device gotch.Device) {
 			epocLoss = loss.MustShallowClone()
 			epocLoss.Detach_()
 
-			// fmt.Printf("completed \t %v batches\t %.2f\n", i, loss.Float64Values()[0])
-
 			bImages.MustDrop()
 			bLabels.MustDrop()
 		}
@@ -109,6 +132,8 @@ func runTrainAndSaveModel(ds *vision.Dataset, device gotch.Device) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Printf("Completed training. Best accuracy: %0.4f\n", bestAccuracy)
 }
 
 func loadTrainedAndTestAcc(ds *vision.Dataset, device gotch.Device) {
