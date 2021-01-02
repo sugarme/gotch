@@ -86,7 +86,7 @@ func TestModuleForwardIValue(t *testing.T) {
 	iv1 := ts.NewIValue(*ts1)
 	iv2 := ts.NewIValue(*ts2)
 
-	got, err := foo.ForwardIs([]ts.IValue{iv1, iv2})
+	got, err := foo.ForwardIs([]ts.IValue{*iv1, *iv2})
 	if err != nil {
 		t.Error(err)
 	}

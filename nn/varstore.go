@@ -659,30 +659,3 @@ func (e *Entry) OrZerosNoTrain(dims []int64) *ts.Tensor {
 	z := ts.MustZeros(dims, gotch.Float, e.path.Device())
 	return e.path.getOrAddWithLock(e.name, z, true, *e.variables)
 }
-
-// TODO: can we implement `Div` operator in Go?
-// NOTE: `Rhs` (right hand side) is a generic type parameter
-// If not given, it will be default to `self` type
-/*
- * impl<'a, T> Div<T> for &'a mut Path<'a>
- * where
- *     T: std::string::ToString,
- * {
- *     type Output = Path<'a>;
- *
- *     fn div(self, rhs: T) -> Self::Output {
- *         self.sub(rhs.to_string())
- *     }
- * }
- *
- * impl<'a, T> Div<T> for &'a Path<'a>
- * where
- *     T: std::string::ToString,
- * {
- *     type Output = Path<'a>;
- *
- *     fn div(self, rhs: T) -> Self::Output {
- *         self.sub(rhs.to_string())
- *     }
- * }
- *  */
