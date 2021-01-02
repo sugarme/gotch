@@ -2,6 +2,7 @@ package nn
 
 import (
 	"io"
+	"log"
 	"strings"
 
 	ts "github.com/sugarme/gotch/tensor"
@@ -73,4 +74,15 @@ func TrainableCModuleLoadData(p *Path, stream io.Reader) (*TrainableCModule, err
 // Save saves TrainableCModule to specified file.
 func (m *TrainableCModule) Save(file string) error {
 	return m.Inner.Save(file)
+}
+
+// ForwardT implements ModuleT for TrainableCModule.
+// NOTE: train parameter will not be used.
+func (m *TrainableCModule) ForwardT(x *ts.Tensor, train bool) *ts.Tensor {
+	retVal, err := m.Inner.ForwardTs([]ts.Tensor{*x})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
 }
