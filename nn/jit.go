@@ -86,3 +86,13 @@ func (m *TrainableCModule) ForwardT(x *ts.Tensor, train bool) *ts.Tensor {
 
 	return retVal
 }
+
+// SetTrain set TrainableCModule to train mode
+func (m *TrainableCModule) SetTrain() {
+	m.Inner.SetTrain()
+}
+
+// SetEval set TrainableCModule to inference mode
+func (m *TrainableCModule) SetEval() {
+	m.Inner.SetEval()
+}
