@@ -728,6 +728,17 @@ func AtmLoadStrOnDevice(val string, sz int, device int32) Cmodule {
 	return C.atm_load_str_on_device(ptr, csz, cdevice)
 }
 
+// void atm_save(module m, char *);
+func AtmSave(m Cmodule, path string) {
+	ptr := C.CString(path)
+	C.atm_save(m, ptr)
+}
+
+// void atm_named_parameters(module, void *data, void (*f)(void *, char *, tensor));
+func AtmNamedParameters(m Cmodule, dataPtr unsafe.Pointer) {
+	C.atm_named_parameters(m, dataPtr, C.f(C.callback_fn))
+}
+
 // tensor atm_forward(module, tensor *tensors, int ntensors);
 func AtmForward(m Cmodule, tensors *Ctensor, ntensors int) Ctensor {
 	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
@@ -752,4 +763,26 @@ func AtmTo(m Cmodule, device int32, dtype int32, nonBlocking bool) {
 	cnonBlocking := *(*C.bool)(unsafe.Pointer(&nonBlocking))
 
 	C.atm_to(m, cdevice, cdtype, cnonBlocking)
+}
+
+// int atm_get_profiling_mode();
+func AtmGetProfilingMode() bool {
+	retVal := C.atm_get_profiling_mode()
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// void atm_set_profiling_mode(int);
+func AtmSetProfilingMode(b bool) {
+	cbool := *(*C.int)(unsafe.Pointer(&b))
+	C.atm_set_profiling_mode(cbool)
+}
+
+// void atm_eval(module);
+func AtmEval(m Cmodule) {
+	C.atm_eval(m)
+}
+
+// void atm_train(module);
+func AtmTrain(m Cmodule) {
+	C.atm_train(m)
 }

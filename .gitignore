@@ -11,7 +11,7 @@
 
 *.txt
 *.json
-*.pt
+data/*.pt
 *.ot
 
 target/
