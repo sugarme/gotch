@@ -123,9 +123,8 @@ func NewIValue(v interface{}) *IValue {
 			switch {
 			// 1. Tuple (Tensor, Tensor)
 			case val.Type() == reflect.TypeOf([]Tensor{}) && val.Len() == 2:
-				// panic("Its Tensor tuple")
-				retVal.kind = TupleVal
-				retVal.name = "Tuple"
+				retVal.kind = TensorListVal
+				retVal.name = "TensorList"
 
 				// convert tensors to []ivalue
 				tensors := v.([]Tensor)
@@ -517,20 +516,87 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 		}
 
 		// 4. Get Ivalue from Civalue for each tuple element
-		var vals []interface{}
-		for _, civalue := range civalues {
-			v, err := IValueFromC(&civalue)
-			if err != nil {
-				return nil, err
-			}
-			vals = append(vals, v)
+		// Determine element kind
+		v, err := IValueFromC(&civalues[0])
+		if err != nil {
+			return nil, err
 		}
+		elemName := v.Name()
+		switch elemName {
+		case "Tensor":
+			var vals []Tensor
+			for _, civalue := range civalues {
+				v, err := IValueFromC(&civalue)
+				if err != nil {
+					return nil, err
+				}
 
-		return &IValue{
-			value: vals,
-			kind:  TupleVal,
-			name:  "Tuple",
-		}, nil
+				vals = append(vals, Tensor{v.Value().(lib.Ctensor)})
+			}
+			return &IValue{
+				value: vals,
+				kind:  TensorListVal,
+				name:  "TensorList",
+			}, nil
+		case "IntList":
+			var vals []int64
+			for _, civalue := range civalues {
+				v, err := IValueFromC(&civalue)
+				if err != nil {
+					return nil, err
+				}
+				vals = append(vals, v.Value().(int64))
+			}
+			return &IValue{
+				value: vals,
+				kind:  IntListVal,
+				name:  "IntList",
+			}, nil
+		case "BoolList":
+			var vals []bool
+			for _, civalue := range civalues {
+				v, err := IValueFromC(&civalue)
+				if err != nil {
+					return nil, err
+				}
+				vals = append(vals, v.Value().(bool))
+			}
+			return &IValue{
+				value: vals,
+				kind:  BoolListVal,
+				name:  "BoolList",
+			}, nil
+		case "DoubleList":
+			var vals []float64
+			for _, civalue := range civalues {
+				v, err := IValueFromC(&civalue)
+				if err != nil {
+					return nil, err
+				}
+				vals = append(vals, v.Value().(float64))
+			}
+			return &IValue{
+				value: vals,
+				kind:  DoubleListVal,
+				name:  "DoubleList",
+			}, nil
+
+		default:
+			var vals []interface{}
+			for _, civalue := range civalues {
+				v, err := IValueFromC(&civalue)
+				if err != nil {
+					return nil, err
+				}
+				vals = append(vals, v)
+			}
+
+			return &IValue{
+				value: vals,
+				kind:  TupleVal,
+				name:  "Tuple",
+			}, nil
+		}
 
 	case 6: // IntList
 		// 1. Len
