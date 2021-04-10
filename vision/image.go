@@ -14,7 +14,7 @@ import (
 
 // (height, width, channel) -> (channel, height, width)
 func hwcToCHW(tensor *ts.Tensor) *ts.Tensor {
-	retVal, err := tensor.Permute([]int64{2, 0, 1}, true)
+	retVal, err := tensor.Permute([]int64{2, 0, 1}, false)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
@@ -22,7 +22,7 @@ func hwcToCHW(tensor *ts.Tensor) *ts.Tensor {
 }
 
 func chwToHWC(tensor *ts.Tensor) *ts.Tensor {
-	retVal, err := tensor.Permute([]int64{1, 2, 0}, true)
+	retVal, err := tensor.Permute([]int64{1, 2, 0}, false)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
@@ -112,7 +112,8 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 	h := tsSize[1]
 	w := tsSize[0]
 
-	if (w * outH) == (h * outW) {
+	switch (w * outH) == (h * outW) {
+	case true: // same ratio
 		tmpTs, err := ts.ResizeHwc(t, outW, outH)
 		if err != nil {
 			err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.ResizeHwc() method call err: %v\n", err)
@@ -122,7 +123,8 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 		tmpTs.MustDrop()
 
 		return tsCHW, nil
-	} else {
+
+	case false:
 		ratioW := float64(outW) / float64(h)
 		ratioH := float64(outH) / float64(w)
 		ratio := math.Max(ratioW, ratioH)
@@ -138,10 +140,12 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 		tmpTs.MustDrop()
 
 		var tensorW *ts.Tensor
+		var delTensorW bool = false // Flag whether to delete tensorW to prevent memory leak.
 		if resizeW == outW {
 			tensorW = tsCHW
 		} else {
 			tensorW, err = tsCHW.Narrow(2, (resizeW-outW)/2, outW, false)
+			delTensorW = true
 			if err != nil {
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
 				return nil, err
@@ -159,13 +163,19 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 				return nil, err
 			}
 
-			tensorW.MustDrop()
+			if delTensorW {
+				tensorW.MustDrop()
+			}
 			return tensorH, nil
 
 		default:
 			err = fmt.Errorf("Shouldn't reach here")
 			return nil, err
 		}
+
+	default:
+		err = fmt.Errorf("Shouldn't reach here")
+		return nil, err
 	}
 }
 
