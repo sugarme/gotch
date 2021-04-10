@@ -97,7 +97,13 @@ func (in *ImageNet) SaveImage(tensor *ts.Tensor, path string) error {
 		return err
 	}
 
-	return Save(unnormTs, path)
+	err = Save(unnormTs, path)
+	if err != nil {
+		return err
+	}
+
+	unnormTs.MustDrop()
+	return nil
 }
 
 // Load loads an image from a file and applies the ImageNet normalization.
@@ -108,7 +114,13 @@ func (in *ImageNet) LoadImage(path string) (*ts.Tensor, error) {
 		return nil, err
 	}
 
-	return in.Normalize(tensor)
+	loadedTs, err := in.Normalize(tensor)
+	if err != nil {
+		return nil, err
+	}
+
+	tensor.MustDrop()
+	return loadedTs, nil
 }
 
 // LoadImageAndResize loads an image from a file and resize it to the specified width and height.
@@ -134,7 +146,13 @@ func (in *ImageNet) LoadImageAndResize224(path string) (*ts.Tensor, error) {
 		return nil, err
 	}
 
-	return in.Normalize(tensor)
+	normTs, err := in.Normalize(tensor)
+	if err != nil {
+		return nil, err
+	}
+
+	tensor.MustDrop()
+	return normTs, nil
 }
 
 func (in *ImageNet) hasSuffix(path string) bool {
@@ -177,7 +195,15 @@ func (in *ImageNet) loadImageFromDir(dir string) (*ts.Tensor, error) {
 		return nil, err
 	}
 
-	return ts.Stack(images, int64(0))
+	stackedTs, err := ts.Stack(images, int64(0))
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(images); i++ {
+		images[i].MustDrop()
+	}
+	return stackedTs, nil
 }
 
 // LoadFromDir loads a dataset from a directory.
@@ -213,7 +239,7 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 		classes = append(classes, sub.Name())
 	}
 
-	fmt.Printf("Classess: %v\n", classes)
+	// fmt.Printf("Classess: %v\n", classes)
 
 	var (
 		trainImages []ts.Tensor
@@ -253,13 +279,28 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 		testLabels = append(testLabels, *testLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
 	}
 
+	trainImageTs := ts.MustCat(trainImages, 0)
+	dropTsSlice(trainImages)
+	trainLabelTs := ts.MustCat(trainLabels, 0)
+	dropTsSlice(trainLabels)
+	testImageTs := ts.MustCat(testImages, 0)
+	dropTsSlice(testImages)
+	testLabelTs := ts.MustCat(testLabels, 0)
+	dropTsSlice(testLabels)
+
 	return &Dataset{
-		TrainImages: ts.MustCat(trainImages, 0),
-		TrainLabels: ts.MustCat(trainLabels, 0),
-		TestImages:  ts.MustCat(testImages, 0),
-		TestLabels:  ts.MustCat(testLabels, 0),
+		TrainImages: trainImageTs,
+		TrainLabels: trainLabelTs,
+		TestImages:  testImageTs,
+		TestLabels:  testLabelTs,
 		Labels:      int64(len(classes)),
 	}, nil
+}
+
+func dropTsSlice(tensors []ts.Tensor) {
+	for i := 0; i < len(tensors); i++ {
+		tensors[i].MustDrop()
+	}
 }
 
 const imagenetClassCount int64 = 1000
