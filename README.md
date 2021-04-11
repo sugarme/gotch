@@ -25,27 +25,49 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 - Default CUDA version is `10.1` if CUDA is available otherwise using CPU version.
 - Default Pytorch C++ API version is `1.7.0`
 
-### Step 1: Setup libtorch
-
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
+
+### CPU
+
+#### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
-    chmod +x setup.sh
-    sudo bash setup-libtorch.sh
+    chmod +x setup-libtorch.sh
+    export CUDA_VER=cpu && sudo bash setup-libtorch.sh
 ```
 
-### Step 2: Setup gotch
-
-**CPU**
+#### Step 2: Setup gotch
 
 ```bash
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
+    chmod +x setup-gotch.sh
     export CUDA_VER=cpu && export GOTCH_VER=image && sudo bash setup-gotch.sh
 ```
 
-**GPU**
+### GPU
+
+**NOTE**: make sure your machine has working CUDA. 
+- Check version: `nvidia-smi`
+- [Install nvidia driver here](https://www.nvidia.com/Download/Find.aspx?lang=en)
+- [Install CUDA here](https://developer.nvidia.com/cuda-downloads)
+- [Install CuDNN here](https://developer.nvidia.com/rdp/cudnn-download#)
+
+#### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
 ```bash
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
+    chmod +x setup-libtorch.sh
+
+    # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && sudo bash setup-libtorch.sh
+```
+
+#### Step 2: Setup gotch
+
+```bash
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
+    chmod +x setup-gotch.sh
     # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
     export CUDA_VER=YOUR_PC_CUDA_VERSION && export GOTCH_VER=image && sudo bash setup-gotch.sh
 ```
