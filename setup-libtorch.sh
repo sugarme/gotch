@@ -3,7 +3,7 @@
 LIBTORCH_VERSION="${LIBTORCH_VER:-1.7.0}"
 CUDA_VERSION="${CUDA_VER:-10.1}"
 
-if [ $CUDA_VERSION == "cpu" ]
+if [ $CUDA_VERSION=="cpu" ]
 then
   CU_VERSION="cpu"
 else
@@ -15,7 +15,7 @@ GOTCH_LIBTORCH="/usr/local/lib/libtorch"
 LIBRARY_PATH="$LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
 CPATH="$CPATH:$GOTCH_LIBTORCH/lib:$GOTCH_LIBTORCH/include:$GOTCH_LIBTORCH/include/torch/csrc/api/include"
 
-if [ $CUDA_VERSION == "cpu" ]
+if [ $CUDA_VERSION=="cpu" ]
 then
   LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
 else
@@ -32,6 +32,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 #=================
 LIBTORCH_ZIP="libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2B${CU_VERSION}.zip"
 LIBTORCH_URL="https://download.pytorch.org/libtorch/${CU_VERSION}/${LIBTORCH_ZIP}"
+echo $LIBTORCH_URL
 wget  -q --show-progress --progress=bar:force:noscroll  -O "/tmp/$LIBTORCH_ZIP" "$LIBTORCH_URL"
 sudo rm -rf $GOTCH_LIBTORCH # delete old libtorch if exisitng
 sudo unzip "/tmp/$LIBTORCH_ZIP" -d $GOTCH_LIBTORCH

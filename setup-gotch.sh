@@ -4,7 +4,7 @@ GOTCH_VERSION="${GOTCH_VER:-latest}"
 LIBTORCH_VERSION="${LIBTORCH_VER:-1.7.0}"
 CUDA_VERSION="${CUDA_VER:-10.1}"
 
-if [ $CUDA_VERSION == "cpu" ]
+if [ $CUDA_VERSION=="cpu" ]
 then
   CU_VERSION="cpu"
 else
@@ -21,7 +21,7 @@ go get "github.com/sugarme/gotch@$GOTCH_VERSION"
 rm -rf /tmp/gotch-test
 cd $cwd
 
-if [ $CUDA_VERSION == "cpu" ]
+if [ $CUDA_VERSION=="cpu" ]
 then
   # prepare C lib for CPU version
   sudo rm $GOTCH/libtch/lib.go
