@@ -47,7 +47,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 
 ```bash
     # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && GOTCH_VER=image  && bash setup-gotch.sh
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && GOTCH_VER=image  && sudo bash setup-gotch.sh
 ```
 
 ## Examples
