@@ -25,20 +25,28 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 - Default CUDA version is `10.1` if CUDA is available otherwise using CPU version.
 - Default Pytorch C++ API version is `1.7.0`
 
+### Step 1: Install libtorch
+
+**NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
+
 ```bash
-
-    wget https://raw.githubusercontent.com/sugarme/gotch/v0.3.8/setup.sh
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
     chmod +x setup.sh
+    sudo bash setup-libtorch.sh
+```
 
-    # Default
-    bash setup.sh
+### Step 2: Install gotch
 
-    # Specify CUDA version
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && bash setup.sh
+**CPU**
 
-    # CPU
-    export CUDA_VER=cpu && bash setup.sh
+```bash
+    export CUDA_VER=cpu && export GOTCH_VER=image && sudo bash setup-gotch.sh
+```
 
+**GPU**
+
+```bash
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && GOTCH_VER=image  && bash setup.sh
 ```
 
 ## Examples
