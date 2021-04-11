@@ -34,7 +34,16 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
     chmod +x setup-libtorch.sh
-    export CUDA_VER=cpu && sudo bash setup-libtorch.sh
+    export CUDA_VER=cpu && bash setup-libtorch.sh
+```
+
+**Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
+
+```bash
+    export GOTCH_LIBTORCH="/usr/local/lib/libtorch"
+    export LIBRARY_PATH="$LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
+    export CPATH="$CPATH:$GOTCH_LIBTORCH/lib:$GOTCH_LIBTORCH/include:$GOTCH_LIBTORCH/include/torch/csrc/api/include"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
 ```
 
 #### Step 2: Setup gotch
@@ -42,7 +51,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=image && sudo bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.3.9-rc1 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -60,7 +69,16 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     chmod +x setup-libtorch.sh
 
     # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && sudo bash setup-libtorch.sh
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && bash setup-libtorch.sh
+```
+
+**Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
+
+```bash
+    export GOTCH_LIBTORCH="/usr/local/lib/libtorch"
+    export LIBRARY_PATH="$LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
+    export CPATH="$CPATH:$GOTCH_LIBTORCH/lib:$GOTCH_LIBTORCH/include:$GOTCH_LIBTORCH/include/torch/csrc/api/include"
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib:/usr/lib64-nvidia:/usr/local/cuda-${CUDA_VERSION}/lib64"
 ```
 
 #### Step 2: Setup gotch
@@ -69,7 +87,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
     chmod +x setup-gotch.sh
     # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && export GOTCH_VER=image && sudo bash setup-gotch.sh
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && export GOTCH_VER=v0.3.9-rc1 && bash setup-gotch.sh
 ```
 
 ## Examples
