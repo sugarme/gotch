@@ -154,7 +154,6 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 
 		switch int64(resizeH) == outH {
 		case true:
-			tsCHW.MustDrop()
 			return tensorW, nil
 		case false:
 			tensorH, err := tsCHW.Narrow(1, (resizeH-outH)/2, outH, true)
