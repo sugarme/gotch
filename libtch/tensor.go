@@ -247,20 +247,22 @@ func AtSaveMultiNew(tensors []Ctensor, names []string, filename string) {
 	// number of bytes for each array of pointers.
 	nbytes := C.size_t(ntensors) * C.size_t(unsafe.Sizeof(uintptr(0)))
 
-	cnamesPtr := (*[1 << 30]**C.char)(C.malloc(nbytes))
-	for i, name := range names {
-		cname := C.CString(name)
-		cnamesPtr[i] = &cname
-	}
+	cnamesPtr := make([]*C.char, ntensors)
 	ctensorsPtr := (*[1 << 30]C.tensor)(C.malloc(nbytes))
-	for i, ctensor := range tensors {
-		ctensorsPtr[i] = (C.tensor)(ctensor)
+	defer C.free(unsafe.Pointer(ctensorsPtr))
+
+	for i := 0; i < ntensors; i++ {
+		cname := C.CString(names[i])
+		defer C.free(unsafe.Pointer(cname))
+		cnamesPtr[i] = cname
+		ctensorsPtr[i] = (C.tensor)(tensors[i])
 	}
 
 	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
 	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
 
-	C.at_save_multi(&ctensorsPtr[0], cnamesPtr[0], cntensors, cfilename)
+	C.at_save_multi(&ctensorsPtr[0], &cnamesPtr[0], cntensors, cfilename)
 }
 
 /* [at_load_multi] takes as input an array of nullptr for [tensors]. */
