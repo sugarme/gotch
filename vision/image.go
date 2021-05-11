@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
-	// "path/filepath"
 
 	"github.com/sugarme/gotch"
 	ts "github.com/sugarme/gotch/tensor"
@@ -15,7 +14,7 @@ import (
 
 // (height, width, channel) -> (channel, height, width)
 func hwcToCHW(tensor *ts.Tensor) *ts.Tensor {
-	retVal, err := tensor.Permute([]int64{2, 0, 1}, true)
+	retVal, err := tensor.Permute([]int64{2, 0, 1}, false)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
@@ -23,7 +22,7 @@ func hwcToCHW(tensor *ts.Tensor) *ts.Tensor {
 }
 
 func chwToHWC(tensor *ts.Tensor) *ts.Tensor {
-	retVal, err := tensor.Permute([]int64{1, 2, 0}, true)
+	retVal, err := tensor.Permute([]int64{1, 2, 0}, false)
 	if err != nil {
 		log.Fatalf("hwcToCHW error: %v\n", err)
 	}
@@ -40,7 +39,10 @@ func Load(path string) (*ts.Tensor, error) {
 		return nil, err
 	}
 
-	return hwcToCHW(tensor), nil
+	loadedTs := hwcToCHW(tensor)
+	tensor.MustDrop()
+
+	return loadedTs, nil
 }
 
 // Save saves an image to a file.
@@ -63,15 +65,24 @@ func Save(tensor *ts.Tensor, path string) error {
 		return err
 	}
 
+	var tsCHW, tsHWC *ts.Tensor
 	switch {
 	case len(shape) == 4 && shape[0] == 1:
-		return ts.SaveHwc(chwToHWC(t.MustSqueeze1(int64(0), true).MustTo(gotch.CPU, true)), path)
+		tsCHW = t.MustSqueeze1(int64(0), true)
+		tsHWC = chwToHWC(tsCHW).MustTo(gotch.CPU, true)
 	case len(shape) == 3:
-		return ts.SaveHwc(chwToHWC(t.MustTo(gotch.CPU, true)), path)
+		tsHWC = chwToHWC(t.MustTo(gotch.CPU, true))
 	default:
 		err = fmt.Errorf("Unexpected size (%v) for image tensor.\n", len(shape))
 		return err
 	}
+
+	if err = ts.SaveHwc(tsHWC, path); err != nil {
+		return err
+	}
+
+	tsHWC.MustDrop()
+	return nil
 }
 
 // Resize resizes an image.
@@ -83,7 +94,11 @@ func Resize(t *ts.Tensor, outW int64, outH int64) (*ts.Tensor, error) {
 	if err != nil {
 		return nil, err
 	}
-	return hwcToCHW(tmpTs), nil
+
+	tsCHW := hwcToCHW(tmpTs)
+	tmpTs.MustDrop()
+
+	return tsCHW, nil
 }
 
 func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Tensor, error) {
@@ -97,14 +112,19 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 	h := tsSize[1]
 	w := tsSize[0]
 
-	if (w * outH) == (h * outW) {
+	switch (w * outH) == (h * outW) {
+	case true: // same ratio
 		tmpTs, err := ts.ResizeHwc(t, outW, outH)
 		if err != nil {
 			err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.ResizeHwc() method call err: %v\n", err)
 			return nil, err
 		}
-		return hwcToCHW(tmpTs), nil
-	} else {
+		tsCHW := hwcToCHW(tmpTs)
+		tmpTs.MustDrop()
+
+		return tsCHW, nil
+
+	case false:
 		ratioW := float64(outW) / float64(h)
 		ratioH := float64(outH) / float64(w)
 		ratio := math.Max(ratioW, ratioH)
@@ -116,33 +136,45 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 		resizeH = maxInt64(resizeH, outH)
 
 		tmpTs, err := ts.ResizeHwc(t, resizeW, resizeH)
-		tensor := hwcToCHW(tmpTs)
+		tsCHW := hwcToCHW(tmpTs)
+		tmpTs.MustDrop()
 
 		var tensorW *ts.Tensor
-		var tensorH *ts.Tensor
+		var delTensorW bool = false // Flag whether to delete tensorW to prevent memory leak.
 		if resizeW == outW {
-			tensorW = tensor
+			tensorW = tsCHW
 		} else {
-			tensorW, err = tensor.Narrow(2, (resizeW-outW)/2, outW, true)
+			tensorW, err = tsCHW.Narrow(2, (resizeW-outW)/2, outW, false)
+			delTensorW = true
 			if err != nil {
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
 				return nil, err
 			}
 		}
 
-		var retVal *ts.Tensor
-		if int64(resizeH) == outH {
-			retVal = tensorW
-		} else {
-			tensorH, err = tensor.Narrow(1, (resizeH-outH)/2, outH, true)
+		switch int64(resizeH) == outH {
+		case true:
+			return tensorW, nil
+		case false:
+			tensorH, err := tsCHW.Narrow(1, (resizeH-outH)/2, outH, true)
 			if err != nil {
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
-				return retVal, err
+				return nil, err
 			}
-			retVal = tensorH
+
+			if delTensorW {
+				tensorW.MustDrop()
+			}
+			return tensorH, nil
+
+		default:
+			err = fmt.Errorf("Shouldn't reach here")
+			return nil, err
 		}
 
-		return retVal, nil
+	default:
+		err = fmt.Errorf("Shouldn't reach here")
+		return nil, err
 	}
 }
 
@@ -160,7 +192,13 @@ func LoadAndResize(path string, outW int64, outH int64) (*ts.Tensor, error) {
 		return nil, err
 	}
 
-	return resizePreserveAspectRatioHWC(tensor, outW, outH)
+	resizedTs, err := resizePreserveAspectRatioHWC(tensor, outW, outH)
+	if err != nil {
+		return nil, err
+	}
+	tensor.MustDrop()
+
+	return resizedTs, nil
 }
 
 // LoadDir loads all the images in a directory.
@@ -185,7 +223,16 @@ func LoadDir(dir string, outW int64, outH int64) (*ts.Tensor, error) {
 		tensors = append(tensors, *tensor)
 	}
 
-	return ts.Stack(tensors, 0)
+	stackedTs, err := ts.Stack(tensors, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(tensors); i++ {
+		tensors[i].MustDrop()
+	}
+
+	return stackedTs, nil
 }
 
 func maxInt64(v1, v2 int64) int64 {

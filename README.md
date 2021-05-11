@@ -25,20 +25,69 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 - Default CUDA version is `10.1` if CUDA is available otherwise using CPU version.
 - Default Pytorch C++ API version is `1.7.0`
 
+**NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
+
+### CPU
+
+#### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
+
 ```bash
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
+    chmod +x setup-libtorch.sh
+    export CUDA_VER=cpu && bash setup-libtorch.sh
+```
 
-    wget https://raw.githubusercontent.com/sugarme/gotch/v0.3.8/setup.sh
-    chmod +x setup.sh
+**Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
 
-    # Default
-    bash setup.sh
+```bash
+    export GOTCH_LIBTORCH="/usr/local/lib/libtorch"
+    export LIBRARY_PATH="$LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
+    export CPATH="$CPATH:$GOTCH_LIBTORCH/lib:$GOTCH_LIBTORCH/include:$GOTCH_LIBTORCH/include/torch/csrc/api/include"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
+```
 
-    # Specify CUDA version
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && bash setup.sh
+#### Step 2: Setup gotch
 
-    # CPU
-    export CUDA_VER=cpu && bash setup.sh
+```bash
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
+    chmod +x setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.3.9-rc1 && bash setup-gotch.sh
+```
 
+### GPU
+
+**NOTE**: make sure your machine has working CUDA. 
+- Check version: `nvidia-smi`
+- [Install nvidia driver here](https://www.nvidia.com/Download/Find.aspx?lang=en)
+- [Install CUDA here](https://developer.nvidia.com/cuda-downloads)
+- [Install CuDNN here](https://developer.nvidia.com/rdp/cudnn-download#)
+
+#### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
+
+```bash
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
+    chmod +x setup-libtorch.sh
+
+    # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && bash setup-libtorch.sh
+```
+
+**Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
+
+```bash
+    export GOTCH_LIBTORCH="/usr/local/lib/libtorch"
+    export LIBRARY_PATH="$LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
+    export CPATH="$CPATH:$GOTCH_LIBTORCH/lib:$GOTCH_LIBTORCH/include:$GOTCH_LIBTORCH/include/torch/csrc/api/include"
+    LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib:/usr/lib64-nvidia:/usr/local/cuda-${CUDA_VERSION}/lib64"
+```
+
+#### Step 2: Setup gotch
+
+```bash
+    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
+    chmod +x setup-gotch.sh
+    # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
+    export CUDA_VER=YOUR_PC_CUDA_VERSION && export GOTCH_VER=v0.3.9-rc1 && bash setup-gotch.sh
 ```
 
 ## Examples
