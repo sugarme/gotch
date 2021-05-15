@@ -81,6 +81,10 @@ func (s *Sequential) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
 		return xs.MustShallowClone()
 	}
 
+	if len(s.layers) == 1 {
+		return s.layers[0].Forward(xs)
+	}
+
 	// forward sequentially
 	outs := make([]ts.Tensor, len(s.layers))
 	for i := 0; i < len(s.layers); i++ {
