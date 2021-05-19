@@ -565,7 +565,7 @@ func MustWhere(condition Tensor, del bool) (retVal []Tensor) {
 // ====================================================================
 
 // void atg_lstsq(tensor *, tensor self, tensor A);
-func (ts *Tensor) Lstsq(a *ts.Tensor, del bool) (retVal *Tensor, err error) {
+func (ts *Tensor) Lstsq(a *Tensor, del bool) (retVal *Tensor, err error) {
 	if del {
 		defer ts.MustDrop()
 	}
@@ -580,7 +580,7 @@ func (ts *Tensor) Lstsq(a *ts.Tensor, del bool) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func (ts *Tensor) MustLstsq(a *ts.Tensor, del bool) (retVal *Tensor) {
+func (ts *Tensor) MustLstsq(a *Tensor, del bool) (retVal *Tensor) {
 	retVal, err := ts.Lstsq(del)
 	if err != nil {
 		log.Fatal(err)
