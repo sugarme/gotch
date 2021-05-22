@@ -1,8 +1,14 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+- [#24], [#26]: fixed memory leak.
+- [#30]: fixed varstore.Save() randomly panic - segmentfault
+- [#32]: nn.Seq Forward return nil tensor if length of layers = 1
 
 ## [0.3.8]
 
@@ -85,4 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#6]: https://github.com/sugarme/gotch/issues/6
 [#4]: https://github.com/sugarme/gotch/issues/4
 [#20]: https://github.com/sugarme/gotch/issues/20
-
+[#24]: https://github.com/sugarme/gotch/issues/24
+[#26]: https://github.com/sugarme/gotch/issues/26
+[#30]: https://github.com/sugarme/gotch/issues/30
+[#32]: https://github.com/sugarme/gotch/issues/32
