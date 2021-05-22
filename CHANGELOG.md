@@ -6,9 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.9]
 - [#24], [#26]: fixed memory leak.
 - [#30]: fixed varstore.Save() randomly panic - segmentfault
 - [#32]: nn.Seq Forward return nil tensor if length of layers = 1
+- [#36]: resolved image augmentation
 
 ## [0.3.8]
 
