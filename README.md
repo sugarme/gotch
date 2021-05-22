@@ -257,8 +257,9 @@ func main() {
 - [Neural style transfer](example/neural-style-transfer)
 - [Image pretrained models - inference](example/pretrained-model)
 - [Translation](example/translation)
-
-More coming soon...
+- [Convert Pytorch Python model to Go](example/convert-model)
+- [Load Python Pytorch JIT model then train/finetune in Go](example/jit-train)
+- [Image augmentation](example/augmentation)
 
 ## Getting Started
 
