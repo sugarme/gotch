@@ -28,4 +28,7 @@ There are 2 APIs (`aug.Compose` and `aug.OneOf`) to compose augmentation methods
 ```
 
 
+![transformed images](augment.png)
+
+
 

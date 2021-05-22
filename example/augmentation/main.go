@@ -16,8 +16,8 @@ func main() {
 			panic(err)
 		}
 
-		device := gotch.CudaIfAvailable()
-		// device := gotch.CPU
+		// device := gotch.CudaIfAvailable()
+		device := gotch.CPU
 		imgTs := img.MustTo(device, true)
 		// t, err := aug.Compose(aug.WithResize(512, 512)) // NOTE. WithResize just works on CPU.
 		// t, err := aug.Compose(aug.WithRandRotate(0, 360), aug.WithColorJitter(0.3, 0.3, 0.3, 0.4))
@@ -37,6 +37,7 @@ func main() {
 		// t, err := aug.Compose(aug.WithNormalize(aug.WithNormalizeMean([]float64{0.485, 0.456, 0.406}), aug.WithNormalizeStd([]float64{0.229, 0.224, 0.225})))
 
 		t, err := aug.Compose(
+			aug.WithResize(200, 200),
 			aug.WithRandomVFlip(0.5),
 			aug.WithRandomHFlip(0.5),
 			aug.WithRandomCutout(),

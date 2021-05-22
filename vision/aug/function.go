@@ -761,7 +761,6 @@ func applyGridTransform(x, gridInput *ts.Tensor, mode string, fillValue []float6
 	addTs := mask.MustMul1(ts.FloatScalar(-1), false).MustAdd1(ts.FloatScalar(1.0), true).MustMul(fillImg, true)
 	imgOut := image.MustMul(mask, true).MustAdd(addTs, true)
 	addTs.MustDrop()
-	image.MustDrop()
 	mask.MustDrop()
 	fillImg.MustDrop()
 
