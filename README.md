@@ -51,7 +51,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.3.9-rc1 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.3.9 && bash setup-gotch.sh
 ```
 
 ### GPU
