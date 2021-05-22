@@ -581,7 +581,7 @@ func (ts *Tensor) Lstsq(a *Tensor, del bool) (retVal *Tensor, err error) {
 }
 
 func (ts *Tensor) MustLstsq(a *Tensor, del bool) (retVal *Tensor) {
-	retVal, err := ts.Lstsq(del)
+	retVal, err := ts.Lstsq(a, del)
 	if err != nil {
 		log.Fatal(err)
 	}
