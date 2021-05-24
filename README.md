@@ -32,7 +32,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 #### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
 ```bash
-    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
+    wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh
     chmod +x setup-libtorch.sh
     export CUDA_VER=cpu && bash setup-libtorch.sh
 ```
@@ -49,7 +49,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 #### Step 2: Setup gotch
 
 ```bash
-    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
+    wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
     export CUDA_VER=cpu && export GOTCH_VER=v0.3.9 && bash setup-gotch.sh
 ```
@@ -65,11 +65,13 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 #### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
 ```bash
-    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-libtorch.sh
+    wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh
     chmod +x setup-libtorch.sh
 
-    # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && bash setup-libtorch.sh
+    # CUDA 10.1
+    export CUDA_VER=10.1 && bash setup-libtorch.sh
+    # CUDA 11.0
+    export CUDA_VER=11.0 && bash setup-libtorch.sh
 ```
 
 **Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
@@ -84,10 +86,12 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 #### Step 2: Setup gotch
 
 ```bash
-    wget https://raw.githubusercontent.com/sugarme/gotch/image/setup-gotch.sh
+    wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    # Replace YOUR_PC_CUDA_VERSION with real one. E.g. `10.1`
-    export CUDA_VER=YOUR_PC_CUDA_VERSION && export GOTCH_VER=v0.3.9-rc1 && bash setup-gotch.sh
+    # CUDA 10.1
+    export CUDA_VER=10.1 && export GOTCH_VER=v0.3.9 && bash setup-gotch.sh
+    # CUDA 11.0
+    export CUDA_VER=11.0 && export GOTCH_VER=v0.3.9 && bash setup-gotch.sh
 ```
 
 ## Examples
