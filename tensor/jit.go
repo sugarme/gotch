@@ -87,6 +87,7 @@ func NewIValue(v interface{}) *IValue {
 		retVal.kind = StringVal
 		retVal.name = "String"
 	case "slice":
+		fmt.Printf("slice elem type: %q\n", reflect.TypeOf(v).Elem().Kind().String())
 		switch reflect.TypeOf(v).Elem().Kind().String() {
 		case "IValue":
 			switch len(v.([]IValue)) {
@@ -124,20 +125,14 @@ func NewIValue(v interface{}) *IValue {
 			// 1. Tuple (Tensor, Tensor)
 			case val.Type() == reflect.TypeOf([]Tensor{}) && val.Len() == 2:
 				retVal.kind = TensorListVal
-				retVal.name = "TensorList"
-
-				// convert tensors to []ivalue
-				tensors := v.([]Tensor)
-				var ivals []IValue
-				for _, tensor := range tensors {
-					ival := NewIValue(tensor)
-					ivals = append(ivals, *ival)
-				}
-				retVal.value = ivals
+				retVal.name = "Tuple"
+				retVal.value = v.([]Tensor)
 
 				// 2. List (Tensor, Tensor, ...)
 			case val.Type() == reflect.TypeOf([]Tensor{}) && val.Len() > 2:
-				panic("Its Tensor list")
+				retVal.kind = TensorListVal
+				retVal.name = "TensorList"
+				retVal.value = v.([]Tensor)
 			default:
 				log.Fatalf("NewIValue method call - 'slice -> struct' case - Unsupported type (%v)\n", reflect.TypeOf(v).Kind().String())
 			}
