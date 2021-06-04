@@ -590,6 +590,73 @@ void ato_set_learning_rate_group(optimizer t, size_t group, double learning_rate
   )
 }
 
+// ============ set/get learning rates ==============================
+// TT. added for learning rate scheduler
+// lr scheduler APIs will be in Pytorch 1.9?
+// Ref. https://github.com/pytorch/pytorch/issues/50577
+template <class T>
+void set_lrs(optimizer t, std::vector<double> &learning_rates) {
+  torch::optim::OptimizerOptions *d = &(t->defaults());
+  if (auto p = dynamic_cast<T *>(d)) {
+    for (std::size_t i = 0; i < t->param_groups().size(); i++) {
+      auto &param_group = t->param_groups()[i];
+      torch::optim::OptimizerOptions *d = &(param_group.options());
+      if (auto p2 = dynamic_cast<T *>(d)) {
+        p2->lr(learning_rates[i]);
+      } else
+        throw std::invalid_argument("unexpected param group type");
+    }
+  }
+}
+
+void ato_set_learning_rates(optimizer t, std::vector<double> &learning_rates) {
+  PROTECT(
+      set_lrs<torch::optim::AdamOptions>(t, learning_rates);
+      set_lrs<torch::optim::AdamWOptions>(t, learning_rates);
+      set_lrs<torch::optim::RMSpropOptions>(t, learning_rates);
+      set_lrs<torch::optim::SGDOptions>(t, learning_rates);
+  )
+}
+
+template <class T> void get_lrs(optimizer t, vector<double> &lrs) {
+  torch::optim::OptimizerOptions *d = &(t->defaults());
+  if (auto p = dynamic_cast<T *>(d)) {
+    for (std::size_t i = 0; i < t->param_groups().size(); i++) {
+      auto &param_group = t->param_groups()[i];
+      torch::optim::OptimizerOptions *d = &(param_group.options());
+      if (auto p2 = dynamic_cast<T *>(d)) {
+        lrs[i] = p2->lr();
+      } else
+        throw std::invalid_argument("unexpected param group type");
+    }
+  }
+}
+
+void ato_get_learning_rates(optimizer t, double *lrs, int *param_group_num) {
+  PROTECT(
+      int ngroup = t->param_groups().size();
+      static vector<double> learning_rates(ngroup);
+      get_lrs<torch::optim::AdamOptions>(t, learning_rates);
+      get_lrs<torch::optim::AdamWOptions>(t, learning_rates);
+      get_lrs<torch::optim::RMSpropOptions>(t, learning_rates);
+      get_lrs<torch::optim::SGDOptions>(t, learning_rates);
+      
+      copy(learning_rates.begin(), learning_rates.end(), lrs);
+      param_group_num[0] = ngroup;
+  )
+}
+
+int64_t ato_param_group_num(optimizer t) {
+   PROTECT(
+       return t->param_groups().size();
+   )
+   
+   return -1;
+}
+
+
+// ============ End of set/get learning rates ==============================
+
 void ato_set_momentum(optimizer t, double momentum) {
   PROTECT(
     torch::optim::OptimizerOptions* d = &(t->defaults());

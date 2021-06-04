@@ -440,6 +440,31 @@ func AtoSetLearningRate(coptimizer Coptimizer, learningRate float64) {
 	C.ato_set_learning_rate(coptimizer, clearningRate)
 }
 
+func AtoGetLearningRates(coptimizer Coptimizer) []float64 {
+	cLRsPtr := (*C.double)(unsafe.Pointer(C.malloc(0)))
+	cngroup := (*C.int)(unsafe.Pointer(C.malloc(0)))
+
+	C.ato_get_learning_rates(coptimizer, cLRsPtr, cngroup)
+	ngroup := *(*int)(unsafe.Pointer(cngroup))
+
+	var lrs []float64 = make([]float64, ngroup)
+	var currPtr *C.double = cLRsPtr
+	for i := 0; i < ngroup; i++ {
+		lrs[i] = *(*float64)(unsafe.Pointer(currPtr))
+		nextPtr := (*C.double)(unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(currPtr)))
+		currPtr = nextPtr
+	}
+
+	return lrs
+}
+
+func AtoParamGroupNum(coptimizer Coptimizer) int64 {
+	cpgNum := C.ato_param_group_num(coptimizer)
+
+	pgNum := *(*int64)(unsafe.Pointer(&cpgNum))
+	return pgNum
+}
+
 // void ato_set_momentum(optimizer, double momentum);
 func AtoSetMomentum(coptimizer Coptimizer, momentum float64) {
 	cmomentum := *(*C.double)(unsafe.Pointer(&momentum))

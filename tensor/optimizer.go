@@ -80,6 +80,27 @@ func (co *COptimizer) SetLearningRate(lr float64) error {
 	return TorchErr()
 }
 
+// GetLeanringRates get learning rates for the optimizer
+func (co *COptimizer) GetLearningRates() ([]float64, error) {
+	lrs := lib.AtoGetLearningRates(co.coptimizer)
+
+	if err := TorchErr(); err != nil {
+		return nil, err
+	}
+
+	return lrs, nil
+}
+
+func (co *COptimizer) ParamGroupNum() (int64, error) {
+	ngroup := lib.AtoParamGroupNum(co.coptimizer)
+
+	if err := TorchErr(); err != nil {
+		return -1, err
+	}
+
+	return ngroup, nil
+}
+
 // SetMomentum sets a momentum for the optimizer
 func (co *COptimizer) SetMomentum(m float64) error {
 	lib.AtoSetMomentum(co.coptimizer, m)

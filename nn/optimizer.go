@@ -276,10 +276,28 @@ func (opt *Optimizer) SetLR(lr float64) {
 	}
 }
 
+func (opt *Optimizer) GetLRs() []float64 {
+	lrs, err := opt.opt.GetLearningRates()
+	if err != nil {
+		log.Fatalf("Optimizer - GetLRs  method call error: %v\n", err)
+	}
+
+	return lrs
+}
+
 // SetMomentum sets the optimizer momentum.
 func (opt *Optimizer) SetMomentum(m float64) {
 	err := opt.opt.SetMomentum(m)
 	if err != nil {
 		log.Fatalf("Optimizer - SetMomentum  method call error: %v\n", err)
 	}
+}
+
+func (opt *Optimizer) ParamGroupNum() int64 {
+	ngroup, err := opt.opt.ParamGroupNum()
+	if err != nil {
+		log.Fatalf("Optimizer - ParamGroupNum  method call error: %v\n", err)
+	}
+
+	return ngroup
 }

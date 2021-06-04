@@ -130,6 +130,12 @@ void ato_zero_grad(optimizer);
 void ato_step(optimizer);
 void ato_free(optimizer);
 
+// TT. APIs for learning rate scheduler
+void ato_set_learning_rates(optimizer, double* learning_rates);
+//double *ato_get_learning_rates(optimizer);
+int64_t ato_param_group_num(optimizer);
+void ato_get_learning_rates(optimizer, double *lrs, int *ngroup);
+
 scalar ats_int(int64_t);
 scalar ats_float(double);
 int64_t ats_to_int(scalar);
@@ -197,7 +203,7 @@ void ati_free(ivalue);
 #include "torch_api_generated.h"
 
 #ifdef __cplusplus
-};
+}; // extern "C"
 #endif
 
 #endif
