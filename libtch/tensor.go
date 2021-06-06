@@ -9,9 +9,28 @@ package libtch
 import "C"
 
 import (
+	"bytes"
+	"encoding/binary"
+	"log"
 	"strings"
 	"unsafe"
 )
+
+var nativeEndian binary.ByteOrder
+
+func init() {
+	buf := [2]byte{}
+	*(*uint16)(unsafe.Pointer(&buf[0])) = uint16(0xABCD)
+
+	switch buf {
+	case [2]byte{0xCD, 0xAB}:
+		nativeEndian = binary.LittleEndian
+	case [2]byte{0xAB, 0xCD}:
+		nativeEndian = binary.BigEndian
+	default:
+		panic("Could not determine native endianness.")
+	}
+}
 
 // NOTE: C.tensor is a C pointer to torch::Tensor
 type Ctensor = C.tensor
@@ -418,20 +437,9 @@ func AtoAddParametersOld(coptimizer Coptimizer, tensors []Ctensor, ntensors int)
 	C.ato_add_parameters_old(coptimizer, &ctensors[0], cntensors)
 }
 
-// NOTE. This function is not working correctly. Need to update!!!
-// DO NOT USE!!!!!
-// TODO. updated
-func AtoAddParameters(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
-
-	var ctensors []C.tensor
-	for i := 0; i < len(tensors); i++ {
-		ctensors = append(ctensors, (C.tensor)(tensors[i]))
-	}
-
-	cntensors := *(*C.size_t)(unsafe.Pointer(&ntensors))
-
-	// Just give pointer to the first element of ctensors slice
-	C.ato_add_parameters(coptimizer, ctensors[0], cntensors)
+func AtoAddParameter(coptimizer Coptimizer, tensor Ctensor, group uint) {
+	cgroup := *(*C.ulong)(unsafe.Pointer(&group))
+	C.ato_add_parameter(coptimizer, tensor, cgroup)
 }
 
 // void ato_set_learning_rate(optimizer, double learning_rate);
@@ -458,11 +466,39 @@ func AtoGetLearningRates(coptimizer Coptimizer) []float64 {
 	return lrs
 }
 
+func AtoSetLearningRates(coptimizer Coptimizer, lrs []float64) {
+	elementNum := len(lrs)
+	eltSizeInBytes := 8 // float64 takes 8 Bytes
+	nbytes := int(eltSizeInBytes) * int(elementNum)
+	dataPtr := C.malloc(C.size_t(nbytes))
+	defer C.free(unsafe.Pointer(dataPtr))
+	dataSlice := (*[1 << 32]byte)(dataPtr)[:nbytes:nbytes] // 4294967296
+	buf := bytes.NewBuffer(dataSlice[:0:nbytes])
+	if err := binary.Write(buf, nativeEndian, lrs); err != nil {
+		log.Fatal(err)
+	}
+
+	clrs := (*C.double)(dataPtr)
+	lrsNum := len(lrs)
+	clrsNum := *(*C.int)(unsafe.Pointer(&lrsNum))
+	C.ato_set_learning_rates(coptimizer, clrs, clrsNum)
+}
+
 func AtoParamGroupNum(coptimizer Coptimizer) int64 {
 	cpgNum := C.ato_param_group_num(coptimizer)
 
 	pgNum := *(*int64)(unsafe.Pointer(&cpgNum))
 	return pgNum
+}
+
+func AtoAddParamGroup(coptimizer Coptimizer, tensors []Ctensor, ntensors int) {
+	var ctensors []C.tensor
+	for i := 0; i < len(tensors); i++ {
+		ctensors = append(ctensors, (C.tensor)(tensors[i]))
+	}
+	cntensors := *(*C.int)(unsafe.Pointer(&ntensors))
+
+	C.ato_add_param_group(coptimizer, &ctensors[0], cntensors)
 }
 
 // void ato_set_momentum(optimizer, double momentum);

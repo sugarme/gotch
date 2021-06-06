@@ -59,7 +59,6 @@ func Sgd(lr, momentum, dampening, wd float64, nesterov bool) (*COptimizer, error
 
 // AddParameters adds parameters as a slice of tensors to optimizer
 func (co *COptimizer) AddParameters(tensors []Tensor) error {
-
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
 		ctensors = append(ctensors, t.ctensor)
@@ -69,6 +68,13 @@ func (co *COptimizer) AddParameters(tensors []Tensor) error {
 
 	// NOTE. temporary switch back as param group not updated yet!
 	lib.AtoAddParametersOld(co.coptimizer, ctensors, ntensors)
+
+	return TorchErr()
+}
+
+// AddParameter adds a single parameter to parameter group.
+func (co *COptimizer) AddParameter(param *Tensor, group uint) error {
+	lib.AtoAddParameter(co.coptimizer, param.ctensor, group)
 
 	return TorchErr()
 }
@@ -91,6 +97,15 @@ func (co *COptimizer) GetLearningRates() ([]float64, error) {
 	return lrs, nil
 }
 
+func (co *COptimizer) SetLearningRates(lrs []float64) error {
+	lib.AtoSetLearningRates(co.coptimizer, lrs)
+	if err := TorchErr(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (co *COptimizer) ParamGroupNum() (int64, error) {
 	ngroup := lib.AtoParamGroupNum(co.coptimizer)
 
@@ -99,6 +114,18 @@ func (co *COptimizer) ParamGroupNum() (int64, error) {
 	}
 
 	return ngroup, nil
+}
+
+func (co *COptimizer) AddParamGroup(tensors []Tensor) error {
+	var ctensors []lib.Ctensor
+	for _, t := range tensors {
+		ctensors = append(ctensors, t.ctensor)
+	}
+
+	ntensors := len(tensors)
+
+	lib.AtoAddParamGroup(co.coptimizer, ctensors, ntensors)
+	return TorchErr()
 }
 
 // SetMomentum sets a momentum for the optimizer

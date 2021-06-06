@@ -14,6 +14,11 @@ import (
 // SEP is a separator to separate path elements in the tensor names.
 const SEP = "."
 
+type Var struct {
+	Tensor *ts.Tensor
+	Group  uint // optimizer parameter group
+}
+
 // Variables represents a collection of tensors.
 //
 // NOTE: When the variable store is frozen, trainable still is set to tree,
@@ -21,7 +26,8 @@ const SEP = "."
 type Variables struct {
 	mutex              *sync.Mutex
 	NamedVariables     map[string]*ts.Tensor
-	TrainableVariables []ts.Tensor
+	TrainableVariables []Var
+	// TrainableVariables []ts.Tensor
 }
 
 // VarStore is used to store variables used by one or multiple layers.
@@ -35,6 +41,7 @@ type VarStore struct {
 type Path struct {
 	path     []string
 	varstore *VarStore
+	group    uint // optimizer parameter group
 }
 
 // Entry holds an entry corresponding to a given name in Path.
@@ -49,7 +56,8 @@ func NewVarStore(device gotch.Device) *VarStore {
 	variables := Variables{
 		mutex:              &sync.Mutex{},
 		NamedVariables:     make(map[string]*ts.Tensor, 0),
-		TrainableVariables: make([]ts.Tensor, 0),
+		TrainableVariables: make([]Var, 0),
+		// TrainableVariables: make([]ts.Tensor, 0),
 	}
 
 	return &VarStore{
@@ -88,9 +96,9 @@ func (vs *VarStore) TrainableVariables() []ts.Tensor {
 	vs.Vars.mutex.Lock()
 	defer vs.Vars.mutex.Unlock()
 
-	retVal := vs.Vars.TrainableVariables
-	for _, t := range vs.Vars.TrainableVariables {
-		retVal = append(retVal, *t.MustShallowClone())
+	var retVal []ts.Tensor
+	for _, v := range vs.Vars.TrainableVariables {
+		retVal = append(retVal, *v.Tensor.MustShallowClone())
 	}
 
 	return retVal
@@ -119,6 +127,7 @@ func (vs *VarStore) Root() *Path {
 	return &Path{
 		path:     []string{},
 		varstore: vs,
+		group:    0,
 	}
 }
 
@@ -257,7 +266,7 @@ func (vs *VarStore) Freeze() {
 	defer vs.Vars.mutex.Unlock()
 
 	for _, v := range vs.Vars.TrainableVariables {
-		_, err := v.SetRequiresGrad(false, false)
+		_, err := v.Tensor.SetRequiresGrad(false, false)
 		if err != nil {
 			log.Fatalf("Freeze() Error: %v\n", err)
 		}
@@ -272,7 +281,7 @@ func (vs *VarStore) Unfreeze() {
 	defer vs.Vars.mutex.Unlock()
 
 	for _, v := range vs.Vars.TrainableVariables {
-		_, err := v.SetRequiresGrad(true, false)
+		_, err := v.Tensor.SetRequiresGrad(true, false)
 		if err != nil {
 			log.Fatalf("Unfreeze() Error: %v\n", err)
 		}
@@ -328,6 +337,7 @@ func (p *Path) Sub(str string) *Path {
 	return &Path{
 		path:     path,
 		varstore: p.varstore,
+		group:    p.group,
 	}
 }
 
@@ -375,7 +385,11 @@ func (p *Path) add(name string, newTs *ts.Tensor, trainable bool) *ts.Tensor {
 	}
 
 	if trainable {
-		p.varstore.Vars.TrainableVariables = append(p.varstore.Vars.TrainableVariables, *tensor)
+		v := Var{
+			Tensor: tensor,
+			Group:  p.group,
+		}
+		p.varstore.Vars.TrainableVariables = append(p.varstore.Vars.TrainableVariables, v)
 	}
 
 	p.varstore.Vars.NamedVariables[path] = tensor
@@ -409,12 +423,20 @@ func (p *Path) getOrAddWithLock(name string, tensor *ts.Tensor, trainable bool, 
 	}
 
 	if trainable {
-		variables.TrainableVariables = append(variables.TrainableVariables, *ttensor)
+		v := Var{
+			Tensor: ttensor,
+			Group:  p.group,
+		}
+		variables.TrainableVariables = append(variables.TrainableVariables, v)
 	}
 
 	variables.NamedVariables[path] = ttensor
 
 	return ttensor
+}
+
+func (p *Path) SetGroup(g uint) {
+	p.group = g
 }
 
 // ZerosNoTrain creates a new variable initialized with zeros.
