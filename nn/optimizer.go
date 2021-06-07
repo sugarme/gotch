@@ -15,6 +15,7 @@ type Optimizer struct {
 	// variables            Variables // having embedded sync.Mutex
 	variablesInOptimizer uint8
 	config               interface{}
+	stepCount            int
 }
 
 // OptimizerConfig defines Optimizer configurations. These configs can be used to build optimizer.
@@ -55,6 +56,7 @@ func defaultBuild(config OptimizerConfig, vs *VarStore, lr float64) (retVal *Opt
 		// variables:            vs.Vars,
 		variablesInOptimizer: uint8(len(vs.Vars.TrainableVariables)),
 		config:               config,
+		stepCount:            0,
 	}, nil
 }
 
@@ -222,6 +224,7 @@ func (opt *Optimizer) Step() {
 	if err != nil {
 		log.Fatalf("Optimizer - Step method call error: %v\n", err)
 	}
+	opt.stepCount += 1
 }
 
 // BackwardStep applies a backward step pass, update the gradients, and performs an optimization step.
