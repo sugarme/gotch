@@ -33,13 +33,19 @@ type LambdaLR struct {
 
 // NewLambdaLRScheduler creates a new LambdaLRScheduler.
 func NewLambdaLR(opt *Optimizer, ldFns []LambdaFn, lastEpoch int) *LambdaLR {
+	ngroup := opt.ParamGroupNum()
+	if int(ngroup) != len(ldFns) {
+		log.Fatalf("Number of lambda functions (%d) is not equal to number of optimizer groups (%d)", len(ldFns), ngroup)
+	}
 	return &LambdaLR{opt, ldFns, lastEpoch}
 }
 
+// Build implements scheduler interface.
 func (l *LambdaLR) Build() *LRScheduler {
 	return &LRScheduler{l}
 }
 
+// SetLRs implements scheduler interface.
 func (l *LambdaLR) SetLRs(epochOpt ...int) {
 	epoch := -1
 	if len(epochOpt) > 0 {
