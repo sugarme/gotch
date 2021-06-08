@@ -311,13 +311,13 @@ func (opt *Optimizer) SetMomentum(m float64) {
 	}
 }
 
-func (opt *Optimizer) ParamGroupNum() int64 {
+func (opt *Optimizer) ParamGroupNum() int {
 	ngroup, err := opt.opt.ParamGroupNum()
 	if err != nil {
 		log.Fatalf("Optimizer - ParamGroupNum  method call error: %v\n", err)
 	}
 
-	return ngroup
+	return int(ngroup)
 }
 
 func (opt *Optimizer) AddParamGroup(tensors []ts.Tensor) {
