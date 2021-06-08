@@ -1,7 +1,7 @@
 package nn
 
 import (
-	// "fmt"
+	"fmt"
 	"log"
 	"math"
 )
@@ -252,4 +252,129 @@ func contain(item int, list []int) bool {
 	}
 
 	return false
+}
+
+// ExponentialLR decays the learning rates of each optimizer parameter group by gamma every
+// epochs.
+type ExponentialLR struct {
+	opt        *Optimizer
+	gamma      float64
+	initialLRs []float64
+}
+
+// NewExponentialLR creates a new ExponentialLR.
+func NewExponentialLR(opt *Optimizer, gamma float64) *ExponentialLR {
+	initialLRs := opt.GetLRs()
+	return &ExponentialLR{opt, gamma, initialLRs}
+}
+
+// Build implements scheduler interface.
+func (e *ExponentialLR) Build() *LRScheduler {
+	return &LRScheduler{e}
+}
+
+// SetLRs implements scheduler interface.
+func (e *ExponentialLR) SetLRs(epochOpt ...int) {
+	epoch := -1
+	if len(epochOpt) > 0 {
+		epoch = epochOpt[0]
+	}
+
+	var newLRs []float64
+	lrs, err := e.opt.opt.GetLearningRates()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	switch {
+	case epoch == -1, epoch == 0:
+		newLRs = lrs
+	default:
+		for _, lr := range lrs {
+			newLR := floatRound(lr*e.gamma, 10)
+			newLRs = append(newLRs, newLR)
+		}
+	}
+
+	e.opt.SetLRs(newLRs)
+}
+
+// CosineAnnealingLR set the learning rates of each optimizer parameter group by using
+// a cosine annealing schedule where eta max is set to initial learning rate and Tcur
+// is the number of epochs since the last restart in SGDR (Stochastic Gradient Descent with Warm Restarts).
+//
+// NOTE. this implements only the cosine annealing part of SGDR, and not the starts.
+// Ref.
+// - https://pytorch.org/docs/stable/optim.html#torch.optim.lr_scheduler.CosineAnnealingLR
+// - https://arxiv.org/abs/1608.03983
+type CosineAnnealingLR struct {
+	opt        *Optimizer
+	tmax       int     // maximal number of iteration
+	etaMin     float64 // Minimum learning rate. Default = 0
+	initialLRs []float64
+	stepCount  int
+	lastEpoch  int
+}
+
+// NewConsineAnnealingLR creates a new ConsineAnnealingLR.
+func NewCosineAnnealingLR(opt *Optimizer, tmax int, etaMin float64, lastEpochOpt ...int) *CosineAnnealingLR {
+	lastEpoch := -1
+	if len(lastEpochOpt) > 0 {
+		lastEpoch = lastEpochOpt[0]
+	}
+	stepCount := 0
+	opt.ResetStepCount()
+	initialLRs := opt.GetLRs()
+	fmt.Printf("Scheduler initialLRs: %v\n", initialLRs)
+	return &CosineAnnealingLR{opt, tmax, etaMin, initialLRs, stepCount, lastEpoch}
+}
+
+// Build implements scheduler interface.
+func (ca *CosineAnnealingLR) Build() *LRScheduler {
+	s := &LRScheduler{ca}
+	s.Step()
+	return s
+}
+
+// SetLRs implements scheduler interface.
+func (ca *CosineAnnealingLR) SetLRs(epochOpt ...int) {
+	switch len(epochOpt) {
+	case 0:
+		ca.lastEpoch += 1
+	default:
+		ca.lastEpoch = epochOpt[0]
+	}
+
+	var newLRs []float64
+	lrs, err := ca.opt.opt.GetLearningRates()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	switch {
+	case ca.lastEpoch == 0:
+		newLRs = ca.initialLRs
+	case (ca.lastEpoch-1-ca.tmax)%(2*ca.tmax) == 0:
+		// fmt.Printf("Epoch %d: case 2(%v)\n", ca.lastEpoch, (ca.lastEpoch-1-ca.tmax)%(2*ca.tmax))
+		for i, lr := range lrs {
+			// group['lr'] + (base_lr - self.eta_min) * (1 - math.cos(math.pi / self.T_max)) / 2
+			newLR := lr + (ca.initialLRs[i]-ca.etaMin)*(1-math.Cos(math.Pi/float64(ca.tmax)))/2
+			newLRs = append(newLRs, newLR)
+		}
+	default:
+		// fmt.Printf("Epoch %d: case 3(%v)\n", ca.lastEpoch, (ca.lastEpoch-1-ca.tmax)%(2*ca.tmax))
+		for _, lr := range lrs {
+			//(1 + math.cos(math.pi * self.last_epoch / self.T_max))
+			dividend := 1 + math.Cos(math.Pi*float64(ca.lastEpoch)/float64(ca.tmax))
+
+			// (1 + math.cos(math.pi * (self.last_ca.lastEpoch - 1) / self.T_max)) * (group['lr'] - self.eta_min) + self.eta_min
+			divisor := (1 + math.Cos(math.Pi*(float64(ca.lastEpoch-1)/float64(ca.tmax))))
+			newLR := (dividend/divisor)*(lr-ca.etaMin) + ca.etaMin
+			newLRs = append(newLRs, newLR)
+		}
+	}
+
+	ca.opt.SetLRs(newLRs)
+	ca.stepCount += 1
+	// fmt.Printf("Epoch %d - LRs: %0.6f\n", ca.lastEpoch, ca.opt.GetLRs())
 }

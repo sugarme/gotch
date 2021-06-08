@@ -136,3 +136,58 @@ func TestMultiStepLR(t *testing.T) {
 		}
 	}
 }
+
+func TestExponentialLR(t *testing.T) {
+	vs := NewVarStore(gotch.CPU)
+	opt, err := DefaultAdamConfig().Build(vs, 0.05)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var s *LRScheduler
+	s = NewStepLR(opt, 30, 0.1).Build()
+
+	wants := []float64{
+		0.05,    // initial LR -> 0.05
+		0.005,   // epoch 1 -> 0.05 * gamma = 0.005
+		0.0005,  // epoch 2 -> 0.005 * gamma = 0.0005
+		0.00005, // epoch 3 -> 0.0005 * gamma = 0.00005
+	}
+	i := 0
+	for epoch := 0; epoch < 3; epoch++ {
+		s.Step(epoch)
+		want := wants[i]
+		got := opt.GetLRs()[0]
+		if got != want {
+			t.Errorf("Epoch %d: Want %v - Got %v", epoch, want, got)
+		}
+	}
+}
+
+func TestCosineAnnealingLR(t *testing.T) {
+	vs := NewVarStore(gotch.CPU)
+	model := NewLinear(vs.Root(), 10, 2, DefaultLinearConfig())
+	opt, err := DefaultSGDConfig().Build(vs, 1.0)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// var s *LRScheduler
+	steps := 10
+	// s = NewCosineAnnealingLR(opt, steps, 0.0).Build()
+
+	for epoch := 0; epoch < 5; epoch++ {
+		opt.SetLRs([]float64{1.0})
+		s := NewCosineAnnealingLR(opt, steps, 0.0).Build()
+		// t.Logf("Initial LRs: %v\n", opt.GetLRs())
+		for idx := 0; idx < steps; idx++ {
+			s.Step()
+			t.Logf("LR: %0.10f\n", opt.GetLRs())
+		}
+
+		t.Logf("Reset scheduler. \n")
+	}
+
+	t.Log(model)
+	t.Error("failed")
+}

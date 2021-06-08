@@ -227,6 +227,16 @@ func (opt *Optimizer) Step() {
 	opt.stepCount += 1
 }
 
+// ResetStepCount set step count to zero.
+func (opt *Optimizer) ResetStepCount() {
+	opt.stepCount = 0
+}
+
+// StepCount get current step count.
+func (opt *Optimizer) StepCount() int {
+	return opt.stepCount
+}
+
 // BackwardStep applies a backward step pass, update the gradients, and performs an optimization step.
 func (opt *Optimizer) BackwardStep(loss *ts.Tensor) {
 	opt.addMissingVariables()
