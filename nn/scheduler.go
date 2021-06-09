@@ -1,7 +1,7 @@
 package nn
 
 import (
-	"fmt"
+	// "fmt"
 	"log"
 	"math"
 )
@@ -29,10 +29,16 @@ type LambdaLR struct {
 	opt        *Optimizer
 	lrLambdas  []LambdaFn // length should be 1 or equal to length of optimizer param groups.
 	initialLRs []float64
+	stepCount  int
+	lastEpoch  int
 }
 
 // NewLambdaLRS creates a new LambdaLRS.
-func NewLambdaLR(opt *Optimizer, ldFns []LambdaFn) *LambdaLR {
+func NewLambdaLR(opt *Optimizer, ldFns []LambdaFn, lastEpochOpt ...int) *LambdaLR {
+	lastEpoch := -1
+	if len(lastEpochOpt) > 0 {
+		lastEpoch = lastEpochOpt[0]
+	}
 	ngroup := opt.ParamGroupNum()
 	initialLRs := opt.GetLRs()
 	var funcs []LambdaFn = make([]LambdaFn, ngroup)
@@ -47,34 +53,46 @@ func NewLambdaLR(opt *Optimizer, ldFns []LambdaFn) *LambdaLR {
 	default:
 		log.Fatalf("Number of lambda functions (%d) is not equal to number of optimizer groups (%d)", len(ldFns), ngroup)
 	}
-	return &LambdaLR{opt, ldFns, initialLRs}
+
+	return &LambdaLR{
+		opt:        opt,
+		lrLambdas:  ldFns,
+		initialLRs: initialLRs,
+		stepCount:  0,
+		lastEpoch:  lastEpoch,
+	}
 }
 
 // Build implements scheduler interface.
 func (l *LambdaLR) Build() *LRScheduler {
-	return &LRScheduler{l}
+	s := &LRScheduler{l}
+	s.Step()
+	return s
 }
 
 // SetLRs implements scheduler interface.
 func (l *LambdaLR) SetLRs(epochOpt ...int) {
-	epoch := -1
-	if len(epochOpt) > 0 {
-		epoch = epochOpt[0]
+	switch len(epochOpt) {
+	case 0:
+		l.lastEpoch += 1
+	default:
+		l.lastEpoch = epochOpt[0]
 	}
 
 	var newLRs []float64
-	switch epoch {
-	case -1, 0:
+	switch l.lastEpoch {
+	case 0:
 		newLRs = l.initialLRs
 	default:
 		for i, lr := range l.initialLRs {
-			lambda := l.lrLambdas[i](epoch)
+			lambda := l.lrLambdas[i](l.lastEpoch)
 			newLR := lr * lambda
 			newLRs = append(newLRs, newLR)
 		}
 	}
 
 	l.opt.SetLRs(newLRs)
+	l.stepCount += 1
 }
 
 // MultiplicativeLR calculates new learning rates for each optimizer para groups
@@ -83,12 +101,20 @@ type MultiplicativeLR struct {
 	opt        *Optimizer
 	lrLambdas  []LambdaFn // length should be 1 or equal to length of optimizer param groups.
 	initialLRs []float64
+	stepCount  int
+	lastEpoch  int
 }
 
 // NewMultiplicativeLR creates a new MultiplicativeLR.
-func NewMultiplicativeLR(opt *Optimizer, ldFns []LambdaFn) *MultiplicativeLR {
+func NewMultiplicativeLR(opt *Optimizer, ldFns []LambdaFn, lastEpochOpt ...int) *MultiplicativeLR {
+	lastEpoch := -1
+	if len(lastEpochOpt) > 0 {
+		lastEpoch = lastEpochOpt[0]
+	}
+
 	ngroup := opt.ParamGroupNum()
 	initialLRs := opt.GetLRs()
+
 	var funcs []LambdaFn = make([]LambdaFn, ngroup)
 	switch len(ldFns) {
 	case 1:
@@ -101,39 +127,49 @@ func NewMultiplicativeLR(opt *Optimizer, ldFns []LambdaFn) *MultiplicativeLR {
 	default:
 		log.Fatalf("Number of lambda functions (%d) is not equal to number of optimizer groups (%d)", len(ldFns), ngroup)
 	}
-	return &MultiplicativeLR{opt, ldFns, initialLRs}
+	return &MultiplicativeLR{
+		opt:        opt,
+		lrLambdas:  ldFns,
+		initialLRs: initialLRs,
+		stepCount:  0,
+		lastEpoch:  lastEpoch,
+	}
 }
 
 // Build implements scheduler interface.
 func (m *MultiplicativeLR) Build() *LRScheduler {
-	return &LRScheduler{m}
+	s := &LRScheduler{m}
+	s.Step()
+	return s
 }
 
 // SetLRs implements scheduler interface.
-func (l *MultiplicativeLR) SetLRs(epochOpt ...int) {
-	epoch := -1
-	if len(epochOpt) > 0 {
-		epoch = epochOpt[0]
+func (m *MultiplicativeLR) SetLRs(epochOpt ...int) {
+	switch len(epochOpt) {
+	case 0:
+		m.lastEpoch += 1
+	default:
+		m.lastEpoch = epochOpt[0]
 	}
 
 	var newLRs []float64
-	lrs, err := l.opt.opt.GetLearningRates()
+	lrs, err := m.opt.opt.GetLearningRates()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	switch epoch {
-	case -1, 0:
-		newLRs = lrs
+	switch m.lastEpoch {
+	case 0:
+		newLRs = m.initialLRs
 	default:
 		for i, lr := range lrs {
-			lambda := l.lrLambdas[i](epoch)
+			lambda := m.lrLambdas[i](m.lastEpoch)
 			newLR := lr * lambda
 			newLRs = append(newLRs, newLR)
 		}
 	}
 
-	l.opt.SetLRs(newLRs)
+	m.opt.SetLRs(newLRs)
 }
 
 // StepLR decays the learning rates of each optimizer parameter group by gamma every
@@ -146,24 +182,42 @@ type StepLR struct {
 	stepSize   int
 	gamma      float64
 	initialLRs []float64
+	stepCount  int
+	lastEpoch  int
 }
 
 // NewStepLR creates a new StepLR.
-func NewStepLR(opt *Optimizer, stepSize int, gamma float64) *StepLR {
+func NewStepLR(opt *Optimizer, stepSize int, gamma float64, lastEpochOpt ...int) *StepLR {
+	lastEpoch := -1
+	if len(lastEpochOpt) > 0 {
+		lastEpoch = lastEpochOpt[0]
+	}
+
 	initialLRs := opt.GetLRs()
-	return &StepLR{opt, stepSize, gamma, initialLRs}
+	return &StepLR{
+		opt:        opt,
+		stepSize:   stepSize,
+		gamma:      gamma,
+		initialLRs: initialLRs,
+		stepCount:  0,
+		lastEpoch:  lastEpoch,
+	}
 }
 
 // Build implements scheduler interface.
 func (s *StepLR) Build() *LRScheduler {
-	return &LRScheduler{s}
+	sc := &LRScheduler{s}
+	sc.Step()
+	return sc
 }
 
 // SetLRs implements scheduler interface.
 func (s *StepLR) SetLRs(epochOpt ...int) {
-	epoch := -1
-	if len(epochOpt) > 0 {
-		epoch = epochOpt[0]
+	switch len(epochOpt) {
+	case 0:
+		s.lastEpoch += 1
+	default:
+		s.lastEpoch = epochOpt[0]
 	}
 
 	var newLRs []float64
@@ -173,7 +227,7 @@ func (s *StepLR) SetLRs(epochOpt ...int) {
 	}
 
 	switch {
-	case epoch == -1, epoch == 0, epoch%s.stepSize != 0:
+	case s.lastEpoch == 0, s.lastEpoch%s.stepSize != 0:
 		newLRs = lrs
 	default:
 		for _, lr := range lrs {
@@ -205,24 +259,42 @@ type MultiStepLR struct {
 	milestones []int
 	gamma      float64
 	initialLRs []float64
+	stepCount  int
+	lastEpoch  int
 }
 
 // NewStepLR creates a new StepLR.
-func NewMultiStepLR(opt *Optimizer, milestones []int, gamma float64) *MultiStepLR {
+func NewMultiStepLR(opt *Optimizer, milestones []int, gamma float64, lastEpochOpt ...int) *MultiStepLR {
+	lastEpoch := -1
+	if len(lastEpochOpt) > 0 {
+		lastEpoch = lastEpochOpt[0]
+	}
+
 	initialLRs := opt.GetLRs()
-	return &MultiStepLR{opt, milestones, gamma, initialLRs}
+	return &MultiStepLR{
+		opt:        opt,
+		milestones: milestones,
+		gamma:      gamma,
+		initialLRs: initialLRs,
+		stepCount:  0,
+		lastEpoch:  lastEpoch,
+	}
 }
 
 // Build implements scheduler interface.
 func (ms *MultiStepLR) Build() *LRScheduler {
-	return &LRScheduler{ms}
+	s := &LRScheduler{ms}
+	s.Step()
+	return s
 }
 
 // SetLRs implements scheduler interface.
 func (ms *MultiStepLR) SetLRs(epochOpt ...int) {
-	epoch := -1
-	if len(epochOpt) > 0 {
-		epoch = epochOpt[0]
+	switch len(epochOpt) {
+	case 0:
+		ms.lastEpoch += 1
+	default:
+		ms.lastEpoch = epochOpt[0]
 	}
 
 	var newLRs []float64
@@ -232,7 +304,7 @@ func (ms *MultiStepLR) SetLRs(epochOpt ...int) {
 	}
 
 	switch {
-	case !contain(epoch, ms.milestones):
+	case !contain(ms.lastEpoch, ms.milestones):
 		newLRs = lrs
 	default:
 		for _, lr := range lrs {
@@ -260,24 +332,41 @@ type ExponentialLR struct {
 	opt        *Optimizer
 	gamma      float64
 	initialLRs []float64
+	stepCount  int
+	lastEpoch  int
 }
 
 // NewExponentialLR creates a new ExponentialLR.
-func NewExponentialLR(opt *Optimizer, gamma float64) *ExponentialLR {
+func NewExponentialLR(opt *Optimizer, gamma float64, lastEpochOpt ...int) *ExponentialLR {
+	lastEpoch := -1
+	if len(lastEpochOpt) > 0 {
+		lastEpoch = lastEpochOpt[0]
+	}
+
 	initialLRs := opt.GetLRs()
-	return &ExponentialLR{opt, gamma, initialLRs}
+	return &ExponentialLR{
+		opt:        opt,
+		gamma:      gamma,
+		initialLRs: initialLRs,
+		stepCount:  0,
+		lastEpoch:  lastEpoch,
+	}
 }
 
 // Build implements scheduler interface.
 func (e *ExponentialLR) Build() *LRScheduler {
-	return &LRScheduler{e}
+	s := &LRScheduler{e}
+	s.Step()
+	return s
 }
 
 // SetLRs implements scheduler interface.
 func (e *ExponentialLR) SetLRs(epochOpt ...int) {
-	epoch := -1
-	if len(epochOpt) > 0 {
-		epoch = epochOpt[0]
+	switch len(epochOpt) {
+	case 0:
+		e.lastEpoch += 1
+	default:
+		e.lastEpoch = epochOpt[0]
 	}
 
 	var newLRs []float64
@@ -287,7 +376,7 @@ func (e *ExponentialLR) SetLRs(epochOpt ...int) {
 	}
 
 	switch {
-	case epoch == -1, epoch == 0:
+	case e.lastEpoch == 0:
 		newLRs = lrs
 	default:
 		for _, lr := range lrs {
@@ -322,11 +411,16 @@ func NewCosineAnnealingLR(opt *Optimizer, tmax int, etaMin float64, lastEpochOpt
 	if len(lastEpochOpt) > 0 {
 		lastEpoch = lastEpochOpt[0]
 	}
-	stepCount := 0
 	opt.ResetStepCount()
 	initialLRs := opt.GetLRs()
-	fmt.Printf("Scheduler initialLRs: %v\n", initialLRs)
-	return &CosineAnnealingLR{opt, tmax, etaMin, initialLRs, stepCount, lastEpoch}
+	return &CosineAnnealingLR{
+		opt:        opt,
+		tmax:       tmax,
+		etaMin:     etaMin,
+		initialLRs: initialLRs,
+		stepCount:  0,
+		lastEpoch:  lastEpoch,
+	}
 }
 
 // Build implements scheduler interface.
@@ -355,14 +449,12 @@ func (ca *CosineAnnealingLR) SetLRs(epochOpt ...int) {
 	case ca.lastEpoch == 0:
 		newLRs = ca.initialLRs
 	case (ca.lastEpoch-1-ca.tmax)%(2*ca.tmax) == 0:
-		// fmt.Printf("Epoch %d: case 2(%v)\n", ca.lastEpoch, (ca.lastEpoch-1-ca.tmax)%(2*ca.tmax))
 		for i, lr := range lrs {
 			// group['lr'] + (base_lr - self.eta_min) * (1 - math.cos(math.pi / self.T_max)) / 2
 			newLR := lr + (ca.initialLRs[i]-ca.etaMin)*(1-math.Cos(math.Pi/float64(ca.tmax)))/2
 			newLRs = append(newLRs, newLR)
 		}
 	default:
-		// fmt.Printf("Epoch %d: case 3(%v)\n", ca.lastEpoch, (ca.lastEpoch-1-ca.tmax)%(2*ca.tmax))
 		for _, lr := range lrs {
 			//(1 + math.cos(math.pi * self.last_epoch / self.T_max))
 			dividend := 1 + math.Cos(math.Pi*float64(ca.lastEpoch)/float64(ca.tmax))
@@ -376,5 +468,4 @@ func (ca *CosineAnnealingLR) SetLRs(epochOpt ...int) {
 
 	ca.opt.SetLRs(newLRs)
 	ca.stepCount += 1
-	// fmt.Printf("Epoch %d - LRs: %0.6f\n", ca.lastEpoch, ca.opt.GetLRs())
 }
