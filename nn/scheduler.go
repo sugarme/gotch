@@ -597,6 +597,60 @@ func defaultReduceLROnPlateauOptions() *ReduceLROnPlateauOptions {
 	}
 }
 
+func WithReduceOnPlateauMode(mode string) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.Mode = mode
+	}
+}
+
+func WithReduceOnPlateauFactor(factor float64) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.Factor = factor
+	}
+}
+
+func WithReduceOnPlateauPatience(patience int) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.Patience = patience
+	}
+}
+
+func WithReduceOnPlateauVerbose(verbose bool) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.Verbose = verbose
+	}
+}
+
+func WithReduceOnPlateauThreshold(threshold float64) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.Threshold = threshold
+	}
+}
+
+func WithReduceOnPlateauThresholdMode(thresholdMode string) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.ThresholdMode = thresholdMode
+	}
+}
+
+func WithReduceOnPlateauEps(eps float64) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.Eps = eps
+	}
+}
+
+func WithReduceOnPlateauMinLRs(minLRs []float64) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.MinLRs = minLRs
+	}
+}
+
+func WithReduceOnPlateauCooldown(cooldown int) ReduceLROnPlateauOption {
+	return func(o *ReduceLROnPlateauOptions) {
+		o.Cooldown = cooldown
+	}
+}
+
 func NewReduceLROnPlateau(opt *Optimizer, opts ...ReduceLROnPlateauOption) *ReduceLROnPlateau {
 	options := defaultReduceLROnPlateauOptions()
 	for _, o := range opts {
@@ -746,4 +800,376 @@ func floatMax(v1, v2 float64) float64 {
 		return v1
 	}
 	return v2
+}
+
+// CyclicLR sets the learning rate of each parameter group according to
+// cyclical learning rate policy (CLR). The policy cycles the learning
+// rate between two boundaries with a constant frequency, as detailed in
+// the paper `Cyclical Learning Rates for Training Neural Networks`_.
+// The distance between the two boundaries can be scaled on a per-iteration
+// or per-cycle basis.
+//
+// Cyclical learning rate policy changes the learning rate after every batch.
+// `Step()` should be called after a batch has been used for training.
+// This class has three built-in policies, as put forth in the paper:
+// - "triangular": A basic triangular cycle without amplitude scaling.
+// - "triangular2": A basic triangular cycle that scales initial amplitude by half each cycle.
+// - "exp_range": A cycle that scales initial amplitude by :math:`\text{gamma}^{\text{cycle iterations}}`
+// at each cycle iteration.
+//
+// Source:
+// - Cyclical Learning Rates for Training Neural Networks: https://arxiv.org/abs/1506.01186
+// - bckenstler/CLR: https://github.com/bckenstler/CLR
+type CyclicLR struct {
+	// optimizer (Optimizer): Wrapped optimizer.
+	opt *Optimizer
+
+	// base_lr (float or list): Initial learning rate which is the
+	// lower boundary in the cycle for each parameter group.
+	initialLRs []float64
+
+	// Upper learning rate boundaries in the cycle
+	// for each parameter group. Functionally,
+	// it defines the cycle amplitude (max_lr - base_lr).
+	// The lr at any cycle is the sum of base_lr
+	// and some scaling of the amplitude; therefore
+	// max_lr may not actually be reached depending on
+	// scaling function.
+	maxLRs []float64
+
+	// Number of training iterations in the
+	// increasing half of a cycle.
+	// Default: 2000
+	stepSizeUp int
+
+	// Number of training iterations in the
+	// decreasing half of a cycle. If stepSizeDown is -1,
+	// it is set to stepSizeUp.
+	// Default: -1
+	stepSizeDown int
+
+	// One of {triangular, triangular2, exp_range}.
+	// Values correspond to policies detailed above.
+	// If scaleFn is not None, this argument is ignored.
+	// Default: 'triangular'
+	mode string
+
+	// Constant in 'expRange' scaling function:
+	// gamma**(cycle iterations)
+	// Default: 1.0
+	gamma float64
+
+	// Custom scaling policy defined by a single
+	// argument lambda function, where
+	// 0 <= scaleFn(x) <= 1 for all x >= 0.
+	// If specified, then 'mode' is ignored.
+	// Default: nil
+	scaleFn func(x float64) float64
+
+	// One of {'cycle', 'iterations'}.
+	// Defines whether scale_fn is evaluated on
+	// cycle number or cycle iterations (training
+	// iterations since start of cycle).
+	// Default: 'cycle'
+	scaleMode string
+
+	// If `true`, momentum is cycled inversely
+	// to learning rate between 'baseMomentum' and 'maxMomentum'.
+	// Default: true
+	cycleMomentum bool
+
+	// Lower momentum boundaries in the cycle
+	// for each parameter group. Note that momentum is cycled inversely
+	// to learning rate; at the peak of a cycle, momentum is
+	// 'baseMomentum' and learning rate is 'maxLR'.
+	// Default: 0.8
+	baseMomentums []float64
+
+	// Upper momentum boundaries in the cycle
+	// for each parameter group. Functionally,
+	// it defines the cycle amplitude (maxMomentum - baseMomentum).
+	// The momentum at any cycle is the difference of maxMomentum
+	// and some scaling of the amplitude; therefore
+	// baseMomentum may not actually be reached depending on
+	// scaling function. Note that momentum is cycled inversely
+	// to learning rate; at the start of a cycle, momentum is 'maxMomentum'
+	// and learning rate is 'baseLR'
+	// Default: 0.9
+	maxMomentums []float64
+
+	// The index of the last batch. This parameter is used when
+	// resuming a training job. Since `Step()` should be invoked after each
+	// batch instead of after each epoch, this number represents the total
+	// number of *batches* computed, not the total number of epochs computed.
+	// When lastEpoch=-1, the schedule is started from the beginning.
+	// Default: -1
+	lastEpoch int
+
+	totalSize int
+	stepRatio float64
+}
+
+type CyclicOptions struct {
+	StepSizeUp    int                     // 2000
+	StepSizeDown  int                     // -1
+	Mode          string                  // "triangular"
+	Gamma         float64                 // 1.0
+	ScaleFn       func(x float64) float64 // nil
+	ScaleMode     string                  // "cycle"
+	CycleMomentum bool                    // true
+	BaseMomentum  float64                 // 0.8
+	MaxMomentum   float64                 // 0.9
+	LastEpoch     int                     // -1
+}
+
+type CyclicOption func(*CyclicOptions)
+
+func defaultCyclicOptions() *CyclicOptions {
+	return &CyclicOptions{
+		StepSizeUp:    2000,
+		StepSizeDown:  -1,
+		Mode:          "triangular",
+		Gamma:         1.0,
+		ScaleFn:       nil,
+		ScaleMode:     "cycle",
+		CycleMomentum: true,
+		BaseMomentum:  0.8,
+		MaxMomentum:   0.9,
+		LastEpoch:     -1,
+	}
+}
+
+func WithCyclicStepSizeUp(v int) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.StepSizeUp = v
+	}
+}
+
+func WithCyclicStepSizeDown(v int) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.StepSizeDown = v
+	}
+}
+
+func WithCyclicMode(v string) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.Mode = v
+	}
+}
+
+func WithCyclicGamma(v float64) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.Gamma = v
+	}
+}
+
+func WithCyclicScaleFn(v func(x float64) float64) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.ScaleFn = v
+	}
+}
+
+func WithCyclicScaleMode(v string) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.ScaleMode = v
+	}
+}
+
+func WithCyclicCycleMomentum(v bool) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.CycleMomentum = v
+	}
+}
+
+func WithCyclicBaseMomentum(v float64) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.BaseMomentum = v
+	}
+}
+
+func WithCyclicMaxMomentum(v float64) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.MaxMomentum = v
+	}
+}
+
+func WithCyclicLastEpoch(v int) CyclicOption {
+	return func(o *CyclicOptions) {
+		o.LastEpoch = v
+	}
+}
+
+func NewCyclicLR(opt *Optimizer, baseLRs, maxLRs []float64, opts ...CyclicOption) *CyclicLR {
+	options := defaultCyclicOptions()
+	for _, o := range opts {
+		o(options)
+	}
+
+	var cyc *CyclicLR = new(CyclicLR)
+
+	initialLRs := formatParam(opt, baseLRs, "baseLRs")
+	if options.LastEpoch == -1 {
+		opt.SetLRs(initialLRs)
+	}
+	cyc.initialLRs = initialLRs
+
+	cyc.opt = opt
+	cyc.maxLRs = formatParam(opt, maxLRs, "maxLRs")
+
+	var stepSizeDown int
+	switch options.StepSizeDown {
+	case -1:
+		stepSizeDown = options.StepSizeUp
+	default:
+		stepSizeDown = options.StepSizeDown
+	}
+	cyc.stepSizeUp = options.StepSizeUp
+	cyc.stepSizeDown = stepSizeDown
+
+	totalSize := stepSizeDown + options.StepSizeUp
+	stepRatio := float64(options.StepSizeUp) / float64(totalSize)
+	cyc.totalSize = totalSize
+	cyc.stepRatio = stepRatio
+
+	if !strContain([]string{"triangular", "triangular2", "exp_range"}, options.Mode) && options.ScaleFn == nil {
+		log.Fatalf("Invalide 'mode': %v and scale function is nil\n", options.Mode)
+	}
+	cyc.mode = options.Mode
+	cyc.gamma = options.Gamma
+
+	switch options.ScaleFn {
+	case nil:
+		switch cyc.mode {
+		case "triangular":
+			cyc.scaleFn = func(x float64) float64 {
+				return 1.0
+			}
+			cyc.scaleMode = "cycle"
+
+		case "triangular2":
+			cyc.scaleFn = func(x float64) float64 {
+				return 1 / (math.Pow(2.0, (x - 1.0)))
+			}
+			cyc.scaleMode = "cycle"
+		case "ex_range":
+			cyc.scaleFn = func(x float64) float64 {
+				return math.Pow(cyc.gamma, x)
+			}
+			cyc.scaleMode = "iterations"
+		}
+
+	default:
+		cyc.scaleFn = options.ScaleFn
+		cyc.scaleMode = options.ScaleMode
+	}
+
+	cyc.cycleMomentum = options.CycleMomentum
+	if cyc.cycleMomentum {
+		// if optimizer doesn't have momentum, throw error
+		// TODO. type casting optimizer.config and check
+		cyc.baseMomentums = formatParam(opt, []float64{options.BaseMomentum}, "baseMomentum")
+		if options.LastEpoch == -1 {
+			opt.SetMomentum(options.BaseMomentum)
+		}
+		cyc.maxMomentums = formatParam(opt, []float64{options.MaxMomentum}, "maxMomentum")
+	}
+
+	return cyc
+}
+
+func strContain(items []string, item string) bool {
+	for _, i := range items {
+		if i == item {
+			return true
+		}
+	}
+
+	return false
+}
+
+func formatParam(opt *Optimizer, param []float64, paramName string) []float64 {
+	ngroup := opt.ParamGroupNum()
+	var paramOut []float64 = make([]float64, ngroup)
+	switch len(param) {
+	case 1:
+		for i := 0; i < ngroup; i++ {
+			paramOut[i] = param[0]
+		}
+	case ngroup:
+		paramOut = param
+	default:
+		log.Fatalf("Length of %s should be either 1 or equal to number of param groups. Got %v\n", paramName, len(param))
+	}
+
+	return paramOut
+}
+
+// SetLRs implements scheduler interface.
+//
+// It calculates the learning rate at batch index. This function treats
+// `lastEpoch` as the last batch index.
+// NOTE. If `cycleMomentum` is ``true``, this function has a side effect of
+// updating the optimizer's momentum.
+func (cyc *CyclicLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
+		cyc.lastEpoch += 1
+	default:
+		cyc.lastEpoch = options.LastEpoch
+	}
+
+	cycle := math.Floor(1.0 + float64(cyc.lastEpoch)/float64(cyc.totalSize))
+	x := 1.0 + float64(cyc.lastEpoch)/float64(cyc.totalSize) - cycle
+
+	var scaleFactor float64
+	switch {
+	case x <= cyc.stepRatio:
+		scaleFactor = x / cyc.stepRatio
+	default:
+		scaleFactor = (x - 1.0) / (cyc.stepRatio - 1.0)
+	}
+
+	ngroup := cyc.opt.ParamGroupNum()
+	var newLRs []float64 = make([]float64, ngroup)
+	for i := 0; i < ngroup; i++ {
+		baseLR := cyc.initialLRs[i]
+		maxLR := cyc.maxLRs[i]
+		baseHeight := (maxLR - baseLR) * scaleFactor
+		var newLR float64
+		switch cyc.scaleMode {
+		case "cycle":
+			newLR = baseLR + baseHeight*cyc.scaleFn(cycle)
+		default:
+			newLR = baseLR + baseHeight*cyc.scaleFn(float64(cyc.lastEpoch))
+		}
+
+		newLRs[i] = newLR
+	}
+
+	// Update optimizer learning rates.
+	cyc.opt.SetLRs(newLRs)
+
+	// Update optimizer momentum.
+	// NOTE. for now, we just assuming there's 1 param group and will update momentum for such param group.
+	if cyc.cycleMomentum {
+		var momentum float64
+		baseMomentum, maxMomentum := cyc.baseMomentums[0], cyc.maxMomentums[0]
+		baseHeight := (maxMomentum - baseMomentum) * scaleFactor
+		switch cyc.scaleMode {
+		case "cycle":
+			momentum = maxMomentum - baseHeight*cyc.scaleFn(cycle)
+		default:
+			momentum = maxMomentum - baseHeight*cyc.scaleFn(float64(cyc.lastEpoch))
+		}
+		cyc.opt.SetMomentum(momentum)
+	}
+}
+
+// Build implements scheduler interface.
+func (cyc *CyclicLR) Build() *LRScheduler {
+	return &LRScheduler{cyc}
 }

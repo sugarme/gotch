@@ -200,3 +200,28 @@ func contain(item int, list []int) bool {
 
 	return false
 }
+
+func TestCyclicLR(t *testing.T) {
+	vs := nn.NewVarStore(gotch.CPU)
+	model := nn.NewLinear(vs.Root(), 10, 2, nn.DefaultLinearConfig())
+	opt, err := nn.DefaultSGDConfig().Build(vs, 1.0)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var s *nn.LRScheduler
+	baseLRs := []float64{0.001}
+	maxLRs := []float64{0.1}
+	s = nn.NewCyclicLR(opt, baseLRs, maxLRs, nn.WithCyclicStepSizeUp(5), nn.WithCyclicMode("triangular")).Build()
+
+	var lrs []float64
+	for i := 0; i < 100; i++ {
+		opt.Step()
+		lr := opt.GetLRs()[0]
+		lrs = append(lrs, lr)
+		t.Logf("batch %2d: lr %0.4f\n", i, lr)
+		s.Step()
+	}
+	// t.Logf("Lrs: %+v\n", lrs)
+	t.Log(model)
+}
