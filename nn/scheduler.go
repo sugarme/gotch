@@ -2,12 +2,40 @@ package nn
 
 import (
 	// "fmt"
+	"fmt"
 	"log"
 	"math"
 )
 
+type SchedulerOptions struct {
+	// Metrics   map[string]interface{}
+	Loss      float64 // Usually metrics is loss value
+	LastEpoch int
+}
+type SchedulerOption func(*SchedulerOptions)
+
+func defaultSchedulerOptions() *SchedulerOptions {
+	return &SchedulerOptions{
+		// Metrics:   make(map[string]interface{}, 0),
+		Loss:      math.Inf(1),
+		LastEpoch: -1,
+	}
+}
+
+func WithLastEpoch(epoch int) SchedulerOption {
+	return func(o *SchedulerOptions) {
+		o.LastEpoch = epoch
+	}
+}
+
+func WithLoss(loss float64) SchedulerOption {
+	return func(o *SchedulerOptions) {
+		o.Loss = loss
+	}
+}
+
 type scheduler interface {
-	SetLRs(epochOpt ...int)
+	SetLRs(opts ...SchedulerOption)
 	Build() *LRScheduler
 }
 
@@ -17,8 +45,8 @@ type LRScheduler struct {
 }
 
 // Step updates optimizer learning rate.
-func (s *LRScheduler) Step(epochOpt ...int) {
-	s.scheduler.SetLRs(epochOpt...)
+func (s *LRScheduler) Step(opts ...SchedulerOption) {
+	s.scheduler.SetLRs(opts...)
 }
 
 type LambdaFn func(in interface{}) float64
@@ -34,11 +62,7 @@ type LambdaLR struct {
 }
 
 // NewLambdaLRS creates a new LambdaLRS.
-func NewLambdaLR(opt *Optimizer, ldFns []LambdaFn, lastEpochOpt ...int) *LambdaLR {
-	lastEpoch := -1
-	if len(lastEpochOpt) > 0 {
-		lastEpoch = lastEpochOpt[0]
-	}
+func NewLambdaLR(opt *Optimizer, ldFns []LambdaFn) *LambdaLR {
 	ngroup := opt.ParamGroupNum()
 	initialLRs := opt.GetLRs()
 	var funcs []LambdaFn = make([]LambdaFn, ngroup)
@@ -59,7 +83,7 @@ func NewLambdaLR(opt *Optimizer, ldFns []LambdaFn, lastEpochOpt ...int) *LambdaL
 		lrLambdas:  ldFns,
 		initialLRs: initialLRs,
 		stepCount:  0,
-		lastEpoch:  lastEpoch,
+		lastEpoch:  -1,
 	}
 }
 
@@ -71,12 +95,16 @@ func (l *LambdaLR) Build() *LRScheduler {
 }
 
 // SetLRs implements scheduler interface.
-func (l *LambdaLR) SetLRs(epochOpt ...int) {
-	switch len(epochOpt) {
-	case 0:
+func (l *LambdaLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
 		l.lastEpoch += 1
 	default:
-		l.lastEpoch = epochOpt[0]
+		l.lastEpoch = options.LastEpoch
 	}
 
 	var newLRs []float64
@@ -106,12 +134,7 @@ type MultiplicativeLR struct {
 }
 
 // NewMultiplicativeLR creates a new MultiplicativeLR.
-func NewMultiplicativeLR(opt *Optimizer, ldFns []LambdaFn, lastEpochOpt ...int) *MultiplicativeLR {
-	lastEpoch := -1
-	if len(lastEpochOpt) > 0 {
-		lastEpoch = lastEpochOpt[0]
-	}
-
+func NewMultiplicativeLR(opt *Optimizer, ldFns []LambdaFn) *MultiplicativeLR {
 	ngroup := opt.ParamGroupNum()
 	initialLRs := opt.GetLRs()
 
@@ -132,7 +155,7 @@ func NewMultiplicativeLR(opt *Optimizer, ldFns []LambdaFn, lastEpochOpt ...int) 
 		lrLambdas:  ldFns,
 		initialLRs: initialLRs,
 		stepCount:  0,
-		lastEpoch:  lastEpoch,
+		lastEpoch:  -1,
 	}
 }
 
@@ -144,12 +167,16 @@ func (m *MultiplicativeLR) Build() *LRScheduler {
 }
 
 // SetLRs implements scheduler interface.
-func (m *MultiplicativeLR) SetLRs(epochOpt ...int) {
-	switch len(epochOpt) {
-	case 0:
+func (m *MultiplicativeLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
 		m.lastEpoch += 1
 	default:
-		m.lastEpoch = epochOpt[0]
+		m.lastEpoch = options.LastEpoch
 	}
 
 	var newLRs []float64
@@ -187,12 +214,7 @@ type StepLR struct {
 }
 
 // NewStepLR creates a new StepLR.
-func NewStepLR(opt *Optimizer, stepSize int, gamma float64, lastEpochOpt ...int) *StepLR {
-	lastEpoch := -1
-	if len(lastEpochOpt) > 0 {
-		lastEpoch = lastEpochOpt[0]
-	}
-
+func NewStepLR(opt *Optimizer, stepSize int, gamma float64) *StepLR {
 	initialLRs := opt.GetLRs()
 	return &StepLR{
 		opt:        opt,
@@ -200,7 +222,7 @@ func NewStepLR(opt *Optimizer, stepSize int, gamma float64, lastEpochOpt ...int)
 		gamma:      gamma,
 		initialLRs: initialLRs,
 		stepCount:  0,
-		lastEpoch:  lastEpoch,
+		lastEpoch:  -1,
 	}
 }
 
@@ -212,12 +234,16 @@ func (s *StepLR) Build() *LRScheduler {
 }
 
 // SetLRs implements scheduler interface.
-func (s *StepLR) SetLRs(epochOpt ...int) {
-	switch len(epochOpt) {
-	case 0:
+func (s *StepLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
 		s.lastEpoch += 1
 	default:
-		s.lastEpoch = epochOpt[0]
+		s.lastEpoch = options.LastEpoch
 	}
 
 	var newLRs []float64
@@ -264,12 +290,7 @@ type MultiStepLR struct {
 }
 
 // NewStepLR creates a new StepLR.
-func NewMultiStepLR(opt *Optimizer, milestones []int, gamma float64, lastEpochOpt ...int) *MultiStepLR {
-	lastEpoch := -1
-	if len(lastEpochOpt) > 0 {
-		lastEpoch = lastEpochOpt[0]
-	}
-
+func NewMultiStepLR(opt *Optimizer, milestones []int, gamma float64) *MultiStepLR {
 	initialLRs := opt.GetLRs()
 	return &MultiStepLR{
 		opt:        opt,
@@ -277,7 +298,7 @@ func NewMultiStepLR(opt *Optimizer, milestones []int, gamma float64, lastEpochOp
 		gamma:      gamma,
 		initialLRs: initialLRs,
 		stepCount:  0,
-		lastEpoch:  lastEpoch,
+		lastEpoch:  -1,
 	}
 }
 
@@ -289,12 +310,16 @@ func (ms *MultiStepLR) Build() *LRScheduler {
 }
 
 // SetLRs implements scheduler interface.
-func (ms *MultiStepLR) SetLRs(epochOpt ...int) {
-	switch len(epochOpt) {
-	case 0:
+func (ms *MultiStepLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
 		ms.lastEpoch += 1
 	default:
-		ms.lastEpoch = epochOpt[0]
+		ms.lastEpoch = options.LastEpoch
 	}
 
 	var newLRs []float64
@@ -337,19 +362,14 @@ type ExponentialLR struct {
 }
 
 // NewExponentialLR creates a new ExponentialLR.
-func NewExponentialLR(opt *Optimizer, gamma float64, lastEpochOpt ...int) *ExponentialLR {
-	lastEpoch := -1
-	if len(lastEpochOpt) > 0 {
-		lastEpoch = lastEpochOpt[0]
-	}
-
+func NewExponentialLR(opt *Optimizer, gamma float64) *ExponentialLR {
 	initialLRs := opt.GetLRs()
 	return &ExponentialLR{
 		opt:        opt,
 		gamma:      gamma,
 		initialLRs: initialLRs,
 		stepCount:  0,
-		lastEpoch:  lastEpoch,
+		lastEpoch:  -1,
 	}
 }
 
@@ -361,12 +381,16 @@ func (e *ExponentialLR) Build() *LRScheduler {
 }
 
 // SetLRs implements scheduler interface.
-func (e *ExponentialLR) SetLRs(epochOpt ...int) {
-	switch len(epochOpt) {
-	case 0:
+func (e *ExponentialLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
 		e.lastEpoch += 1
 	default:
-		e.lastEpoch = epochOpt[0]
+		e.lastEpoch = options.LastEpoch
 	}
 
 	var newLRs []float64
@@ -406,11 +430,7 @@ type CosineAnnealingLR struct {
 }
 
 // NewConsineAnnealingLR creates a new ConsineAnnealingLR.
-func NewCosineAnnealingLR(opt *Optimizer, tmax int, etaMin float64, lastEpochOpt ...int) *CosineAnnealingLR {
-	lastEpoch := -1
-	if len(lastEpochOpt) > 0 {
-		lastEpoch = lastEpochOpt[0]
-	}
+func NewCosineAnnealingLR(opt *Optimizer, tmax int, etaMin float64) *CosineAnnealingLR {
 	opt.ResetStepCount()
 	initialLRs := opt.GetLRs()
 	return &CosineAnnealingLR{
@@ -419,7 +439,7 @@ func NewCosineAnnealingLR(opt *Optimizer, tmax int, etaMin float64, lastEpochOpt
 		etaMin:     etaMin,
 		initialLRs: initialLRs,
 		stepCount:  0,
-		lastEpoch:  lastEpoch,
+		lastEpoch:  -1,
 	}
 }
 
@@ -431,12 +451,16 @@ func (ca *CosineAnnealingLR) Build() *LRScheduler {
 }
 
 // SetLRs implements scheduler interface.
-func (ca *CosineAnnealingLR) SetLRs(epochOpt ...int) {
-	switch len(epochOpt) {
-	case 0:
+func (ca *CosineAnnealingLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
 		ca.lastEpoch += 1
 	default:
-		ca.lastEpoch = epochOpt[0]
+		ca.lastEpoch = options.LastEpoch
 	}
 
 	var newLRs []float64
@@ -468,4 +492,258 @@ func (ca *CosineAnnealingLR) SetLRs(epochOpt ...int) {
 
 	ca.opt.SetLRs(newLRs)
 	ca.stepCount += 1
+}
+
+// ReduceLROnPlateau reduces learning rate when a metric has stopped improving.
+// Models often benefit from reducing the learning rate by a factor
+// of 2-10 once learning stagnates. This scheduler reads a metrics
+// quantity and if no improvement is seen for a 'patience' number
+// of epochs, the learning rate is reduced.
+type ReduceLROnPlateau struct {
+	opt *Optimizer
+
+	// One of `min` or `max`. In `min` mode, lr will be reduced
+	// when the quantiy monitored has stopped DECREASING. In `max`
+	// mode, it will be reduced when the quantity mornitored has stopped
+	// INCREASING. Default = "min"
+	mode string
+
+	// Factor by which the learning rate will be reduced (new LR = lr * factor).
+	// Default = 0.1
+	factor float64
+
+	// Number of epochs with no improvement after which learning rate
+	// will be reduced. E.g., if patience = 2, then we will ignore the first
+	// 2 epochs with no improvement, and wil only decrease the LR after the 3rd epoch
+	// if the loss still hasn't improved then.
+	// Default: 10
+	patience int
+
+	// If "true", prints a message to stdout for each update.
+	// Default = false
+	verbose bool
+
+	// Threshold for measuring the new optimum to only focus on
+	// significant changes.
+	// Default = 1e-4
+	threshold float64
+
+	// One of `rel`, `abs`
+	// - `rel`: dynamicThreshold = best * (1 + threshold) in `max` mode
+	// or bet * (1 - threshold) in `min` mode
+	// - `abs`: dynamicThreshold = best + threshold in `max` mode or
+	// best - threshold in `min` mode.
+	// Default = `rel`
+	thresholdMode string
+
+	// Number of epochs to wait before resuming normal operation after
+	// LR has been reduced.
+	// Default = 0
+	cooldown int
+
+	// Default = 0
+	cooldownCounter int
+
+	// A lower bound on the learning rate of all optimizer param groups.
+	// If length = 1, it applies to all param groups, otherwise, it should
+	// have the same legnth as optimizer learning groups.
+	// Default = []float64{0}
+	minLRs []float64
+
+	// Minimal decay applied to LR. If the difference between new and old LR
+	// is smaller than eps, then update is ignored.
+	// Default = 1e-8
+	eps float64
+
+	// Default = modeWorse (either inf or -inf)
+	best float64
+
+	// Default = 0
+	numBadEpochs int
+
+	// The worse value for the chosen mode
+	// Default = inf if mode="min" or -inf if mode="max"
+	modeWorse float64
+
+	// Default = 0
+	lastEpoch int
+}
+
+type ReduceLROnPlateauOptions struct {
+	Mode          string
+	Factor        float64
+	Patience      int
+	Verbose       bool
+	Threshold     float64
+	ThresholdMode string
+	MinLRs        []float64
+	Cooldown      int
+	Eps           float64
+}
+
+type ReduceLROnPlateauOption func(*ReduceLROnPlateauOptions)
+
+func defaultReduceLROnPlateauOptions() *ReduceLROnPlateauOptions {
+	return &ReduceLROnPlateauOptions{
+		Mode:          "min",
+		Factor:        0.1,
+		Patience:      10,
+		Verbose:       false,
+		Threshold:     1e-4,
+		ThresholdMode: "rel",
+		Cooldown:      0,
+		MinLRs:        []float64{0.0},
+		Eps:           1e-8,
+	}
+}
+
+func NewReduceLROnPlateau(opt *Optimizer, opts ...ReduceLROnPlateauOption) *ReduceLROnPlateau {
+	options := defaultReduceLROnPlateauOptions()
+	for _, o := range opts {
+		o(options)
+	}
+
+	// Validate input parameters
+	if options.Mode != "min" && options.Mode != "max" {
+		log.Fatalf("Invalid 'mode'. Mode should be either 'min' or 'max', got %v\n", options.Mode)
+	}
+	if options.Factor >= 1.0 {
+		log.Fatalf("Factor should be < 1.0. Got %v\n", options.Factor)
+	}
+
+	if options.ThresholdMode != "rel" && options.ThresholdMode != "abs" {
+		log.Fatalf("Invalide threshold mode. Should be 'rel' or 'abs'. Got %v\n", options.ThresholdMode)
+	}
+
+	var modeWorse float64
+	switch options.Mode {
+	case "min":
+		modeWorse = math.Inf(1) // inf
+	case "max":
+		modeWorse = math.Inf(-1) // -inf
+	}
+
+	ngroup := opt.ParamGroupNum()
+	var minLRs []float64 = make([]float64, ngroup)
+	switch len(options.MinLRs) {
+	case 1:
+		for i := 0; i < ngroup; i++ {
+			minLRs[i] = options.MinLRs[0]
+		}
+	case ngroup:
+		minLRs = options.MinLRs
+	default:
+		log.Fatalf("MinLRs should have length of 1 or the same length as optimizer param groups. Got %v\n", len(options.MinLRs))
+	}
+
+	return &ReduceLROnPlateau{
+		opt:             opt,
+		mode:            options.Mode,
+		factor:          options.Factor,
+		patience:        options.Patience,
+		verbose:         options.Verbose,
+		threshold:       options.Threshold,
+		thresholdMode:   options.ThresholdMode,
+		cooldown:        options.Cooldown,
+		cooldownCounter: 0,
+		minLRs:          minLRs,
+		eps:             options.Eps,
+
+		best:         modeWorse,
+		numBadEpochs: 0,
+		modeWorse:    modeWorse,
+		lastEpoch:    0,
+	}
+}
+
+// Reset number of bad epochs counter and cooldown counter
+func (s *ReduceLROnPlateau) reset() {
+	s.best = s.modeWorse
+	s.cooldownCounter = 0
+	s.numBadEpochs = 0
+}
+
+func (s *ReduceLROnPlateau) inCooldown() bool {
+	return s.cooldownCounter > 0
+}
+
+// Evaluates whether the metrics (loss) is better than current (best) value.
+func (s *ReduceLROnPlateau) isBetter(a, best float64) bool {
+	switch {
+	case s.mode == "min" && s.thresholdMode == "rel":
+		relEpsilon := 1.0 - s.threshold
+		return a < best*relEpsilon
+
+	case s.mode == "min" && s.thresholdMode == "abs":
+		return a < best-s.threshold
+
+	case s.mode == "max" && s.thresholdMode == "rel":
+		relEpsilon := s.threshold + 1
+		return a > best*relEpsilon
+	default: // mode == "max" && thresholdMode == "abs"
+		return a > best+s.threshold
+	}
+}
+
+func (s *ReduceLROnPlateau) reduceLRs(epoch int) {
+	oldLRs := s.opt.GetLRs()
+
+	var newLRs []float64 = oldLRs
+	for i, oldLR := range oldLRs {
+		newLR := floatMax(oldLR*s.factor, s.minLRs[i])
+		if oldLR-newLR > s.eps {
+			newLRs[i] = newLR
+			if s.verbose {
+				fmt.Printf("Epoch %06d: Reducing learning rate of param groups %d to %0.4e\n", epoch, i, newLR)
+			}
+		}
+	}
+
+	s.opt.SetLRs(newLRs)
+}
+
+// SetLRs implements scheduler interface.
+func (s *ReduceLROnPlateau) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+
+	switch options.LastEpoch {
+	case -1:
+		s.lastEpoch += 1
+	default:
+		s.lastEpoch = options.LastEpoch
+	}
+
+	switch s.isBetter(options.Loss, s.best) {
+	case true:
+		s.best = options.Loss
+		s.numBadEpochs = 0
+	case false:
+		s.numBadEpochs += 1
+	}
+
+	if s.inCooldown() {
+		s.cooldownCounter -= 1
+		s.numBadEpochs = 0 // ignore any bad epochs in cooldown
+	}
+
+	if s.numBadEpochs > s.patience {
+		s.reduceLRs(s.lastEpoch)
+		s.cooldownCounter = s.cooldown
+		s.numBadEpochs = 0
+	}
+}
+
+// Build implements scheduler interface.
+func (s *ReduceLROnPlateau) Build() *LRScheduler {
+	return &LRScheduler{s}
+}
+
+func floatMax(v1, v2 float64) float64 {
+	if v1 >= v2 {
+		return v1
+	}
+	return v2
 }
