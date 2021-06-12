@@ -6,7 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.10]
 - Update installation at README.md
+- [#38] fixed JIT model
+- Added Optimizer Learning Rate Schedulers
+- Added AdamW Optimizer
 
 ## [0.3.9]
 - [#24], [#26]: fixed memory leak.
