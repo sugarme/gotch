@@ -1173,3 +1173,161 @@ func (cyc *CyclicLR) SetLRs(opts ...SchedulerOption) {
 func (cyc *CyclicLR) Build() *LRScheduler {
 	return &LRScheduler{cyc}
 }
+
+// CosineAnnealingWarmRestart sets the learning rate of each parameter group
+/// using a cosine annealing schedule.
+//
+// Source:
+// Stochastic Gradient Descent with Warm Restarts: https://arxiv.org/abs/1608.03983
+type CosineAnnealingWarmRestarts struct {
+	opt *Optimizer
+
+	// Number of iterations for the first restart.
+	t0 int
+
+	// Number of epochs between 2 warm restarts.
+	ti int
+
+	// A factor increases Ti after a restart.
+	tMult int // Default = 1
+
+	// Minimum learning rate.
+	etaMin float64 // Default = 0.0
+
+	// Number of epochs since last restart.
+	tcur int
+
+	// The index of last epoch. Default: -1.
+	lastEpoch  int // Default = -1
+	initialLRs []float64
+	stepCount  int
+}
+
+type CosineAnnealingWarmRestartsOptions struct {
+	TMult     int
+	EtaMin    float64
+	LastEpoch int
+}
+
+type CosineAnnealingWarmRestartsOption func(*CosineAnnealingWarmRestartsOptions)
+
+func defaultCosineAnnealingWarmRestartsOptions() *CosineAnnealingWarmRestartsOptions {
+	return &CosineAnnealingWarmRestartsOptions{
+		TMult:     1,
+		EtaMin:    0.0,
+		LastEpoch: -1,
+	}
+}
+
+func WithTMult(v int) CosineAnnealingWarmRestartsOption {
+	return func(o *CosineAnnealingWarmRestartsOptions) {
+		o.TMult = v
+	}
+}
+
+func WithEtaMin(v float64) CosineAnnealingWarmRestartsOption {
+	return func(o *CosineAnnealingWarmRestartsOptions) {
+		o.EtaMin = v
+	}
+}
+
+func WithCosineAnnealingLastEpoch(v int) CosineAnnealingWarmRestartsOption {
+	return func(o *CosineAnnealingWarmRestartsOptions) {
+		o.LastEpoch = v
+	}
+}
+
+func NewCosineAnnealingWarmRestarts(opt *Optimizer, t0 int, opts ...CosineAnnealingWarmRestartsOption) *CosineAnnealingWarmRestarts {
+	options := defaultCosineAnnealingWarmRestartsOptions()
+	for _, o := range opts {
+		o(options)
+	}
+
+	if t0 <= 0 {
+		log.Fatalf("T0 expected to be positive. Got %v\n", t0)
+	}
+
+	if options.TMult < 1 {
+		log.Fatalf("Expected TMult >= 1. Got %v\n", options.TMult)
+	}
+
+	initialLRs := opt.GetLRs()
+
+	return &CosineAnnealingWarmRestarts{
+		opt:        opt,
+		t0:         t0,
+		ti:         t0,
+		tMult:      options.TMult,
+		etaMin:     options.EtaMin,
+		tcur:       options.LastEpoch,
+		lastEpoch:  options.LastEpoch,
+		stepCount:  0,
+		initialLRs: initialLRs,
+	}
+}
+
+// SetLRs implements scheduler interface.
+//
+// NOTE. scheduler.Step(epoch) could be called after every batch update
+func (s *CosineAnnealingWarmRestarts) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+
+	var epoch int = options.LastEpoch
+	if options.LastEpoch == -1 && s.lastEpoch < 0 {
+		epoch = 0
+	}
+
+	switch {
+	case epoch == -1:
+		epoch = s.lastEpoch + 1
+		s.tcur = s.tcur + 1
+		if s.tcur >= s.ti {
+			s.tcur = s.tcur - s.ti
+			s.ti = s.ti * s.tMult
+		}
+
+	case epoch < 0:
+		log.Fatalf("Expected non-negative epoch, got %v\n", epoch)
+
+	case epoch >= s.t0:
+		switch s.tMult {
+		case 1:
+			s.tcur = epoch % s.t0
+		default:
+			// n = int(math.log((epoch / self.T_0 * (self.T_mult - 1) + 1), self.T_mult))
+			n := int(math.Log(float64((epoch/s.t0)*(s.tMult-1)+1)) / math.Log(float64(s.tMult)))
+
+			// self.T_cur = epoch - self.T_0 * (self.T_mult ** n - 1) / (self.T_mult - 1)
+			s.tcur = epoch - (s.t0*int(math.Pow(float64(s.tMult), float64(n-1))))/(s.tMult-1)
+
+			// self.T_i = self.T_0 * self.T_mult ** (n)
+			s.ti = s.t0 * int(math.Pow(float64(s.tMult), float64(n)))
+		}
+
+	default:
+		s.ti = s.t0
+		s.tcur = epoch
+	}
+
+	s.lastEpoch = epoch
+
+	var newLRs []float64
+	// [self.eta_min + (base_lr - self.eta_min) * (1 + math.cos(math.pi * self.T_cur / self.T_i)) / 2
+	// for base_lr in self.base_lrs]
+	for _, baseLR := range s.initialLRs {
+		newLR := s.etaMin + (baseLR-s.etaMin)*(1+math.Cos(math.Pi*float64(s.tcur)/float64(s.ti)))/2
+		newLRs = append(newLRs, newLR)
+	}
+
+	s.opt.SetLRs(newLRs)
+}
+
+// Build implement scheduler interface
+func (s *CosineAnnealingWarmRestarts) Build() *LRScheduler {
+	scheduler := &LRScheduler{s}
+	scheduler.Step()
+	return scheduler
+}

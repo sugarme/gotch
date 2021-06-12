@@ -225,3 +225,29 @@ func TestCyclicLR(t *testing.T) {
 	// t.Logf("Lrs: %+v\n", lrs)
 	t.Log(model)
 }
+
+func TestCosineAnnealingWarmRestarts(t *testing.T) {
+	vs := nn.NewVarStore(gotch.CPU)
+	model := nn.NewLinear(vs.Root(), 2, 1, nn.DefaultLinearConfig())
+	opt, err := nn.DefaultSGDConfig().Build(vs, 0.1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var s *nn.LRScheduler
+	t0 := 10
+	tMult := 1
+	etaMin := 0.001
+	lastEpoch := -1
+	s = nn.NewCosineAnnealingWarmRestarts(opt, t0, nn.WithTMult(tMult), nn.WithEtaMin(etaMin), nn.WithCosineAnnealingLastEpoch(lastEpoch)).Build()
+
+	var lrs []float64
+	for i := 0; i < 100; i++ {
+		s.Step()
+		lr := opt.GetLRs()[0]
+		lrs = append(lrs, lr)
+		t.Logf("batch %2d: lr %0.4f\n", i, lr)
+	}
+	// t.Logf("Lrs: %+v\n", lrs)
+	t.Log(model)
+}
