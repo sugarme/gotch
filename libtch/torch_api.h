@@ -119,7 +119,7 @@ optimizer ato_sgd(double learning_rate, double momentum, double dampening,
 // NOTE. switch back as param group #261 not updated yet.
 // Backward compat
 void ato_add_parameters_old(optimizer, tensor *, int ntensors);
-void ato_add_parameters(optimizer, tensor, size_t group);
+void ato_add_parameter(optimizer, tensor, size_t group);
 void ato_set_learning_rate(optimizer, double learning_rate);
 void ato_set_momentum(optimizer, double momentum);
 void ato_set_learning_rate_group(optimizer, size_t group, double learning_rate);
@@ -129,6 +129,12 @@ void ato_set_weight_decay_group(optimizer t, size_t group, double weight_decay);
 void ato_zero_grad(optimizer);
 void ato_step(optimizer);
 void ato_free(optimizer);
+
+// TT. APIs for learning rate scheduler
+void ato_set_learning_rates(optimizer, double* learning_rates, int lrs_num);
+int64_t ato_param_group_num(optimizer);
+void ato_get_learning_rates(optimizer, double *lrs, int *ngroup);
+void ato_add_param_group(optimizer, tensor *params, int param_num);
 
 scalar ats_int(int64_t);
 scalar ats_float(double);
@@ -197,7 +203,7 @@ void ati_free(ivalue);
 #include "torch_api_generated.h"
 
 #ifdef __cplusplus
-};
+}; // extern "C"
 #endif
 
 #endif

@@ -3,6 +3,7 @@ package nn
 // Optimizers to be used for gradient-descent based training.
 
 import (
+	"fmt"
 	"log"
 
 	ts "github.com/sugarme/gotch/tensor"
@@ -14,6 +15,7 @@ type Optimizer struct {
 	// variables            Variables // having embedded sync.Mutex
 	variablesInOptimizer uint8
 	config               interface{}
+	stepCount            int
 }
 
 // OptimizerConfig defines Optimizer configurations. These configs can be used to build optimizer.
@@ -40,25 +42,21 @@ func defaultBuild(config OptimizerConfig, vs *VarStore, lr float64) (retVal *Opt
 		return retVal, err
 	}
 
-	var parameters []ts.Tensor
-	for _, v := range vs.Vars.TrainableVariables {
-		param := v.MustShallowClone()
-		parameters = append(parameters, *param)
-	}
-
 	if len(vs.Vars.TrainableVariables) > 0 {
-		if err = opt.AddParameters(vs.Vars.TrainableVariables); err != nil {
-			return retVal, err
+		for _, v := range vs.Vars.TrainableVariables {
+			if err = opt.AddParameter(v.Tensor, v.Group); err != nil {
+				err = fmt.Errorf("Optimizer defaultBuild - AddParameter failed: %w\n", err)
+				return nil, err
+			}
 		}
 	}
-
-	// TODO: should we clone or copy?
 
 	return &Optimizer{
 		opt: opt,
 		// variables:            vs.Vars,
 		variablesInOptimizer: uint8(len(vs.Vars.TrainableVariables)),
 		config:               config,
+		stepCount:            0,
 	}, nil
 }
 
@@ -135,6 +133,42 @@ func (c *AdamConfig) buildCOpt(lr float64) (*ts.COptimizer, error) {
 }
 
 func (c *AdamConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
+	return defaultBuild(c, vs, lr)
+}
+
+// AdamW optimizer:
+// ===============
+
+type AdamWConfig struct {
+	Beta1 float64
+	Beta2 float64
+	Wd    float64
+}
+
+// DefaultAdamConfig creates AdamConfig with default values
+func DefaultAdamWConfig() *AdamConfig {
+	return &AdamConfig{
+		Beta1: 0.9,
+		Beta2: 0.999,
+		Wd:    0.0,
+	}
+}
+
+// NewAdamConfig creates AdamConfig with specified values
+func NewAdamWConfig(beta1, beta2, wd float64) *AdamWConfig {
+	return &AdamWConfig{
+		Beta1: beta1,
+		Beta2: beta2,
+		Wd:    wd,
+	}
+}
+
+// Implement OptimizerConfig interface for AdamConfig
+func (c *AdamWConfig) buildCOpt(lr float64) (*ts.COptimizer, error) {
+	return ts.AdamW(lr, c.Beta1, c.Beta2, c.Wd)
+}
+
+func (c *AdamWConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
 	return defaultBuild(c, vs, lr)
 }
 
@@ -226,25 +260,31 @@ func (opt *Optimizer) Step() {
 	if err != nil {
 		log.Fatalf("Optimizer - Step method call error: %v\n", err)
 	}
+	opt.stepCount += 1
+}
+
+// ResetStepCount set step count to zero.
+func (opt *Optimizer) ResetStepCount() {
+	opt.stepCount = 0
+}
+
+// StepCount get current step count.
+func (opt *Optimizer) StepCount() int {
+	return opt.stepCount
 }
 
 // BackwardStep applies a backward step pass, update the gradients, and performs an optimization step.
 func (opt *Optimizer) BackwardStep(loss *ts.Tensor) {
-
 	opt.addMissingVariables()
-
 	err := opt.opt.ZeroGrad()
 	if err != nil {
 		log.Fatalf("Optimizer - BackwardStep method call - ZeroGrad error: %v\n", err)
 	}
-
 	loss.MustBackward()
-
 	err = opt.opt.Step()
 	if err != nil {
 		log.Fatalf("Optimizer - BackwardStep  method call - Step() error: %v\n", err)
 	}
-
 }
 
 // BackwardStepClip applies a backward step pass, update the gradients, and performs an optimization step.
@@ -252,27 +292,60 @@ func (opt *Optimizer) BackwardStep(loss *ts.Tensor) {
 // The gradients are clipped based on `max` before being applied.
 func (opt *Optimizer) BackwardStepClip(loss *ts.Tensor, max float64) {
 	opt.addMissingVariables()
-
 	err := opt.opt.ZeroGrad()
 	if err != nil {
 		log.Fatalf("Optimizer - BackwardStepClip method call - ZeroGrad error: %v\n", err)
 	}
-
 	loss.MustBackward()
-
 	opt.ClipGradValue(max)
-
 	err = opt.opt.Step()
 	if err != nil {
 		log.Fatalf("Optimizer - BackwardStepClip  method call - Step() error: %v\n", err)
 	}
 }
 
+/// TODO. Clips gradient L2 norm over all trainable parameters.
+//
+// The norm is computed over all gradients together, as if they were
+// concatenated into a single vector.
+func (opt *Optimizer) ClipGradNorm(max float64) {
+	// TODO.
+	log.Fatalf("Not implemented yet!")
+}
+
+// TODO. Applies a backward step pass, update the gradients, and performs an optimization step.
+//
+// The gradients L2 norm is clipped based on `max`.
+func (opt *Optimizer) BackwardStepClipNorm(loss *ts.Tensor, max float64) {
+	// TODO.
+	log.Fatalf("Not implemented yet!")
+}
+
 // SetLR sets the optimizer learning rate.
+//
+// NOTE. it sets a SINGLE value of learning rate for all parameter groups.
+// Most of the time, there's one parameter group.
 func (opt *Optimizer) SetLR(lr float64) {
 	err := opt.opt.SetLearningRate(lr)
 	if err != nil {
 		log.Fatalf("Optimizer - SetLR  method call error: %v\n", err)
+	}
+}
+
+func (opt *Optimizer) GetLRs() []float64 {
+	lrs, err := opt.opt.GetLearningRates()
+	if err != nil {
+		log.Fatalf("Optimizer - GetLRs  method call error: %v\n", err)
+	}
+
+	return lrs
+}
+
+// SetLRs sets learning rates for ALL parameter groups respectively.
+func (opt *Optimizer) SetLRs(lrs []float64) {
+	err := opt.opt.SetLearningRates(lrs)
+	if err != nil {
+		log.Fatalf("Optimizer - SetLRs  method call error: %v\n", err)
 	}
 }
 
@@ -281,5 +354,21 @@ func (opt *Optimizer) SetMomentum(m float64) {
 	err := opt.opt.SetMomentum(m)
 	if err != nil {
 		log.Fatalf("Optimizer - SetMomentum  method call error: %v\n", err)
+	}
+}
+
+func (opt *Optimizer) ParamGroupNum() int {
+	ngroup, err := opt.opt.ParamGroupNum()
+	if err != nil {
+		log.Fatalf("Optimizer - ParamGroupNum  method call error: %v\n", err)
+	}
+
+	return int(ngroup)
+}
+
+func (opt *Optimizer) AddParamGroup(tensors []ts.Tensor) {
+	err := opt.opt.AddParamGroup(tensors)
+	if err != nil {
+		log.Fatalf("Optimizer - ParamGroupNum  method call error: %v\n", err)
 	}
 }
