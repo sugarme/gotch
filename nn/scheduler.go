@@ -1551,7 +1551,6 @@ func NewOneCycleLR(opt *Optimizer, maxLR float64, opts ...OneCycleOption) *OneCy
 	oc := new(OneCycleLR)
 	oc.opt = opt
 	oc.lastEpoch = options.LastEpoch
-	oc.totalSteps = options.TotalSteps
 
 	// validate  pctStart
 	if options.PctStart < 0 || options.PctStart > 1 {
@@ -1579,7 +1578,7 @@ func NewOneCycleLR(opt *Optimizer, maxLR float64, opts ...OneCycleOption) *OneCy
 		}
 	}
 
-	oc.stepSizeUp = int(options.PctStart*float64(options.TotalSteps)) - 1
+	oc.stepSizeUp = int(options.PctStart*float64(oc.totalSteps)) - 1
 	oc.stepSizeDown = oc.totalSteps - oc.stepSizeUp - 1
 
 	// validate annealStrategy

@@ -270,10 +270,11 @@ func TestOneCycleLR(t *testing.T) {
 
 	var lrs []float64
 	for i := 0; i < 100; i++ {
-		s.Step()
+		opt.Step()
 		lr := opt.GetLRs()[0]
 		lrs = append(lrs, lr)
 		t.Logf("batch %2d: lr %0.4f\n", i, lr)
+		s.Step()
 	}
 	// t.Logf("Lrs: %+v\n", lrs)
 	t.Log(model)
