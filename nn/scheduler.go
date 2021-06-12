@@ -824,7 +824,7 @@ type CyclicLR struct {
 	// optimizer (Optimizer): Wrapped optimizer.
 	opt *Optimizer
 
-	// base_lr (float or list): Initial learning rate which is the
+	// Initial learning rate which is the
 	// lower boundary in the cycle for each parameter group.
 	initialLRs []float64
 
@@ -1330,4 +1330,383 @@ func (s *CosineAnnealingWarmRestarts) Build() *LRScheduler {
 	scheduler := &LRScheduler{s}
 	scheduler.Step()
 	return scheduler
+}
+
+// OneCycleLR sets the learning rate of each parameter group according to the
+// 1cycle learning rate policy. The 1cycle policy anneals the learning
+// rate from an initial learning rate to some maximum learning rate and then
+// from that maximum learning rate to some minimum learning rate much lower
+// than the initial learning rate.
+//
+// This policy was initially described in the paper `Super-Convergence:
+// Very Fast Training of Neural Networks Using Large Learning Rates`_.
+// The 1cycle learning rate policy changes the learning rate after every batch.
+// `step` should be called after a batch has been used for training.
+// This scheduler is not chainable.
+//
+// Note also that the total number of steps in the cycle can be determined in one
+// of two ways (listed in order of precedence):
+// - A value for total_steps is explicitly provided.
+// - A number of epochs (epochs) and a number of steps per epoch
+// (steps_per_epoch) are provided.
+// In this case, the number of total steps is inferred by
+// total_steps = epochs * steps_per_epoch
+// You must either provide a value for total_steps or provide a value for both
+// epochs and steps_per_epoch.
+//
+// Source:
+// Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates
+// https://arxiv.org/abs/1708.07120
+type OneCycleLR struct {
+	opt *Optimizer
+
+	// Upper learning rate boundaries in the cycle
+	// for each parameter group.
+	maxLRs []float64
+	minLRs []float64
+
+	// The total number of steps in the cycle. Note that
+	// if a value is provided here, then it must be inferred by providing
+	// a value for epochs and stepsPerEpoch.
+	// Default: -1
+	totalSteps int
+
+	// The number of epochs to train for. This is used along
+	// with stepsPerEpoch in order to infer the total number of steps in the cycle
+	// if a value for totalSteps is not provided.
+	// Default: -1
+	// epochs int
+
+	// The number of steps per epoch to train for. This is
+	// used along with epochs in order to infer the total number of steps in the
+	// cycle if a value for totalSteps is not provided.
+	// Default: -1
+	// stepsPerEpoch int
+
+	// The percentage of the cycle (in number of steps) spent
+	// increasing the learning rate.
+	// Default: 0.3
+	// pctStart float64
+
+	// Specifies the annealing strategy: one of ["cos", "linear"].
+	// - "cos" for cosine annealing,
+	// - "linear" for linear annealing.
+	// Default: 'cos'
+	// annealStrategy string
+
+	// If "true", momentum is cycled inversely
+	// to learning rate between "baseMomentum" and "maxMomentum".
+	// Default: true
+	cycleMomentum bool
+
+	// Lower momentum boundaries in the cycle
+	// for each parameter group. Note that momentum is cycled inversely
+	// to learning rate; at the peak of a cycle, momentum is
+	// 'base_momentum' and learning rate is 'max_lr'.
+	// Default: 0.85
+	baseMomentums []float64
+
+	// Upper momentum boundaries in the cycle for each parameter group. Functionally,
+	// it defines the cycle amplitude (max_momentum - base_momentum).
+	// Note that momentum is cycled inversely to learning rate; at the start of a cycle,
+	// momentum is "maxMomentum" and learning rate is "baseLR"
+	// Default: 0.95
+	maxMomentums []float64
+
+	// Determines the initial learning rate via initialLR = maxLR/divFactor
+	// Default: 25
+	// divFactor float64
+
+	// Determines the minimum learning rate via
+	// minLR = initialLR/finalDivFactor
+	// Default: 1e4
+	// finalDivFactor float64
+
+	// The index of the last batch. This parameter is used when
+	// resuming a training job. Since `step()` should be invoked after each
+	// batch instead of after each epoch, this number represents the total
+	// number of *batches* computed, not the total number of epochs computed.
+	// When lastEpoch=-1, the schedule is started from the beginning.
+	// Default: -1
+	lastEpoch int
+
+	initialLRs []float64
+
+	// Number of training iterations in the
+	// increasing half of a cycle.
+	stepSizeUp int
+
+	// Number of training iterations in the
+	// decreasing half of a cycle. If stepSizeDown is -1,
+	// it is set to stepSizeUp.
+	stepSizeDown int
+
+	annealFn func(start, end, pct float64) float64
+}
+
+type OneCycleOptions struct {
+	TotalSteps     int
+	Epochs         int
+	StepsPerEpoch  int
+	PctStart       float64
+	AnnealStrategy string
+	CycleMomentum  bool
+	BaseMomentum   float64
+	MaxMomentum    float64
+	DivFactor      float64
+	FinalDivFactor float64
+	LastEpoch      int
+}
+
+type OneCycleOption func(*OneCycleOptions)
+
+func defaultOneCycleOptions() *OneCycleOptions {
+	return &OneCycleOptions{
+		TotalSteps:     -1,
+		Epochs:         -1,
+		StepsPerEpoch:  -1,
+		PctStart:       0.3,
+		AnnealStrategy: "cos",
+		CycleMomentum:  true,
+		BaseMomentum:   0.85,
+		MaxMomentum:    0.95,
+		DivFactor:      25.0,
+		FinalDivFactor: 1e4,
+		LastEpoch:      -1,
+	}
+}
+
+func WithOneCycleTotalSteps(v int) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.TotalSteps = v
+	}
+}
+
+func WithOneCycleEpochs(v int) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.Epochs = v
+	}
+}
+
+func WithOneCycleStepsPerEpoch(v int) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.StepsPerEpoch = v
+	}
+}
+
+func WithOneCyclePctStart(v float64) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.PctStart = v
+	}
+}
+
+func WithOneCycleAnnealStrategy(v string) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.AnnealStrategy = v
+	}
+}
+
+func WithOneCycleCycleMomentum(v bool) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.CycleMomentum = v
+	}
+}
+
+func WithOneCycleBaseMomentum(v float64) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.BaseMomentum = v
+	}
+}
+
+func WithOneCycleMaxMomentum(v float64) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.MaxMomentum = v
+	}
+}
+
+func WithOneCycleDivFactor(v float64) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.DivFactor = v
+	}
+}
+
+func WithOneCycleFinalDivFactor(v float64) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.FinalDivFactor = v
+	}
+}
+
+func WithOneCycleLastEpoch(v int) OneCycleOption {
+	return func(o *OneCycleOptions) {
+		o.LastEpoch = v
+	}
+}
+
+func NewOneCycleLR(opt *Optimizer, maxLR float64, opts ...OneCycleOption) *OneCycleLR {
+	options := defaultOneCycleOptions()
+	for _, o := range opts {
+		o(options)
+	}
+
+	oc := new(OneCycleLR)
+	oc.opt = opt
+	oc.lastEpoch = options.LastEpoch
+	oc.totalSteps = options.TotalSteps
+
+	// validate  pctStart
+	if options.PctStart < 0 || options.PctStart > 1 {
+		log.Fatalf("Expected float between 0 and 1 pct_start, but got %v\n", options.PctStart)
+	}
+
+	// validate totalSteps
+	switch {
+	case options.TotalSteps == -1 && options.Epochs == -1 && options.StepsPerEpoch == -1:
+		log.Fatal("You must define either total_steps OR (epochs AND steps_per_epoch)")
+	case options.TotalSteps != -1:
+		if options.TotalSteps <= 0 {
+			log.Fatalf("Expected non-negative integer totalSteps, but got %v", options.TotalSteps)
+		}
+
+		oc.totalSteps = options.TotalSteps
+	default:
+		switch {
+		case options.Epochs <= 0:
+			log.Fatalf("Expected non-negative integer epochs, but got %v\n", options.Epochs)
+		case options.StepsPerEpoch <= 0:
+			log.Fatalf("Expected non-negative integer stepsPerEpoch, but got %v\n", options.StepsPerEpoch)
+		default:
+			oc.totalSteps = options.Epochs * options.StepsPerEpoch
+		}
+	}
+
+	oc.stepSizeUp = int(options.PctStart*float64(options.TotalSteps)) - 1
+	oc.stepSizeDown = oc.totalSteps - oc.stepSizeUp - 1
+
+	// validate annealStrategy
+	switch {
+	case !strContain([]string{"cos", "linear"}, options.AnnealStrategy):
+		log.Fatalf("anneal_strategy must by one of 'cos' or 'linear', instead got %v\n", options.AnnealStrategy)
+	case options.AnnealStrategy == "cos":
+		oc.annealFn = func(start, end, pct float64) float64 {
+			// "Cosine anneal from `start` to `end` as pct goes from 0.0 to 1.0."
+			cosOut := math.Cos(math.Pi*pct) + 1
+			return end + (start-end)/2.0*cosOut
+		}
+	case options.AnnealStrategy == "linear":
+		oc.annealFn = func(start, end, pct float64) float64 {
+			return (end-start)*pct + start
+		}
+	}
+
+	// Initialize learning rate variables
+	maxLRs := formatParam(opt, []float64{maxLR}, "maxLR")
+	ngroup := opt.ParamGroupNum()
+	var initialLRs []float64 = make([]float64, ngroup)
+	var minLRs []float64 = make([]float64, ngroup)
+	if options.LastEpoch == -1 {
+		for i := 0; i < ngroup; i++ {
+			initialLR := maxLRs[i] / options.DivFactor
+			initialLRs[i] = initialLR
+			minLRs[i] = initialLR / options.FinalDivFactor
+		}
+
+		// Set initial learning rate for optimizer
+		opt.SetLRs(initialLRs)
+
+		// Keep maxLRs and minLRs in scheduler as we don't have these fields in optimizer as Python.
+		oc.maxLRs = maxLRs
+		oc.minLRs = minLRs
+	}
+	oc.initialLRs = initialLRs
+
+	// Initialize momentum
+	oc.cycleMomentum = options.CycleMomentum
+	if oc.cycleMomentum {
+		// NOTE.
+		// Optimizer must support momentum with `cycle_momentum` option enabled
+		// Assumming we have "momentum" and "betas" in optimizer
+		// In Python, implementation as follow:
+		/*
+			self.use_beta1 = 'betas' in self.optimizer.defaults
+			max_momentums = self._format_param('max_momentum', optimizer, max_momentum)
+			base_momentums = self._format_param('base_momentum', optimizer, base_momentum)
+			if last_epoch == -1:
+					for m_momentum, b_momentum, group in zip(max_momentums, base_momentums, optimizer.param_groups):
+							if self.use_beta1:
+									_, beta2 = group['betas']
+									group['betas'] = (m_momentum, beta2)
+							else:
+									group['momentum'] = m_momentum
+							group['max_momentum'] = m_momentum
+							group['base_momentum'] = b_momentum
+		*/
+
+		// TODO. work on Optimizer to fully implement
+		oc.maxMomentums = formatParam(opt, []float64{options.MaxMomentum}, "maxMomentum")
+		oc.baseMomentums = formatParam(opt, []float64{options.BaseMomentum}, "baseMomentum")
+		if options.LastEpoch == -1 {
+			opt.SetMomentum(options.MaxMomentum)
+		}
+	}
+
+	fmt.Printf("oc: %+v\n", *oc)
+
+	return oc
+}
+
+func (oc *OneCycleLR) SetLRs(opts ...SchedulerOption) {
+	options := defaultSchedulerOptions()
+	for _, o := range opts {
+		o(options)
+	}
+	switch options.LastEpoch {
+	case -1:
+		oc.lastEpoch += 1
+	default:
+		oc.lastEpoch = options.LastEpoch
+	}
+
+	var newLRs []float64
+	var newMomentums []float64
+	stepNum := oc.lastEpoch
+	if stepNum > oc.totalSteps {
+		log.Fatalf("Tried to step %v times. The specified number of total steps is %v", stepNum, oc.totalSteps)
+	}
+	ngroup := oc.opt.ParamGroupNum()
+	for i := 0; i < ngroup; i++ {
+		var computedLR float64
+		var computedMomentum float64
+		initialLR := oc.initialLRs[i]
+		maxLR := oc.maxLRs[i]
+		minLR := oc.minLRs[i]
+		maxMomentum := oc.maxMomentums[i]
+		baseMomentum := oc.baseMomentums[i]
+		switch {
+		case stepNum <= oc.stepSizeUp:
+			computedLR = oc.annealFn(initialLR, maxLR, float64(stepNum)/float64(oc.stepSizeUp))
+			if oc.cycleMomentum {
+				computedMomentum = oc.annealFn(maxMomentum, baseMomentum, float64(stepNum)/float64(oc.stepSizeUp))
+			}
+
+		default:
+			downStepNum := stepNum - oc.stepSizeUp
+			computedLR = oc.annealFn(maxLR, minLR, float64(downStepNum)/float64(oc.stepSizeDown))
+			if oc.cycleMomentum {
+				computedMomentum = oc.annealFn(baseMomentum, maxMomentum, float64(downStepNum)/float64(oc.stepSizeDown))
+			}
+		}
+
+		newLRs = append(newLRs, computedLR)
+		newMomentums = append(newMomentums, computedMomentum)
+	}
+
+	oc.opt.SetLRs(newLRs)
+	// For now, just use first momentum.
+	oc.opt.SetMomentum(newMomentums[0])
+}
+
+func (oc *OneCycleLR) Build() *LRScheduler {
+	s := &LRScheduler{oc}
+	s.Step()
+	return s
 }

@@ -251,3 +251,30 @@ func TestCosineAnnealingWarmRestarts(t *testing.T) {
 	// t.Logf("Lrs: %+v\n", lrs)
 	t.Log(model)
 }
+
+func TestOneCycleLR(t *testing.T) {
+	vs := nn.NewVarStore(gotch.CPU)
+	model := nn.NewLinear(vs.Root(), 2, 1, nn.DefaultLinearConfig())
+	opt, err := nn.DefaultSGDConfig().Build(vs, 0.1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var s *nn.LRScheduler
+	maxLR := 0.1
+	stepsPerEpoch := 10
+	epochs := 10
+	annealStrategy := "linear"
+
+	s = nn.NewOneCycleLR(opt, maxLR, nn.WithOneCycleStepsPerEpoch(stepsPerEpoch), nn.WithOneCycleEpochs(epochs), nn.WithOneCycleAnnealStrategy(annealStrategy)).Build()
+
+	var lrs []float64
+	for i := 0; i < 100; i++ {
+		s.Step()
+		lr := opt.GetLRs()[0]
+		lrs = append(lrs, lr)
+		t.Logf("batch %2d: lr %0.4f\n", i, lr)
+	}
+	// t.Logf("Lrs: %+v\n", lrs)
+	t.Log(model)
+}
