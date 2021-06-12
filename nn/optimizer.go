@@ -136,6 +136,42 @@ func (c *AdamConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
 	return defaultBuild(c, vs, lr)
 }
 
+// AdamW optimizer:
+// ===============
+
+type AdamWConfig struct {
+	Beta1 float64
+	Beta2 float64
+	Wd    float64
+}
+
+// DefaultAdamConfig creates AdamConfig with default values
+func DefaultAdamWConfig() *AdamConfig {
+	return &AdamConfig{
+		Beta1: 0.9,
+		Beta2: 0.999,
+		Wd:    0.0,
+	}
+}
+
+// NewAdamConfig creates AdamConfig with specified values
+func NewAdamWConfig(beta1, beta2, wd float64) *AdamWConfig {
+	return &AdamWConfig{
+		Beta1: beta1,
+		Beta2: beta2,
+		Wd:    wd,
+	}
+}
+
+// Implement OptimizerConfig interface for AdamConfig
+func (c *AdamWConfig) buildCOpt(lr float64) (*ts.COptimizer, error) {
+	return ts.AdamW(lr, c.Beta1, c.Beta2, c.Wd)
+}
+
+func (c *AdamWConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
+	return defaultBuild(c, vs, lr)
+}
+
 // RMSProp optimizer:
 // ===============
 

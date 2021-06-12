@@ -21,6 +21,17 @@ func Adam(lr, beta1, beta2, weightDecay float64) (*COptimizer, error) {
 	return &COptimizer{coptimizer}, nil
 }
 
+// AdamW returns AdamW optimizer
+func AdamW(lr, beta1, beta2, weightDecay float64) (*COptimizer, error) {
+	coptimizer := lib.AtoAdamW(lr, beta1, beta2, weightDecay)
+
+	if err := TorchErr(); err != nil {
+		return nil, err
+	}
+
+	return &COptimizer{coptimizer}, nil
+}
+
 // RmsProp returns RMSProp optimizer
 func RmsProp(lr, alpha, eps, wd, momentum float64, centered bool) (*COptimizer, error) {
 	var centeredCInt int
