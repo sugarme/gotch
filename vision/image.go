@@ -69,9 +69,13 @@ func Save(tensor *ts.Tensor, path string) error {
 	switch {
 	case len(shape) == 4 && shape[0] == 1:
 		tsCHW = t.MustSqueeze1(int64(0), true)
-		tsHWC = chwToHWC(tsCHW).MustTo(gotch.CPU, true)
+		chwTs := chwToHWC(tsCHW)
+		tsCHW.MustDrop()
+		tsHWC = chwTs.MustTo(gotch.CPU, true)
 	case len(shape) == 3:
-		tsHWC = chwToHWC(t.MustTo(gotch.CPU, true))
+		chwTs := t.MustTo(gotch.CPU, true)
+		tsHWC = chwToHWC(chwTs)
+		chwTs.MustDrop()
 	default:
 		err = fmt.Errorf("Unexpected size (%v) for image tensor.\n", len(shape))
 		return err
@@ -90,10 +94,12 @@ func Save(tensor *ts.Tensor, path string) error {
 // This expects as input a tensor of shape [channel, height, width] and returns
 // a tensor of shape [channel, out_h, out_w].
 func Resize(t *ts.Tensor, outW int64, outH int64) (*ts.Tensor, error) {
-	tmpTs, err := ts.ResizeHwc(chwToHWC(t), outW, outH)
+	hwcTs := chwToHWC(t)
+	tmpTs, err := ts.ResizeHwc(hwcTs, outW, outH)
 	if err != nil {
 		return nil, err
 	}
+	hwcTs.MustDrop()
 
 	tsCHW := hwcToCHW(tmpTs)
 	tmpTs.MustDrop()
@@ -154,6 +160,7 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 
 		switch int64(resizeH) == outH {
 		case true:
+			tsCHW.MustDrop()
 			return tensorW, nil
 		case false:
 			tensorH, err := tsCHW.Narrow(1, (resizeH-outH)/2, outH, true)
@@ -182,7 +189,13 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 //
 // This expects as input a tensor of shape [channel, height, width] and returns
 func ResizePreserveAspectRatio(t *ts.Tensor, outW int64, outH int64) (*ts.Tensor, error) {
-	return resizePreserveAspectRatioHWC(chwToHWC(t), outW, outH)
+	hwcTs := chwToHWC(t)
+	resizedTs, err := resizePreserveAspectRatioHWC(hwcTs, outW, outH)
+	if err != nil {
+		return nil, err
+	}
+	hwcTs.MustDrop()
+	return resizedTs, nil
 }
 
 // LoadAndResize loads and resizes an image, preserve the aspect ratio by taking a center crop.

@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Fixed multiple memory leakage at `vision/image.go`
+- Fixed memory leakage at `dutil/dataloader.go`
+- Fixed multiple memory leakage at `efficientnet.go`
 
 ## [0.3.10]
 - Update installation at README.md

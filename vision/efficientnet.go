@@ -209,6 +209,7 @@ func block(p *nn.Path, args BlockArgs) ts.ModuleT {
 		}
 
 		ys1 := ys.ApplyT(depthwiseConv, false)
+		ys.MustDrop()
 		ys2 := ys1.ApplyT(depthwiseBn, train)
 		ys1.MustDrop()
 		ys3 := ys2.Swish()
@@ -217,13 +218,15 @@ func block(p *nn.Path, args BlockArgs) ts.ModuleT {
 		var ys4 *ts.Tensor
 		// NOTE: args.SeRatio is optional value.
 		if args.SeRatio == 0 {
-			ys4 = ys3
+			ys4 = ys3.MustShallowClone()
+			ys3.MustDrop()
 		} else {
 			tmp1 := ys3.MustAdaptiveAvgPool2d([]int64{1, 1}, false)
 			tmp2 := tmp1.ApplyT(se, train)
 			tmp1.MustDrop()
 			tmp3 := tmp2.MustSigmoid(true)
 			ys4 = ys3.MustMul(tmp3, true)
+			tmp3.MustDrop()
 		}
 
 		ys5 := ys4.ApplyT(projectConv, false)
@@ -303,6 +306,7 @@ func efficientnet(p *nn.Path, params *params, nclasses int64) ts.ModuleT {
 		tmp4 := tmp3.ApplyT(blocks, train)
 		tmp3.MustDrop()
 		tmp5 := tmp4.ApplyT(convHead, false)
+		tmp4.MustDrop()
 		tmp6 := tmp5.ApplyT(bn1, train)
 		tmp5.MustDrop()
 		tmp7 := tmp6.Swish()

@@ -3,6 +3,8 @@ package dutil
 import (
 	"fmt"
 	"reflect"
+
+	ts "github.com/sugarme/gotch/tensor"
 )
 
 // DataLoader combines a dataset and a sampler and provides
@@ -86,6 +88,15 @@ func (dl *DataLoader) Next() (interface{}, error) {
 	}
 
 	elemType := reflect.TypeOf(elem)
+	// Free up memory if element is Tensor
+	switch elemType.String() {
+	case "[]tensor.Tensor":
+		for _, el := range elem.([]ts.Tensor) {
+			el.MustDrop()
+		}
+	case "*tensor.Tensor":
+		elem.(*ts.Tensor).MustDrop()
+	}
 
 	items := reflect.MakeSlice(reflect.SliceOf(elemType), 0, dl.dataset.Len())
 	nextIndex := dl.currIdx + dl.batchSize

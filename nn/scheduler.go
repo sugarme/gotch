@@ -1648,8 +1648,6 @@ func NewOneCycleLR(opt *Optimizer, maxLR float64, opts ...OneCycleOption) *OneCy
 		}
 	}
 
-	fmt.Printf("oc: %+v\n", *oc)
-
 	return oc
 }
 
