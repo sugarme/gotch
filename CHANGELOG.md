@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed memory leakage at `dutil/dataloader.go`
 - Fixed multiple memory leakage at `efficientnet.go`
 - Added `dataloader.Len()` method
+- Fixed deleting input tensor inside function at `tensor/other.go`  `tensor.CrossEntropyForLogits` and `tensor.AccuracyForLogits`
 
 ## [0.3.10]
 - Update installation at README.md
