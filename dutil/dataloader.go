@@ -126,3 +126,8 @@ func (dl *DataLoader) HasNext() bool {
 func (dl *DataLoader) Reset() {
 	dl.currIdx = 0
 }
+
+// Len returns number of samples to be iterated.
+func (dl *DataLoader) Len() int {
+	return len(dl.indexes)
+}

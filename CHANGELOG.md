@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed multiple memory leakage at `vision/image.go`
 - Fixed memory leakage at `dutil/dataloader.go`
 - Fixed multiple memory leakage at `efficientnet.go`
+- Added `dataloader.Len()` method
 
 ## [0.3.10]
 - Update installation at README.md
