@@ -187,8 +187,8 @@ func (vs *VarStore) Load(filepath string) error {
 		}
 
 		// mismatched shape
-		destShape := currTs.MustSize()
-		sourceShape := vs.Vars.NamedVariables[tsName].MustSize()
+		sourceShape := currTs.MustSize()
+		destShape := vs.Vars.NamedVariables[tsName].MustSize()
 		if !reflect.DeepEqual(destShape, sourceShape) {
 			err = fmt.Errorf("Mismatched shape error for variable name: %v - At store: %v - At source %v\n", tsName, destShape, sourceShape)
 			return err
