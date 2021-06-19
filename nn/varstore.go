@@ -244,7 +244,7 @@ func (vs *VarStore) LoadPartial(filepath string) ([]string, error) {
 		destShape := currTs.MustSize()
 		sourceShape := vs.Vars.NamedVariables[tsName].MustSize()
 		if !reflect.DeepEqual(destShape, sourceShape) {
-			fmt.Printf("Mismatched shape error for variable name: %v - At store: %v - At source %v\n", tsName, destShape, sourceShape)
+			fmt.Printf("WARNING: Mismatched shape error for variable name: %v - At store: %v - At source %v. Skip loading this weight...\n", tsName, destShape, sourceShape)
 			missingVariables = append(missingVariables, tsName)
 			continue
 		}
