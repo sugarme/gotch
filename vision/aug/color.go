@@ -44,24 +44,33 @@ func (c *ColorJitter) setHue(hue float64) {
 // Forward implement ts.Module by randomly picking one of brightness, contrast,
 // staturation or hue function to transform input image tensor.
 func (c *ColorJitter) Forward(x *ts.Tensor) *ts.Tensor {
+	fx := Byte2FloatImage(x)
+
+	var out *ts.Tensor
 	rand.Seed(time.Now().UnixNano())
 	idx := rand.Intn(4)
 	switch idx {
 	case 0:
 		v := randVal(getMinMax(c.brightness))
-		return adjustBrightness(x, v)
+		out = adjustBrightness(fx, v)
 	case 1:
 		v := randVal(getMinMax(c.contrast))
-		return adjustContrast(x, v)
+		out = adjustContrast(fx, v)
 	case 2:
 		v := randVal(getMinMax(c.saturation))
-		return adjustSaturation(x, v)
+		out = adjustSaturation(fx, v)
 	case 3:
 		v := randVal(0, c.hue)
-		return adjustHue(x, v)
+		out = adjustHue(fx, v)
 	default:
 		panic("Shouldn't reach here.")
 	}
+
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithColorJitter(brightness, contrast, sat, hue float64) Option {

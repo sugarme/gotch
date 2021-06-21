@@ -23,16 +23,22 @@ func newRandomAutocontrast(pOpt ...float64) *RandomAutocontrast {
 }
 
 func (rac *RandomAutocontrast) Forward(x *ts.Tensor) *ts.Tensor {
+	fx := Byte2FloatImage(x)
+
 	r := randPvalue()
 	var out *ts.Tensor
 	switch {
 	case r < rac.pvalue:
-		out = autocontrast(x)
+		out = autocontrast(fx)
 	default:
-		out = x.MustShallowClone()
+		out = fx.MustShallowClone()
 	}
 
-	return out
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandomAutocontrast(p ...float64) Option {

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed incorrect message mismatched tensor shape at `nn.Varstore.Load`
 - Fixed incorrect y -> x at `vision/aug/affine.go` getParam func
 - Fixed double free tensor at `vision/aug/function.go` Equalize func.
+- Changed `vision/aug` all input image should be `uint8` (Byte) dtype and transformed output has the same dtype (uint8) so that `Compose()` can compose any transformer options.
 
 ## [0.3.10]
 - Update installation at README.md

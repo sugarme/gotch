@@ -66,12 +66,18 @@ func newRotate(angle float64) *RotateModule {
 
 // Forward implements ts.Module for RotateModule
 func (r *RotateModule) Forward(x *ts.Tensor) *ts.Tensor {
-	out, err := Rotate(x, r.angle)
+	fx := Byte2FloatImage(x)
+
+	out, err := Rotate(fx, r.angle)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return out
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRotate(angle float64) Option {

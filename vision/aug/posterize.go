@@ -54,8 +54,8 @@ func newRandomPosterize(opts ...posterizeOption) *RandomPosterize {
 	}
 }
 
+// NOTE. Input image must be uint8 dtype otherwise panic!
 func (rp *RandomPosterize) Forward(x *ts.Tensor) *ts.Tensor {
-
 	r := randPvalue()
 	var out *ts.Tensor
 	switch {

@@ -1,6 +1,7 @@
 package aug
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/sugarme/gotch"
@@ -18,13 +19,17 @@ func newResizeModule(h, w int64) *ResizeModule {
 }
 
 // Forward implements ts.Module for RandRotateModule
+// NOTE. input tensor must be uint8 (Byte) dtype otherwise panic!
 func (rs *ResizeModule) Forward(x *ts.Tensor) *ts.Tensor {
-	imgTs := x.MustTotype(gotch.Uint8, false)
-	out, err := vision.Resize(imgTs, rs.width, rs.height)
+	dtype := x.DType()
+	if dtype != gotch.Uint8 {
+		err := fmt.Errorf("Invalid dtype. Expect uint8 (Byte) dtype. Got %v\n", dtype)
+		panic(err)
+	}
+	out, err := vision.Resize(x, rs.width, rs.height)
 	if err != nil {
 		log.Fatal(err)
 	}
-	imgTs.MustDrop()
 	return out
 }
 

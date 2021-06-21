@@ -17,17 +17,22 @@ func newRandomInvert(pOpt ...float64) *RandomInvert {
 }
 
 func (ri *RandomInvert) Forward(x *ts.Tensor) *ts.Tensor {
-	r := randPvalue()
+	fx := Byte2FloatImage(x)
 
+	r := randPvalue()
 	var out *ts.Tensor
 	switch {
 	case r < ri.pvalue:
-		out = invert(x)
+		out = invert(fx)
 	default:
-		out = x.MustShallowClone()
+		out = fx.MustShallowClone()
 	}
 
-	return out
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandomInvert(pvalueOpt ...float64) Option {
