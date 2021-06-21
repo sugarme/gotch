@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed deleting input tensor inside function at `tensor/other.go`  `tensor.CrossEntropyForLogits` and `tensor.AccuracyForLogits`
 - Added warning to `varstore.LoadPartial` when mismatched tensor shapes between source and varstore.
 - Fixed incorrect message mismatched tensor shape at `nn.Varstore.Load`
+- Fixed incorrect y -> x at `vision/aug/affine.go` getParam func
+- Fixed double free tensor at `vision/aug/function.go` Equalize func.
 
 ## [0.3.10]
 - Update installation at README.md

@@ -946,7 +946,8 @@ func affine(img *ts.Tensor, angle float64, translations []int64, scale float64, 
 
 	matrix := getInverseAffineMatrix([]float64{0.0, 0.0}, angle, translateF, scale, shear)
 
-	dtype := gotch.Float
+	// dtype := gotch.Float
+	dtype := img.DType()
 	device := img.MustDevice()
 	dim := img.MustSize()
 	theta := ts.MustOfSlice(matrix).MustTotype(dtype, true).MustTo(device, true).MustView([]int64{1, 2, 3}, true)
@@ -1402,7 +1403,6 @@ func scaleChannel(imgChan *ts.Tensor) *ts.Tensor {
 	nonZeroHistSum := nonZeroHist.MustNarrow(0, 0, nonZeroHistDim[0]-1, true).MustSum(gotch.Int64, true)
 	step := nonZeroHistSum.MustDiv1(ts.IntScalar(255), true)
 	stepVal := step.Int64Values()[0]
-	nonZeroHistSum.MustDrop()
 
 	var out *ts.Tensor
 	// if step == 0:
@@ -1443,7 +1443,6 @@ func scaleChannel(imgChan *ts.Tensor) *ts.Tensor {
 	for _, x := range xs {
 		x.MustDrop()
 	}
-	halfStep.MustDrop()
 	lut2.MustDrop()
 	hist.MustDrop()
 	step.MustDrop()

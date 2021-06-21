@@ -58,7 +58,7 @@ func (ra *RandomAffine) getParams(imageSize []int64) (float64, []int64, float64,
 
 		dy := ts.MustEmpty([]int64{1}, gotch.Float, gotch.CPU)
 		dy.MustUniform_(-maxDY, maxDY)
-		ty := dx.Float64Values()[0]
+		ty := dy.Float64Values()[0]
 		dy.MustDrop()
 
 		translations = []int64{int64(tx), int64(ty)} // should we use math.Round here???
