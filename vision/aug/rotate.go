@@ -99,12 +99,18 @@ func newRandRotate(min, max float64) *RandRotateModule {
 
 // Forward implements ts.Module for RandRotateModule
 func (rr *RandRotateModule) Forward(x *ts.Tensor) *ts.Tensor {
-	out, err := RandomRotate(x, rr.minAngle, rr.maxAngle)
+	fx := Byte2FloatImage(x)
+
+	out, err := RandomRotate(fx, rr.minAngle, rr.maxAngle)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return out
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandRotate(minAngle, maxAngle float64) Option {

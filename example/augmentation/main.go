@@ -46,7 +46,8 @@ func tOne() {
 	device := gotch.CPU
 	imgTs := img.MustTo(device, true)
 
-	t, err := aug.Compose(aug.WithRandomSolarize(aug.WithSolarizeThreshold(125), aug.WithSolarizePvalue(1.0)))
+	t, err := aug.Compose(aug.WithRandomAutocontrast(1.0))
+	// t, err := aug.Compose(aug.WithRandomSolarize(aug.WithSolarizeThreshold(125), aug.WithSolarizePvalue(1.0)))
 	// t, err := aug.Compose(aug.WithRandomAdjustSharpness(aug.WithSharpnessPvalue(1.0), aug.WithSharpnessFactor(10)))
 	// t, err := aug.Compose(aug.WithRandRotate(0, 360))
 	// t, err := aug.Compose(aug.WithResize(320, 320)) // NOTE. WithResize just works on CPU.

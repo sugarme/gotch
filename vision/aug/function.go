@@ -1526,7 +1526,7 @@ func Byte2FloatImage(x *ts.Tensor) *ts.Tensor {
 // It's panic if input is not float dtype tensor.
 func Float2ByteImage(x *ts.Tensor) *ts.Tensor {
 	dtype := x.DType()
-	if dtype != gotch.Float {
+	if dtype != gotch.Float && dtype != gotch.Double {
 		err := fmt.Errorf("Input tensor is not float dtype (%v)", dtype)
 		panic(err)
 	}
