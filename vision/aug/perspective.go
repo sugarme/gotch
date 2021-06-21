@@ -176,10 +176,17 @@ func (rp *RandomPerspective) getParams(w, h int64) ([][]int64, [][]int64) {
 }
 
 func (rp *RandomPerspective) Forward(x *ts.Tensor) *ts.Tensor {
-	height, width := getImageSize(x)
+	fx := Byte2FloatImage(x)
+
+	height, width := getImageSize(fx)
 	startPoints, endPoints := rp.getParams(height, width)
-	out := perspective(x, startPoints, endPoints, rp.interpolationMode, rp.fillValue)
-	return out
+	out := perspective(fx, startPoints, endPoints, rp.interpolationMode, rp.fillValue)
+
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandomPerspective(opts ...perspectiveOption) Option {

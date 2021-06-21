@@ -99,7 +99,8 @@ func castSqueezeOut(x *ts.Tensor, needCast, needSqueeze bool, outDType gotch.DTy
 }
 
 func gaussianBlur(x *ts.Tensor, ks []int64, sigma []float64) *ts.Tensor {
-	dtype := gotch.Float
+	// dtype := gotch.Float
+	dtype := x.DType()
 	if x.DType() == gotch.Float || x.DType() == gotch.Double {
 		dtype = x.DType()
 	}
@@ -1200,8 +1201,9 @@ func autocontrast(img *ts.Tensor) *ts.Tensor {
 		log.Fatalf("Input image tensor should have at least 3 dimensions. Got %v\n", len(dim))
 	}
 
-	var bound int64 = 255
-	dtype := gotch.Float
+	// NOTE. image tensor expected to be float dtype [0,1]
+	var bound float64 = 1.0
+	dtype := img.DType()
 
 	// minimum = img.amin(dim=(-2, -1), keepdim=True).to(dtype)
 	minTs := img.MustAmin([]int64{-2, -1}, true, false).MustTotype(dtype, true)
@@ -1221,16 +1223,16 @@ func autocontrast(img *ts.Tensor) *ts.Tensor {
 
 	// maximum[eq_idxs] = bound
 	maxTsView := maxTs.MustIndexSelect(0, eqIdx, false)
-	boundTs := maxTsView.MustOnesLike(false).MustMul1(ts.IntScalar(bound), true)
+	boundTs := maxTsView.MustOnesLike(false).MustMul1(ts.FloatScalar(bound), true)
 	maxTsView.Copy_(boundTs)
 	boundTs.MustDrop()
 	maxTsView.MustDrop()
 
 	// scale = bound / (maximum - minimum)
-	scale := maxTs.MustSub(minTs, false).MustPow(ts.IntScalar(-1), true).MustMul1(ts.IntScalar(bound), true)
+	scale := maxTs.MustSub(minTs, false).MustPow(ts.IntScalar(-1), true).MustMul1(ts.FloatScalar(bound), true)
 	//
 	// return ((img - minimum) * scale).clamp(0, bound).to(img.dtype)
-	out := img.MustSub(minTs, false).MustMul(scale, true).MustClamp(ts.IntScalar(0), ts.IntScalar(bound), true).MustTotype(dtype, true)
+	out := img.MustSub(minTs, false).MustMul(scale, true).MustClamp(ts.IntScalar(0), ts.FloatScalar(bound), true).MustTotype(dtype, true)
 
 	minTs.MustDrop()
 	maxTs.MustDrop()
@@ -1393,7 +1395,7 @@ func scaleChannel(imgChan *ts.Tensor) *ts.Tensor {
 	// hist = torch.bincount(img_chan.view(-1), minlength=256)
 
 	// hist = torch.histc(img_chan.to(torch.float32), bins=256, min=0, max=255)
-	hist := imgChan.MustHistc(256, false)
+	hist := imgChan.MustTotype(gotch.Float, false).MustHistc(256, true)
 
 	// nonzero_hist = hist[hist != 0]
 	nonZeroHist := hist.MustNonzero(false) // [n, 1]
@@ -1500,13 +1502,34 @@ func normalize(img *ts.Tensor, mean, std []float64) *ts.Tensor {
 		log.Fatalf("std must be 1 or 3 elements. Got %v\n", len(std))
 	}
 
-	// out := img.MustSub(mTs, false).MustDiv(sTs, true)
-	x := img.MustDiv1(ts.FloatScalar(255.0), false)
-	out := x.MustSub(mTs, false).MustDiv(sTs, true).MustMul1(ts.IntScalar(255), true)
-	x.MustDrop()
+	out := img.MustSub(mTs, false).MustDiv(sTs, true)
 
 	mTs.MustDrop()
 	sTs.MustDrop()
 
 	return out
+}
+
+// Byte2FloatImage converts uint8 dtype image tensor to float dtype.
+// It's panic if input image is not uint8 dtype.
+func Byte2FloatImage(x *ts.Tensor) *ts.Tensor {
+	dtype := x.DType()
+	if dtype != gotch.Uint8 {
+		err := fmt.Errorf("Input tensor is not uint8 dtype (%v)", dtype)
+		panic(err)
+	}
+
+	return x.MustDiv1(ts.FloatScalar(255.0), false)
+}
+
+// Float2ByteImage converts float dtype image to uint8 dtype image.
+// It's panic if input is not float dtype tensor.
+func Float2ByteImage(x *ts.Tensor) *ts.Tensor {
+	dtype := x.DType()
+	if dtype != gotch.Float {
+		err := fmt.Errorf("Input tensor is not float dtype (%v)", dtype)
+		panic(err)
+	}
+
+	return x.MustMul1(ts.IntScalar(255), false).MustTotype(gotch.Uint8, true)
 }

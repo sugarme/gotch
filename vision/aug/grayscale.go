@@ -17,8 +17,15 @@ type Grayscale struct {
 }
 
 func (gs *Grayscale) Forward(x *ts.Tensor) *ts.Tensor {
-	out := rgb2Gray(x, gs.outChan)
-	return out
+	fx := Byte2FloatImage(x)
+
+	out := rgb2Gray(fx, gs.outChan)
+
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func newGrayscale(outChanOpt ...int64) *Grayscale {

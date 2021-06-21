@@ -50,14 +50,16 @@ func (c *RandomCrop) params(x *ts.Tensor) (int64, int64, int64, int64) {
 }
 
 func (c *RandomCrop) Forward(x *ts.Tensor) *ts.Tensor {
+	fx := Byte2FloatImage(x)
+
 	var img *ts.Tensor
 	if c.padding != nil {
-		img = pad(x, c.padding, c.paddingMode)
+		img = pad(fx, c.padding, c.paddingMode)
 	} else {
-		img = x.MustShallowClone()
+		img = fx.MustShallowClone()
 	}
 
-	w, h := getImageSize(x)
+	w, h := getImageSize(fx)
 
 	var (
 		paddedW  *ts.Tensor
@@ -86,7 +88,11 @@ func (c *RandomCrop) Forward(x *ts.Tensor) *ts.Tensor {
 	i, j, h, w := c.params(x)
 	out := crop(paddedWH, i, j, h, w)
 	paddedWH.MustDrop()
-	return out
+
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+	return bx
 }
 
 func WithRandomCrop(size []int64, padding []int64, paddingIfNeeded bool, paddingMode string) Option {

@@ -57,17 +57,22 @@ func newRandomSolarize(opts ...solarizeOption) *RandomSolarize {
 }
 
 func (rs *RandomSolarize) Forward(x *ts.Tensor) *ts.Tensor {
-	r := randPvalue()
+	fx := Byte2FloatImage(x)
 
+	r := randPvalue()
 	var out *ts.Tensor
 	switch {
 	case r < rs.pvalue:
-		out = solarize(x, rs.threshold)
+		out = solarize(fx, rs.threshold)
 	default:
-		out = x.MustShallowClone()
+		out = fx.MustShallowClone()
 	}
 
-	return out
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandomSolarize(opts ...solarizeOption) Option {

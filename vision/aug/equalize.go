@@ -24,9 +24,9 @@ func newRandomEqualize(pOpt ...float64) *RandomEqualize {
 	return &RandomEqualize{p}
 }
 
+// NOTE. input image MUST be uint8 dtype otherwise panic!
 func (re *RandomEqualize) Forward(x *ts.Tensor) *ts.Tensor {
 	r := randPvalue()
-
 	var out *ts.Tensor
 	switch {
 	case r < re.pvalue:

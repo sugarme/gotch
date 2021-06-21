@@ -73,12 +73,20 @@ func newGaussianBlur(ks []int64, sig []float64) *GaussianBlur {
 }
 
 func (b *GaussianBlur) Forward(x *ts.Tensor) *ts.Tensor {
+	assertImageTensor(x)
+	fx := Byte2FloatImage(x)
+
 	sigmaTs := ts.MustEmpty([]int64{1}, gotch.Float, gotch.CPU)
 	sigmaTs.MustUniform_(b.sigma[0], b.sigma[1])
 	sigmaVal := sigmaTs.Float64Values()[0]
 	sigmaTs.MustDrop()
 
-	return gaussianBlur(x, b.kernelSize, []float64{sigmaVal, sigmaVal})
+	out := gaussianBlur(fx, b.kernelSize, []float64{sigmaVal, sigmaVal})
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithGaussianBlur(ks []int64, sig []float64) Option {

@@ -95,12 +95,19 @@ func (ra *RandomAffine) getParams(imageSize []int64) (float64, []int64, float64,
 }
 
 func (ra *RandomAffine) Forward(x *ts.Tensor) *ts.Tensor {
-	w, h := getImageSize(x)
+	assertImageTensor(x)
+	fx := Byte2FloatImage(x)
+
+	w, h := getImageSize(fx)
 	angle, translations, scale, shear := ra.getParams([]int64{w, h})
 
-	out := affine(x, angle, translations, scale, shear, ra.interpolationMode, ra.fillValue)
+	out := affine(fx, angle, translations, scale, shear, ra.interpolationMode, ra.fillValue)
 
-	return out
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func newRandomAffine(opts ...affineOption) *RandomAffine {

@@ -146,22 +146,27 @@ func (rc *RandomCutout) cutoutParams(x *ts.Tensor) (int64, int64, int64, int64, 
 }
 
 func (rc *RandomCutout) Forward(img *ts.Tensor) *ts.Tensor {
+	fx := Byte2FloatImage(img)
+
 	randTs := ts.MustRandn([]int64{1}, gotch.Float, gotch.CPU)
 	randVal := randTs.Float64Values()[0]
 	randTs.MustDrop()
 
+	var out *ts.Tensor
 	switch randVal < rc.pvalue {
 	case true:
-		x, y, h, w, v := rc.cutoutParams(img)
-		out := cutout(img, x, y, h, w, rc.rgbVal)
+		x, y, h, w, v := rc.cutoutParams(fx)
+		out = cutout(fx, x, y, h, w, rc.rgbVal)
 		v.MustDrop()
-		return out
 	case false:
-		out := img.MustShallowClone()
-		return out
+		out = fx.MustShallowClone()
 	}
 
-	panic("Shouldn't reach here")
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandomCutout(opts ...cutoutOption) Option {

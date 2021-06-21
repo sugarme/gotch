@@ -79,8 +79,15 @@ func newNormalize(opts ...normalizeOption) *Normalize {
 }
 
 func (n *Normalize) Forward(x *ts.Tensor) *ts.Tensor {
-	out := normalize(x, n.mean, n.std)
-	return out
+	fx := Byte2FloatImage(x)
+
+	out := normalize(fx, n.mean, n.std)
+
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithNormalize(opts ...normalizeOption) Option {

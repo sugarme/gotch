@@ -22,16 +22,24 @@ func newRandomHorizontalFlip(pvalue float64) *RandomHorizontalFlip {
 }
 
 func (hf *RandomHorizontalFlip) Forward(x *ts.Tensor) *ts.Tensor {
+	fx := Byte2FloatImage(x)
+
 	randTs := ts.MustRandn([]int64{1}, gotch.Float, gotch.CPU)
 	randVal := randTs.Float64Values()[0]
 	randTs.MustDrop()
+	var out *ts.Tensor
 	switch {
 	case randVal < hf.pvalue:
-		return hflip(x)
+		out = hflip(fx)
 	default:
-		out := x.MustShallowClone()
-		return out
+		out = fx.MustShallowClone()
 	}
+
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandomHFlip(pvalue float64) Option {
@@ -58,16 +66,25 @@ func newRandomVerticalFlip(pvalue float64) *RandomVerticalFlip {
 }
 
 func (vf *RandomVerticalFlip) Forward(x *ts.Tensor) *ts.Tensor {
+	fx := Byte2FloatImage(x)
+
 	randTs := ts.MustRandn([]int64{1}, gotch.Float, gotch.CPU)
 	randVal := randTs.Float64Values()[0]
 	randTs.MustDrop()
+
+	var out *ts.Tensor
 	switch {
 	case randVal < vf.pvalue:
-		return vflip(x)
+		out = vflip(fx)
 	default:
-		out := x.MustShallowClone()
-		return out
+		out = fx.MustShallowClone()
 	}
+
+	bx := Float2ByteImage(out)
+	fx.MustDrop()
+	out.MustDrop()
+
+	return bx
 }
 
 func WithRandomVFlip(pvalue float64) Option {
