@@ -42,8 +42,8 @@ func tOne() {
 		panic(err)
 	}
 
-	// device := gotch.CudaIfAvailable()
-	device := gotch.CPU
+	device := gotch.CudaIfAvailable()
+	// device := gotch.CPU
 	imgTs := img.MustTo(device, true)
 
 	// t, err := aug.Compose(aug.WithRandomAutocontrast(1.0))
