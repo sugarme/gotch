@@ -53,23 +53,18 @@ func newRandomAdjustSharpness(opts ...sharpnessOption) *RandomAdjustSharpness {
 	}
 }
 
+// NOTE. input img dtype shoule be `uint8` (Byte)
 func (ras *RandomAdjustSharpness) Forward(x *ts.Tensor) *ts.Tensor {
-	fx := Byte2FloatImage(x)
-
 	r := randPvalue()
 	var out *ts.Tensor
 	switch {
 	case r < ras.pvalue:
-		out = adjustSharpness(fx, ras.sharpnessFactor)
+		out = adjustSharpness(x, ras.sharpnessFactor)
 	default:
-		out = fx.MustShallowClone()
+		out = x.MustShallowClone()
 	}
 
-	bx := Float2ByteImage(out)
-	fx.MustDrop()
-	out.MustDrop()
-
-	return bx
+	return out
 }
 
 func WithRandomAdjustSharpness(opts ...sharpnessOption) Option {
