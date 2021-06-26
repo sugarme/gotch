@@ -951,7 +951,7 @@ func affine(img *ts.Tensor, angle float64, translations []int64, scale float64, 
 	dtype := img.DType()
 	device := img.MustDevice()
 	dim := img.MustSize()
-	theta := ts.MustOfSlice(matrix).MustTotype(dtype, true).MustTo(device, true).MustView([]int64{1, 2, 3}, true)
+	theta := ts.MustOfSlice(matrix).MustTotype(dtype, true).MustTo(device, true).MustReshape([]int64{1, 2, 3}, true)
 
 	// grid will be generated on the same device as theta and img
 	w := dim[len(dim)-1]
@@ -1043,44 +1043,34 @@ func genAffineGrid(theta *ts.Tensor, w, h, ow, oh int64) *ts.Tensor {
 	d := 0.5
 	dtype := theta.DType()
 	device := theta.MustDevice()
-	// base_grid = torch.empty(1, oh, ow, 3, dtype=theta.dtype, device=theta.device)
-	baseGrid := ts.MustEmpty([]int64{1, oh, ow, 3}, dtype, device)
 
-	// x_grid = torch.linspace(-ow * 0.5 + d, ow * 0.5 + d - 1, steps=ow, device=theta.device)
+	// base_grid = torch.empty(1, oh, ow, 3, dtype=theta.dtype, device=theta.device)
+	x := ts.MustEmpty([]int64{oh, ow, 3}, dtype, device)
+
 	startX := float64(-ow)*0.5 + d
 	endX := float64(ow)*0.5 + d - 1.0
 	xGrid := ts.MustLinspace(ts.FloatScalar(startX), ts.FloatScalar(endX), []int64{ow}, dtype, device)
 
-	// y_grid = torch.linspace(-oh * 0.5 + d, oh * 0.5 + d - 1, steps=oh, device=theta.device).unsqueeze_(-1)
 	startY := float64(-oh)*0.5 + d
 	endY := float64(oh)*0.5 + d - 1.0
-	yGrid := ts.MustLinspace(ts.FloatScalar(startY), ts.FloatScalar(endY), []int64{oh}, dtype, device)
+	yGrid := ts.MustLinspace(ts.FloatScalar(startY), ts.FloatScalar(endY), []int64{oh}, dtype, device).MustUnsqueeze(-1, true)
+
+	oneGrid := ts.MustOnes([]int64{ow}, dtype, device)
 
 	// base_grid[..., 0].copy_(x_grid)
 	// base_grid[..., 1].copy_(y_grid)
 	// base_grid[..., 2].fill_(1)
-	baseDim := baseGrid.MustSize()
-	for i := 0; i < int(baseDim[1]); i++ {
-		view := baseGrid.MustSelect(0, 0, false).MustSelect(0, int64(i), true).MustSelect(1, 0, true)
-		view.Copy_(xGrid)
-		view.MustDrop()
-	}
-	for i := 0; i < int(baseDim[2]); i++ {
-		view := baseGrid.MustSelect(0, 0, false).MustSelect(1, int64(i), true).MustSelect(1, 1, true)
-		view.Copy_(yGrid)
-		view.MustDrop()
-	}
+	xview := x.MustTranspose(2, 0, false).MustSelect(0, 0, true).MustTranspose(0, 1, true)
+	xview.Copy_(xGrid)
+	xview.MustDrop()
 
-	for i := 0; i < int(baseDim[2]); i++ {
-		view := baseGrid.MustSelect(0, 0, false).MustSelect(1, int64(i), true).MustSelect(1, 2, true)
-		// view.Fill_(ts.FloatScalar(1.0)) // NOTE. THIS CAUSES MEMORY LEAK!!!!
-		oneTs := view.MustOnesLike(false)
-		view.Copy_(oneTs)
-		oneTs.MustDrop()
-		view.MustDrop()
-	}
+	yview := x.MustTranspose(2, 0, false).MustSelect(0, 1, true).MustTranspose(0, 1, true)
+	yview.Copy_(yGrid)
+	yview.MustDrop()
 
-	// rescaled_theta = theta.transpose(1, 2) / torch.tensor([0.5 * w, 0.5 * h], dtype=theta.dtype, device=theta.device)
+	oview := x.MustTranspose(2, 0, false).MustSelect(0, 2, true).MustTranspose(0, 1, true)
+	oview.Copy_(oneGrid)
+	oview.MustDrop()
 
 	// rescaled_theta1 = theta1.transpose(1, 2) / torch.tensor([0.5 * ow, 0.5 * oh], dtype=dtype, device=device)
 	divTs := ts.MustOfSlice([]float64{0.5 * float64(w), 0.5 * float64(h)}).MustTotype(dtype, true).MustTo(device, true)
@@ -1088,9 +1078,7 @@ func genAffineGrid(theta *ts.Tensor, w, h, ow, oh int64) *ts.Tensor {
 	divTs.MustDrop()
 
 	// output_grid = base_grid.view(1, oh * ow, 3).bmm(rescaled_theta)
-	outputGrid := baseGrid.MustView([]int64{1, oh * ow, 3}, false).MustBmm(rescaledTheta, true).MustView([]int64{1, oh, ow, 2}, true)
-
-	baseGrid.MustDrop()
+	outputGrid := x.MustView([]int64{1, oh * ow, 3}, true).MustBmm(rescaledTheta, true).MustView([]int64{1, oh, ow, 2}, true)
 	xGrid.MustDrop()
 	yGrid.MustDrop()
 	rescaledTheta.MustDrop()

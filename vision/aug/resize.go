@@ -26,11 +26,23 @@ func (rs *ResizeModule) Forward(x *ts.Tensor) *ts.Tensor {
 		err := fmt.Errorf("Invalid dtype. Expect uint8 (Byte) dtype. Got %v\n", dtype)
 		panic(err)
 	}
-	out, err := vision.Resize(x, rs.width, rs.height)
+
+	device := x.MustDevice()
+	var xCPU *ts.Tensor
+	if device != gotch.CPU {
+		xCPU = x.MustTo(device, false)
+	} else {
+		xCPU = x.MustShallowClone()
+	}
+
+	out, err := vision.Resize(xCPU, rs.width, rs.height)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return out
+
+	xCPU.MustDrop()
+
+	return out.MustTo(device, true)
 }
 
 func WithResize(h, w int64) Option {
@@ -42,3 +54,177 @@ func WithResize(h, w int64) Option {
 
 // TODO.
 type RandomResizedCrop struct{}
+
+type DownSample struct{}
+
+func newDownSample(p float64) *DownSample {
+	return &DownSample{}
+}
+
+// Forward implements ts.Module for RandRotateModule
+// NOTE. input tensor must be uint8 (Byte) dtype otherwise panic!
+func (rs *DownSample) Forward(x *ts.Tensor) *ts.Tensor {
+	dtype := x.DType()
+	if dtype != gotch.Uint8 {
+		err := fmt.Errorf("Invalid dtype. Expect uint8 (Byte) dtype. Got %v\n", dtype)
+		panic(err)
+	}
+
+	device := x.MustDevice()
+	h := x.MustSize()[1]
+	w := x.MustSize()[2]
+	var xCPU *ts.Tensor
+	if device != gotch.CPU {
+		xCPU = x.MustTo(device, false)
+	} else {
+		xCPU = x.MustShallowClone()
+	}
+
+	out, err := vision.Resize(xCPU, w/2, h/2)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	xCPU.MustDrop()
+	return out.MustTo(device, true)
+}
+
+type ZoomIn struct {
+	v float64 // v should be [0, 0.5]
+}
+
+func newZoomIn(v float64) *ZoomIn {
+	return &ZoomIn{v: v}
+}
+
+func WithZoomIn(v float64) Option {
+	if v < 0 || v > 0.5 {
+		err := fmt.Errorf("Invalid input value. Expect value in range [0, 0.5]. Got %v\n", v)
+		panic(err)
+	}
+	return func(o *Options) {
+		ds := newZoomIn(v)
+		o.zoomIn = ds
+	}
+}
+
+// Forward implements ts.Module for RandRotateModule
+// NOTE. input tensor must be uint8 (Byte) dtype otherwise panic!
+func (rs *ZoomIn) Forward(x *ts.Tensor) *ts.Tensor {
+	dtype := x.DType()
+	if dtype != gotch.Uint8 {
+		err := fmt.Errorf("Invalid dtype. Expect uint8 (Byte) dtype. Got %v\n", dtype)
+		panic(err)
+	}
+
+	device := x.MustDevice()
+	h := x.MustSize()[1]
+	w := x.MustSize()[2]
+	var xCPU *ts.Tensor
+	if device != gotch.CPU {
+		xCPU = x.MustTo(device, false)
+	} else {
+		xCPU = x.MustShallowClone()
+	}
+
+	var out *ts.Tensor
+	var err error
+	r := randPvalue()
+	switch {
+	case r < rs.v:
+		cropW := int64(rs.v) * w
+		cropH := int64(rs.v) * h
+		newW := w - cropW
+		newH := h - cropH
+		// img = PIL.ImageOps.fit(img, size=(new_w,new_h), bleed=v/2, method=Image.BILINEAR)
+		fitImg := fitImg(xCPU, newW, newH)
+		xCPU.MustDrop()
+		// return img.resize((w,h), resample=Image.BILINEAR)
+		out, err = vision.Resize(fitImg, w, h)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fitImg.MustDrop()
+	default:
+		out = x.MustShallowClone()
+	}
+
+	return out.MustTo(device, true)
+}
+
+// TODO.
+func fitImg(x *ts.Tensor, w, h int64) *ts.Tensor {
+
+	panic("Not implemented")
+}
+
+type ZoomOut struct {
+	v float64 // v should be [0, 0.5]
+}
+
+func newZoomOut(v float64) *ZoomOut {
+	return &ZoomOut{v: v}
+}
+
+func WithZoomOut(v float64) Option {
+	if v < 0 || v > 0.5 {
+		err := fmt.Errorf("Invalid input value. Expect value in range [0, 0.5]. Got %v\n", v)
+		panic(err)
+	}
+	return func(o *Options) {
+		ds := newZoomOut(v)
+		o.zoomOut = ds
+	}
+}
+
+// Forward implements ts.Module for RandRotateModule
+// NOTE. input tensor must be uint8 (Byte) dtype otherwise panic!
+func (rs *ZoomOut) Forward(x *ts.Tensor) *ts.Tensor {
+	dtype := x.DType()
+	if dtype != gotch.Uint8 {
+		err := fmt.Errorf("Invalid dtype. Expect uint8 (Byte) dtype. Got %v\n", dtype)
+		panic(err)
+	}
+
+	device := x.MustDevice()
+	h := x.MustSize()[1]
+	w := x.MustSize()[2]
+	var xCPU *ts.Tensor
+	if device != gotch.CPU {
+		xCPU = x.MustTo(device, false)
+	} else {
+		xCPU = x.MustShallowClone()
+	}
+
+	var out *ts.Tensor
+	var err error
+	r := randPvalue()
+	switch {
+	case r < rs.v:
+		padW := int64(rs.v) * w
+		padH := int64(rs.v) * h
+
+		padImg := padImg(xCPU, padW, padH)
+		xCPU.MustDrop()
+		// return img.resize((w,h), resample=Image.BILINEAR)
+		out, err = vision.Resize(padImg, w, h)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		padImg.MustDrop()
+	default:
+		out = x.MustShallowClone()
+	}
+
+	return out.MustTo(device, true)
+}
+
+// TODO.
+func padImg(x *ts.Tensor, w, h int64) *ts.Tensor {
+
+	// img = np.asarray(img)
+	// img = np.pad(img, [(pad_h//2,pad_h//2), (pad_w//2,pad_w//2), (0,0)], mode='reflect')
+	return x.MustConstantPadNd([]int64{h / 2, h / 2, w / 2, w / 2}, false)
+}

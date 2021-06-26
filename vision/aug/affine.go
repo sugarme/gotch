@@ -139,11 +139,11 @@ type affineOption func(*affineOptions)
 
 func defaultAffineOptions() *affineOptions {
 	return &affineOptions{
-		degree:            []int64{-180, 180},
-		translate:         nil,
-		scale:             nil,
-		shear:             []float64{-180.0, 180.0},
-		interpolationMode: "bilinear",
+		degree:            []int64{0, 0},
+		translate:         []float64{0, 0},
+		scale:             []float64{1, 1},
+		shear:             []float64{0, 0},
+		interpolationMode: "nearest",
 		fillValue:         []float64{0.0, 0.0, 0.0},
 	}
 }

@@ -44,6 +44,9 @@ type Options struct {
 	randomAutocontrast    *RandomAutocontrast
 	randomAdjustSharpness *RandomAdjustSharpness
 	randomEqualize        *RandomEqualize
+	downSample            *DownSample
+	zoomIn                *ZoomIn
+	zoomOut               *ZoomOut
 	normalize             *Normalize
 }
 
@@ -68,6 +71,9 @@ func defaultOption() *Options {
 		randomAutocontrast:    nil,
 		randomAdjustSharpness: nil,
 		randomEqualize:        nil,
+		downSample:            nil,
+		zoomIn:                nil,
+		zoomOut:               nil,
 		normalize:             nil,
 	}
 }
@@ -163,6 +169,18 @@ func Compose(opts ...Option) (Transformer, error) {
 
 	if augOpts.normalize != nil {
 		augs.Add(augOpts.normalize)
+	}
+
+	if augOpts.downSample != nil {
+		augs.Add(augOpts.downSample)
+	}
+
+	if augOpts.zoomIn != nil {
+		augs.Add(augOpts.zoomIn)
+	}
+
+	if augOpts.zoomOut != nil {
+		augs.Add(augOpts.zoomOut)
 	}
 
 	return &Augment{augs}, nil
