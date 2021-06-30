@@ -51,11 +51,20 @@ func tOne() {
 	// t, err := aug.Compose(aug.WithRandomAutocontrast(1.0))
 	// t, err := aug.Compose(aug.WithRandomSolarize(aug.WithSolarizeThreshold(125), aug.WithSolarizePvalue(1.0)))
 	// t, err := aug.Compose(aug.WithRandomAdjustSharpness(aug.WithSharpnessPvalue(1.0), aug.WithSharpnessFactor(10)))
-	// t, err := aug.Compose(aug.WithRandRotate(0, 360))
-	// Down sampling
-	// t, err := aug.Compose(aug.WithResize(h/2, w/2)) // NOTE. WithResize just works on CPU.
-	// t, err := aug.Compose(aug.WithResize(320, 320)) // NOTE. WithResize just works on CPU.
+
+	// Rotate
+	// t, err := aug.Compose(aug.WithRandRotate(15, 15))
+	// t, err := aug.Compose(aug.WithRotate(15))
+	// t, err := aug.Compose(aug.WithRandomAffine(aug.WithAffineDegree([]int64{0, 15})))
+
+	// DownSample
+	// t, err := aug.Compose(aug.WithResize(h/2, w/2))
+	// t, err := aug.Compose(aug.WithResize(320, 320))
+	// ZoomOut
+	// t, err := aug.Compose(aug.WithZoomOut(0.3))
+
 	// t, err := aug.Compose(aug.WithRandomPosterize(aug.WithPosterizeBits(2), aug.WithPosterizePvalue(1.0)))
+
 	// t, err := aug.Compose(aug.WithRandomPerspective(aug.WithPerspectiveScale(0.6), aug.WithPerspectivePvalue(1.0)))
 	// t, err := aug.Compose(aug.WithNormalize(aug.WithNormalizeMean([]float64{0.485, 0.456, 0.406}), aug.WithNormalizeStd([]float64{0.229, 0.224, 0.225})))
 	// t, err := aug.Compose(aug.WithRandomInvert(1.0))
@@ -64,12 +73,18 @@ func tOne() {
 	// t, err := aug.Compose(aug.WithRandomHFlip(1.0))
 	// t, err := aug.Compose(aug.WithRandomEqualize(1.0))
 	// t, err := aug.Compose(aug.WithRandomCutout(aug.WithCutoutValue([]int64{124, 96, 255}), aug.WithCutoutScale([]float64{0.01, 0.1}), aug.WithCutoutRatio([]float64{0.5, 0.5}), aug.WithCutoutPvalue(1.0)))
+	t, err := aug.Compose(aug.WithRandomCutout(aug.WithCutoutValue([]int64{127, 127, 127}), aug.WithCutoutRatio([]float64{0.01, 0.2}), aug.WithCutoutPvalue(1.0)))
+	// t, err := aug.Compose(aug.WithRandomCutout(aug.WithCutoutScale([]float64{0.3, 0.3}), aug.WithCutoutPvalue(1.0)))
+
 	// t, err := aug.Compose(aug.WithCenterCrop([]int64{320, 320}))
 	// t, err := aug.Compose(aug.WithRandomAutocontrast())
-	// t, err := aug.Compose(aug.WithColorJitter(0.3, 0.3, 0.3, 0.3))
+	// t, err := aug.Compose(aug.WithColorJitter(aug.WithColorBrightness([]float64{1.3, 1.3})))
+	// t, err := aug.Compose(aug.WithColorJitter(aug.WithColorSaturation([]float64{1.3, 1.3})))
+	// t, err := aug.Compose(aug.WithColorJitter(aug.WithColorContrast([]float64{1.3, 1.3})))
+	// t, err := aug.Compose(aug.WithColorJitter(aug.WithColorHue([]float64{0.3})))
 	// t, err := aug.Compose(aug.WithGaussianBlur([]int64{5, 5}, []float64{1.0, 2.0}))
 	// t, err := aug.Compose(aug.WithRandomAffine(aug.WithAffineDegree([]int64{0, 15}), aug.WithAffineShear([]float64{0, 15})))
-	t, err := aug.Compose(aug.WithRandomAffine(aug.WithAffineDegree([]int64{0, 15}), aug.WithAffineTranslate([]float64{0.0, 0.1})))
+	// t, err := aug.Compose(aug.WithRandomAffine(aug.WithAffineDegree([]int64{0, 15}), aug.WithAffineTranslate([]float64{0.0, 0.1})))
 
 	out := t.Transform(imgTs)
 	fname := fmt.Sprintf("./bb-transformed.jpg")
@@ -100,7 +115,7 @@ func tMany() {
 			aug.WithRandomCutout(),
 			aug.OneOf(
 				0.3,
-				aug.WithColorJitter(0.3, 0.3, 0.3, 0.4),
+				aug.WithColorJitter(aug.WithColorBrightness([]float64{0.3})),
 				aug.WithRandomGrayscale(1.0),
 			),
 			aug.OneOf(

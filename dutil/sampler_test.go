@@ -84,7 +84,7 @@ func TestNewBatchSampler(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected invalid batch size error.")
 	}
-	_, err = dutil.NewBatchSampler(10, 1, true)
+	_, err = dutil.NewBatchSampler(10, 0, true)
 	if err == nil {
 		t.Errorf("Expected invalid batch size error.")
 	}

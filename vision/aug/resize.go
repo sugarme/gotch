@@ -188,8 +188,6 @@ func (rs *ZoomOut) Forward(x *ts.Tensor) *ts.Tensor {
 	}
 
 	device := x.MustDevice()
-	h := x.MustSize()[1]
-	w := x.MustSize()[2]
 	var xCPU *ts.Tensor
 	if device != gotch.CPU {
 		xCPU = x.MustTo(device, false)
@@ -197,34 +195,28 @@ func (rs *ZoomOut) Forward(x *ts.Tensor) *ts.Tensor {
 		xCPU = x.MustShallowClone()
 	}
 
-	var out *ts.Tensor
-	var err error
-	r := randPvalue()
-	switch {
-	case r < rs.v:
-		padW := int64(rs.v) * w
-		padH := int64(rs.v) * h
+	Fimg := Byte2FloatImage(xCPU)
 
-		padImg := padImg(xCPU, padW, padH)
-		xCPU.MustDrop()
-		// return img.resize((w,h), resample=Image.BILINEAR)
-		out, err = vision.Resize(padImg, w, h)
-		if err != nil {
-			log.Fatal(err)
-		}
+	fmt.Printf("Fimg size: %v\n", Fimg.MustSize())
+	h := float64(Fimg.MustSize()[1])
+	w := float64(Fimg.MustSize()[2])
+	padW := int64(rs.v * w)
+	padH := int64(rs.v * h)
+	fmt.Printf("padH: %v - padW: %v\n", padH, padW)
 
-		padImg.MustDrop()
-	default:
-		out = x.MustShallowClone()
+	// img = np.pad(img, [(pad_h//2,pad_h//2), (pad_w//2,pad_w//2), (0,0)], mode='reflect')
+	padding := []int64{padH / 2, padH / 2, padW / 2, padW / 2, 0, 0}
+	fmt.Printf("padding: %+v\n", padding)
+	padImg := pad(Fimg, padding, "reflection")
+	xCPU.MustDrop()
+	Fimg.MustDrop()
+	// return img.resize((w,h), resample=Image.BILINEAR)
+	out, err := vision.Resize(padImg, int64(w), int64(h))
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	padImg.MustDrop()
+
 	return out.MustTo(device, true)
-}
-
-// TODO.
-func padImg(x *ts.Tensor, w, h int64) *ts.Tensor {
-
-	// img = np.asarray(img)
-	// img = np.pad(img, [(pad_h//2,pad_h//2), (pad_w//2,pad_w//2), (0,0)], mode='reflect')
-	return x.MustConstantPadNd([]int64{h / 2, h / 2, w / 2, w / 2}, false)
 }

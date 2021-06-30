@@ -172,8 +172,8 @@ type BatchSampler struct {
 
 // NewBatchSampler creates a new BatchSampler.
 func NewBatchSampler(n, batchSize int, dropLast bool, shuffleOpt ...bool) (*BatchSampler, error) {
-	if batchSize > n || batchSize <= 1 {
-		err := fmt.Errorf("Invalid batch size: batch size must be greater than 1 and less or equal to number of samples(%v).", n)
+	if batchSize > n || batchSize < 1 {
+		err := fmt.Errorf("Invalid batch size: batch size must be equal or greater than 1 and less or equal to number of samples(%v). Got %v", n, batchSize)
 		return nil, err
 	}
 

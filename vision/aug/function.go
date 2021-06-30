@@ -189,10 +189,6 @@ func assertChannels(x *ts.Tensor, permitted []int64) {
 
 func blend(img1, img2 *ts.Tensor, ratio float64) *ts.Tensor {
 	dtype := img1.DType()
-	// bound := 1.0
-	// if dtype == gotch.Double || dtype == gotch.Float {
-	// bound = 255.0
-	// }
 	bound := 255.0
 
 	// (ratio * img1 + (1.0 - ratio) * img2).clamp(0, bound).to(img1.dtype)
@@ -416,9 +412,10 @@ func hsv2RGB(x *ts.Tensor) *ts.Tensor {
 	h := &hsvTs[0]
 	s := &hsvTs[1]
 	v := &hsvTs[2]
-
+	// i = torch.floor(h * 6.0)
 	i := h.MustMul1(ts.FloatScalar(6.0), false).MustFloor(true)
-	f := h.MustMul1(ts.FloatScalar(0.6), false).MustSub(i, true)
+	// f = (h * 6.0) - i
+	f := h.MustMul1(ts.FloatScalar(6.0), false).MustSub(i, true)
 
 	// p = torch.clamp((v * (1.0 - s)), 0.0, 1.0)
 	x1 := s.MustMul1(ts.FloatScalar(-1), false).MustAdd1(ts.FloatScalar(1.0), true)
@@ -437,10 +434,13 @@ func hsv2RGB(x *ts.Tensor) *ts.Tensor {
 	x3 := sub1.MustMul1(ts.FloatScalar(-1), true).MustAdd1(ts.FloatScalar(1.0), true).MustMul(v, true) // deleted sub1
 	t := x3.MustClamp(ts.FloatScalar(0.0), ts.FloatScalar(1.0), true)                                  // deleted x3
 
+	// i = i.to(dtype=torch.int32)
+	i = i.MustTotype(gotch.Int, true)
 	//i = i % 6
-	iremainder := i.MustRemainder(ts.FloatScalar(6), true) // delete i
+	iremainder := i.MustRemainder(ts.IntScalar(6), true) // delete i
 	// torch.arange(6, device=i.device).view(-1, 1, 1)
 	x4 := ts.MustArange(ts.FloatScalar(6), gotch.Float, iremainder.MustDevice()).MustView([]int64{-1, 1, 1}, true)
+	// mask = i.unsqueeze(dim=-3) == torch.arange(6, device=i.device).view(-1, 1, 1)
 	mask := iremainder.MustUnsqueeze(-3, true).MustEq1(x4, true).MustTotype(x.DType(), true) // delete iremainder
 	x4.MustDrop()
 
@@ -494,6 +494,7 @@ func adjustHue(x *ts.Tensor, hue float64) *ts.Tensor {
 	h := &hsvTs[0]
 	s := &hsvTs[1]
 	v := &hsvTs[2]
+	// h = (h + hue_factor) % 1.0
 	hAdj := h.MustAdd1(ts.FloatScalar(hue), false).MustRemainder(ts.FloatScalar(1.0), true)
 
 	hsvAdj := ts.MustStack([]ts.Tensor{*hAdj, *s, *v}, -3)

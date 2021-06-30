@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `vision/aug` all input image should be `uint8` (Byte) dtype and transformed output has the same dtype (uint8) so that `Compose()` can compose any transformer options.
 - Fixed wrong result of `aug.RandomAdjustSharpness`
 - Fixed memory leak at `aug/function.getAffineGrid`
+- Changed `vision/aug` and correct ColorJitter
+- Changed `vision/aug` and correct Resize
+- Changed `dutil/sampler` to accept batchsize from 1.
 
 ## [0.3.10]
 - Update installation at README.md
