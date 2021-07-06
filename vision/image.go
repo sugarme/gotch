@@ -114,7 +114,6 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 		return nil, err
 	}
 
-	// TODO: check it
 	h := tsSize[1]
 	w := tsSize[0]
 
@@ -146,12 +145,10 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 		tmpTs.MustDrop()
 
 		var tensorW *ts.Tensor
-		var delTensorW bool = false // Flag whether to delete tensorW to prevent memory leak.
 		if resizeW == outW {
-			tensorW = tsCHW
+			tensorW = tsCHW.MustShallowClone()
 		} else {
 			tensorW, err = tsCHW.Narrow(2, (resizeW-outW)/2, outW, false)
-			delTensorW = true
 			if err != nil {
 				err = fmt.Errorf("resizePreserveAspectRatioHWC - ts.Narrow() method call err: %v\n", err)
 				return nil, err
@@ -169,9 +166,7 @@ func resizePreserveAspectRatioHWC(t *ts.Tensor, outW int64, outH int64) (*ts.Ten
 				return nil, err
 			}
 
-			if delTensorW {
-				tensorW.MustDrop()
-			}
+			tensorW.MustDrop()
 			return tensorH, nil
 
 		default:

@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `vision/aug` and correct ColorJitter
 - Changed `vision/aug` and correct Resize
 - Changed `dutil/sampler` to accept batchsize from 1.
+- Fixed double free in `vision/image.go/resizePreserveAspectRatio`
+- Fixed incorrect ctype `long` caused compiling error in MacOS as noted on [#44]
 
 ## [0.3.10]
 - Update installation at README.md
@@ -119,3 +121,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#26]: https://github.com/sugarme/gotch/issues/26
 [#30]: https://github.com/sugarme/gotch/issues/30
 [#32]: https://github.com/sugarme/gotch/issues/32
+[#44]: https://github.com/sugarme/gotch/issues/44
