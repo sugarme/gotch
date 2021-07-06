@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.12]
 - Fixed multiple memory leakage at `vision/image.go`
 - Fixed memory leakage at `dutil/dataloader.go`
 - Fixed multiple memory leakage at `efficientnet.go`
@@ -23,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `dutil/sampler` to accept batchsize from 1.
 - Fixed double free in `vision/image.go/resizePreserveAspectRatio`
 - Fixed incorrect ctype `long` caused compiling error in MacOS as noted on [#44]
+
+## [0.3.11]
+
+Same as [0.3.10]
 
 ## [0.3.10]
 - Update installation at README.md
