@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
-## [0.3.12]
+## [0.3.13]
 - Fixed multiple memory leakage at `vision/image.go`
 - Fixed memory leakage at `dutil/dataloader.go`
 - Fixed multiple memory leakage at `efficientnet.go`
@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `vision/aug` and correct Resize
 - Changed `dutil/sampler` to accept batchsize from 1.
 - Fixed double free in `vision/image.go/resizePreserveAspectRatio`
+
+## [0.3.12]
+
+Skip this tag
 
 ## [0.3.11]
 
