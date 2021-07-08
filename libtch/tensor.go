@@ -464,6 +464,12 @@ func AtoGetLearningRates(coptimizer Coptimizer) []float64 {
 	C.ato_get_learning_rates(coptimizer, cLRsPtr, cngroup)
 	ngroup := *(*int)(unsafe.Pointer(cngroup))
 
+	// NOTE. temp fix `panic: runtime error: makeslice: len out of range`
+	// due to error in C side with ngroup ridiculous huge number (ie. ngroup: 139745350909953)
+	if ngroup > 1000 {
+		ngroup = 1
+	}
+
 	var lrs []float64 = make([]float64, ngroup)
 	var currPtr *C.double = cLRsPtr
 	for i := 0; i < ngroup; i++ {
