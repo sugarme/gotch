@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Fixed temporary fix huge number of learning group returned from C at `libtch/tensor.go AtoGetLearningRates`
+- Fixed incorrect `nn.AdamWConfig` and some documentation.
+- Fixed - reworked on `vision.ResNet` and `vision.DenseNet` to fix incorrect layers and memory leak
+- Changed `dutil.DataLoader.Reset()` to reshuffle when resetting DataLoader if flag is true
+- Changed `dutil.DataLoader.Next()`. Deleted case batch size == 1 to make consistency by always returning items in a slice `[]element dtype` even with batchsize = 1.
+- Added `nn.CrossEntropyLoss` and `nn.BCELoss` 
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.

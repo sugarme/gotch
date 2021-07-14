@@ -27,5 +27,3 @@ func (ts *Tensor) AccuracyForLogits(targets *Tensor) (retVal *Tensor) {
 func (ts *Tensor) MaxPool2DDefault(ksize int64, del bool) (retVal *Tensor) {
 	return ts.MustMaxPool2d([]int64{ksize, ksize}, []int64{ksize, ksize}, []int64{0, 0}, []int64{1, 1}, false, del)
 }
-
-// TODO: continue

@@ -14,6 +14,7 @@ type DataLoader struct {
 	indexes   []int // order of samples in dataset for interation.
 	batchSize int
 	currIdx   int
+	sampler   Sampler
 }
 
 func NewDataLoader(data Dataset, s Sampler) (*DataLoader, error) {
@@ -40,6 +41,7 @@ func NewDataLoader(data Dataset, s Sampler) (*DataLoader, error) {
 		indexes:   s.Sample(),
 		batchSize: s.BatchSize(),
 		currIdx:   0,
+		sampler:   s,
 	}, nil
 }
 
@@ -70,18 +72,7 @@ func (dl *DataLoader) Next() (interface{}, error) {
 		return nil, err
 	}
 
-	// Non-batching
-	if dl.batchSize == 1 {
-		item, err := dl.dataset.Item(dl.currIdx)
-		if err != nil {
-			return nil, err
-		}
-
-		dl.currIdx += 1
-		return item, nil
-	}
-
-	// Batch sampling
+	// determine element dtype
 	elem, err := dl.dataset.Item(0)
 	if err != nil {
 		return nil, err
@@ -98,6 +89,7 @@ func (dl *DataLoader) Next() (interface{}, error) {
 		elem.(*ts.Tensor).MustDrop()
 	}
 
+	// Get a batch based on batch size
 	items := reflect.MakeSlice(reflect.SliceOf(elemType), 0, dl.dataset.Len())
 	nextIndex := dl.currIdx + dl.batchSize
 
@@ -123,7 +115,14 @@ func (dl *DataLoader) HasNext() bool {
 }
 
 // Reset reset index to start position.
-func (dl *DataLoader) Reset() {
+func (dl *DataLoader) Reset(shuffleOpt ...bool) {
+	shuffle := false
+	if len(shuffleOpt) > 0 {
+		shuffle = shuffleOpt[0]
+	}
+	if shuffle {
+		dl.indexes = dl.sampler.Sample()
+	}
 	dl.currIdx = 0
 }
 

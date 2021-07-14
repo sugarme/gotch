@@ -21,36 +21,49 @@ func dnConv2d(p *nn.Path, cIn, cOut, ksize, padding, stride int64) *nn.Conv2D {
 	return nn.NewConv2D(p, cIn, cOut, ksize, config)
 }
 
-func denseLayer(p *nn.Path, cIn, bnSize, growth int64) ts.ModuleT {
+type denseLayer struct {
+	Conv1 *nn.Conv2D
+	Bn1   *nn.BatchNorm
+	Conv2 *nn.Conv2D
+	Bn2   *nn.BatchNorm
+}
+
+func (l *denseLayer) ForwardT(xs *ts.Tensor, train bool) *ts.Tensor {
+	ys1 := xs.ApplyT(l.Bn1, train)
+	ys2 := ys1.MustRelu(true)
+	ys3 := ys2.Apply(l.Conv1)
+	ys2.MustDrop()
+	ys4 := ys3.ApplyT(l.Bn2, train)
+	ys3.MustDrop()
+	ys5 := ys4.MustRelu(true)
+	ys := ys5.Apply(l.Conv2)
+	ys5.MustDrop()
+
+	res := ts.MustCat([]ts.Tensor{*xs, *ys}, 1)
+	ys.MustDrop()
+
+	return res
+}
+
+func newDenseLayer(p *nn.Path, cIn, bnSize, growth int64) ts.ModuleT {
 	cInter := bnSize * growth
 	bn1 := nn.BatchNorm2D(p.Sub("norm1"), cIn, nn.DefaultBatchNormConfig())
 	conv1 := dnConv2d(p.Sub("conv1"), cIn, cInter, 1, 0, 1)
 	bn2 := nn.BatchNorm2D(p.Sub("norm2"), cInter, nn.DefaultBatchNormConfig())
 	conv2 := dnConv2d(p.Sub("conv2"), cInter, growth, 3, 1, 1)
 
-	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
-		ys1 := xs.ApplyT(bn1, train)
-		ys2 := ys1.MustRelu(true)
-		ys3 := ys2.Apply(conv1)
-		ys2.MustDrop()
-		ys4 := ys3.ApplyT(bn2, train)
-		ys3.MustDrop()
-		ys5 := ys4.MustRelu(true)
-		ys := ys5.Apply(conv2)
-		ys5.MustDrop()
-
-		res := ts.MustCat([]ts.Tensor{*xs, *ys}, 1)
-		ys.MustDrop()
-
-		return res
-	})
+	return &denseLayer{
+		Bn1:   bn1,
+		Conv1: conv1,
+		Bn2:   bn2,
+		Conv2: conv2,
+	}
 }
 
 func denseBlock(p *nn.Path, cIn, bnSize, growth, nlayers int64) ts.ModuleT {
 	seq := nn.SeqT()
-
 	for i := 0; i < int(nlayers); i++ {
-		seq.Add(denseLayer(p.Sub(fmt.Sprintf("denselayer%v", 1+i)), cIn+int64(i)*growth, bnSize, growth))
+		seq.Add(newDenseLayer(p.Sub(fmt.Sprintf("denselayer%v", 1+i)), cIn+(int64(i)*growth), bnSize, growth))
 	}
 
 	return seq
@@ -74,7 +87,7 @@ func transition(p *nn.Path, cIn, cOut int64) ts.ModuleT {
 	return seq
 }
 
-func densenet(p *nn.Path, cIn, cOut, bnSize int64, blockConfig []int64, growth int64) ts.ModuleT {
+func densenet(p *nn.Path, cIn, bnSize int64, growth int64, blockConfig []int64, cOut int64) ts.ModuleT {
 	fp := p.Sub("features")
 	seq := nn.SeqT()
 
@@ -90,12 +103,13 @@ func densenet(p *nn.Path, cIn, cOut, bnSize int64, blockConfig []int64, growth i
 	nfeat := cIn
 
 	for i, nlayers := range blockConfig {
-		seq.Add(denseBlock(fp.Sub(fmt.Sprintf("densebloc%v", 1+i)), nfeat, bnSize, growth, nlayers))
+		seq.Add(denseBlock(fp.Sub(fmt.Sprintf("denseblock%v", 1+i)), nfeat, bnSize, growth, nlayers))
 
 		nfeat += nlayers * growth
 
 		if i+1 != len(blockConfig) {
 			seq.Add(transition(fp.Sub(fmt.Sprintf("transition%v", 1+i)), nfeat, nfeat/2))
+			nfeat = nfeat / 2
 		}
 	}
 
@@ -115,6 +129,7 @@ func densenet(p *nn.Path, cIn, cOut, bnSize int64, blockConfig []int64, growth i
 }
 
 func DenseNet121(p *nn.Path, nclasses int64) ts.ModuleT {
+	// path, cIn, bnSize, growth, blockConfig, cOut
 	return densenet(p, 64, 4, 32, []int64{6, 12, 24, 16}, nclasses)
 }
 

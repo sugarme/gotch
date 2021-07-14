@@ -145,16 +145,16 @@ type AdamWConfig struct {
 	Wd    float64
 }
 
-// DefaultAdamConfig creates AdamConfig with default values
-func DefaultAdamWConfig() *AdamConfig {
-	return &AdamConfig{
+// DefaultAdamWConfig creates AdamWConfig with default values
+func DefaultAdamWConfig() *AdamWConfig {
+	return &AdamWConfig{
 		Beta1: 0.9,
 		Beta2: 0.999,
-		Wd:    0.0,
+		Wd:    0.01,
 	}
 }
 
-// NewAdamConfig creates AdamConfig with specified values
+// NewAdamWConfig creates AdamWConfig with specified values
 func NewAdamWConfig(beta1, beta2, wd float64) *AdamWConfig {
 	return &AdamWConfig{
 		Beta1: beta1,
@@ -163,11 +163,12 @@ func NewAdamWConfig(beta1, beta2, wd float64) *AdamWConfig {
 	}
 }
 
-// Implement OptimizerConfig interface for AdamConfig
+// Implement OptimizerConfig interface for AdamWConfig
 func (c *AdamWConfig) buildCOpt(lr float64) (*ts.COptimizer, error) {
 	return ts.AdamW(lr, c.Beta1, c.Beta2, c.Wd)
 }
 
+// Build builds AdamW optimizer
 func (c *AdamWConfig) Build(vs *VarStore, lr float64) (*Optimizer, error) {
 	return defaultBuild(c, vs, lr)
 }
