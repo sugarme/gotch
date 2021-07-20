@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `nn.CrossEntropyLoss` and `nn.BCELoss` 
 - Fixed `tensor.ForwardIs` return `Tuple` and `TensorList` instead of always returning `TensorList`
 - Changed exporting augment options and make ColorJitter forward output dtype `uint8` for chaining with other augment options.
+- [#45] Fixed `init/RandInt` incorrect initialization 
+- [#48] Fixed `init/RandInit` when init with mean = 0.0.
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
@@ -143,3 +145,5 @@ Same as [0.3.10]
 [#30]: https://github.com/sugarme/gotch/issues/30
 [#32]: https://github.com/sugarme/gotch/issues/32
 [#44]: https://github.com/sugarme/gotch/issues/44
+[#45]: https://github.com/sugarme/gotch/issues/45
+[#48]: https://github.com/sugarme/gotch/issues/48
