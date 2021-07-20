@@ -35,7 +35,7 @@ type cutoutOptions struct {
 	rgbVal []int64 // RGB value
 }
 
-type cutoutOption func(o *cutoutOptions)
+type CutoutOption func(o *cutoutOptions)
 
 func defaultCutoutOptions() *cutoutOptions {
 	return &cutoutOptions{
@@ -55,7 +55,7 @@ func newRandomCutout(pvalue float64, scale, ratio []float64, rgbVal []int64) *Ra
 	}
 }
 
-func WithCutoutPvalue(p float64) cutoutOption {
+func WithCutoutPvalue(p float64) CutoutOption {
 	if p < 0 || p > 1 {
 		log.Fatalf("Cutout p-value must be in range from 0 to 1. Got %v\n", p)
 	}
@@ -64,7 +64,7 @@ func WithCutoutPvalue(p float64) cutoutOption {
 	}
 }
 
-func WithCutoutScale(scale []float64) cutoutOption {
+func WithCutoutScale(scale []float64) CutoutOption {
 	if len(scale) != 2 {
 		log.Fatalf("Cutout scale should be in a range of 2 elments. Got %v elements\n", len(scale))
 	}
@@ -73,7 +73,7 @@ func WithCutoutScale(scale []float64) cutoutOption {
 	}
 }
 
-func WithCutoutRatio(ratio []float64) cutoutOption {
+func WithCutoutRatio(ratio []float64) CutoutOption {
 	if len(ratio) != 2 {
 		log.Fatalf("Cutout ratio should be in a range of 2 elments. Got %v elements\n", len(ratio))
 	}
@@ -82,7 +82,7 @@ func WithCutoutRatio(ratio []float64) cutoutOption {
 	}
 }
 
-func WithCutoutValue(rgb []int64) cutoutOption {
+func WithCutoutValue(rgb []int64) CutoutOption {
 	var rgbVal []int64
 	switch len(rgb) {
 	case 1:
@@ -169,7 +169,7 @@ func (rc *RandomCutout) Forward(img *ts.Tensor) *ts.Tensor {
 	return bx
 }
 
-func WithRandomCutout(opts ...cutoutOption) Option {
+func WithRandomCutout(opts ...CutoutOption) Option {
 	params := defaultCutoutOptions()
 	for _, o := range opts {
 		o(params)

@@ -22,7 +22,7 @@ type solarizeOptions struct {
 	pvalue    float64
 }
 
-type solarizeOption func(*solarizeOptions)
+type SolarizeOption func(*solarizeOptions)
 
 func defaultSolarizeOptions() *solarizeOptions {
 	return &solarizeOptions{
@@ -31,19 +31,19 @@ func defaultSolarizeOptions() *solarizeOptions {
 	}
 }
 
-func WithSolarizePvalue(p float64) solarizeOption {
+func WithSolarizePvalue(p float64) SolarizeOption {
 	return func(o *solarizeOptions) {
 		o.pvalue = p
 	}
 }
 
-func WithSolarizeThreshold(th float64) solarizeOption {
+func WithSolarizeThreshold(th float64) SolarizeOption {
 	return func(o *solarizeOptions) {
 		o.threshold = th
 	}
 }
 
-func newRandomSolarize(opts ...solarizeOption) *RandomSolarize {
+func newRandomSolarize(opts ...SolarizeOption) *RandomSolarize {
 	params := defaultSolarizeOptions()
 
 	for _, o := range opts {
@@ -75,7 +75,7 @@ func (rs *RandomSolarize) Forward(x *ts.Tensor) *ts.Tensor {
 	return bx
 }
 
-func WithRandomSolarize(opts ...solarizeOption) Option {
+func WithRandomSolarize(opts ...SolarizeOption) Option {
 	rs := newRandomSolarize(opts...)
 
 	return func(o *Options) {

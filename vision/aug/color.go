@@ -222,5 +222,8 @@ func (c *ColorJitter) Forward(x *ts.Tensor) *ts.Tensor {
 		sOut.MustDrop()
 	}
 
-	return hOut
+	bx := Float2ByteImage(hOut)
+	hOut.MustDrop()
+
+	return bx
 }

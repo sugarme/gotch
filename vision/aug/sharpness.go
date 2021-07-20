@@ -21,7 +21,7 @@ type sharpnessOptions struct {
 	pvalue          float64
 }
 
-type sharpnessOption func(*sharpnessOptions)
+type SharpnessOption func(*sharpnessOptions)
 
 func defaultSharpnessOptions() *sharpnessOptions {
 	return &sharpnessOptions{
@@ -30,19 +30,19 @@ func defaultSharpnessOptions() *sharpnessOptions {
 	}
 }
 
-func WithSharpnessPvalue(p float64) sharpnessOption {
+func WithSharpnessPvalue(p float64) SharpnessOption {
 	return func(o *sharpnessOptions) {
 		o.pvalue = p
 	}
 }
 
-func WithSharpnessFactor(f float64) sharpnessOption {
+func WithSharpnessFactor(f float64) SharpnessOption {
 	return func(o *sharpnessOptions) {
 		o.sharpnessFactor = f
 	}
 }
 
-func newRandomAdjustSharpness(opts ...sharpnessOption) *RandomAdjustSharpness {
+func newRandomAdjustSharpness(opts ...SharpnessOption) *RandomAdjustSharpness {
 	p := defaultSharpnessOptions()
 	for _, o := range opts {
 		o(p)
@@ -67,7 +67,7 @@ func (ras *RandomAdjustSharpness) Forward(x *ts.Tensor) *ts.Tensor {
 	return out
 }
 
-func WithRandomAdjustSharpness(opts ...sharpnessOption) Option {
+func WithRandomAdjustSharpness(opts ...SharpnessOption) Option {
 	ras := newRandomAdjustSharpness(opts...)
 	return func(o *Options) {
 		o.randomAdjustSharpness = ras

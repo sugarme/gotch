@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed `dutil.DataLoader.Reset()` to reshuffle when resetting DataLoader if flag is true
 - Changed `dutil.DataLoader.Next()`. Deleted case batch size == 1 to make consistency by always returning items in a slice `[]element dtype` even with batchsize = 1.
 - Added `nn.CrossEntropyLoss` and `nn.BCELoss` 
+- Fixed `tensor.ForwardIs` return `Tuple` and `TensorList` instead of always returning `TensorList`
+- Changed exporting augment options and make ColorJitter forward output dtype `uint8` for chaining with other augment options.
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.

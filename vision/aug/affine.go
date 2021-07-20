@@ -110,7 +110,7 @@ func (ra *RandomAffine) Forward(x *ts.Tensor) *ts.Tensor {
 	return bx
 }
 
-func newRandomAffine(opts ...affineOption) *RandomAffine {
+func newRandomAffine(opts ...AffineOption) *RandomAffine {
 	p := defaultAffineOptions()
 	for _, o := range opts {
 		o(p)
@@ -135,7 +135,7 @@ type affineOptions struct {
 	fillValue         []float64
 }
 
-type affineOption func(*affineOptions)
+type AffineOption func(*affineOptions)
 
 func defaultAffineOptions() *affineOptions {
 	return &affineOptions{
@@ -148,43 +148,43 @@ func defaultAffineOptions() *affineOptions {
 	}
 }
 
-func WithAffineDegree(degree []int64) affineOption {
+func WithAffineDegree(degree []int64) AffineOption {
 	return func(o *affineOptions) {
 		o.degree = degree
 	}
 }
 
-func WithAffineTranslate(translate []float64) affineOption {
+func WithAffineTranslate(translate []float64) AffineOption {
 	return func(o *affineOptions) {
 		o.translate = translate
 	}
 }
 
-func WithAffineScale(scale []float64) affineOption {
+func WithAffineScale(scale []float64) AffineOption {
 	return func(o *affineOptions) {
 		o.scale = scale
 	}
 }
 
-func WithAffineShear(shear []float64) affineOption {
+func WithAffineShear(shear []float64) AffineOption {
 	return func(o *affineOptions) {
 		o.shear = shear
 	}
 }
 
-func WithAffineMode(mode string) affineOption {
+func WithAffineMode(mode string) AffineOption {
 	return func(o *affineOptions) {
 		o.interpolationMode = mode
 	}
 }
 
-func WithAffineFillValue(fillValue []float64) affineOption {
+func WithAffineFillValue(fillValue []float64) AffineOption {
 	return func(o *affineOptions) {
 		o.fillValue = fillValue
 	}
 }
 
-func WithRandomAffine(opts ...affineOption) Option {
+func WithRandomAffine(opts ...AffineOption) Option {
 	ra := newRandomAffine(opts...)
 	return func(o *Options) {
 		o.randomAffine = ra

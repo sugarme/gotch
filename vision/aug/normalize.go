@@ -24,7 +24,7 @@ type normalizeOptions struct {
 	std  []float64
 }
 
-type normalizeOption func(*normalizeOptions)
+type NormalizeOption func(*normalizeOptions)
 
 // Mean and SD can be calculated for specific dataset as follow:
 /*
@@ -54,19 +54,19 @@ func defaultNormalizeOptions() *normalizeOptions {
 	}
 }
 
-func WithNormalizeStd(std []float64) normalizeOption {
+func WithNormalizeStd(std []float64) NormalizeOption {
 	return func(o *normalizeOptions) {
 		o.std = std
 	}
 }
 
-func WithNormalizeMean(mean []float64) normalizeOption {
+func WithNormalizeMean(mean []float64) NormalizeOption {
 	return func(o *normalizeOptions) {
 		o.mean = mean
 	}
 }
 
-func newNormalize(opts ...normalizeOption) *Normalize {
+func newNormalize(opts ...NormalizeOption) *Normalize {
 	p := defaultNormalizeOptions()
 	for _, o := range opts {
 		o(p)
@@ -90,7 +90,7 @@ func (n *Normalize) Forward(x *ts.Tensor) *ts.Tensor {
 	return bx
 }
 
-func WithNormalize(opts ...normalizeOption) Option {
+func WithNormalize(opts ...NormalizeOption) Option {
 	n := newNormalize(opts...)
 	return func(o *Options) {
 		o.normalize = n

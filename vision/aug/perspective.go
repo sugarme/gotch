@@ -43,33 +43,33 @@ func defaultPerspectiveOptions() *perspectiveOptions {
 	}
 }
 
-type perspectiveOption func(*perspectiveOptions)
+type PerspectiveOption func(*perspectiveOptions)
 
-func WithPerspectivePvalue(p float64) perspectiveOption {
+func WithPerspectivePvalue(p float64) PerspectiveOption {
 	return func(o *perspectiveOptions) {
 		o.pvalue = p
 	}
 }
 
-func WithPerspectiveScale(s float64) perspectiveOption {
+func WithPerspectiveScale(s float64) PerspectiveOption {
 	return func(o *perspectiveOptions) {
 		o.distortionScale = s
 	}
 }
 
-func WithPerspectiveMode(m string) perspectiveOption {
+func WithPerspectiveMode(m string) PerspectiveOption {
 	return func(o *perspectiveOptions) {
 		o.interpolationMode = m
 	}
 }
 
-func WithPerspectiveValue(v []float64) perspectiveOption {
+func WithPerspectiveValue(v []float64) PerspectiveOption {
 	return func(o *perspectiveOptions) {
 		o.fillValue = v
 	}
 }
 
-func newRandomPerspective(opts ...perspectiveOption) *RandomPerspective {
+func newRandomPerspective(opts ...PerspectiveOption) *RandomPerspective {
 	params := defaultPerspectiveOptions()
 	for _, opt := range opts {
 		opt(params)
@@ -189,7 +189,7 @@ func (rp *RandomPerspective) Forward(x *ts.Tensor) *ts.Tensor {
 	return bx
 }
 
-func WithRandomPerspective(opts ...perspectiveOption) Option {
+func WithRandomPerspective(opts ...PerspectiveOption) Option {
 	rp := newRandomPerspective(opts...)
 	return func(o *Options) {
 		o.randomPerspective = rp

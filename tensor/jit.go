@@ -528,11 +528,19 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 
 				vals = append(vals, Tensor{v.Value().(lib.Ctensor)})
 			}
-			return &IValue{
-				value: vals,
-				kind:  TensorListVal,
-				name:  "TensorList",
-			}, nil
+			if len == 2 {
+				return &IValue{
+					value: vals,
+					kind:  TensorListVal,
+					name:  "Tuple",
+				}, nil
+			} else {
+				return &IValue{
+					value: vals,
+					kind:  TensorListVal,
+					name:  "TensorList",
+				}, nil
+			}
 		case "IntList":
 			var vals []int64
 			for _, civalue := range civalues {

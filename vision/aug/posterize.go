@@ -21,7 +21,7 @@ type posterizeOptions struct {
 	bits   uint8
 }
 
-type posterizeOption func(*posterizeOptions)
+type PosterizeOption func(*posterizeOptions)
 
 func defaultPosterizeOptions() *posterizeOptions {
 	return &posterizeOptions{
@@ -30,19 +30,19 @@ func defaultPosterizeOptions() *posterizeOptions {
 	}
 }
 
-func WithPosterizePvalue(p float64) posterizeOption {
+func WithPosterizePvalue(p float64) PosterizeOption {
 	return func(o *posterizeOptions) {
 		o.pvalue = p
 	}
 }
 
-func WithPosterizeBits(bits uint8) posterizeOption {
+func WithPosterizeBits(bits uint8) PosterizeOption {
 	return func(o *posterizeOptions) {
 		o.bits = bits
 	}
 }
 
-func newRandomPosterize(opts ...posterizeOption) *RandomPosterize {
+func newRandomPosterize(opts ...PosterizeOption) *RandomPosterize {
 	p := defaultPosterizeOptions()
 	for _, o := range opts {
 		o(p)
@@ -68,7 +68,7 @@ func (rp *RandomPosterize) Forward(x *ts.Tensor) *ts.Tensor {
 	return out
 }
 
-func WithRandomPosterize(opts ...posterizeOption) Option {
+func WithRandomPosterize(opts ...PosterizeOption) Option {
 	rp := newRandomPosterize(opts...)
 
 	return func(o *Options) {
