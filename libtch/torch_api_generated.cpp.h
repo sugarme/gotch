@@ -212,12 +212,6 @@ void atg__aminmax_dim(tensor *out__, tensor self, int64_t dim, int keepdim) {
   )
 }
 
-void atg__amp_foreach_non_finite_check_and_unscale_(tensor *out__, tensor *self_data, int self_len, tensor found_inf, tensor inv_scale) {
-  PROTECT(
-    auto outputs__ = torch::_amp_foreach_non_finite_check_and_unscale_(of_carray_tensor(self_data, self_len), *found_inf, *inv_scale);
-  )
-}
-
 void atg__amp_update_scale_(tensor *out__, tensor self, tensor growth_tracker, tensor found_inf, double scale_growth_factor, double scale_backoff_factor, int64_t growth_interval) {
   PROTECT(
     auto outputs__ = torch::_amp_update_scale_(*self, *growth_tracker, *found_inf, scale_growth_factor, scale_backoff_factor, growth_interval);

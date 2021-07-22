@@ -106,11 +106,6 @@ cdim := *(*C.int64_t)(unsafe.Pointer(&dim))
 ckeepdim := *(*C.int)(unsafe.Pointer(&keepdim)) 
 	C.atg__aminmax_dim(ptr, self, cdim, ckeepdim)
 }
-func Atg_AmpForeachNonFiniteCheckAndUnscale_(ptr *Ctensor, selfData []Ctensor, selfLen int, foundInf Ctensor, invScale Ctensor){
-cselfDataPtr := (*Ctensor)(unsafe.Pointer(&selfData[0]))
-cselfLen := *(*C.int)(unsafe.Pointer(&selfLen)) 
-	C.atg__amp_foreach_non_finite_check_and_unscale_(ptr, cselfDataPtr, cselfLen, foundInf, invScale)
-}
 func Atg_AmpUpdateScale_(ptr *Ctensor, self Ctensor, growthTracker Ctensor, foundInf Ctensor, scaleGrowthFactor float64, scaleBackoffFactor float64, growthInterval int64){
 cscaleGrowthFactor := *(*C.double)(unsafe.Pointer(&scaleGrowthFactor))
 cscaleBackoffFactor := *(*C.double)(unsafe.Pointer(&scaleBackoffFactor))

@@ -25,6 +25,7 @@ let excluded_functions =
     ; "backward"
     ; "set_data"
     ; "_amp_non_finite_check_and_unscale_"
+    ; "_amp_foreach_non_finite_check_and_unscale_"
     ; "_cummin_helper"
     ; "_cummax_helper"
     ; "retain_grad"
