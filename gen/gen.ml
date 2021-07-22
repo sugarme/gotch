@@ -814,7 +814,26 @@ let write_wrapper funcs filename =
             ; "UnsafeChunk"
             ; "UnsafeSplit"
             ; "UnsafeSplitWithSizes"
-            ; "AlignTensors" ]
+            ; "AlignTensors"
+            ; "UnflattenDenseTensors"
+            ; "TensorSplit"
+            ; "TensorSplitIndices"
+            ; "TensorSplitTensorIndicesOrSections"
+            ; "QuantizePerTensorTensors"
+            ; "Dsplit"
+            ; "DsplitArray"
+            ; "Hsplit"
+            ; "HsplitArray"
+            ; "Vsplit"
+            ; "VsplitArray"
+            ; "DequantizeTensors"
+            ; "Atleast1dSequence"
+            ; "Atleast2dSequence"
+            ; "Atleast3dSequence"
+            ; "Index"
+            ; "IndexPut"
+            ; "IndexPut_"
+            ; "_IndexPutImpl_" ]
           in
           if
             List.exists excluded_funcs ~f:(fun name ->
@@ -982,7 +1001,26 @@ let write_must_wrapper funcs filename =
             ; "UnsafeChunk"
             ; "UnsafeSplit"
             ; "UnsafeSplitWithSizes"
-            ; "AlignTensors" ]
+            ; "AlignTensors"
+            ; "UnflattenDenseTensors"
+            ; "TensorSplit"
+            ; "TensorSplitIndices"
+            ; "TensorSplitTensorIndicesOrSections"
+            ; "QuantizePerTensorTensors"
+            ; "Dsplit"
+            ; "DsplitArray"
+            ; "Hsplit"
+            ; "HsplitArray"
+            ; "Vsplit"
+            ; "VsplitArray"
+            ; "DequantizeTensors"
+            ; "Atleast1dSequence"
+            ; "Atleast2dSequence"
+            ; "Atleast3dSequence"
+            ; "Index"
+            ; "IndexPut"
+            ; "IndexPut_"
+            ; "_IndexPutImpl_" ]
           in
           if
             List.exists excluded_funcs ~f:(fun name ->
@@ -992,7 +1030,7 @@ let write_must_wrapper funcs filename =
             match func.returns with
             | `dynamic ->
                 pm "\n" ;
-                if is_method then pm "func(ts *Tensor) %s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) Must%s(" gofunc_name
                 else pm "func Must%s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;
@@ -1031,7 +1069,7 @@ let write_must_wrapper funcs filename =
                 pm "} \n"
             | `bool ->
                 pm "\n" ;
-                if is_method then pm "func(ts *Tensor) %s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) Must%s(" gofunc_name
                 else pm "func Must%s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;
@@ -1048,7 +1086,7 @@ let write_must_wrapper funcs filename =
                 pm "} \n"
             | `int64_t ->
                 pm "\n" ;
-                if is_method then pm "func(ts *Tensor) %s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) Must%s(" gofunc_name
                 else pm "func Must%s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;
@@ -1065,7 +1103,7 @@ let write_must_wrapper funcs filename =
                 pm "} \n"
             | `double ->
                 pm "\n" ;
-                if is_method then pm "func(ts *Tensor) %s(" gofunc_name
+                if is_method then pm "func(ts *Tensor) Must%s(" gofunc_name
                 else pm "func Must%s(" gofunc_name ;
                 pm "%s" go_args_list ;
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:false) ;
@@ -1142,9 +1180,32 @@ let write_ffi funcs filename =
                 exported_name
                 (Func.c_go_args_list_notype func)
           | `dynamic -> pm ""
-          | `bool -> pm ""
-          | `int64_t -> pm ""
-          | `double -> pm ""
+          | `bool ->
+              pm "func Atg%s(%s) bool{%s" ffifunc_name
+                (Func.c_go_args_list func)
+                (Func.c_go_args_list_body func) ;
+              pm "\t cResult := C.atg_%s(%s)" exported_name
+                (Func.c_go_args_list_notype func) ;
+              pm "\t cbool := *(*int)(unsafe.Pointer(&cResult))" ;
+              pm "\t if cbool == 1{return true}" ;
+              pm "\t return false" ;
+              pm "}"
+          | `int64_t ->
+              pm "func Atg%s(%s) int64{%s" ffifunc_name
+                (Func.c_go_args_list func)
+                (Func.c_go_args_list_body func) ;
+              pm "\t cResult := C.atg_%s(%s)" exported_name
+                (Func.c_go_args_list_notype func) ;
+              pm "\t return *(*int64)(unsafe.Pointer(&cResult))" ;
+              pm "}"
+          | `double ->
+              pm "func Atg%s(%s) float64{%s" ffifunc_name
+                (Func.c_go_args_list func)
+                (Func.c_go_args_list_body func) ;
+              pm "\t cResult := C.atg_%s(%s)" exported_name
+                (Func.c_go_args_list_notype func) ;
+              pm "\t return *(*float64)(unsafe.Pointer(&cResult))" ;
+              pm "}"
           (* TODO: need more implement here *)
           (* pm "func Atg%s(%s)(retValPtr *Ctensor)" *)
           (* (Func.go_name exported_name) *)

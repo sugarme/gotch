@@ -3,6 +3,7 @@ package aug
 import (
 	"fmt"
 	"log"
+
 	// "math"
 
 	"github.com/sugarme/gotch"
@@ -38,11 +39,11 @@ func (c *RandomCrop) params(x *ts.Tensor) (int64, int64, int64, int64) {
 		return 0, 0, h, w
 	}
 
-	iTs := ts.MustRandint1(0, h-th+1, []int64{1}, gotch.Int64, gotch.CPU)
+	iTs := ts.MustRandint(h-th+1, []int64{1}, gotch.Int64, gotch.CPU)
 	i := iTs.Int64Values()[0]
 	iTs.MustDrop()
 
-	jTs := ts.MustRandint1(0, w-tw+1, []int64{1}, gotch.Int64, gotch.CPU)
+	jTs := ts.MustRandint(w-tw+1, []int64{1}, gotch.Int64, gotch.CPU)
 	j := jTs.Int64Values()[0]
 	jTs.MustDrop()
 

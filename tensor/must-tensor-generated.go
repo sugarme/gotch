@@ -513,7 +513,7 @@ func(ts *Tensor) Must_CumsumOut(out *Tensor, dim int64, del bool)(retVal *Tensor
   return retVal
 } 
 
-func(ts *Tensor) _DebugHasInternalOverlap(del bool)(retVal int64) { 
+func(ts *Tensor) Must_DebugHasInternalOverlap(del bool)(retVal int64) { 
   
   retVal, err := ts._DebugHasInternalOverlap(del)
   if err != nil { log.Fatal(err) }
@@ -529,7 +529,7 @@ func Must_DimArange(like *Tensor, dim int64)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) _Dimi(del bool)(retVal int64) { 
+func(ts *Tensor) Must_Dimi(del bool)(retVal int64) { 
   
   retVal, err := ts._Dimi(del)
   if err != nil { log.Fatal(err) }
@@ -537,7 +537,7 @@ func(ts *Tensor) _Dimi(del bool)(retVal int64) {
   return retVal
 } 
 
-func(ts *Tensor) _Dimv(del bool)(retVal int64) { 
+func(ts *Tensor) Must_Dimv(del bool)(retVal int64) { 
   
   retVal, err := ts._Dimv(del)
   if err != nil { log.Fatal(err) }
@@ -697,7 +697,7 @@ func Must_GridSampler2dCpuFallback(input *Tensor, grid *Tensor, interpolationMod
   return retVal
 } 
 
-func(ts *Tensor) _HasCompatibleShallowCopyType(from *Tensor, del bool)(retVal bool) { 
+func(ts *Tensor) Must_HasCompatibleShallowCopyType(from *Tensor, del bool)(retVal bool) { 
   
   retVal, err := ts._HasCompatibleShallowCopyType(from, del)
   if err != nil { log.Fatal(err) }
@@ -708,14 +708,6 @@ func(ts *Tensor) _HasCompatibleShallowCopyType(from *Tensor, del bool)(retVal bo
 func(ts *Tensor) Must_IndexCopy_(dim int64, index *Tensor, source *Tensor)() { 
   
   err := ts._IndexCopy_(dim, index, source)
-  if err != nil { log.Fatal(err) }
-  
-  return 
-} 
-
-func(ts *Tensor) Must_IndexPutImpl_(indices []Tensor, values *Tensor, accumulate bool, unsafety bool)() { 
-  
-  err := ts._IndexPutImpl_(indices, values, accumulate, unsafety)
   if err != nil { log.Fatal(err) }
   
   return 
@@ -873,7 +865,7 @@ func Must_NnpackSpatialConvolutionBackwardWeight(input *Tensor, weightsize []int
   return retVal
 } 
 
-func(ts *Tensor) _Nnz(del bool)(retVal int64) { 
+func(ts *Tensor) Must_Nnz(del bool)(retVal int64) { 
   
   retVal, err := ts._Nnz(del)
   if err != nil { log.Fatal(err) }
@@ -1265,7 +1257,7 @@ func(ts *Tensor) Must_Values(del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) _Version(del bool)(retVal int64) { 
+func(ts *Tensor) Must_Version(del bool)(retVal int64) { 
   
   retVal, err := ts._Version(del)
   if err != nil { log.Fatal(err) }
@@ -1697,7 +1689,7 @@ func(ts *Tensor) MustAllOut(out *Tensor, dim int64, keepdim bool, del bool)(retV
   return retVal
 } 
 
-func(ts *Tensor) Allclose(other *Tensor, rtol float64, atol float64, equalNan bool, del bool)(retVal bool) { 
+func(ts *Tensor) MustAllclose(other *Tensor, rtol float64, atol float64, equalNan bool, del bool)(retVal bool) { 
   
   retVal, err := ts.Allclose(other, rtol, atol, equalNan, del)
   if err != nil { log.Fatal(err) }
@@ -2161,14 +2153,6 @@ func(ts *Tensor) MustAtleast1d(del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func MustAtleast1dSequence(tensors []Tensor)(retVal []Tensor) { 
-  
-  retVal, err := Atleast1dSequence(tensors)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) MustAtleast2d(del bool)(retVal *Tensor) { 
   
   retVal, err := ts.Atleast2d(del)
@@ -2177,25 +2161,9 @@ func(ts *Tensor) MustAtleast2d(del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func MustAtleast2dSequence(tensors []Tensor)(retVal []Tensor) { 
-  
-  retVal, err := Atleast2dSequence(tensors)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) MustAtleast3d(del bool)(retVal *Tensor) { 
   
   retVal, err := ts.Atleast3d(del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func MustAtleast3dSequence(tensors []Tensor)(retVal []Tensor) { 
-  
-  retVal, err := Atleast3dSequence(tensors)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -3577,7 +3545,7 @@ func(ts *Tensor) MustCudnnGridSampler(grid *Tensor, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) CudnnIsAcceptable(del bool)(retVal bool) { 
+func(ts *Tensor) MustCudnnIsAcceptable(del bool)(retVal bool) { 
   
   retVal, err := ts.CudnnIsAcceptable(del)
   if err != nil { log.Fatal(err) }
@@ -3681,7 +3649,7 @@ func(ts *Tensor) MustDeg2radOut(out *Tensor, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) DenseDim(del bool)(retVal int64) { 
+func(ts *Tensor) MustDenseDim(del bool)(retVal int64) { 
   
   retVal, err := ts.DenseDim(del)
   if err != nil { log.Fatal(err) }
@@ -3692,14 +3660,6 @@ func(ts *Tensor) DenseDim(del bool)(retVal int64) {
 func(ts *Tensor) MustDequantize(del bool)(retVal *Tensor) { 
   
   retVal, err := ts.Dequantize(del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func MustDequantizeTensors(tensors []Tensor)(retVal []Tensor) { 
-  
-  retVal, err := DequantizeTensors(tensors)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -4025,22 +3985,6 @@ func(ts *Tensor) MustDropout_(p float64, train bool)() {
   return 
 } 
 
-func(ts *Tensor) Dsplit(sections int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.Dsplit(sections, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) DsplitArray(indices []int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.DsplitArray(indices, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func MustDstack(tensors []Tensor)(retVal *Tensor) { 
   
   retVal, err := Dstack(tensors)
@@ -4225,7 +4169,7 @@ func(ts *Tensor) MustEqTensorOut(out *Tensor, other *Tensor, del bool)(retVal *T
   return retVal
 } 
 
-func(ts *Tensor) Equal(other *Tensor, del bool)(retVal bool) { 
+func(ts *Tensor) MustEqual(other *Tensor, del bool)(retVal bool) { 
   
   retVal, err := ts.Equal(other, del)
   if err != nil { log.Fatal(err) }
@@ -5809,22 +5753,6 @@ func(ts *Tensor) MustHistcOut(out *Tensor, bins int64, del bool)(retVal *Tensor)
   return retVal
 } 
 
-func(ts *Tensor) Hsplit(sections int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.Hsplit(sections, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) HsplitArray(indices []int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.HsplitArray(indices, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func MustHspmm(mat1 *Tensor, mat2 *Tensor)(retVal *Tensor) { 
   
   retVal, err := Hspmm(mat1, mat2)
@@ -6025,14 +5953,6 @@ func(ts *Tensor) MustImag(del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) MustIndex(indices []Tensor, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.Index(indices, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) MustIndexAdd(dim int64, index *Tensor, source *Tensor, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.IndexAdd(dim, index, source, del)
@@ -6108,22 +6028,6 @@ func(ts *Tensor) MustIndexFillIntTensor(dim int64, index *Tensor, value *Tensor,
 func(ts *Tensor) MustIndexFillIntTensor_(dim int64, index *Tensor, value *Tensor)() { 
   
   err := ts.IndexFillIntTensor_(dim, index, value)
-  if err != nil { log.Fatal(err) }
-  
-  return 
-} 
-
-func(ts *Tensor) MustIndexPut(indices []Tensor, values *Tensor, accumulate bool, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.IndexPut(indices, values, accumulate, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) MustIndexPut_(indices []Tensor, values *Tensor, accumulate bool)() { 
-  
-  err := ts.IndexPut_(indices, values, accumulate)
   if err != nil { log.Fatal(err) }
   
   return 
@@ -6217,7 +6121,7 @@ func(ts *Tensor) MustInverseOut(out *Tensor, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) IsCoalesced(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsCoalesced(del bool)(retVal bool) { 
   
   retVal, err := ts.IsCoalesced(del)
   if err != nil { log.Fatal(err) }
@@ -6225,7 +6129,7 @@ func(ts *Tensor) IsCoalesced(del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsComplex(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsComplex(del bool)(retVal bool) { 
   
   retVal, err := ts.IsComplex(del)
   if err != nil { log.Fatal(err) }
@@ -6233,7 +6137,7 @@ func(ts *Tensor) IsComplex(del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsDistributed(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsDistributed(del bool)(retVal bool) { 
   
   retVal, err := ts.IsDistributed(del)
   if err != nil { log.Fatal(err) }
@@ -6241,7 +6145,7 @@ func(ts *Tensor) IsDistributed(del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsFloatingPoint(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsFloatingPoint(del bool)(retVal bool) { 
   
   retVal, err := ts.IsFloatingPoint(del)
   if err != nil { log.Fatal(err) }
@@ -6249,7 +6153,7 @@ func(ts *Tensor) IsFloatingPoint(del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsLeaf(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsLeaf(del bool)(retVal bool) { 
   
   retVal, err := ts.IsLeaf(del)
   if err != nil { log.Fatal(err) }
@@ -6257,7 +6161,7 @@ func(ts *Tensor) IsLeaf(del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsNonzero(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsNonzero(del bool)(retVal bool) { 
   
   retVal, err := ts.IsNonzero(del)
   if err != nil { log.Fatal(err) }
@@ -6265,7 +6169,7 @@ func(ts *Tensor) IsNonzero(del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsPinned(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsPinned(del bool)(retVal bool) { 
   
   retVal, err := ts.IsPinned(del)
   if err != nil { log.Fatal(err) }
@@ -6273,7 +6177,7 @@ func(ts *Tensor) IsPinned(del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsSameSize(other *Tensor, del bool)(retVal bool) { 
+func(ts *Tensor) MustIsSameSize(other *Tensor, del bool)(retVal bool) { 
   
   retVal, err := ts.IsSameSize(other, del)
   if err != nil { log.Fatal(err) }
@@ -6281,7 +6185,7 @@ func(ts *Tensor) IsSameSize(other *Tensor, del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsSetTo(tensor *Tensor, del bool)(retVal bool) { 
+func(ts *Tensor) MustIsSetTo(tensor *Tensor, del bool)(retVal bool) { 
   
   retVal, err := ts.IsSetTo(tensor, del)
   if err != nil { log.Fatal(err) }
@@ -6289,7 +6193,7 @@ func(ts *Tensor) IsSetTo(tensor *Tensor, del bool)(retVal bool) {
   return retVal
 } 
 
-func(ts *Tensor) IsSigned(del bool)(retVal bool) { 
+func(ts *Tensor) MustIsSigned(del bool)(retVal bool) { 
   
   retVal, err := ts.IsSigned(del)
   if err != nil { log.Fatal(err) }
@@ -9113,7 +9017,7 @@ func(ts *Tensor) MustOuterOut(out *Tensor, vec2 *Tensor, del bool)(retVal *Tenso
   return retVal
 } 
 
-func(ts *Tensor) OutputNr(del bool)(retVal int64) { 
+func(ts *Tensor) MustOutputNr(del bool)(retVal int64) { 
   
   retVal, err := ts.OutputNr(del)
   if err != nil { log.Fatal(err) }
@@ -9361,7 +9265,7 @@ func(ts *Tensor) MustPut_(index *Tensor, source *Tensor, accumulate bool)() {
   return 
 } 
 
-func(ts *Tensor) QPerChannelAxis(del bool)(retVal int64) { 
+func(ts *Tensor) MustQPerChannelAxis(del bool)(retVal int64) { 
   
   retVal, err := ts.QPerChannelAxis(del)
   if err != nil { log.Fatal(err) }
@@ -9385,7 +9289,7 @@ func(ts *Tensor) MustQPerChannelZeroPoints(del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) QScale(del bool)(retVal float64) { 
+func(ts *Tensor) MustQScale(del bool)(retVal float64) { 
   
   retVal, err := ts.QScale(del)
   if err != nil { log.Fatal(err) }
@@ -9393,7 +9297,7 @@ func(ts *Tensor) QScale(del bool)(retVal float64) {
   return retVal
 } 
 
-func(ts *Tensor) QZeroPoint(del bool)(retVal int64) { 
+func(ts *Tensor) MustQZeroPoint(del bool)(retVal int64) { 
   
   retVal, err := ts.QZeroPoint(del)
   if err != nil { log.Fatal(err) }
@@ -9476,14 +9380,6 @@ func(ts *Tensor) MustQuantizePerChannel(scales *Tensor, zeroPoints *Tensor, axis
 func(ts *Tensor) MustQuantizePerTensor(scale float64, zeroPoint int64, dtype gotch.DType, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.QuantizePerTensor(scale, zeroPoint, dtype, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func MustQuantizePerTensorTensors(tensors []Tensor, scales *Tensor, zeroPoints *Tensor, dtype gotch.DType)(retVal []Tensor) { 
-  
-  retVal, err := QuantizePerTensorTensors(tensors, scales, zeroPoints, dtype)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -10889,7 +10785,7 @@ func MustSparseCooTensorIndicesSize(indices *Tensor, values *Tensor, size []int6
   return retVal
 } 
 
-func(ts *Tensor) SparseDim(del bool)(retVal int64) { 
+func(ts *Tensor) MustSparseDim(del bool)(retVal int64) { 
   
   retVal, err := ts.SparseDim(del)
   if err != nil { log.Fatal(err) }
@@ -11545,30 +11441,6 @@ func(ts *Tensor) MustTanhOut(out *Tensor, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) TensorSplit(sections int64, dim int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.TensorSplit(sections, dim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) TensorSplitIndices(indices []int64, dim int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.TensorSplitIndices(indices, dim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) TensorSplitTensorIndicesOrSections(tensorIndicesOrSections *Tensor, dim int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.TensorSplitTensorIndicesOrSections(tensorIndicesOrSections, dim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) MustTensordot(other *Tensor, dimsSelf []int64, dimsOther []int64, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.Tensordot(other, dimsSelf, dimsOther, del)
@@ -11924,14 +11796,6 @@ func(ts *Tensor) MustTypeAs(other *Tensor, del bool)(retVal *Tensor) {
 func(ts *Tensor) MustUnflatten(dim int64, sizes []int64, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.Unflatten(dim, sizes, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func MustUnflattenDenseTensors(flat *Tensor, tensors []Tensor)(retVal []Tensor) { 
-  
-  retVal, err := UnflattenDenseTensors(flat, tensors)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -12316,22 +12180,6 @@ func(ts *Tensor) MustViewAsReal(del bool)(retVal *Tensor) {
 func(ts *Tensor) MustViewDtype(dtype gotch.DType, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.ViewDtype(dtype, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) Vsplit(sections int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.Vsplit(sections, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) VsplitArray(indices []int64, del bool)(retVal []Tensor) { 
-  
-  retVal, err := ts.VsplitArray(indices, del)
   if err != nil { log.Fatal(err) }
   
   return retVal

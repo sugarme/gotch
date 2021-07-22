@@ -9,9 +9,9 @@ import (
 )
 
 func TestTensorInit(t *testing.T) {
-	tensor := ts.MustArange1(ts.IntScalar(1), ts.IntScalar(5), gotch.Int64, gotch.CPU)
+	tensor := ts.MustArange(ts.IntScalar(5), gotch.Int64, gotch.CPU)
 
-	want := []float64{1, 2, 3, 4}
+	want := []float64{0, 1, 2, 3, 4}
 	got := tensor.Float64Values()
 
 	if !reflect.DeepEqual(want, got) {
@@ -23,9 +23,9 @@ func TestTensorInit(t *testing.T) {
 func TestInplaceAssign(t *testing.T) {
 	tensor := ts.MustOfSlice([]int64{3, 1, 4, 1, 5})
 
-	tensor.MustAdd1_(ts.IntScalar(1))
-	tensor.MustMul1_(ts.IntScalar(2))
-	tensor.MustSub1_(ts.IntScalar(1))
+	tensor.MustAddScalar_(ts.IntScalar(1))
+	tensor.MustMulScalar_(ts.IntScalar(2))
+	tensor.MustSubScalar_(ts.IntScalar(1))
 
 	want := []int64{7, 3, 9, 3, 11}
 	got := tensor.Vals()
@@ -38,7 +38,7 @@ func TestInplaceAssign(t *testing.T) {
 
 func TestConstantOp(t *testing.T) {
 	tensor := ts.MustOfSlice([]int64{3, 9, 3, 11})
-	resTs1 := tensor.MustMul1(ts.IntScalar(-1), true)
+	resTs1 := tensor.MustMulScalar(ts.IntScalar(-1), true)
 
 	want1 := []int64{-3, -9, -3, -11}
 	got1 := resTs1.Vals()

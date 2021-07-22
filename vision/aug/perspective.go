@@ -107,11 +107,11 @@ func (rp *RandomPerspective) getParams(w, h int64) ([][]int64, [][]int64) {
 	// int(torch.randint(0, int(distortion_scale * half_height) + 1, size=(1, )).item())
 	// ]
 	tlVal1 := int64(rp.distortionScale*float64(halfW)) + 1
-	tlTs1 := ts.MustRandint1(0, tlVal1, []int64{1}, gotch.Int64, gotch.CPU)
+	tlTs1 := ts.MustRandint(tlVal1, []int64{1}, gotch.Int64, gotch.CPU)
 	tl1 := tlTs1.Int64Values()[0]
 	tlTs1.MustDrop()
 	tlVal2 := int64(rp.distortionScale*float64(halfH)) + 1
-	tlTs2 := ts.MustRandint1(0, tlVal2, []int64{1}, gotch.Int64, gotch.CPU)
+	tlTs2 := ts.MustRandint(tlVal2, []int64{1}, gotch.Int64, gotch.CPU)
 	tl2 := tlTs2.Int64Values()[0]
 	tlTs2.MustDrop()
 	topLeft = []int64{tl1, tl2}
@@ -121,11 +121,11 @@ func (rp *RandomPerspective) getParams(w, h int64) ([][]int64, [][]int64) {
 	// int(torch.randint(0, int(distortion_scale * half_height) + 1, size=(1, )).item())
 	// ]
 	trVal1 := w - int64(rp.distortionScale*float64(halfW)) - 1
-	trTs1 := ts.MustRandint1(trVal1, w, []int64{1}, gotch.Int64, gotch.CPU)
+	trTs1 := ts.MustRandintLow(trVal1, w, []int64{1}, gotch.Int64, gotch.CPU)
 	tr1 := trTs1.Int64Values()[0]
 	trTs1.MustDrop()
 	trVal2 := int64(rp.distortionScale*float64(halfH)) + 1
-	trTs2 := ts.MustRandint1(0, trVal2, []int64{1}, gotch.Int64, gotch.CPU)
+	trTs2 := ts.MustRandint(trVal2, []int64{1}, gotch.Int64, gotch.CPU)
 	tr2 := trTs2.Int64Values()[0]
 	trTs2.MustDrop()
 	topRight = []int64{tr1, tr2}
@@ -135,11 +135,11 @@ func (rp *RandomPerspective) getParams(w, h int64) ([][]int64, [][]int64) {
 	// int(torch.randint(height - int(distortion_scale * half_height) - 1, height, size=(1, )).item())
 	// ]
 	brVal1 := w - int64(rp.distortionScale*float64(halfW)) - 1
-	brTs1 := ts.MustRandint1(brVal1, w, []int64{1}, gotch.Int64, gotch.CPU)
+	brTs1 := ts.MustRandintLow(brVal1, w, []int64{1}, gotch.Int64, gotch.CPU)
 	br1 := brTs1.Int64Values()[0]
 	brTs1.MustDrop()
 	brVal2 := h - int64(rp.distortionScale*float64(halfH)) - 1
-	brTs2 := ts.MustRandint1(brVal2, h, []int64{1}, gotch.Int64, gotch.CPU)
+	brTs2 := ts.MustRandintLow(brVal2, h, []int64{1}, gotch.Int64, gotch.CPU)
 	br2 := brTs2.Int64Values()[0]
 	brTs2.MustDrop()
 	bottomRight = []int64{br1, br2}
@@ -149,11 +149,11 @@ func (rp *RandomPerspective) getParams(w, h int64) ([][]int64, [][]int64) {
 	// int(torch.randint(height - int(distortion_scale * half_height) - 1, height, size=(1, )).item())
 	// ]
 	blVal1 := int64(rp.distortionScale*float64(halfW)) + 1
-	blTs1 := ts.MustRandint1(0, blVal1, []int64{1}, gotch.Int64, gotch.CPU)
+	blTs1 := ts.MustRandint(blVal1, []int64{1}, gotch.Int64, gotch.CPU)
 	bl1 := blTs1.Int64Values()[0]
 	blTs1.MustDrop()
 	blVal2 := h - int64(rp.distortionScale*float64(halfH)) - 1
-	blTs2 := ts.MustRandint1(blVal2, h, []int64{1}, gotch.Int64, gotch.CPU)
+	blTs2 := ts.MustRandintLow(blVal2, h, []int64{1}, gotch.Int64, gotch.CPU)
 	bl2 := blTs2.Int64Values()[0]
 	blTs2.MustDrop()
 	bottomLeft = []int64{bl1, bl2}

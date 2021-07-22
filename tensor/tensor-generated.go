@@ -1168,24 +1168,6 @@ func(ts *Tensor) _IndexCopy_(dim int64, index *Tensor, source *Tensor)(err error
   return err
 } 
 
-func(ts *Tensor) _IndexPutImpl_(indices []Tensor, values *Tensor, accumulate bool, unsafety bool)(err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var cindices []lib.Ctensor
-  for _, t := range indices {cindices = append(cindices, t.ctensor)}
-caccumulate := int32(0)
- if accumulate { caccumulate = int32(1) }
-cunsafety := int32(0)
- if unsafety { cunsafety = int32(1) }
-lib.Atg_IndexPutImpl_(ptr, ts.ctensor, indices, values.ctensor, caccumulate, cunsafety)
-  if err = TorchErr(); err != nil {
-    return err
-  }
-  ts.ctensor = *ptr
-  
-  return err
-} 
-
 func(ts *Tensor) _Indices(del bool)(retVal *Tensor, err error) { 
 if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
@@ -3530,20 +3512,6 @@ if del { defer ts.MustDrop() }
   return retVal, err
 } 
 
-func Atleast1dSequence(tensors []Tensor)(retVal []Tensor, err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var ctensors []lib.Ctensor
-  for _, t := range tensors {ctensors = append(ctensors, t.ctensor)}
-lib.AtgAtleast1dSequence(ptr, ctensors, len(ctensors))
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
 func(ts *Tensor) Atleast2d(del bool)(retVal *Tensor, err error) { 
 if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
@@ -3557,39 +3525,11 @@ if del { defer ts.MustDrop() }
   return retVal, err
 } 
 
-func Atleast2dSequence(tensors []Tensor)(retVal []Tensor, err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var ctensors []lib.Ctensor
-  for _, t := range tensors {ctensors = append(ctensors, t.ctensor)}
-lib.AtgAtleast2dSequence(ptr, ctensors, len(ctensors))
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
 func(ts *Tensor) Atleast3d(del bool)(retVal *Tensor, err error) { 
 if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
   lib.AtgAtleast3d(ptr, ts.ctensor)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func Atleast3dSequence(tensors []Tensor)(retVal []Tensor, err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var ctensors []lib.Ctensor
-  for _, t := range tensors {ctensors = append(ctensors, t.ctensor)}
-lib.AtgAtleast3dSequence(ptr, ctensors, len(ctensors))
   if err = TorchErr(); err != nil {
     return retVal, err
   }
@@ -6165,20 +6105,6 @@ if del { defer ts.MustDrop() }
   return retVal, err
 } 
 
-func DequantizeTensors(tensors []Tensor)(retVal []Tensor, err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var ctensors []lib.Ctensor
-  for _, t := range tensors {ctensors = append(ctensors, t.ctensor)}
-lib.AtgDequantizeTensors(ptr, ctensors, len(ctensors))
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
 func(ts *Tensor) Det(del bool)(retVal *Tensor, err error) { 
 if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
@@ -6687,32 +6613,6 @@ lib.AtgDropout_(ptr, ts.ctensor, p, ctrain)
   ts.ctensor = *ptr
   
   return err
-} 
-
-func(ts *Tensor) Dsplit(sections int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgDsplit(ptr, ts.ctensor, sections)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func(ts *Tensor) DsplitArray(indices []int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgDsplitArray(ptr, ts.ctensor, indices, len(indices))
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
 } 
 
 func Dstack(tensors []Tensor)(retVal *Tensor, err error) { 
@@ -9638,32 +9538,6 @@ if del { defer ts.MustDrop() }
   return retVal, err
 } 
 
-func(ts *Tensor) Hsplit(sections int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgHsplit(ptr, ts.ctensor, sections)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func(ts *Tensor) HsplitArray(indices []int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgHsplitArray(ptr, ts.ctensor, indices, len(indices))
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
 func Hspmm(mat1 *Tensor, mat2 *Tensor)(retVal *Tensor, err error) { 
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
@@ -9983,21 +9857,6 @@ if del { defer ts.MustDrop() }
   return retVal, err
 } 
 
-func(ts *Tensor) Index(indices []Tensor, del bool)(retVal *Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var cindices []lib.Ctensor
-  for _, t := range indices {cindices = append(cindices, t.ctensor)}
-lib.AtgIndex(ptr, ts.ctensor, indices)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
 func(ts *Tensor) IndexAdd(dim int64, index *Tensor, source *Tensor, del bool)(retVal *Tensor, err error) { 
 if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
@@ -10115,39 +9974,6 @@ func(ts *Tensor) IndexFillIntTensor_(dim int64, index *Tensor, value *Tensor)(er
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
   lib.AtgIndexFillIntTensor_(ptr, ts.ctensor, dim, index.ctensor, value.ctensor)
-  if err = TorchErr(); err != nil {
-    return err
-  }
-  ts.ctensor = *ptr
-  
-  return err
-} 
-
-func(ts *Tensor) IndexPut(indices []Tensor, values *Tensor, accumulate bool, del bool)(retVal *Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var cindices []lib.Ctensor
-  for _, t := range indices {cindices = append(cindices, t.ctensor)}
-caccumulate := int32(0)
- if accumulate { caccumulate = int32(1) }
-lib.AtgIndexPut(ptr, ts.ctensor, indices, values.ctensor, caccumulate)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func(ts *Tensor) IndexPut_(indices []Tensor, values *Tensor, accumulate bool)(err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var cindices []lib.Ctensor
-  for _, t := range indices {cindices = append(cindices, t.ctensor)}
-caccumulate := int32(0)
- if accumulate { caccumulate = int32(1) }
-lib.AtgIndexPut_(ptr, ts.ctensor, indices, values.ctensor, caccumulate)
   if err = TorchErr(); err != nil {
     return err
   }
@@ -15918,20 +15744,6 @@ if del { defer ts.MustDrop() }
   return retVal, err
 } 
 
-func QuantizePerTensorTensors(tensors []Tensor, scales *Tensor, zeroPoints *Tensor, dtype gotch.DType)(retVal []Tensor, err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var ctensors []lib.Ctensor
-  for _, t := range tensors {ctensors = append(ctensors, t.ctensor)}
-lib.AtgQuantizePerTensorTensors(ptr, ctensors, len(ctensors), scales.ctensor, zeroPoints.ctensor, dtype.CInt())
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
 func QuantizedBatchNorm(input *Tensor, weight *Tensor, bias *Tensor, mean *Tensor, vari *Tensor, eps float64, outputScale float64, outputZeroPoint int64)(retVal *Tensor, err error) { 
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
@@ -19329,45 +19141,6 @@ if del { defer ts.MustDrop() }
   return retVal, err
 } 
 
-func(ts *Tensor) TensorSplit(sections int64, dim int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgTensorSplit(ptr, ts.ctensor, sections, dim)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func(ts *Tensor) TensorSplitIndices(indices []int64, dim int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgTensorSplitIndices(ptr, ts.ctensor, indices, len(indices), dim)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func(ts *Tensor) TensorSplitTensorIndicesOrSections(tensorIndicesOrSections *Tensor, dim int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgTensorSplitTensorIndicesOrSections(ptr, ts.ctensor, tensorIndicesOrSections.ctensor, dim)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
 func(ts *Tensor) Tensordot(other *Tensor, dimsSelf []int64, dimsOther []int64, del bool)(retVal *Tensor, err error) { 
 if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
@@ -19948,20 +19721,6 @@ if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
   lib.AtgUnflatten(ptr, ts.ctensor, dim, sizes, len(sizes))
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func UnflattenDenseTensors(flat *Tensor, tensors []Tensor)(retVal []Tensor, err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-   var ctensors []lib.Ctensor
-  for _, t := range tensors {ctensors = append(ctensors, t.ctensor)}
-lib.AtgUnflattenDenseTensors(ptr, flat.ctensor, ctensors, len(ctensors))
   if err = TorchErr(); err != nil {
     return retVal, err
   }
@@ -20971,32 +20730,6 @@ if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
   lib.AtgViewDtype(ptr, ts.ctensor, dtype.CInt())
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func(ts *Tensor) Vsplit(sections int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgVsplit(ptr, ts.ctensor, sections)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
-} 
-
-func(ts *Tensor) VsplitArray(indices []int64, del bool)(retVal []Tensor, err error) { 
-if del { defer ts.MustDrop() }
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-  lib.AtgVsplitArray(ptr, ts.ctensor, indices, len(indices))
   if err = TorchErr(); err != nil {
     return retVal, err
   }

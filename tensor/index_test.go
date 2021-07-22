@@ -11,7 +11,7 @@ import (
 func TestIntegerIndex(t *testing.T) {
 	// [ 0 1 2
 	//   3 4 5 ]
-	tensor := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(2*3), gotch.Int64, gotch.CPU).MustView([]int64{2, 3}, true)
+	tensor := ts.MustArange(ts.IntScalar(2*3), gotch.Int64, gotch.CPU).MustView([]int64{2, 3}, true)
 	// tensor, err := ts.NewTensorFromData([]bool{true, false, false, false, false, false}, []int64{2, 3})
 	// if err != nil {
 	// panic(err)
@@ -71,7 +71,7 @@ func TestIntegerIndex(t *testing.T) {
 }
 
 func TestNewInsertAxis(t *testing.T) {
-	tensor := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(2*3), gotch.Int64, gotch.CPU).MustView([]int64{2, 3}, true)
+	tensor := ts.MustArange(ts.IntScalar(2*3), gotch.Int64, gotch.CPU).MustView([]int64{2, 3}, true)
 	var idxs1 []ts.TensorIndexer = []ts.TensorIndexer{
 		ts.NewInsertNewAxis(),
 	}
@@ -112,7 +112,7 @@ func TestNewInsertAxis(t *testing.T) {
 func TestRangeIndex(t *testing.T) {
 
 	// Range
-	tensor1 := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(4*3), gotch.Int64, gotch.CPU).MustView([]int64{4, 3}, true)
+	tensor1 := ts.MustArange(ts.IntScalar(4*3), gotch.Int64, gotch.CPU).MustView([]int64{4, 3}, true)
 	idx1 := []ts.TensorIndexer{
 		ts.NewNarrow(1, 3),
 	}
@@ -131,7 +131,7 @@ func TestRangeIndex(t *testing.T) {
 	}
 
 	// Full range
-	tensor2 := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(2*3), gotch.Int64, gotch.CPU).MustView([]int64{2, 3}, true)
+	tensor2 := ts.MustArange(ts.IntScalar(2*3), gotch.Int64, gotch.CPU).MustView([]int64{2, 3}, true)
 	idx2 := []ts.TensorIndexer{
 		ts.NewNarrow(0, tensor2.MustSize()[0]),
 	}
@@ -150,7 +150,7 @@ func TestRangeIndex(t *testing.T) {
 	}
 
 	// Range from
-	tensor3 := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(4*3), gotch.Int64, gotch.CPU).MustView([]int64{4, 3}, true)
+	tensor3 := ts.MustArange(ts.IntScalar(4*3), gotch.Int64, gotch.CPU).MustView([]int64{4, 3}, true)
 	idx3 := []ts.TensorIndexer{
 		ts.NewNarrow(2, tensor3.MustSize()[0]),
 	}
@@ -169,7 +169,7 @@ func TestRangeIndex(t *testing.T) {
 	}
 
 	// Range to
-	tensor4 := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(4*3), gotch.Int64, gotch.CPU).MustView([]int64{4, 3}, true)
+	tensor4 := ts.MustArange(ts.IntScalar(4*3), gotch.Int64, gotch.CPU).MustView([]int64{4, 3}, true)
 	idx4 := []ts.TensorIndexer{
 		ts.NewNarrow(0, 2),
 	}
@@ -189,7 +189,7 @@ func TestRangeIndex(t *testing.T) {
 }
 
 func TestSliceIndex(t *testing.T) {
-	tensor1 := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(6*2), gotch.Int64, gotch.CPU).MustView([]int64{6, 2}, true)
+	tensor1 := ts.MustArange(ts.IntScalar(6*2), gotch.Int64, gotch.CPU).MustView([]int64{6, 2}, true)
 	idx1 := []ts.TensorIndexer{
 		ts.NewSliceIndex([]int64{1, 3, 5}),
 	}
@@ -207,7 +207,7 @@ func TestSliceIndex(t *testing.T) {
 		t.Errorf("Got tensor values: %v\n", got1Shape)
 	}
 
-	tensor2 := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(3*4), gotch.Int64, gotch.CPU).MustView([]int64{3, 4}, true)
+	tensor2 := ts.MustArange(ts.IntScalar(3*4), gotch.Int64, gotch.CPU).MustView([]int64{3, 4}, true)
 	idx2 := []ts.TensorIndexer{
 		ts.NewNarrow(0, tensor2.MustSize()[0]),
 		ts.NewSliceIndex([]int64{3, 0}),
@@ -229,7 +229,7 @@ func TestSliceIndex(t *testing.T) {
 }
 
 func TestComplexIndex(t *testing.T) {
-	tensor := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(2*3*5*7), gotch.Int64, gotch.CPU).MustView([]int64{2, 3, 5, 7}, true)
+	tensor := ts.MustArange(ts.IntScalar(2*3*5*7), gotch.Int64, gotch.CPU).MustView([]int64{2, 3, 5, 7}, true)
 	idx := []ts.TensorIndexer{
 		ts.NewSelect(1),
 		ts.NewNarrow(1, 2),
@@ -253,7 +253,7 @@ func TestComplexIndex(t *testing.T) {
 }
 
 func TestIndex3D(t *testing.T) {
-	tensor := ts.MustArange1(ts.IntScalar(0), ts.IntScalar(24), gotch.Int64, gotch.CPU).MustView([]int64{2, 3, 4}, true)
+	tensor := ts.MustArange(ts.IntScalar(24), gotch.Int64, gotch.CPU).MustView([]int64{2, 3, 4}, true)
 
 	idx1 := []ts.TensorIndexer{
 		ts.NewSelect(0),

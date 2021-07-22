@@ -124,7 +124,7 @@ func readImages(filename string) *ts.Tensor {
 		log.Fatal(err)
 	}
 
-	return imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}, true).MustTotype(gotch.Float, true).MustDiv1(ts.FloatScalar(255.0), true)
+	return imagesTs.MustView([]int64{int64(samples), int64(rows * cols)}, true).MustTotype(gotch.Float, true).MustDivScalar(ts.FloatScalar(255.0), true)
 }
 
 // LoadMNISTDir loads all MNIST data from a given directory to Dataset

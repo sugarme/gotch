@@ -35,7 +35,7 @@ func TestDataLoader_Next(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	want := 100
+	want := []int{100}
 
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("Want: %v\n", want)

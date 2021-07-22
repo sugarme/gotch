@@ -22,9 +22,9 @@ func createTensors(samples int) []ts.Tensor {
 	s := ts.FloatScalar(float64(0.23))
 
 	for i := 0; i < 1; i++ {
-		t := ts.MustOfSlice(data).MustMul1(s, true)
+		t := ts.MustOfSlice(data).MustMulScalar(s, true)
 
-		tensors = append(tensors, t)
+		tensors = append(tensors, *t)
 	}
 
 	return tensors
@@ -72,7 +72,7 @@ func main() {
 			tensors := createTensors(10000)
 			var gpuTensors []ts.Tensor
 			for _, t := range tensors {
-				gpuTensors = append(gpuTensors, t.MustTo(gpu, true))
+				gpuTensors = append(gpuTensors, *t.MustTo(gpu, true))
 			}
 
 			for _, t := range gpuTensors {

@@ -117,8 +117,8 @@ func MobileNetV2(p *nn.Path, nclasses int64) ts.ModuleT {
 	return nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 		tmp1 := xs.ApplyT(features, train)
 
-		tmp2 := tmp1.MustMean1([]int64{2}, false, gotch.Float, true)
-		tmp3 := tmp2.MustMean1([]int64{2}, false, gotch.Float, true)
+		tmp2 := tmp1.MustMeanDim([]int64{2}, false, gotch.Float, true)
+		tmp3 := tmp2.MustMeanDim([]int64{2}, false, gotch.Float, true)
 
 		res := tmp3.ApplyT(classifier, train)
 		tmp3.MustDrop()

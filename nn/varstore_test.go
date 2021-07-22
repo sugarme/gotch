@@ -68,8 +68,8 @@ func TestSaveLoad(t *testing.T) {
 	u2, v2 := add(vs2.Root())
 
 	ts.NoGrad(func() {
-		u1.Add1_(ts.FloatScalar(42.0))
-		v1.Mul1_(ts.FloatScalar(2.0))
+		u1.AddScalar_(ts.FloatScalar(42.0))
+		v1.MulScalar_(ts.FloatScalar(2.0))
 	})
 
 	wantU1 := float64(42.0)

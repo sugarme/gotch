@@ -68,7 +68,7 @@ func Save(tensor *ts.Tensor, path string) error {
 	var tsCHW, tsHWC *ts.Tensor
 	switch {
 	case len(shape) == 4 && shape[0] == 1:
-		tsCHW = t.MustSqueeze1(int64(0), true)
+		tsCHW = t.MustSqueezeDim(int64(0), true)
 		chwTs := chwToHWC(tsCHW)
 		tsCHW.MustDrop()
 		tsHWC = chwTs.MustTo(gotch.CPU, true)

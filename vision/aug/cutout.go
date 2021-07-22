@@ -130,11 +130,11 @@ func (rc *RandomCutout) cutoutParams(x *ts.Tensor) (int64, int64, int64, int64, 
 		v := ts.MustOfSlice(rc.rgbVal).MustUnsqueeze(1, true).MustUnsqueeze(1, true)
 
 		// i = torch.randint(0, img_h - h + 1, size=(1, )).item()
-		iTs := ts.MustRandint1(0, imgH-h+1, []int64{1}, gotch.Int64, gotch.CPU)
+		iTs := ts.MustRandint(imgH-h+1, []int64{1}, gotch.Int64, gotch.CPU)
 		i := iTs.Int64Values()[0]
 		iTs.MustDrop()
 		// j = torch.randint(0, img_w - w + 1, size=(1, )).item()
-		jTs := ts.MustRandint1(0, imgW-w+1, []int64{1}, gotch.Int64, gotch.CPU)
+		jTs := ts.MustRandint(imgW-w+1, []int64{1}, gotch.Int64, gotch.CPU)
 		j := jTs.Int64Values()[0]
 		jTs.MustDrop()
 		return i, j, h, w, v
