@@ -3,10 +3,10 @@
 
 ## Overview
 
-Gotch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ over 1400) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
+Gotch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ over 1700) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
 
 **Some features are**
-- [x] Comprehensive Pytorch tensor APIs (~ 1404) 
+- [x] Comprehensive Pytorch tensor APIs (~ 1716) 
 - [x] Fully featured Pytorch dynamic graph computation
 - [x] JIT interface to run model trained/saved using PyTorch Python API
 - [x] Load pretrained Pytorch models and run inference
