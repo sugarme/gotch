@@ -16,7 +16,7 @@ func gaussianKernel1D(ks int64, sigma float64, dtype gotch.DType, device gotch.D
 	x := ts.MustLinspace(ts.IntScalar(-ksHalf), ts.IntScalar(ksHalf), []int64{ks}, dtype, device)
 
 	// pdf = torch.exp(-0.5 * (x / sigma).pow(2))
-	pdf := x.MustDiv1(ts.FloatScalar(sigma), true).MustPow(ts.IntScalar(2), true).MustMul1(ts.FloatScalar(0.5), true).MustExp(true)
+	pdf := x.MustDivScalar(ts.FloatScalar(sigma), true).MustPow(ts.IntScalar(2), true).MustMulScalar(ts.FloatScalar(0.5), true).MustExp(true)
 	// kernel1d = pdf / pdf.sum()
 	pdfSum := pdf.MustSum(dtype, false)
 	kernel1d := pdf.MustDiv(pdfSum, true)
@@ -76,7 +76,7 @@ func castSqueezeOut(x *ts.Tensor, needCast, needSqueeze bool, outDType gotch.DTy
 	)
 	switch needSqueeze {
 	case true:
-		squeezeTs = x.MustSqueeze1(0, false)
+		squeezeTs = x.MustSqueezeDim(0, false)
 	case false:
 		squeezeTs = x.MustShallowClone()
 	}
@@ -192,8 +192,8 @@ func blend(img1, img2 *ts.Tensor, ratio float64) *ts.Tensor {
 	bound := 255.0
 
 	// (ratio * img1 + (1.0 - ratio) * img2).clamp(0, bound).to(img1.dtype)
-	i1 := img1.MustMul1(ts.FloatScalar(ratio), false)
-	i2 := img2.MustMul1(ts.FloatScalar(1.0-ratio), false)
+	i1 := img1.MustMulScalar(ts.FloatScalar(ratio), false)
+	i2 := img2.MustMulScalar(ts.FloatScalar(1.0-ratio), false)
 	sumTs := i1.MustAdd(i2, true)
 	i2.MustDrop()
 	out := sumTs.MustClamp(ts.FloatScalar(0), ts.FloatScalar(bound), true).MustTotype(dtype, true)
@@ -262,9 +262,9 @@ func rgb2Gray(x *ts.Tensor, outChanOpt ...int64) *ts.Tensor {
 	// This implementation closely follows the TF one:
 	// https://github.com/tensorflow/tensorflow/blob/v2.3.0/tensorflow/python/ops/image_ops_impl.py#L2105-L2138
 	// l_img = (0.2989 * r + 0.587 * g + 0.114 * b).to(img.dtype)
-	rmul := r.MustMul1(ts.FloatScalar(0.2989), true)
-	gmul := g.MustMul1(ts.FloatScalar(0.587), true)
-	bmul := b.MustMul1(ts.FloatScalar(0.114), true)
+	rmul := r.MustMulScalar(ts.FloatScalar(0.2989), true)
+	gmul := g.MustMulScalar(ts.FloatScalar(0.587), true)
+	bmul := b.MustMulScalar(ts.FloatScalar(0.114), true)
 	addTs := rmul.MustAdd(gmul, true).MustAdd(bmul, true)
 	gmul.MustDrop()
 	bmul.MustDrop()
@@ -288,7 +288,7 @@ func adjustContrast(x *ts.Tensor, contrast float64) *ts.Tensor {
 
 	grayTs := rgb2Gray(x).MustTotype(x.DType(), true)
 
-	mean := grayTs.MustMean1([]int64{-3, -2, -1}, true, gotch.Float, true).MustTotype(x.DType(), true)
+	mean := grayTs.MustMeanDim([]int64{-3, -2, -1}, true, gotch.Float, true).MustTotype(x.DType(), true)
 	out := blend(x, mean, contrast)
 	mean.MustDrop()
 
@@ -331,7 +331,7 @@ func rgb2HSV(x *ts.Tensor) *ts.Tensor {
 	// # we don't need to deal with it in case we save the NaN in a buffer in
 	// # backprop, if it is ever supported, but it doesn't hurt to do so.
 	// eqc = maxc == minc
-	eqC := maxC.MustEq1(minC, false)
+	eqC := maxC.MustEqTensor(minC, false)
 
 	// cr = maxc - minc
 	cr := maxC.MustSub(minC, false)
@@ -340,7 +340,7 @@ func rgb2HSV(x *ts.Tensor) *ts.Tensor {
 	ones := maxC.MustOnesLike(false)
 
 	// s = cr / torch.where(eqc, ones, maxc)
-	condMaxC := ones.MustWhere1(eqC, maxC, false)
+	condMaxC := ones.MustWhereSelf(eqC, maxC, false)
 	s := cr.MustDiv(condMaxC, false)
 
 	// # Note that `eqc => maxc = minc = r = g = b`. So the following calculation
@@ -351,27 +351,27 @@ func rgb2HSV(x *ts.Tensor) *ts.Tensor {
 	// rc = (maxc - r) / cr_divisor
 	// gc = (maxc - g) / cr_divisor
 	// bc = (maxc - b) / cr_divisor
-	crDivisor := ones.MustWhere1(eqC, cr, true) // delete ones
+	crDivisor := ones.MustWhereSelf(eqC, cr, true) // delete ones
 	rc := maxC.MustSub(r, false).MustDiv(crDivisor, true)
 	gc := maxC.MustSub(g, false).MustDiv(crDivisor, true)
 	bc := maxC.MustSub(b, false).MustDiv(crDivisor, true)
 
 	// hr = (maxc == r) * (bc - gc)
 	rSub := bc.MustSub(gc, false)
-	hr := maxC.MustEq1(r, false).MustMul(rSub, true)
+	hr := maxC.MustEqTensor(r, false).MustMul(rSub, true)
 	rSub.MustDrop()
 
 	// hg = ((maxc == g) & (maxc != r)) * (2.0 + rc - bc)
-	maxcCond1 := maxC.MustNotEqual1(r, false)
-	hgMul := rc.MustSub(bc, false).MustAdd1(ts.FloatScalar(2.0), true)
-	hg := maxC.MustEq1(g, false).MustLogicalAnd(maxcCond1, true).MustMul(hgMul, true)
+	maxcCond1 := maxC.MustNotEqualTensor(r, false)
+	hgMul := rc.MustSub(bc, false).MustAddScalar(ts.FloatScalar(2.0), true)
+	hg := maxC.MustEqTensor(g, false).MustLogicalAnd(maxcCond1, true).MustMul(hgMul, true)
 	maxcCond1.MustDrop()
 	hgMul.MustDrop()
 
 	// hb = ((maxc != g) & (maxc != r)) * (4.0 + gc - rc)
-	maxcCond2 := maxC.MustNotEqual1(r, false)
-	hbMul := gc.MustSub(rc, false).MustAdd1(ts.FloatScalar(4.0), true)
-	hb := maxC.MustNotEqual1(g, false).MustLogicalAnd(maxcCond2, true).MustMul(hbMul, true)
+	maxcCond2 := maxC.MustNotEqualTensor(r, false)
+	hbMul := gc.MustSub(rc, false).MustAddScalar(ts.FloatScalar(4.0), true)
+	hb := maxC.MustNotEqualTensor(g, false).MustLogicalAnd(maxcCond2, true).MustMul(hbMul, true)
 	maxcCond2.MustDrop()
 	hbMul.MustDrop()
 
@@ -379,8 +379,8 @@ func rgb2HSV(x *ts.Tensor) *ts.Tensor {
 	h1 := hr.MustAdd(hg, false).MustAdd(hb, true)
 
 	// h = torch.fmod((h / 6.0 + 1.0), 1.0)
-	h2 := h1.MustDiv1(ts.FloatScalar(6.0), true).MustAdd1(ts.FloatScalar(1.0), true) // delete h1
-	h3 := h2.MustFmod(ts.FloatScalar(1.0), true)                                     // delete h2
+	h2 := h1.MustDivScalar(ts.FloatScalar(6.0), true).MustAddScalar(ts.FloatScalar(1.0), true) // delete h1
+	h3 := h2.MustFmod(ts.FloatScalar(1.0), true)                                               // delete h2
 
 	// torch.stack((h, s, maxc), dim=-3)
 	out := ts.MustStack([]ts.Tensor{*h3, *s, *maxC}, -3)
@@ -413,26 +413,26 @@ func hsv2RGB(x *ts.Tensor) *ts.Tensor {
 	s := &hsvTs[1]
 	v := &hsvTs[2]
 	// i = torch.floor(h * 6.0)
-	i := h.MustMul1(ts.FloatScalar(6.0), false).MustFloor(true)
+	i := h.MustMulScalar(ts.FloatScalar(6.0), false).MustFloor(true)
 	// f = (h * 6.0) - i
-	f := h.MustMul1(ts.FloatScalar(6.0), false).MustSub(i, true)
+	f := h.MustMulScalar(ts.FloatScalar(6.0), false).MustSub(i, true)
 
 	// p = torch.clamp((v * (1.0 - s)), 0.0, 1.0)
-	x1 := s.MustMul1(ts.FloatScalar(-1), false).MustAdd1(ts.FloatScalar(1.0), true)
+	x1 := s.MustMulScalar(ts.FloatScalar(-1), false).MustAddScalar(ts.FloatScalar(1.0), true)
 	p := v.MustMul(x1, false).MustClamp(ts.FloatScalar(0.0), ts.FloatScalar(1.0), true)
 	x1.MustDrop()
 
 	// q = torch.clamp((v * (1.0 - s * f)), 0.0, 1.0)
-	x2 := s.MustMul(f, false).MustMul1(ts.FloatScalar(-1), true).MustAdd1(ts.FloatScalar(1.0), true)
+	x2 := s.MustMul(f, false).MustMulScalar(ts.FloatScalar(-1), true).MustAddScalar(ts.FloatScalar(1.0), true)
 	q := v.MustMul(x2, false).MustClamp(ts.FloatScalar(0.0), ts.FloatScalar(1.0), true)
 	x2.MustDrop()
 
 	//t = torch.clamp((v * (1.0 - s * (1.0 - f))), 0.0, 1.0)
 	// step1. s * (1.0 - f)
-	sub1 := f.MustMul1(ts.FloatScalar(-1), false).MustAdd1(ts.FloatScalar(1.0), true).MustMul(s, true)
+	sub1 := f.MustMulScalar(ts.FloatScalar(-1), false).MustAddScalar(ts.FloatScalar(1.0), true).MustMul(s, true)
 	// step 2: v *(1.0 - step1)
-	x3 := sub1.MustMul1(ts.FloatScalar(-1), true).MustAdd1(ts.FloatScalar(1.0), true).MustMul(v, true) // deleted sub1
-	t := x3.MustClamp(ts.FloatScalar(0.0), ts.FloatScalar(1.0), true)                                  // deleted x3
+	x3 := sub1.MustMulScalar(ts.FloatScalar(-1), true).MustAddScalar(ts.FloatScalar(1.0), true).MustMul(v, true) // deleted sub1
+	t := x3.MustClamp(ts.FloatScalar(0.0), ts.FloatScalar(1.0), true)                                            // deleted x3
 
 	// i = i.to(dtype=torch.int32)
 	i = i.MustTotype(gotch.Int, true)
@@ -441,7 +441,7 @@ func hsv2RGB(x *ts.Tensor) *ts.Tensor {
 	// torch.arange(6, device=i.device).view(-1, 1, 1)
 	x4 := ts.MustArange(ts.FloatScalar(6), gotch.Float, iremainder.MustDevice()).MustView([]int64{-1, 1, 1}, true)
 	// mask = i.unsqueeze(dim=-3) == torch.arange(6, device=i.device).view(-1, 1, 1)
-	mask := iremainder.MustUnsqueeze(-3, true).MustEq1(x4, true).MustTotype(x.DType(), true) // delete iremainder
+	mask := iremainder.MustUnsqueeze(-3, true).MustEqTensor(x4, true).MustTotype(x.DType(), true) // delete iremainder
 	x4.MustDrop()
 
 	// a1 = torch.stack((v, q, p, p, t, v), dim=-3)
@@ -487,7 +487,7 @@ func adjustHue(x *ts.Tensor, hue float64) *ts.Tensor {
 		return out
 	}
 
-	imgFl := x.MustTotype(gotch.Float, false).MustDiv1(ts.FloatScalar(255.0), true)
+	imgFl := x.MustTotype(gotch.Float, false).MustDivScalar(ts.FloatScalar(255.0), true)
 	hsvImg := rgb2HSV(imgFl)
 
 	hsvTs := hsvImg.MustUnbind(-3, true)
@@ -495,13 +495,13 @@ func adjustHue(x *ts.Tensor, hue float64) *ts.Tensor {
 	s := &hsvTs[1]
 	v := &hsvTs[2]
 	// h = (h + hue_factor) % 1.0
-	hAdj := h.MustAdd1(ts.FloatScalar(hue), false).MustRemainder(ts.FloatScalar(1.0), true)
+	hAdj := h.MustAddScalar(ts.FloatScalar(hue), false).MustRemainder(ts.FloatScalar(1.0), true)
 
 	hsvAdj := ts.MustStack([]ts.Tensor{*hAdj, *s, *v}, -3)
 
 	imgHueAdj := hsv2RGB(hsvAdj)
 
-	out := imgHueAdj.MustMul1(ts.FloatScalar(255.0), true)
+	out := imgHueAdj.MustMulScalar(ts.FloatScalar(255.0), true)
 
 	imgFl.MustDrop()
 	h.MustDrop()
@@ -658,7 +658,7 @@ func cutout(x *ts.Tensor, top, left, height, width int64, rgbVal []int64) *ts.Te
 		srcIdx := []ts.TensorIndexer{cIdx, hNar, wNar}
 		view := output.Idx(srcIdx)
 		oneTs := view.MustOnesLike(false)
-		vTs := oneTs.MustMul1(ts.IntScalar(rgbVal[i]), true)
+		vTs := oneTs.MustMulScalar(ts.IntScalar(rgbVal[i]), true)
 		view.Copy_(vTs)
 		vTs.MustDrop()
 		view.MustDrop()
@@ -760,7 +760,7 @@ func applyGridTransform(x, gridInput *ts.Tensor, mode string, fillValue []float6
 	fillImg := ts.MustOfSlice(fillValue).MustTotype(image.DType(), true).MustTo(image.MustDevice(), true).MustView([]int64{1, 3, 1, 1}, true).MustExpandAs(image, true)
 
 	// img = img * mask + (1.0 - mask) * fill_img
-	addTs := mask.MustMul1(ts.FloatScalar(-1), false).MustAdd1(ts.FloatScalar(1.0), true).MustMul(fillImg, true)
+	addTs := mask.MustMulScalar(ts.FloatScalar(-1), false).MustAddScalar(ts.FloatScalar(1.0), true).MustMul(fillImg, true)
 	imgOut := image.MustMul(mask, true).MustAdd(addTs, true)
 	addTs.MustDrop()
 	mask.MustDrop()
@@ -817,7 +817,7 @@ func perspectiveCoeff(startPoints, endPoints [][]int64) []float64 {
 	res := bMat.MustLstsq(aMat, true)
 
 	aMat.MustDrop()
-	outputTs := res.MustSqueeze1(1, true)
+	outputTs := res.MustSqueezeDim(1, true)
 	output := outputTs.Float64Values()
 	outputTs.MustDrop()
 
@@ -897,7 +897,7 @@ func perspectiveGrid(coef []float64, ow, oh int64, dtype gotch.DType, device got
 	rescaledTheta1.MustDrop()
 	rescaledTheta2.MustDrop()
 
-	outputGrid := outputGrid1.MustDiv(outputGrid2, true).MustSub1(ts.FloatScalar(1.0), true).MustView([]int64{1, oh, ow, 2}, true)
+	outputGrid := outputGrid1.MustDiv(outputGrid2, true).MustSubScalar(ts.FloatScalar(1.0), true).MustView([]int64{1, oh, ow, 2}, true)
 	outputGrid2.MustDrop()
 
 	baseGrid.MustDrop()
@@ -1132,7 +1132,7 @@ func solarize(img *ts.Tensor, threshold float64) *ts.Tensor {
 	// return torch.where(img >= threshold, inverted_img, img)
 	conditionTs := img.MustGe(ts.FloatScalar(threshold), false)
 
-	out := img.MustWhere1(conditionTs, invertedImg, false)
+	out := img.MustWhereSelf(conditionTs, invertedImg, false)
 
 	invertedImg.MustDrop()
 	conditionTs.MustDrop()
@@ -1153,7 +1153,7 @@ func invert(img *ts.Tensor) *ts.Tensor {
 
 	var bound int64 = 255
 	// return bound - img
-	out := img.MustMul1(ts.IntScalar(-1), false).MustAdd1(ts.IntScalar(bound), true)
+	out := img.MustMulScalar(ts.IntScalar(-1), false).MustAddScalar(ts.IntScalar(bound), true)
 	return out
 }
 
@@ -1201,7 +1201,7 @@ func autocontrast(img *ts.Tensor) *ts.Tensor {
 
 	// eq_idxs = torch.where(minimum == maximum)[0]
 	// NOTE. Eq(minTs, maxTs) give [n, c, 1, 1] or [channels, 1, 1]
-	eqIdx := minTs.MustEq1(maxTs, false).MustSqueeze1(-1, true).MustSqueeze1(-1, true).MustTotype(gotch.Int64, true)
+	eqIdx := minTs.MustEqTensor(maxTs, false).MustSqueezeDim(-1, true).MustSqueezeDim(-1, true).MustTotype(gotch.Int64, true)
 
 	// minimum[eq_idxs] = 0
 	minTsView := minTs.MustIndexSelect(0, eqIdx, false)
@@ -1212,13 +1212,13 @@ func autocontrast(img *ts.Tensor) *ts.Tensor {
 
 	// maximum[eq_idxs] = bound
 	maxTsView := maxTs.MustIndexSelect(0, eqIdx, false)
-	boundTs := maxTsView.MustOnesLike(false).MustMul1(ts.FloatScalar(bound), true)
+	boundTs := maxTsView.MustOnesLike(false).MustMulScalar(ts.FloatScalar(bound), true)
 	maxTsView.Copy_(boundTs)
 	boundTs.MustDrop()
 	maxTsView.MustDrop()
 
 	// scale = bound / (maximum - minimum)
-	scale := maxTs.MustSub(minTs, false).MustPow(ts.IntScalar(-1), true).MustMul1(ts.FloatScalar(bound), true)
+	scale := maxTs.MustSub(minTs, false).MustPow(ts.IntScalar(-1), true).MustMulScalar(ts.FloatScalar(bound), true)
 	//
 	// return ((img - minimum) * scale).clamp(0, bound).to(img.dtype)
 	out := img.MustSub(minTs, false).MustMul(scale, true).MustClamp(ts.IntScalar(0), ts.FloatScalar(bound), true).MustTotype(dtype, true)
@@ -1265,7 +1265,7 @@ func blurredDegenerateImage(img *ts.Tensor) *ts.Tensor {
 
 	// kernel[1, 1] = 5.0
 	kernelView := kernel.MustNarrow(1, 1, 1, false).MustNarrow(0, 1, 1, true)
-	centerVal := kernelView.MustOnesLike(false).MustMul1(ts.FloatScalar(5.0), true)
+	centerVal := kernelView.MustOnesLike(false).MustMulScalar(ts.FloatScalar(5.0), true)
 	kernelView.Copy_(centerVal) // center kernel value
 	centerVal.MustDrop()
 	kernelView.MustDrop()
@@ -1393,7 +1393,7 @@ func scaleChannel(imgChan *ts.Tensor) *ts.Tensor {
 
 	// step = torch.div(nonzero_hist[:-1].sum(), 255, rounding_mode='floor')
 	histoLen := nonzeroHisto.MustSize()[0]
-	step := nonzeroHisto.MustNarrow(0, 0, histoLen-1, true).MustSum(gotch.Float, true).MustFloorDivide1(ts.FloatScalar(255.0), true)
+	step := nonzeroHisto.MustNarrow(0, 0, histoLen-1, true).MustSum(gotch.Float, true).MustFloorDivideScalar(ts.FloatScalar(255.0), true)
 
 	stepVal := step.Float64Values()[0]
 	if stepVal == 0 {
@@ -1404,7 +1404,7 @@ func scaleChannel(imgChan *ts.Tensor) *ts.Tensor {
 	}
 
 	// lut = torch.div(torch.cumsum(hist, 0) + torch.div(step, 2, rounding_mode='floor'), step, rounding_mode='floor')
-	halfStep := step.MustFloorDivide1(ts.FloatScalar(2.0), false)
+	halfStep := step.MustFloorDivideScalar(ts.FloatScalar(2.0), false)
 	lut := histo.Must_Cumsum(0, true).MustAdd(halfStep, true).MustFloorDivide(step, true)
 	step.MustDrop()
 	halfStep.MustDrop()
@@ -1491,7 +1491,7 @@ func Byte2FloatImage(x *ts.Tensor) *ts.Tensor {
 		panic(err)
 	}
 
-	return x.MustDiv1(ts.FloatScalar(255.0), false)
+	return x.MustDivScalar(ts.FloatScalar(255.0), false)
 }
 
 // Float2ByteImage converts float dtype image to uint8 dtype image.
@@ -1503,5 +1503,5 @@ func Float2ByteImage(x *ts.Tensor) *ts.Tensor {
 		panic(err)
 	}
 
-	return x.MustMul1(ts.IntScalar(255), false).MustTotype(gotch.Uint8, true)
+	return x.MustMulScalar(ts.IntScalar(255), false).MustTotype(gotch.Uint8, true)
 }

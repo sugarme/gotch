@@ -77,7 +77,7 @@ func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Ten
 	}
 
 	initTs := ts.MustRandn(dims, gotch.Float, device)
-	return initTs.MustMul1(ts.FloatScalar(r.stdev), true).MustAdd1(ts.FloatScalar(r.mean), true)
+	return initTs.MustMulScalar(ts.FloatScalar(r.stdev), true).MustAddScalar(ts.FloatScalar(r.mean), true)
 }
 
 func (r randnInit) Set(tensor *ts.Tensor) {

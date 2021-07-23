@@ -105,8 +105,13 @@ void at_set_num_threads(int n_threads);
 
 void at_free(tensor);
 
-void at_run_backward(tensor *tensors, int ntensors, tensor *inputs, int ninputs,
-                     tensor *outputs, int keep_graph, int create_graph);
+void at_run_backward(tensor *tensors,
+                      int ntensors,
+                      tensor *inputs,
+                      int ninputs,
+                      tensor *outputs,
+                      int keep_graph,
+                      int create_graph);
 
 optimizer ato_adam(double learning_rate, double beta1, double beta2,
                    double weight_decay);
@@ -131,7 +136,7 @@ void ato_step(optimizer);
 void ato_free(optimizer);
 
 // TT. APIs for learning rate scheduler
-void ato_set_learning_rates(optimizer, double* learning_rates, int lrs_num);
+void ato_set_learning_rates(optimizer, double *learning_rates, int lrs_num);
 int64_t ato_param_group_num(optimizer);
 void ato_get_learning_rates(optimizer, double *lrs, int *ngroup);
 void ato_add_param_group(optimizer, tensor *params, int param_num);

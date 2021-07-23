@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+
 	// "os"
 	"path/filepath"
 	"reflect"
@@ -38,7 +39,7 @@ func (in *ImageNet) Normalize(tensor *ts.Tensor) (*ts.Tensor, error) {
 		return nil, err
 	}
 
-	resDiv1, err := res.Div1(ts.FloatScalar(float64(255.0)), true)
+	resDiv1, err := res.DivScalar(ts.FloatScalar(float64(255.0)), true)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func (in *ImageNet) UnNormalize(tensor *ts.Tensor) (*ts.Tensor, error) {
 		return nil, err
 	}
 
-	resMul1, err := resAdd.Mul1(ts.FloatScalar(float64(255.0)), true)
+	resMul1, err := resAdd.MulScalar(ts.FloatScalar(float64(255.0)), true)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +264,7 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 		trainImages = append(trainImages, *trainTs)
 
 		trainLabelOnes := ts.MustOnes([]int64{ntrainTs}, gotch.Int64, gotch.CPU)
-		trainLabels = append(trainLabels, *trainLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
+		trainLabels = append(trainLabels, *trainLabelOnes.MustMulScalar(ts.IntScalar(labelIndex), true))
 
 		// test
 		testDir := fmt.Sprintf("%v/%v", validPath, labelDir)
@@ -276,7 +277,7 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 		testImages = append(testImages, *testTs)
 
 		testLabelOnes := ts.MustOnes([]int64{ntestTs}, gotch.Int64, gotch.CPU)
-		testLabels = append(testLabels, *testLabelOnes.MustMul1(ts.IntScalar(labelIndex), true))
+		testLabels = append(testLabels, *testLabelOnes.MustMulScalar(ts.IntScalar(labelIndex), true))
 	}
 
 	trainImageTs := ts.MustCat(trainImages, 0)

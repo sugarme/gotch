@@ -107,9 +107,9 @@ func NewLSTM(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) *LSTM {
 	// if vs.Device().IsCuda() && gotch.Cuda.CudnnIsAvailable() {
 	// TODO: check if Cudnn is available here!!!
 	if vs.Device().IsCuda() {
-		// NOTE. 2 is for LSTM
-		// ref. rnn.cpp in Pytorch
-		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 2, hiddenDim, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
+		// 2: for LSTM
+		// 0: disables projections
+		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 2, hiddenDim, 0, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
 	}
 
 	return &LSTM{
@@ -227,9 +227,9 @@ func NewGRU(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) (retVal *GRU) {
 	}
 
 	if vs.Device().IsCuda() {
-		// NOTE. 3 is for GRU
-		// ref. rnn.cpp in Pytorch
-		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 3, hiddenDim, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
+		// 3: for GRU
+		// 0: disable projections
+		ts.Must_CudnnRnnFlattenWeight(flatWeights, 4, inDim, 3, hiddenDim, 0, cfg.NumLayers, cfg.BatchFirst, cfg.Bidirectional)
 	}
 
 	return &GRU{

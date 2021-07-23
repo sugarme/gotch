@@ -313,8 +313,8 @@ func efficientnet(p *nn.Path, params *params, nclasses int64) ts.ModuleT {
 		tmp6.MustDrop()
 		tmp8 := tmp7.MustAdaptiveAvgPool2d([]int64{1, 1}, false)
 		tmp7.MustDrop()
-		tmp9 := tmp8.MustSqueeze1(-1, true)
-		tmp10 := tmp9.MustSqueeze1(-1, true)
+		tmp9 := tmp8.MustSqueezeDim(-1, true)
+		tmp10 := tmp9.MustSqueezeDim(-1, true)
 
 		res := tmp10.ApplyT(classifier, train)
 		tmp10.MustDrop()

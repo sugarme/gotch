@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
+## [0.4.0]
+- **Update libtorch to 1.9**. Generated **1716 APIs**. There are APIs naming changes ie. `Name1` change to `NameDim` or `NameTensor`.
+
 ## [0.3.14]
 - Fixed temporary fix huge number of learning group returned from C at `libtch/tensor.go AtoGetLearningRates`
 - Fixed incorrect `nn.AdamWConfig` and some documentation.

@@ -20,7 +20,7 @@ func (ts *Tensor) CrossEntropyForLogits(targets *Tensor) (retVal *Tensor) {
 // targets represent ground-truth.
 func (ts *Tensor) AccuracyForLogits(targets *Tensor) (retVal *Tensor) {
 	argmax := ts.MustArgmax([]int64{-1}, false, false)
-	eq1 := argmax.MustEq1(targets, true)
+	eq1 := argmax.MustEqTensor(targets, true)
 	return eq1.MustTotype(gotch.Float, true).MustMean(gotch.Float, true)
 }
 

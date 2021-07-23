@@ -8,7 +8,7 @@ import (
 )
 
 func ExampleTensor_Split(t *testing.T) {
-	tensor := ts.MustArange1(ts.FloatScalar(0), ts.FloatScalar(10), gotch.Float, gotch.CPU).MustView([]int64{5, 2}, true)
+	tensor := ts.MustArange(ts.FloatScalar(10), gotch.Float, gotch.CPU).MustView([]int64{5, 2}, true)
 	splitTensors := tensor.MustSplit(2, 0, false)
 
 	for _, t := range splitTensors {
@@ -27,7 +27,7 @@ func ExampleTensor_Split(t *testing.T) {
 }
 
 func ExampleTensorSplitWithSizes(t *testing.T) {
-	tensor := ts.MustArange1(ts.FloatScalar(0), ts.FloatScalar(10), gotch.Float, gotch.CPU).MustView([]int64{5, 2}, true)
+	tensor := ts.MustArange(ts.FloatScalar(10), gotch.Float, gotch.CPU).MustView([]int64{5, 2}, true)
 	splitTensors := tensor.MustSplitWithSizes([]int64{1, 4}, 0, false)
 
 	for _, t := range splitTensors {

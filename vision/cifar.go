@@ -67,7 +67,7 @@ func readFile(filename string) (imagesTs *ts.Tensor, labelsTs *ts.Tensor) {
 	}
 
 	tmp1 := images.MustTotype(gotch.Float, true)
-	imagesTs = tmp1.MustDiv1(ts.FloatScalar(255.0), true)
+	imagesTs = tmp1.MustDivScalar(ts.FloatScalar(255.0), true)
 
 	labelsTs = labels
 

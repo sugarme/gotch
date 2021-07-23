@@ -1207,7 +1207,7 @@ func (ts *Tensor) Onehot(labels int64) *Tensor {
 	inputTs := unsqueezeTs.MustTotype(gotch.Int64, true)
 
 	zerosTs := MustZeros(dims, gotch.Float, gotch.CPU)
-	retVal := zerosTs.MustScatter1(-1, inputTs, FloatScalar(1.0), true)
+	retVal := zerosTs.MustScatterValue(-1, inputTs, FloatScalar(1.0), true)
 	inputTs.MustDrop()
 
 	return retVal

@@ -18,12 +18,12 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 
 ## Dependencies
 
-- **Libtorch** C++ v1.7.0 library of [Pytorch](https://pytorch.org/)
+- **Libtorch** C++ v1.9.0 library of [Pytorch](https://pytorch.org/)
 
 ## Installation
 
 - Default CUDA version is `10.1` if CUDA is available otherwise using CPU version.
-- Default Pytorch C++ API version is `1.7.0`
+- Default Pytorch C++ API version is `1.9.0`
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
 
@@ -51,7 +51,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.3.14 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.4.0 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -89,9 +89,9 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
     # CUDA 10.1
-    export CUDA_VER=10.1 && export GOTCH_VER=v0.3.14 && bash setup-gotch.sh
+    export CUDA_VER=10.1 && export GOTCH_VER=v0.4.0 && bash setup-gotch.sh
     # CUDA 11.0
-    export CUDA_VER=11.0 && export GOTCH_VER=v0.3.14 && bash setup-gotch.sh
+    export CUDA_VER=11.0 && export GOTCH_VER=v0.4.0 && bash setup-gotch.sh
 ```
 
 ## Examples
