@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [Nofix]
+- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
+
+## [0.3.14]
 - Fixed temporary fix huge number of learning group returned from C at `libtch/tensor.go AtoGetLearningRates`
 - Fixed incorrect `nn.AdamWConfig` and some documentation.
 - Fixed - reworked on `vision.ResNet` and `vision.DenseNet` to fix incorrect layers and memory leak
@@ -17,9 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed exporting augment options and make ColorJitter forward output dtype `uint8` for chaining with other augment options.
 - [#45] Fixed `init/RandInt` incorrect initialization 
 - [#48] Fixed `init/RandInit` when init with mean = 0.0.
-
-## [Nofix]
-- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
 ## [0.3.13]
 - Fixed multiple memory leakage at `vision/image.go`
