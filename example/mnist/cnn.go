@@ -74,9 +74,8 @@ func runCNN1() {
 	testImages := ds.TestImages
 	testLabels := ds.TestLabels
 
-	cuda := gotch.CudaBuilder(0)
-	vs := nn.NewVarStore(cuda.CudaIfAvailable())
-	// vs := nn.NewVarStore(gotch.CPU)
+	device := gotch.CudaIfAvailable()
+	vs := nn.NewVarStore(device)
 
 	net := newNet(vs.Root())
 	opt, err := nn.DefaultAdamConfig().Build(vs, LrCNN)
