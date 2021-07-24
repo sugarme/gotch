@@ -51,7 +51,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.4.0 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.4.1 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -89,9 +89,9 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
     # CUDA 10.1
-    export CUDA_VER=10.1 && export GOTCH_VER=v0.4.0 && bash setup-gotch.sh
+    export CUDA_VER=10.1 && export GOTCH_VER=v0.4.1 && bash setup-gotch.sh
     # CUDA 11.0
-    export CUDA_VER=11.0 && export GOTCH_VER=v0.4.0 && bash setup-gotch.sh
+    export CUDA_VER=11.0 && export GOTCH_VER=v0.4.1 && bash setup-gotch.sh
 ```
 
 ## Examples
@@ -175,7 +175,7 @@ mul tensor (ts1 x ts2):
 // In-place operation
 ts3 := ts.MustOnes([]int64{2, 3}, gotch.Float, gotch.CPU)
 fmt.Printf("Before:\n%v", ts3)
-ts3.MustAdd1_(ts.FloatScalar(2.0))
+ts3.MustAddScalar_(ts.FloatScalar(2.0))
 fmt.Printf("After (ts3 + 2.0):\n%v", ts3)
 
 /*
@@ -277,6 +277,3 @@ Gotch is Apache 2.0 licensed.
 
 - This project has been inspired and used many concepts from [tch-rs](https://github.com/LaurentMazare/tch-rs)
     Libtorch Rust binding. 
-
-
-

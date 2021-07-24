@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GOTCH_VERSION="${GOTCH_VER:-v0.4.0}"
+GOTCH_VERSION="${GOTCH_VER:-v0.4.1}"
 CUDA_VERSION="${CUDA_VER:-10.1}"
 GOTCH_PATH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION"
 
@@ -67,17 +67,25 @@ EOT
 else
   echo "creating $DUMMY_CUDA_FILE for GPU"
   sudo tee -a $DUMMY_CUDA_FILE > /dev/null <<EOT
+#include<stdio.h>
+#include<stdint.h>
+using namespace std;
 extern "C" {
     void dummy_cuda_dependency();
 }
 
+struct cublasContext;
+
 namespace at {
     namespace cuda {
+        cublasContext* getCurrentCUDABlasHandle();
         int warp_size();
     }
 }
+char * magma_strerror(int err);
 void dummy_cuda_dependency() {
-  at::cuda::warp_size();
+    at::cuda::getCurrentCUDABlasHandle();
+    at::cuda::warp_size();
 }
 EOT
 
