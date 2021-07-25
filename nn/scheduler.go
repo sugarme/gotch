@@ -22,6 +22,10 @@ func defaultSchedulerOptions() *SchedulerOptions {
 	}
 }
 
+func DefaultSchedulerOptions() *SchedulerOptions {
+	return defaultSchedulerOptions()
+}
+
 func WithLastEpoch(epoch int) SchedulerOption {
 	return func(o *SchedulerOptions) {
 		o.LastEpoch = epoch

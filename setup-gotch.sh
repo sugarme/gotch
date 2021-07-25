@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GOTCH_VERSION="${GOTCH_VER:-v0.4.2}"
+GOTCH_VERSION="${GOTCH_VER:-v0.4.3}"
 CUDA_VERSION="${CUDA_VER:-10.2}"
 GOTCH_PATH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION"
 
