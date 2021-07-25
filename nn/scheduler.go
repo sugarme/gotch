@@ -44,6 +44,10 @@ type LRScheduler struct {
 	scheduler scheduler
 }
 
+func NewLRScheduler(s scheduler) *LRScheduler {
+	return &LRScheduler{s}
+}
+
 // Step updates optimizer learning rate.
 func (s *LRScheduler) Step(opts ...SchedulerOption) {
 	s.scheduler.SetLRs(opts...)
