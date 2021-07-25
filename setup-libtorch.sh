@@ -1,7 +1,7 @@
 #!/bin/bash
 
 LIBTORCH_VERSION="${LIBTORCH_VER:-1.9.0}"
-CUDA_VERSION="${CUDA_VER:-10.1}"
+CUDA_VERSION="${CUDA_VER:-10.2}"
 
 if [[ -z "${CUDA_VERSION}"=="cpu" ]]; then
   CU_VERSION="cpu"

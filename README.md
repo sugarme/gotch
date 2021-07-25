@@ -22,7 +22,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 
 ## Installation
 
-- Default CUDA version is `10.1` if CUDA is available otherwise using CPU version.
+- Default CUDA version is `10.2` if CUDA is available otherwise using CPU version.
 - Default Pytorch C++ API version is `1.9.0`
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
@@ -51,7 +51,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.4.1 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.4.2 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -68,10 +68,10 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh
     chmod +x setup-libtorch.sh
 
-    # CUDA 10.1
-    export CUDA_VER=10.1 && bash setup-libtorch.sh
-    # CUDA 11.0
-    export CUDA_VER=11.0 && bash setup-libtorch.sh
+    # CUDA 10.2
+    export CUDA_VER=10.2 && bash setup-libtorch.sh
+    # CUDA 11.1
+    export CUDA_VER=11.1 && bash setup-libtorch.sh
 ```
 
 **Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
@@ -88,10 +88,10 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    # CUDA 10.1
-    export CUDA_VER=10.1 && export GOTCH_VER=v0.4.1 && bash setup-gotch.sh
-    # CUDA 11.0
-    export CUDA_VER=11.0 && export GOTCH_VER=v0.4.1 && bash setup-gotch.sh
+    # CUDA 10.2
+    export CUDA_VER=10.2 && export GOTCH_VER=v0.4.2 && bash setup-gotch.sh
+    # CUDA 11.1
+    export CUDA_VER=11.1 && export GOTCH_VER=v0.4.2 && bash setup-gotch.sh
 ```
 
 ## Examples

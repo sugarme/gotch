@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Added nn/scheduler NewLRScheduler()
-
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
+
+## [0.4.2]
+- Added nn/scheduler NewLRScheduler()
+- Added nn/conv config options
 
 ## [0.4.1]
 - fixed cuda error `undefined reference to 'at::cuda::warp_size()'`

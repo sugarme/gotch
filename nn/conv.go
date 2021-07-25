@@ -9,6 +9,10 @@ import (
 	ts "github.com/sugarme/gotch/tensor"
 )
 
+// Conv1DConfig:
+// ============
+
+// Conv1DConfig is configuration struct for convolution 1D.
 type Conv1DConfig struct {
 	Stride   []int64
 	Padding  []int64
@@ -19,24 +23,55 @@ type Conv1DConfig struct {
 	BsInit   Init
 }
 
-type Conv2DConfig struct {
-	Stride   []int64
-	Padding  []int64
-	Dilation []int64
-	Groups   int64
-	Bias     bool
-	WsInit   Init
-	BsInit   Init
+// Conv1DConfigOpt is option for Conv1DConfig.
+type Conv1DConfigOpt func(*Conv1DConfig)
+
+// withStride1D adds stride 1D option.
+func WithStride1D(val int64) Conv1DConfigOpt {
+	return func(cfg *Conv1DConfig) {
+		cfg.Stride = []int64{val}
+	}
 }
 
-type Conv3DConfig struct {
-	Stride   []int64
-	Padding  []int64
-	Dilation []int64
-	Groups   int64
-	Bias     bool
-	WsInit   Init
-	BsInit   Init
+// WithPadding1D adds padding 1D option.
+func WithPadding1D(val int64) Conv1DConfigOpt {
+	return func(cfg *Conv1DConfig) {
+		cfg.Padding = []int64{val}
+	}
+}
+
+// WithDilation1D adds dilation 1D option.
+func WithDilation1D(val int64) Conv1DConfigOpt {
+	return func(cfg *Conv1DConfig) {
+		cfg.Dilation = []int64{val}
+	}
+}
+
+func WithGroup1D(val int64) Conv1DConfigOpt {
+	return func(cfg *Conv1DConfig) {
+		cfg.Groups = val
+	}
+}
+
+// WithBias1D adds bias 1D option.
+func WithBias1D(val bool) Conv1DConfigOpt {
+	return func(cfg *Conv1DConfig) {
+		cfg.Bias = val
+	}
+}
+
+// WithWsInit adds WsInit 1D option.
+func WithWsInit1D(val Init) Conv1DConfigOpt {
+	return func(cfg *Conv1DConfig) {
+		cfg.WsInit = val
+	}
+}
+
+// WithBsInit adds BsInit 1D option.
+func WithBsInit1D(val Init) Conv1DConfigOpt {
+	return func(cfg *Conv1DConfig) {
+		cfg.BsInit = val
+	}
 }
 
 // DefaultConvConfig create a default 1D ConvConfig
@@ -49,6 +84,82 @@ func DefaultConv1DConfig() *Conv1DConfig {
 		Bias:     true,
 		WsInit:   NewKaimingUniformInit(),
 		BsInit:   NewConstInit(float64(0.0)),
+	}
+}
+
+// NewConv1DConfig creates Conv1DConfig.
+func NewConv1DConfig(opts ...Conv1DConfigOpt) *Conv1DConfig {
+	cfg := DefaultConv1DConfig()
+	for _, o := range opts {
+		o(cfg)
+	}
+
+	return cfg
+}
+
+// Conv2DConfig:
+// ============
+
+// Conv2DConfig is configuration for convolution 2D.
+type Conv2DConfig struct {
+	Stride   []int64
+	Padding  []int64
+	Dilation []int64
+	Groups   int64
+	Bias     bool
+	WsInit   Init
+	BsInit   Init
+}
+
+// Conv2DConfigOpt is option type for Conv2DConfig.
+type Conv2DConfigOpt func(*Conv2DConfig)
+
+// WithStride2D adds stride 2D option.
+func WithStride2D(val int64) Conv2DConfigOpt {
+	return func(cfg *Conv2DConfig) {
+		cfg.Stride = []int64{val, val}
+	}
+}
+
+// WithPadding2D adds padding 2D option.
+func WithPadding2D(val int64) Conv2DConfigOpt {
+	return func(cfg *Conv2DConfig) {
+		cfg.Padding = []int64{val, val}
+	}
+}
+
+// WithDilation2D adds dilation 2D option.
+func WithDilation2D(val int64) Conv2DConfigOpt {
+	return func(cfg *Conv2DConfig) {
+		cfg.Dilation = []int64{val, val}
+	}
+}
+
+// WithGroup2D adds group 2D option.
+func WithGroup2D(val int64) Conv2DConfigOpt {
+	return func(cfg *Conv2DConfig) {
+		cfg.Groups = val
+	}
+}
+
+// WithBias2D adds bias 2D option.
+func WithBias2D(val bool) Conv2DConfigOpt {
+	return func(cfg *Conv2DConfig) {
+		cfg.Bias = val
+	}
+}
+
+// WithWsInit2D adds WsInit 2D option.
+func WithWsInit2D(val Init) Conv2DConfigOpt {
+	return func(cfg *Conv2DConfig) {
+		cfg.WsInit = val
+	}
+}
+
+// WithBsInit adds BsInit 2D option.
+func WithBsInit2D(val Init) Conv2DConfigOpt {
+	return func(cfg *Conv2DConfig) {
+		cfg.BsInit = val
 	}
 }
 
@@ -65,12 +176,38 @@ func DefaultConv2DConfig() *Conv2DConfig {
 	}
 }
 
+// NewConv2DConfig creates Conv2DConfig.
+func NewConv2DConfig(opts ...Conv2DConfigOpt) *Conv2DConfig {
+	cfg := DefaultConv2DConfig()
+	for _, o := range opts {
+		o(cfg)
+	}
+
+	return cfg
+}
+
+// Conv3DConfig:
+// =============
+
+// Conv3DConfig is configuration struct for convolution 3D.
+type Conv3DConfig struct {
+	Stride   []int64
+	Padding  []int64
+	Dilation []int64
+	Groups   int64
+	Bias     bool
+	WsInit   Init
+	BsInit   Init
+}
+
+// Conv1D is convolution 1D struct.
 type Conv1D struct {
 	Ws     *ts.Tensor
 	Bs     *ts.Tensor // optional
 	Config *Conv1DConfig
 }
 
+// NewConv1D creates Conv1D struct.
 func NewConv1D(vs *Path, inDim, outDim, k int64, cfg *Conv1DConfig) *Conv1D {
 	var (
 		ws *ts.Tensor
@@ -90,12 +227,14 @@ func NewConv1D(vs *Path, inDim, outDim, k int64, cfg *Conv1DConfig) *Conv1D {
 	}
 }
 
+// Conv2D is convolution 2D struct.
 type Conv2D struct {
 	Ws     *ts.Tensor
 	Bs     *ts.Tensor // optional
 	Config *Conv2DConfig
 }
 
+// NewConv2D creates new Conv2D.
 func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg *Conv2DConfig) *Conv2D {
 	var (
 		ws *ts.Tensor
@@ -115,12 +254,14 @@ func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg *Conv2DConfig) *Conv2
 	}
 }
 
+// Conv3D is convolution 3D struct.
 type Conv3D struct {
 	Ws     *ts.Tensor
 	Bs     *ts.Tensor // optional
 	Config *Conv3DConfig
 }
 
+// NewConv3D creates new Conv3D struct.
 func NewConv3D(vs *Path, inDim, outDim, k int64, cfg *Conv3DConfig) *Conv3D {
 	var (
 		ws *ts.Tensor
