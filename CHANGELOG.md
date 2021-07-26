@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
+## [0.4.4]
+- Dropped libtch `dummy_cuda_dependency()` and `fake_cuda_dependency()` as libtorch ldd linking Okay now.
+
 ## [0.4.3]
 - Export nn/scheduler DefaultSchedulerOptions()
 

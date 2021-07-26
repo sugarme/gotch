@@ -1,7 +1,7 @@
 #!/bin/bash
 
-GOTCH_VERSION="${GOTCH_VER:-v0.4.3}"
-CUDA_VERSION="${CUDA_VER:-10.2}"
+GOTCH_VERSION="${GOTCH_VER:-v0.4.4}"
+CUDA_VERSION="${CUDA_VER:-11.1}"
 GOTCH_PATH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION"
 
 # Install gotch
@@ -24,14 +24,6 @@ cd $cwd
 
 # Setup gotch for CUDA or non-CUDA device:
 #=========================================
-DUMMY_CUDA_FILE="$GOTCH_PATH/libtch/dummy_cuda_dependency.cpp"
-# Check and delete old file if existing
-if [ -f $DUMMY_CUDA_FILE ]
-then
-  echo "$DUMMY_CUDA_FILE existing. Deleting..."
-  sudo rm $DUMMY_CUDA_FILE
-fi
-
 GOTCH_LIB_FILE="$GOTCH_PATH/libtch/lib.go"
 if [ -f $GOTCH_LIB_FILE ]
 then
@@ -41,15 +33,6 @@ fi
 
 # Create files for CUDA or non-CUDA device
 if [ $CUDA_VERSION == "cpu" ]; then
-  echo "creating $DUMMY_CUDA_FILE for CPU"
-  sudo tee -a $DUMMY_CUDA_FILE > /dev/null <<EOT
-extern "C" {
-void dummy_cuda_dependency();
-}
-
-void dummy_cuda_dependency() {}
-EOT
-
   echo "creating $GOTCH_LIB_FILE for CPU"
   sudo tee -a $GOTCH_LIB_FILE > /dev/null <<EOT
 package libtch
@@ -65,30 +48,6 @@ package libtch
 import "C"
 EOT
 else
-  echo "creating $DUMMY_CUDA_FILE for GPU"
-  sudo tee -a $DUMMY_CUDA_FILE > /dev/null <<EOT
-#include<stdio.h>
-#include<stdint.h>
-using namespace std;
-extern "C" {
-    void dummy_cuda_dependency();
-}
-
-struct cublasContext;
-
-namespace at {
-    namespace cuda {
-        cublasContext* getCurrentCUDABlasHandle();
-        int warp_size();
-    }
-}
-char * magma_strerror(int err);
-void dummy_cuda_dependency() {
-    at::cuda::getCurrentCUDABlasHandle();
-    at::cuda::warp_size();
-}
-EOT
-
   echo "creating $GOTCH_LIB_FILE for GPU"
   sudo tee -a $GOTCH_LIB_FILE > /dev/null <<EOT
 package libtch
