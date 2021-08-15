@@ -564,27 +564,27 @@ func MustWhere(condition Tensor, del bool) (retVal []Tensor) {
 // NOTE. patches for APIs `agt_` missing in tensor/ but existing in lib
 // ====================================================================
 
-// void atg_lstsq(tensor *, tensor self, tensor A);
-func (ts *Tensor) Lstsq(a *Tensor, del bool) (retVal *Tensor, err error) {
-	if del {
-		defer ts.MustDrop()
-	}
-	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-
-	lib.AtgLstsq(ptr, ts.ctensor, a.ctensor)
-	if err = TorchErr(); err != nil {
-		return retVal, err
-	}
-	retVal = &Tensor{ctensor: *ptr}
-
-	return retVal, err
-}
-
-func (ts *Tensor) MustLstsq(a *Tensor, del bool) (retVal *Tensor) {
-	retVal, err := ts.Lstsq(a, del)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return retVal
-}
+// // void atg_lstsq(tensor *, tensor self, tensor A);
+// func (ts *Tensor) Lstsq(a *Tensor, del bool) (retVal *Tensor, err error) {
+// if del {
+// defer ts.MustDrop()
+// }
+// ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+//
+// lib.AtgLstsq(ptr, ts.ctensor, a.ctensor)
+// if err = TorchErr(); err != nil {
+// return retVal, err
+// }
+// retVal = &Tensor{ctensor: *ptr}
+//
+// return retVal, err
+// }
+//
+// func (ts *Tensor) MustLstsq(a *Tensor, del bool) (retVal *Tensor) {
+// retVal, err := ts.Lstsq(a, del)
+// if err != nil {
+// log.Fatal(err)
+// }
+//
+// return retVal
+// }

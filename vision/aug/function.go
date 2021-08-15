@@ -814,10 +814,15 @@ func perspectiveCoeff(startPoints, endPoints [][]int64) []float64 {
 	// bMat := ts.MustOfSlice(startPoints).MustTotype(gotch.Float, true).MustView([]int64{8}, true)
 	bMat := ts.MustOfSlice(startData).MustTotype(gotch.Float, true).MustView([]int64{8}, true)
 
-	res := bMat.MustLstsq(aMat, true)
+	// res := bMat.MustLstsq(aMat, true)
+	// Ref. https://github.com/pytorch/vision/blob/d7fa36f221cb2ff670cd4267b83a801cece52522/torchvision/transforms/functional.py#L572
+	solution, residuals, rank, singularValues := bMat.MustLinalgLstsq(aMat, nil, "gels", true)
+	residuals.MustDrop()
+	rank.MustDrop()
+	singularValues.MustDrop()
 
 	aMat.MustDrop()
-	outputTs := res.MustSqueezeDim(1, true)
+	outputTs := solution.MustSqueezeDim(1, true)
 	output := outputTs.Float64Values()
 	outputTs.MustDrop()
 
