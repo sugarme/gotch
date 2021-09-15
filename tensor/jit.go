@@ -162,7 +162,6 @@ func NewIValue(v interface{}) *IValue {
 // ===============
 
 func (iv *IValue) ToCIValue() (*CIValue, error) {
-
 	switch iv.name {
 	case "None":
 		cval := lib.AtiNone()
@@ -451,7 +450,7 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 			return nil, err
 		}
 		return &IValue{
-			value: tensor,
+			value: Tensor{tensor},
 			kind:  TensorVal,
 			name:  "Tensor",
 		}, nil
@@ -526,7 +525,7 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 					return nil, err
 				}
 
-				vals = append(vals, Tensor{v.Value().(lib.Ctensor)})
+				vals = append(vals, v.Value().(Tensor))
 			}
 			if len == 2 {
 				return &IValue{

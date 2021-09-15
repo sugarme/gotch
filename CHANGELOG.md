@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- [#58] Fixed incorrect converting IValue from CIValue case 1 (Tensor). 
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
@@ -168,3 +169,4 @@ Same as [0.3.10]
 [#44]: https://github.com/sugarme/gotch/issues/44
 [#45]: https://github.com/sugarme/gotch/issues/45
 [#48]: https://github.com/sugarme/gotch/issues/48
+[#58]: https://github.com/sugarme/gotch/issues/58
