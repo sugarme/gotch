@@ -104,7 +104,7 @@ func TestTextDataIter(t *testing.T) {
 		col2 := xs.Idx([]ts.TensorIndexer{idxCol, idxCol2})
 		// t.Errorf("col2 shape: %v\n", col2.MustSize())
 
-		pow := col1Fmod.MustSub(col2, true).MustPow(ts.IntScalar(2), true)
+		pow := col1Fmod.MustSub(col2, true).MustPowTensorScalar(ts.IntScalar(2), true)
 		sum := pow.MustSum(gotch.Float, true)
 
 		// Will pass if there's no panic

@@ -6,10 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- [#58] Fixed incorrect converting IValue from CIValue case 1 (Tensor). 
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
+
+## [0.5.0]
+- Upgraded to libtorch 1.10
+- [#58] Fixed incorrect converting IValue from CIValue case 1 (Tensor). 
 
 ## [0.4.5]
 - Added Conv3DConfig and Conv3DConfig Option
