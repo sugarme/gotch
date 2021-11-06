@@ -3,10 +3,10 @@
 
 ## Overview
 
-Gotch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ over 1700) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
+Gotch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ 2169) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
 
 **Some features are**
-- [x] Comprehensive Pytorch tensor APIs (~ 1716) 
+- [x] Comprehensive Pytorch tensor APIs (~ 1844) 
 - [x] Fully featured Pytorch dynamic graph computation
 - [x] JIT interface to run model trained/saved using PyTorch Python API
 - [x] Load pretrained Pytorch models and run inference
@@ -18,12 +18,12 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 
 ## Dependencies
 
-- **Libtorch** C++ v1.9.0 library of [Pytorch](https://pytorch.org/)
+- **Libtorch** C++ v1.10.0 library of [Pytorch](https://pytorch.org/)
 
 ## Installation
 
 - Default CUDA version is `11.1` if CUDA is available otherwise using CPU version.
-- Default Pytorch C++ API version is `1.9.0`
+- Default Pytorch C++ API version is `1.10.0`
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
 
@@ -51,7 +51,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.4.5 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.5.0 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -89,9 +89,9 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
     # CUDA 10.2
-    export CUDA_VER=10.2 && export GOTCH_VER=v0.4.5 && bash setup-gotch.sh
+    export CUDA_VER=10.2 && export GOTCH_VER=v0.5.0 && bash setup-gotch.sh
     # CUDA 11.1
-    export CUDA_VER=11.1 && export GOTCH_VER=v0.4.5 && bash setup-gotch.sh
+    export CUDA_VER=11.1 && export GOTCH_VER=v0.5.0 && bash setup-gotch.sh
 ```
 
 ## Examples
