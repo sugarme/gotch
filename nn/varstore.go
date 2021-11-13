@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 
@@ -322,6 +323,28 @@ func (vs *VarStore) Copy(src VarStore) error {
 	return nil
 }
 
+// Summary prints a simple list of all named variables with their shapes.
+func (vs *VarStore) Summary() {
+	namedTensors := vs.Vars.NamedVariables
+	layers := make([]string, 0, len(namedTensors))
+	for tsName := range namedTensors {
+		layers = append(layers, tsName)
+	}
+	sort.Strings(layers)
+	for _, l := range layers {
+		var x *ts.Tensor
+		for tsName, tsVal := range namedTensors {
+			if tsName == l {
+				x = tsVal
+				break
+			}
+		}
+		fmt.Printf("%s - %+v\n", l, x.MustSize())
+	}
+
+	fmt.Printf("Num of layers: %v\n", len(namedTensors))
+}
+
 // Path methods:
 // =============
 
@@ -339,6 +362,11 @@ func (p *Path) Sub(str string) *Path {
 		varstore: p.varstore,
 		group:    p.group,
 	}
+}
+
+// Paths returns all sub paths from current path.
+func (p *Path) Paths() []string {
+	return p.path
 }
 
 // Device gets the device where the var-store variables are stored.
