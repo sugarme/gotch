@@ -31,7 +31,8 @@ before_install:
   - sudo mkdir -p $LIBTORCH
   - echo "exit" | bash setup-libtorch.sh
   - wget -O /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cpu.zip https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcpu.zip
-  - sudo unzip /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cpu.zip -d ${GOTCH}/libtch
+  - sudo unzip -v /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cpu.zip -d ${GOTCH}/libtch
+  - ls -l ${GOTCH}/libtch/lib.go
   - sudo rm ${GOTCH}/libtch/lib.go
   - sudo cp ${GOTCH}/libtch/lib.go.cpu ${GOTCH}/libtch/lib.go
   - sudo mv ${GOTCH}/libtch/dummy_cuda_dependency.cpp ${GOTCH}/libtch/dummy_cuda_dependency.cpp.gpu
