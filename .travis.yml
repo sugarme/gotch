@@ -29,7 +29,7 @@ before_install:
   # Precompiled libtorch
   - sudo rm -rf $LIBTORCH
   - sudo mkdir -p $LIBTORCH
-  - bash setup-libtorch.sh
+  - echo "exit" | bash setup-libtorch.sh
   - wget -O /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cpu.zip https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}%2Bcpu.zip
   - sudo unzip /tmp/libtorch-cxx11-abi-shared-with-deps-${LIBTORCH_VERSION}+cpu.zip -d ${GOTCH}/libtch
   - sudo rm ${GOTCH}/libtch/lib.go
