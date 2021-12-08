@@ -23,7 +23,7 @@ before_install:
   - export LD_LIBRARY_PATH=${LIBTORCH}/lib
   - export CUDA_VER=cpu && 
 
-    wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh
+    wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh &&
     chmod +x setup-libtorch.sh
 
 
