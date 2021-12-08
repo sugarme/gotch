@@ -21,10 +21,9 @@ before_install:
   - export LIBRARY_PATH=${LIBTORCH}/lib
   - export CPATH=${LIBTORCH}/lib:${LIBTORCH}/include:${LIBTORCH}/include/torch/csrc:${LIBTORCH}/include/torch/csrc/api/include
   - export LD_LIBRARY_PATH=${LIBTORCH}/lib
-  - export CUDA_VER=cpu && 
-
-    wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh &&
-    chmod +x setup-libtorch.sh
+  - export CUDA_VER=cpu
+  - wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh
+  - chmod +x setup-libtorch.sh
 
 
   # Precompiled libtorch
