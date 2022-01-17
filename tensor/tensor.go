@@ -1243,3 +1243,28 @@ func SaveMultiNew(namedTensors []NamedTensor, path string) error {
 
 	return nil
 }
+
+func (ts *Tensor) ConstantPadNdWithVal(pad []int64, value *Scalar, del bool) (retVal *Tensor, err error) {
+	if del {
+		defer ts.MustDrop()
+	}
+	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
+
+	lib.AtoConstantPadNd(ptr, ts.ctensor, pad, len(pad), value.cscalar)
+	if err = TorchErr(); err != nil {
+		return retVal, err
+	}
+	retVal = &Tensor{ctensor: *ptr}
+
+	return retVal, err
+}
+
+func (ts *Tensor) MustConstantPadNdWithVal(pad []int64, value *Scalar, del bool) (retVal *Tensor) {
+
+	retVal, err := ts.ConstantPadNdWithVal(pad, value, del)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return retVal
+}

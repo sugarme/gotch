@@ -510,6 +510,13 @@ void ato_set_learning_rate_group(optimizer t, size_t group,
           set_lr_group<torch::optim::SGDOptions>(t, group, learning_rate);)
 }
 
+void ato_constant_pad_nd(tensor *out__, tensor self, int64_t *pad_data, int pad_len, scalar value) {
+  PROTECT(
+      auto outputs__ = torch::constant_pad_nd(*self, torch::IntArrayRef(pad_data, pad_len), *value);
+    out__[0] = new torch::Tensor(outputs__);
+  )
+}
+
 // ============ set/get learning rates ==============================
 // TT. added for learning rate scheduler
 // lr scheduler APIs will be in Pytorch 1.9?

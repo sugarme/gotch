@@ -864,3 +864,9 @@ func AtmEval(m Cmodule) {
 func AtmTrain(m Cmodule) {
 	C.atm_train(m)
 }
+
+func AtoConstantPadNd(ptr *Ctensor, self Ctensor, padData []int64, padLen int, value Cscalar) {
+	cpadDataPtr := (*C.int64_t)(unsafe.Pointer(&padData[0]))
+	cpadLen := *(*C.int)(unsafe.Pointer(&padLen))
+	C.ato_constant_pad_nd(ptr, self, cpadDataPtr, cpadLen, value)
+}

@@ -141,6 +141,9 @@ int64_t ato_param_group_num(optimizer);
 void ato_get_learning_rates(optimizer, double *lrs, int *ngroup);
 void ato_add_param_group(optimizer, tensor *params, int param_num);
 
+// TT. added option pad value. Original generated API `atg_constant_pad_nd` no option of adding pad value.
+void ato_constant_pad_nd(tensor *, tensor self, int64_t *pad_data, int pad_len, scalar value);
+
 scalar ats_int(int64_t);
 scalar ats_float(double);
 int64_t ats_to_int(scalar);
