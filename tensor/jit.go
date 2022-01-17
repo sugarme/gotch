@@ -202,6 +202,7 @@ func (iv *IValue) ToCIValue() (*CIValue, error) {
 
 	case "Tuple":
 		val := reflect.Indirect(reflect.ValueOf(iv.value))
+		fmt.Printf("val: %v\n", val)
 		switch {
 		// 1. Tuple is (Tensor, Tensor)
 		case val.Type() == reflect.TypeOf([]Tensor{}):

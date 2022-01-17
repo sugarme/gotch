@@ -321,7 +321,7 @@ func (ts *Tensor) MustChunk(chunks int64, dim int64, del bool) (retVal []Tensor)
 }
 
 // tensor *atg_meshgrid(tensor *tensors_data, int tensors_len);
-func (ts *Tensor) Meshgrid(tensors []Tensor) (retVal []Tensor, err error) {
+func Meshgrid(tensors []Tensor) (retVal []Tensor, err error) {
 
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
@@ -348,12 +348,8 @@ func (ts *Tensor) Meshgrid(tensors []Tensor) (retVal []Tensor, err error) {
 	return retVal, nil
 }
 
-func (ts *Tensor) MustMeshgrid(tensors []Tensor, del bool) (retVal []Tensor) {
-	if del {
-		defer ts.MustDrop()
-	}
-
-	retVal, err := ts.Meshgrid(tensors)
+func MustMeshgrid(tensors []Tensor) (retVal []Tensor) {
+	retVal, err := Meshgrid(tensors)
 	if err != nil {
 		log.Fatal(err)
 	}

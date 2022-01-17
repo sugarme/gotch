@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - added `nn.Path.Paths()` method
 - added `nn.VarStore.Summary()` method
+- fixed incorrect tensor method `ts.Meshgrid` -> `Meshgrid`
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
