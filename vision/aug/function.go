@@ -16,7 +16,7 @@ func gaussianKernel1D(ks int64, sigma float64, dtype gotch.DType, device gotch.D
 	x := ts.MustLinspace(ts.IntScalar(-ksHalf), ts.IntScalar(ksHalf), []int64{ks}, dtype, device)
 
 	// pdf = torch.exp(-0.5 * (x / sigma).pow(2))
-	pdf := x.MustDivScalar(ts.FloatScalar(sigma), true).MustPow(ts.IntScalar(2), true).MustMulScalar(ts.FloatScalar(0.5), true).MustExp(true)
+	pdf := x.MustDivScalar(ts.FloatScalar(sigma), true).MustPowTensorScalar(ts.IntScalar(2), true).MustMulScalar(ts.FloatScalar(0.5), true).MustExp(true)
 	// kernel1d = pdf / pdf.sum()
 	pdfSum := pdf.MustSum(dtype, false)
 	kernel1d := pdf.MustDiv(pdfSum, true)
@@ -1223,7 +1223,7 @@ func autocontrast(img *ts.Tensor) *ts.Tensor {
 	maxTsView.MustDrop()
 
 	// scale = bound / (maximum - minimum)
-	scale := maxTs.MustSub(minTs, false).MustPow(ts.IntScalar(-1), true).MustMulScalar(ts.FloatScalar(bound), true)
+	scale := maxTs.MustSub(minTs, false).MustPowTensorScalar(ts.IntScalar(-1), true).MustMulScalar(ts.FloatScalar(bound), true)
 	//
 	// return ((img - minimum) * scale).clamp(0, bound).to(img.dtype)
 	out := img.MustSub(minTs, false).MustMul(scale, true).MustClamp(ts.IntScalar(0), ts.FloatScalar(bound), true).MustTotype(dtype, true)
@@ -1410,7 +1410,7 @@ func scaleChannel(imgChan *ts.Tensor) *ts.Tensor {
 
 	// lut = torch.div(torch.cumsum(hist, 0) + torch.div(step, 2, rounding_mode='floor'), step, rounding_mode='floor')
 	halfStep := step.MustFloorDivideScalar(ts.FloatScalar(2.0), false)
-	lut := histo.Must_Cumsum(0, true).MustAdd(halfStep, true).MustFloorDivide(step, true)
+	lut := histo.MustCumsum(0, histo.DType(), true).MustAdd(halfStep, true).MustFloorDivide(step, true)
 	step.MustDrop()
 	halfStep.MustDrop()
 
