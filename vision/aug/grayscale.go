@@ -86,3 +86,7 @@ func WithRandomGrayscale(pvalueOpt ...float64) Option {
 		o.randomGrayscale = rgs
 	}
 }
+
+func NewGrayscale(outChanOpt ...int64) *Grayscale {
+	return newGrayscale(outChanOpt...)
+}
