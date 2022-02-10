@@ -3,7 +3,7 @@
 LIBTORCH_VERSION="${LIBTORCH_VER:-1.10.0}"
 CUDA_VERSION="${CUDA_VER:-11.1}"
 
-if [[ -z "${CUDA_VERSION}"=="cpu" ]]; then
+if [ "${CUDA_VERSION}"=="cpu" ]; then
   CU_VERSION="cpu"
 else
   CU_VERSION="cu${CUDA_VERSION//./}"
