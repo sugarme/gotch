@@ -118,3 +118,16 @@ func TestOnehot(t *testing.T) {
  *         vec![1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
  *     );
  *     assert_eq!(onehot.size(), vec![4, 4]) */
+
+func TestOfSlice(t *testing.T) {
+	data := []int{1, 2, 3, 4, 5}
+	x := ts.MustOfSlice(data)
+
+	want := gotch.Int
+	got := x.DType()
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("Expected dtype: %v\n", want)
+		t.Errorf("Got dtype: %v\n", got)
+	}
+}

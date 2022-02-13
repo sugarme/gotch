@@ -155,6 +155,10 @@ func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
 
 // OfSlice creates tensor from a slice data
 func OfSlice(data interface{}) (*Tensor, error) {
+	// convert []int -> int32. `binary.Write()` can't write `[]int` because it's not fixed-size!
+	if reflect.TypeOf(data).String() == "[]int" {
+		data = sliceIntToInt32(data.([]int))
+	}
 
 	typ, dataLen, err := DataCheck(data)
 	if err != nil {

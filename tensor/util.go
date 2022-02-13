@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+
 	// "log"
 	"reflect"
 	"unsafe"
@@ -480,4 +481,12 @@ func Must(ts Tensor, err error) (retVal Tensor) {
 		panic(err)
 	}
 	return ts
+}
+
+func sliceIntToInt32(input []int) []int32 {
+	out := make([]int32, len(input))
+	for i := 0; i < len(input); i++ {
+		out[i] = int32(input[i])
+	}
+	return out
 }
