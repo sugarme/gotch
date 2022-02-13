@@ -490,3 +490,11 @@ func sliceIntToInt32(input []int) []int32 {
 	}
 	return out
 }
+
+func sliceInt32ToInt(input []int32) []int {
+	out := make([]int, len(input))
+	for i := 0; i < len(input); i++ {
+		out[i] = int(input[i])
+	}
+	return out
+}

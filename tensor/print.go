@@ -43,7 +43,12 @@ func (ts *Tensor) ValueGo() interface{} {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// fmt.Println(dst)
+
+	// convert []int32 -> int
+	if reflect.TypeOf(dst).String() == "[]int32" {
+		dst = sliceInt32ToInt(dst.([]int32))
+	}
+
 	return dst
 }
 func (ts *Tensor) ToSlice() reflect.Value {
