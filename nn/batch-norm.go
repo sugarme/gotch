@@ -90,3 +90,21 @@ func (bn *BatchNorm) ForwardT(xs *ts.Tensor, train bool) (retVal *ts.Tensor) {
 	return ts.MustBatchNorm(xs, bn.Ws, bn.Bs, bn.RunningMean, bn.RunningVar, train, bn.config.Momentum, bn.config.Eps, bn.config.CudnnEnable)
 
 }
+
+// Forward forwards inputs through the module.
+// NOTE.
+// This forwarding will update BatchNorm weight by default (training=true).
+// Wrap module with tensor.NoGrad() when running model inference mode.
+func (bn *BatchNorm) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
+	dim := xs.Dim()
+
+	if bn.Nd == 1 && dim != 2 && dim != 3 {
+		log.Fatalf("Expected an input tensor with 2 or 3 dims, got %v\n", xs.MustSize())
+	}
+
+	if bn.Nd > 1 && int(dim) != int(bn.Nd)+2 {
+		log.Fatalf("Expected an input tensor with %v dims, got %v\n", bn.Nd+2, xs.MustSize())
+	}
+
+	return ts.MustBatchNorm(xs, bn.Ws, bn.Bs, bn.RunningMean, bn.RunningVar, true, bn.config.Momentum, bn.config.Eps, bn.config.CudnnEnable)
+}

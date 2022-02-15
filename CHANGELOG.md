@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed "nn/rnn NewLSTM() clashed weight names"
 - fixed some old API at `vision/aug/function.go`
 - fixed `tensor.OfSlice()` not supporting `[]int` data type
+- fixed make `tensor.ValueGo()` returning `[]int` instead of `[]int32`
+- added more building block modules: Dropout, MaxPool2D, Parameter, Identity
+- added nn.BatchNorm.Forward() with default training=true
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
