@@ -21,6 +21,10 @@ type Tensor struct {
 	ctensor lib.Ctensor
 }
 
+func (ts *Tensor) Ctensor() unsafe.Pointer {
+	return unsafe.Pointer(ts.ctensor)
+}
+
 // None is an undefined tensor.
 // It can be used in optional tensor parameter where 'None' value used.
 // `ts.MustDefined()` function is used for checking 'null'
@@ -30,6 +34,11 @@ var None = NewTensor()
 func NewTensor() *Tensor {
 	ctensor := lib.AtNewTensor()
 	return &Tensor{ctensor}
+}
+
+func FromCtensor(ctensor unsafe.Pointer) *Tensor {
+	cts := (lib.Ctensor)(ctensor)
+	return &Tensor{cts}
 }
 
 func (ts *Tensor) Dim() uint64 {

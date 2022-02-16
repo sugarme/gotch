@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed make `tensor.ValueGo()` returning `[]int` instead of `[]int32`
 - added more building block modules: Dropout, MaxPool2D, Parameter, Identity
 - added nn.BatchNorm.Forward() with default training=true
+- added exposing `tensor.Ctensor()`
+- added API `tensor.FromCtensor()`
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
