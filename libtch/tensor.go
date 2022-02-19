@@ -111,9 +111,9 @@ func GetAndResetLastErr() *C.char {
 }
 
 // int atc_cuda_device_count();
-func AtcCudaDeviceCount() int {
+func AtcCudaDeviceCount() int32 {
 	result := C.atc_cuda_device_count()
-	return *(*int)(unsafe.Pointer(&result))
+	return *(*int32)(unsafe.Pointer(&result))
 }
 
 // int atc_cuda_is_available();

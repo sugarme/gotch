@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added nn.BatchNorm.Forward() with default training=true
 - added exposing `tensor.Ctensor()`
 - added API `tensor.FromCtensor()`
+- [#67]: fixed incorrect type casting at `atc_cuda_count`
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
