@@ -169,10 +169,22 @@ func OfSlice(data interface{}) (*Tensor, error) {
 		data = sliceIntToInt32(data.([]int))
 	}
 
-	typ, dataLen, err := DataCheck(data)
-	if err != nil {
+	/*
+		typ, dataLen, err := DataCheck(data)
+		if err != nil {
+			return nil, err
+		}
+	*/
+
+	v := reflect.ValueOf(data)
+	kind := v.Kind().String()
+	if kind != "slice" && kind != "array" {
+		err := fmt.Errorf("Expected slice data. Got %q", kind)
 		return nil, err
 	}
+
+	typ := reflect.TypeOf(data).Elem()
+	dataLen := v.Len()
 
 	dtype, err := gotch.ToDType(typ)
 	if err != nil {
