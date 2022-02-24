@@ -14,11 +14,11 @@ var (
 func init() {
 	// default path: {$HOME}/.cache/gotch
 	homeDir := os.Getenv("HOME")
-	CacheDir = fmt.Sprintf("%s/.cache/transformer", homeDir)
+	CacheDir = fmt.Sprintf("%s/.cache/gotch", homeDir)
 
 	initEnv()
 
-	log.Printf("INFO: CacheDir=%q\n", CacheDir)
+	// log.Printf("INFO: CacheDir=%q\n", CacheDir)
 }
 
 func initEnv() {
