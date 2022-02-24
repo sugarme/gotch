@@ -1,36 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/sugarme/gotch"
-	"github.com/sugarme/gotch/nn"
 	"github.com/sugarme/gotch/pickle"
-	"github.com/sugarme/gotch/vision"
 )
 
 func main() {
-	device := gotch.CPU
-	vs := nn.NewVarStore(device)
-	net := vision.VGG16(vs.Root(), 1000)
+	// modelName := "vgg16"
+	// modelName := "mobilenet_v2"
+	// modelName := "resnet18"
+	// modelName := "alexnet"
+	// modelName := "squeezenet1_1"
+	// modelName := "inception_v3_google"
+	modelName := "efficientnet_b4"
 
-	modelName := "vgg16"
-	modelUrl, ok := gotch.ModelUrls[modelName]
+	url, ok := gotch.ModelUrls[modelName]
 	if !ok {
-		log.Fatal("model name %q not found.", modelName)
+		log.Fatalf("Unsupported model name %q\n", modelName)
+	}
+	modelFile, err := gotch.CachedPath(url)
+	if err != nil {
+		panic(err)
 	}
 
-	modelFile, err := gotch.CachedPath(modelUrl)
+	err = pickle.LoadInfo(modelFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	err = pickle.LoadAll(vs, modelFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("%v\n", net)
-	vs.Summary()
 }

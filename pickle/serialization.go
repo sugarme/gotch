@@ -71,7 +71,15 @@ func Decode(filename string) (map[string]*ts.Tensor, error) {
 		stride := sx.Stride
 		storageOffset := sx.StorageOffset
 
-		// fmt.Printf("%q - shape: %v - stride: %v - storageOffset: %v\n", sx.Source.Device().Name, sx.Size, sx.Stride, storageOffset)
+		// log.Printf("%q - %q - shape: %v - stride: %v - storageOffset: %v\n", name, sx.Source.Device().Name, sx.Size, sx.Stride, storageOffset)
+		// log.Printf("data: %v\n", data)
+
+		// Dealing with Pytorch `..._tracked` variables.
+		// TODO. should we just skip them?
+		if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
+			size = []int64{1}
+			stride = []int64{1}
+		}
 
 		x := ts.MustOfSlice(data).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
 		if sx.RequiresGrad {
@@ -373,6 +381,19 @@ func makePickleFindClass(fallback func(module, name string) (interface{}, error)
 			return &RebuildTensor{}, nil
 		case "torch._utils._rebuild_tensor_v2":
 			return &RebuildTensorV2{}, nil
+		case "torch._utils._rebuild_parameter":
+			return &RebuildParameter{}, nil
+		case "torch._utils._sparse_tensor":
+			return &RebuildSparseTensor{}, nil
+		case "torch._utils._rebuild_sparse_csr_tensor":
+			return &RebuildSparseCsrTensor{}, nil
+		case "torch._utils._rebuild_device_tensor_from_numpy":
+			return &RebuildDeviceTensorFromNumpy{}, nil
+		case "torch._utils._rebuild_meta_tensor_no_storage":
+			return &RebuildMetaTensorNoStorage{}, nil
+		case "torch._utils._rebuild_qtensor":
+			return &RebuildQtensor{}, nil
+
 		case "torch.FloatStorage":
 			return &FloatStorageClass{}, nil
 		case "torch.HalfStorage":

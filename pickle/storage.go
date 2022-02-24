@@ -653,6 +653,28 @@ func (r *RebuildTensorV2) Call(args ...interface{}) (interface{}, error) {
 	return tensor, nil
 }
 
+// Rebuild Parameter:
+// ==================
+// RebuildTensor represents a struct to rebuild tensor back from pickle object.
+// Ref. https://github.com/pytorch/pytorch/blob/c2255c36ec121fdb998ce3db8deb7508c814b567/torch/_utils.py#L240
+type RebuildParameter struct{}
+
+var _ Callable = &RebuildParameter{}
+
+func (r *RebuildParameter) Call(args ...interface{}) (interface{}, error) {
+	if len(args) != 3 { // data(*StorageTensor), requires_grad, backward_hooks
+		return nil, fmt.Errorf("RebuildParameter unexpected 3 args, got %d: %#v", len(args), args)
+	}
+
+	tensor, ok := args[0].(*StorageTensor)
+	if !ok {
+		err := fmt.Errorf("RebuildParameter.Call() failed: unexpected arg: %#v\n", args)
+		return nil, err
+	}
+
+	return tensor, nil
+}
+
 func tupleToInt64Slice(tuple *Tuple) ([]int64, error) {
 	length := tuple.Len()
 	slice := make([]int64, length)
@@ -664,4 +686,64 @@ func tupleToInt64Slice(tuple *Tuple) ([]int64, error) {
 		slice[i] = int64(value)
 	}
 	return slice, nil
+}
+
+// Rebuild Sparse Tensor:
+//=======================
+// ref. https://github.com/pytorch/pytorch/blob/c2255c36ec121fdb998ce3db8deb7508c814b567/torch/_utils.py#L178
+type RebuildSparseTensor struct{}
+
+var _ Callable = &RebuildSparseTensor{}
+
+func (r *RebuildSparseTensor) Call(args ...interface{}) (interface{}, error) {
+	// TODO.
+	panic("RebuildSparseTensor.Call(): NotImplementedError")
+}
+
+// Rebuild Sparse CSR Tensor:
+// ==========================
+// Ref. https://github.com/pytorch/pytorch/blob/c2255c36ec121fdb998ce3db8deb7508c814b567/torch/_utils.py#L187
+type RebuildSparseCsrTensor struct{}
+
+var _ Callable = &RebuildSparseCsrTensor{}
+
+func (r *RebuildSparseCsrTensor) Call(args ...interface{}) (interface{}, error) {
+	// TODO.
+	panic("RebuildSparseCsrTensor.Call(): NotImplementedError")
+}
+
+// Rebuild Device Tensor From Numpy:
+// =================================
+// Ref. https://github.com/pytorch/pytorch/blob/c2255c36ec121fdb998ce3db8deb7508c814b567/torch/_utils.py#L197
+type RebuildDeviceTensorFromNumpy struct{}
+
+var _ Callable = &RebuildDeviceTensorFromNumpy{}
+
+func (r *RebuildDeviceTensorFromNumpy) Call(args ...interface{}) (interface{}, error) {
+	// TODO.
+	panic("RebuildDeviceTensorFromNumpy.Call(): NotImplementedError")
+}
+
+// Rebuild Meta Tensor No Storage:
+// ===============================
+// Ref. https://github.com/pytorch/pytorch/blob/c2255c36ec121fdb998ce3db8deb7508c814b567/torch/_utils.py#L208
+type RebuildMetaTensorNoStorage struct{}
+
+var _ Callable = &RebuildMetaTensorNoStorage{}
+
+func (r *RebuildMetaTensorNoStorage) Call(args ...interface{}) (interface{}, error) {
+	// TODO.
+	panic("RebuildMetaTensorNoStorage.Call(): NotImplementedError")
+}
+
+// Rebuild QTensor:
+// ================
+// Ref. https://github.com/pytorch/pytorch/blob/c2255c36ec121fdb998ce3db8deb7508c814b567/torch/_utils.py#L214
+type RebuildQtensor struct{}
+
+var _ Callable = &RebuildQtensor{}
+
+func (r *RebuildQtensor) Call(args ...interface{}) (interface{}, error) {
+	// TODO.
+	panic("RebuildQtensor.Call(): NotImplementedError")
 }
