@@ -287,3 +287,14 @@ func copyFile(src, dst string) error {
 	_, err = io.Copy(destination, source)
 	return err
 }
+
+// CleanCache removes all files cached at `CacheDir`
+func CleanCache() error {
+	err := os.RemoveAll(CacheDir)
+	if err != nil {
+		err = fmt.Errorf("CleanCache() failed: %w", err)
+		return err
+	}
+
+	return nil
+}
