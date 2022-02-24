@@ -3,7 +3,7 @@
 
 ## Overview
 
-Gotch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ 2169) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
+`gotch` creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ 2169) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
 
 **Some features are**
 - [x] Comprehensive Pytorch tensor APIs (~ 1844) 
@@ -12,9 +12,11 @@ Gotch creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its a
 - [x] Load pretrained Pytorch models and run inference
 - [x] Pure Go APIs to build and train neural network models with both CPU and GPU support
 - [x] Most recent image models
-- [ ] NLP Language models - [Transformer](https://github.com/sugarme/transformer) in separate package built with GoTch and [pure Go Tokenizer](https://github.com/sugarme/tokenizer).
+- [ ] NLP Language models - [Transformer](https://github.com/sugarme/transformer) in separate package built with **gotch** and [pure Go Tokenizer](https://github.com/sugarme/tokenizer).
 
-Gotch is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
+`gotch` is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
+
+`gotch` current version is **v0.6.0**
 
 ## Dependencies
 
@@ -51,7 +53,7 @@ Gotch is in active development mode and may have API breaking changes. Feel free
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.5.0 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.6.0 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -89,9 +91,9 @@ Gotch is in active development mode and may have API breaking changes. Feel free
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
     # CUDA 10.2
-    export CUDA_VER=10.2 && export GOTCH_VER=v0.5.0 && bash setup-gotch.sh
+    export CUDA_VER=10.2 && export GOTCH_VER=v0.6.0 && bash setup-gotch.sh
     # CUDA 11.1
-    export CUDA_VER=11.1 && export GOTCH_VER=v0.5.0 && bash setup-gotch.sh
+    export CUDA_VER=11.1 && export GOTCH_VER=v0.6.0 && bash setup-gotch.sh
 ```
 
 ## Examples
@@ -271,7 +273,7 @@ func main() {
 
 ## License
 
-Gotch is Apache 2.0 licensed.
+`gotch` is Apache 2.0 licensed.
 
 ## Acknowledgement
 

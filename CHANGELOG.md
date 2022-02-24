@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [Nofix]
+- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
+
+## [0.6.0]
 - Added subpackage `pickle`. Now we can load directly Python Pytorch pretrained model without any Python script conversion.
 - Added `gotch.CachePath()` and `gotch.ModelUrls`
 - Remove Travis CI for now. 
@@ -23,9 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - added exposing `tensor.Ctensor()`
 - added API `tensor.FromCtensor()`
 - [#67]: fixed incorrect type casting at `atc_cuda_count`
-
-## [Nofix]
-- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
 ## [0.5.0]
 - Upgraded to libtorch 1.10
