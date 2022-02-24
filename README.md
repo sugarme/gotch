@@ -16,7 +16,7 @@
 
 `gotch` is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
 
-`gotch` current version is **v0.6.0**
+`gotch` current version is **v0.6.1**
 
 ## Dependencies
 
@@ -53,7 +53,7 @@
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.6.0 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.6.1 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -91,9 +91,9 @@
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
     # CUDA 10.2
-    export CUDA_VER=10.2 && export GOTCH_VER=v0.6.0 && bash setup-gotch.sh
+    export CUDA_VER=10.2 && export GOTCH_VER=v0.6.1 && bash setup-gotch.sh
     # CUDA 11.1
-    export CUDA_VER=11.1 && export GOTCH_VER=v0.6.0 && bash setup-gotch.sh
+    export CUDA_VER=11.1 && export GOTCH_VER=v0.6.1 && bash setup-gotch.sh
 ```
 
 ## Examples
