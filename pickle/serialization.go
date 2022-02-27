@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math/big"
 	"os"
 	"path"
@@ -75,6 +76,11 @@ func Decode(filename string) (map[string]*ts.Tensor, error) {
 		// log.Printf("data: %v\n", data)
 
 		// Dealing with Pytorch `..._tracked` variables.
+		if reflect.ValueOf(data).Len() == 0 {
+			log.Printf("INFO: skip weigth %q with zero data length.\n", name.(string))
+			continue
+		}
+
 		// TODO. should we just skip them?
 		if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
 			size = []int64{1}
