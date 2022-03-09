@@ -2,6 +2,10 @@
 
 GOTCH_VERSION="${GOTCH_VER:-v0.5.0}"
 CUDA_VERSION="${CUDA_VER:-11.1}"
+
+if [ -z $GOPATH ] then
+  $GOPATH="$HOME/go"
+fi
 GOTCH_PATH="$GOPATH/pkg/mod/github.com/sugarme/gotch@$GOTCH_VERSION"
 
 # Install gotch
