@@ -111,12 +111,12 @@ var ModelUrls map[string]string = map[string]string{
 //
 // CachedPath does several things consequently:
 // 1. Resolves input string to a  fullpath cached filename candidate.
-// 2. Check it at `CachePath`, if exists, then return the candidate. If not
-// 3. Retrieves and Caches data to `CachePath` and returns path to cached data
+// 2. Check it at `CachedDir`, if exists, then return the candidate. If not
+// 3. Retrieves and Caches data to `CachedDir` and returns path to cached data
 func CachedPath(filenameOrUrl string) (resolvedPath string, err error) {
 	filename := path.Base(filenameOrUrl)
-	// Resolves to "candidate" filename at `CacheDir`
-	cachedFileCandidate := fmt.Sprintf("%s/%s", CacheDir, filename)
+	// Resolves to "candidate" filename at `CachedDir`
+	cachedFileCandidate := fmt.Sprintf("%s/%s", CachedDir, filename)
 
 	// 1. Cached candidate file exists
 	if _, err := os.Stat(cachedFileCandidate); err == nil {
@@ -288,9 +288,9 @@ func copyFile(src, dst string) error {
 	return err
 }
 
-// CleanCache removes all files cached at `CacheDir`
+// CleanCache removes all files cached at `CachedDir`
 func CleanCache() error {
-	err := os.RemoveAll(CacheDir)
+	err := os.RemoveAll(CachedDir)
 	if err != nil {
 		err = fmt.Errorf("CleanCache() failed: %w", err)
 		return err
