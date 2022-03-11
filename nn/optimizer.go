@@ -11,8 +11,7 @@ import (
 
 // Optimizer is a struct object to run gradient descent.
 type Optimizer struct {
-	opt *ts.COptimizer
-	// variables            Variables // having embedded sync.Mutex
+	opt                  *ts.COptimizer
 	variablesInOptimizer uint8
 	config               interface{}
 	stepCount            int
@@ -36,7 +35,6 @@ type OptimizerConfig interface {
 
 // defaultBuild is `default` Build method for OptimizerConfig interface
 func defaultBuild(config OptimizerConfig, vs *VarStore, lr float64) (retVal *Optimizer, err error) {
-
 	opt, err := config.buildCOpt(lr)
 	if err != nil {
 		return retVal, err
