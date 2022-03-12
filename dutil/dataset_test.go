@@ -107,7 +107,11 @@ func TestMapDataset_Item(t *testing.T) {
 		t.Error(err)
 	}
 
-	want := 3
+	// NOTE. dataset will be sorted by keys when creating.
+	// So keys: ["one", "three", "two"]
+
+	// Item 0:
+	want := 1
 	got, err := ds.Item(0)
 	if err != nil {
 		t.Error(err)
@@ -117,4 +121,17 @@ func TestMapDataset_Item(t *testing.T) {
 		t.Errorf("Want: %v\n", want)
 		t.Errorf("Got: %v\n", got)
 	}
+
+	// Item 1:
+	got, err = ds.Item(1)
+	want = 3
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("Want: %v\n", want)
+		t.Errorf("Got: %v\n", got)
+	}
+
 }

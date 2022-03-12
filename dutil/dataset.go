@@ -3,6 +3,7 @@ package dutil
 import (
 	"fmt"
 	"reflect"
+	"sort"
 )
 
 // Dataset represents a set of samples and
@@ -57,9 +58,9 @@ func (ds *SliceDataset) DType() reflect.Type {
 	return reflect.TypeOf(ds.data)
 }
 
-// MapDataset holds samples in a map.
+// MapDataset holds samples in a map with string type keys.
+// Dataset sorted by keys at the time of creating.
 type MapDataset struct {
-	// data map[string]interface{}
 	data interface{}
 	keys []string // keys to access elements in map
 }
@@ -87,6 +88,8 @@ func NewMapDataset(data interface{}) (*MapDataset, error) {
 		key := mapIter.Key().Interface()
 		keys = append(keys, key.(string))
 	}
+
+	sort.Strings(keys)
 
 	return &MapDataset{
 		data: data,
