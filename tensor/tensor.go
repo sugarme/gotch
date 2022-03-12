@@ -1101,38 +1101,39 @@ func (ngg *NoGradGuard) Enable() {
 	_ = MustGradSetEnabled(ngg.enabled)
 }
 
-// Reduction type is an enum-like type
-type Reduction int
-
 const (
 	// Do not reduce
-	ReductionNone Reduction = iota
+	ReductionNone int64 = 0
 	// Mean of losses
-	ReductionMean
+	ReductionMean int64 = 1
 	// Sum of losses
-	ReductionSum
+	ReductionSum int64 = 2
 	// Escape hatch in case new options become available
-	ReductionOther
+	ReductionOther int64 = 3
 )
 
-func (r Reduction) ToInt() int {
-	switch r {
-	case ReductionNone:
-		return 0
-	case ReductionMean:
-		return 1
-	case ReductionSum:
-		return 2
-	case ReductionOther:
-		return 3
-	}
-
-	// NOTE. should it be panic here instead of returning -1?
-	return -1
-}
+// func (r Reduction) ToInt() int {
+// switch r {
+// case ReductionNone:
+// return 0
+// case ReductionMean:
+// return 1
+// case ReductionSum:
+// return 2
+// case ReductionOther:
+// return 3
+// }
+//
+// // NOTE. should it be panic here instead of returning -1?
+// return -1
+// }
 
 // Float64Values returns values of tensor in a slice of float64.
-func (ts *Tensor) Float64Values() []float64 {
+func (ts *Tensor) Float64Values(delOpt ...bool) []float64 {
+	del := false
+	if len(delOpt) > 0 {
+		del = delOpt[0]
+	}
 	numel := ts.Numel()
 	vec := make([]float64, numel)
 
@@ -1141,11 +1142,19 @@ func (ts *Tensor) Float64Values() []float64 {
 	float64Ts.MustCopyData(vec, numel)
 	float64Ts.MustDrop()
 
+	if del {
+		ts.MustDrop()
+	}
+
 	return vec
 }
 
 // Int64Values returns values of tensor in a slice of int64.
-func (ts *Tensor) Int64Values() []int64 {
+func (ts *Tensor) Int64Values(delOpt ...bool) []int64 {
+	del := false
+	if len(delOpt) > 0 {
+		del = delOpt[0]
+	}
 	numel := ts.Numel()
 	vec := make([]int64, numel)
 
@@ -1153,6 +1162,10 @@ func (ts *Tensor) Int64Values() []int64 {
 
 	int64Ts.MustCopyData(vec, numel)
 	int64Ts.MustDrop()
+
+	if del {
+		ts.MustDrop()
+	}
 
 	return vec
 }

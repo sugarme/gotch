@@ -39,8 +39,8 @@ func NewLayerNorm(vs *Path, normalizedShape []int64, config *LayerNormConfig) *L
 		bs *ts.Tensor
 	)
 	if config.ElementwiseAffine {
-		ws = vs.NewVar("weight", normalizedShape, config.WsInit)
-		bs = vs.NewVar("bias", normalizedShape, config.BsInit)
+		ws = vs.MustNewVar("weight", normalizedShape, config.WsInit)
+		bs = vs.MustNewVar("bias", normalizedShape, config.BsInit)
 	}
 
 	return &LayerNorm{config, ws, bs, normalizedShape}

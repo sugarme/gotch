@@ -439,26 +439,19 @@ func LoadAll(vs *nn.VarStore, modelFile string) error {
 		return err
 	}
 
-	// for tsName, _ := range vs.Vars.NamedVariables {
-	for tsName := range vs.Vars.NamedVariables {
-		// missing variable
-		currTs, ok := weights[tsName]
-		if !ok {
-			err = fmt.Errorf("LoadAll() failed: Cannot find tensor with name: %v in variable store. \n", tsName)
-			return err
+	var namedTensors []ts.NamedTensor
+	for n, x := range weights {
+		namedTs := ts.NamedTensor{
+			Name:   n,
+			Tensor: x,
 		}
 
-		// mismatched shape
-		sourceShape := currTs.MustSize()
-		destShape := vs.Vars.NamedVariables[tsName].MustSize()
-		if !reflect.DeepEqual(destShape, sourceShape) {
-			err = fmt.Errorf("LoadAll() failed: Mismatched shape error for variable name: %v - At store: %v - At source %v\n", tsName, destShape, sourceShape)
-			return err
-		}
+		namedTensors = append(namedTensors, namedTs)
+	}
 
-		ts.NoGrad(func() {
-			vs.Vars.NamedVariables[tsName].Copy_(currTs)
-		})
+	err = vs.LoadWeights(namedTensors)
+	if err != nil {
+		return err
 	}
 
 	for _, x := range weights {
@@ -477,32 +470,21 @@ func LoadPartial(vs *nn.VarStore, modelFile string) ([]string, error) {
 		return nil, err
 	}
 
+	var namedTensors []ts.NamedTensor
+	for n, x := range weights {
+		namedTs := ts.NamedTensor{
+			Name:   n,
+			Tensor: x,
+		}
+
+		namedTensors = append(namedTensors, namedTs)
+	}
+
 	var missingVariables []string
 
-	// Match and in-place copy value (update) from newly loaded tensors
-	// to existing named tensors if name is matched. Throw error otherwise.
-	for tsName := range vs.Vars.NamedVariables {
-		var currTs *ts.Tensor
-		var ok bool
-
-		// missing variable
-		if currTs, ok = weights[tsName]; !ok {
-			missingVariables = append(missingVariables, tsName)
-			continue
-		}
-
-		// mismatched shape
-		destShape := currTs.MustSize()
-		sourceShape := vs.Vars.NamedVariables[tsName].MustSize()
-		if !reflect.DeepEqual(destShape, sourceShape) {
-			fmt.Printf("WARNING: Mismatched shape error for variable name: %v - At store: %v - At source %v. Skip loading this weight...\n", tsName, destShape, sourceShape)
-			missingVariables = append(missingVariables, tsName)
-			continue
-		}
-
-		ts.NoGrad(func() {
-			vs.Vars.NamedVariables[tsName].Copy_(currTs)
-		})
+	missingVariables, err = vs.LoadWeightsPartial(namedTensors)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, x := range weights {

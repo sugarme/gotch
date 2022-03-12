@@ -42,7 +42,7 @@ func sample(data *ts.TextData, lstm *nn.LSTM, linear *nn.Linear, device gotch.De
 		input.MustDrop()
 		inputView.MustDrop()
 
-		forwardTs := linear.Forward(state.(*nn.LSTMState).H()).MustSqueeze1(0, true).MustSoftmax(-1, gotch.Float, true)
+		forwardTs := linear.Forward(state.(*nn.LSTMState).H()).MustSqueezeDim(0, true).MustSoftmax(-1, gotch.Float, true)
 		sampledY := forwardTs.MustMultinomial(1, false, true)
 		lastLabel = sampledY.Int64Values()[0]
 		sampledY.MustDrop()

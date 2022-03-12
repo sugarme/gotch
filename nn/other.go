@@ -24,6 +24,9 @@ func (d *Dropout) ForwardT(input *ts.Tensor, train bool) (retVal *ts.Tensor) {
 	return ts.MustDropout(input, d.dropoutProb, train)
 }
 
+// Parameter:
+// ==========
+
 // NewParameter creates a kind of tensor that is considered as a module parameter.
 // Ref. https://pytorch.org/docs/stable/generated/torch.nn.parameter.Parameter.html
 func NewParameter(path *Path, name string, x *ts.Tensor, requireGradOpt ...bool) *ts.Tensor {
@@ -32,9 +35,32 @@ func NewParameter(path *Path, name string, x *ts.Tensor, requireGradOpt ...bool)
 		requiredGrad = requireGradOpt[0]
 	}
 
-	param := path.Add(name, x, requiredGrad)
+	param := path.MustAdd(name, x, requiredGrad)
 
 	return param
+}
+
+// Buffer:
+// =======
+
+// NewBuffer creates new buffer.
+//
+// Buffer is different from Parameter as its requiredGrad always false.
+// - `o.Persistent` param. Default=true. If `true` buffer variable will be saved when `nn.VarStore.Save()` is called.
+//
+// Ref.
+// - https://github.com/pytorch/pytorch/blob/f71eede85a69caed637008e331f5ac5f5b7717ae/torch/nn/modules/module.py#L275
+// - https://discuss.pytorch.org/t/what-is-the-difference-between-register-buffer-and-register-parameter-of-nn-module/32723/2
+func NewBuffer(path *Path, name string, x *ts.Tensor, persistentOpt ...bool) *ts.Tensor {
+	persistent := true
+	if len(persistentOpt) > 0 {
+		persistent = persistentOpt[0]
+	}
+	opts := []AddOpt{
+		WithPersistent(persistent),
+		WithVarType("buffer"),
+	}
+	return path.MustAdd(name, x, false, opts...) // requiredGrad always false. Different from parameter.
 }
 
 // Identity:

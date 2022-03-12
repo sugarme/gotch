@@ -73,7 +73,7 @@ func fastResnet(p *nn.Path) *nn.SequentialT {
 
 	seq.Add(nn.NewLinear(p.Sub("linear"), 512, 10, nn.DefaultLinearConfig()))
 	seq.AddFn(nn.NewFunc(func(xs *ts.Tensor) *ts.Tensor {
-		return xs.MustMul1(ts.FloatScalar(0.125), false)
+		return xs.MustMulScalar(ts.FloatScalar(0.125), false)
 	}))
 
 	return seq

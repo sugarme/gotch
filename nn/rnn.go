@@ -97,26 +97,26 @@ func NewLSTM(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) *LSTM {
 		}
 		switch numDirections {
 		case 1:
-			wIh := vs.KaimingUniform(fmt.Sprintf("weight_ih_l%d", i), []int64{gateDim, inDim})
-			wHh := vs.KaimingUniform(fmt.Sprintf("weight_hh_l%d", i), []int64{gateDim, hiddenDim})
-			bIh := vs.Zeros(fmt.Sprintf("bias_ih_l%d", i), []int64{gateDim})
-			bHh := vs.Zeros(fmt.Sprintf("bias_hh_l%d", i), []int64{gateDim})
+			wIh := vs.MustKaimingUniform(fmt.Sprintf("weight_ih_l%d", i), []int64{gateDim, inDim})
+			wHh := vs.MustKaimingUniform(fmt.Sprintf("weight_hh_l%d", i), []int64{gateDim, hiddenDim})
+			bIh := vs.MustZeros(fmt.Sprintf("bias_ih_l%d", i), []int64{gateDim})
+			bHh := vs.MustZeros(fmt.Sprintf("bias_hh_l%d", i), []int64{gateDim})
 
 			flatWeights = append(flatWeights, *wIh, *wHh, *bIh, *bHh)
 
 		case 2: // bi-directional
 			// forward
-			wIh := vs.KaimingUniform(fmt.Sprintf("weight_ih_l%d", i), []int64{gateDim, inDim})
-			wHh := vs.KaimingUniform(fmt.Sprintf("weight_hh_l%d", i), []int64{gateDim, hiddenDim})
-			bIh := vs.Zeros(fmt.Sprintf("bias_ih_l%d", i), []int64{gateDim})
-			bHh := vs.Zeros(fmt.Sprintf("bias_hh_l%d", i), []int64{gateDim})
+			wIh := vs.MustKaimingUniform(fmt.Sprintf("weight_ih_l%d", i), []int64{gateDim, inDim})
+			wHh := vs.MustKaimingUniform(fmt.Sprintf("weight_hh_l%d", i), []int64{gateDim, hiddenDim})
+			bIh := vs.MustZeros(fmt.Sprintf("bias_ih_l%d", i), []int64{gateDim})
+			bHh := vs.MustZeros(fmt.Sprintf("bias_hh_l%d", i), []int64{gateDim})
 			flatWeights = append(flatWeights, *wIh, *wHh, *bIh, *bHh)
 
 			// reverse
-			wIhR := vs.KaimingUniform(fmt.Sprintf("weight_ih_l%d_reverse", i), []int64{gateDim, inDim})
-			wHhR := vs.KaimingUniform(fmt.Sprintf("weight_hh_l%d_reverse", i), []int64{gateDim, hiddenDim})
-			bIhR := vs.Zeros(fmt.Sprintf("bias_ih_l%d_reverse", i), []int64{gateDim})
-			bHhR := vs.Zeros(fmt.Sprintf("bias_hh_l%d_reverse", i), []int64{gateDim})
+			wIhR := vs.MustKaimingUniform(fmt.Sprintf("weight_ih_l%d_reverse", i), []int64{gateDim, inDim})
+			wHhR := vs.MustKaimingUniform(fmt.Sprintf("weight_hh_l%d_reverse", i), []int64{gateDim, hiddenDim})
+			bIhR := vs.MustZeros(fmt.Sprintf("bias_ih_l%d_reverse", i), []int64{gateDim})
+			bHhR := vs.MustZeros(fmt.Sprintf("bias_hh_l%d_reverse", i), []int64{gateDim})
 			flatWeights = append(flatWeights, *wIhR, *wHhR, *bIhR, *bHhR)
 		}
 	}
@@ -234,10 +234,10 @@ func NewGRU(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) (retVal *GRU) {
 				inputDim = hiddenDim * numDirections
 			}
 
-			wIh := vs.KaimingUniform("w_ih", []int64{gateDim, inputDim})
-			wHh := vs.KaimingUniform("w_hh", []int64{gateDim, hiddenDim})
-			bIh := vs.Zeros("b_ih", []int64{gateDim})
-			bHh := vs.Zeros("b_hh", []int64{gateDim})
+			wIh := vs.MustKaimingUniform("w_ih", []int64{gateDim, inputDim})
+			wHh := vs.MustKaimingUniform("w_hh", []int64{gateDim, hiddenDim})
+			bIh := vs.MustZeros("b_ih", []int64{gateDim})
+			bHh := vs.MustZeros("b_hh", []int64{gateDim})
 
 			flatWeights = append(flatWeights, *wIh, *wHh, *bIh, *bHh)
 		}

@@ -73,10 +73,10 @@ func NewConvTranspose1D(vs *Path, inDim, outDim int64, ksizes []int64, cfg *Conv
 
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, ksizes...)
-	ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 
 	if cfg.Bias {
-		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 
 	return &ConvTranspose1D{
@@ -104,11 +104,11 @@ func NewConvTranspose2D(vs *Path, inDim, outDim int64, ksizes []int64, cfg *Conv
 	)
 
 	if cfg.Bias {
-		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, ksizes...)
-	ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 
 	return &ConvTranspose2D{
 		Ws:     ws,
@@ -134,11 +134,11 @@ func NewConvTranspose3D(vs *Path, inDim, outDim int64, ksizes []int64, cfg *Conv
 	)
 
 	if cfg.Bias {
-		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, ksizes...)
-	ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 
 	return &ConvTranspose3D{
 		Ws:     ws,

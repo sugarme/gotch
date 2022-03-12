@@ -49,7 +49,7 @@ func gramMatrix(m *ts.Tensor) *ts.Tensor {
 	gram := mview.MustMatmul(mviewT, true)
 	mviewT.MustDrop()
 
-	return gram.MustDiv1(ts.IntScalar(a*b*c*d), true)
+	return gram.MustDivScalar(ts.IntScalar(a*b*c*d), true)
 }
 
 func styleLoss(m1 *ts.Tensor, m2 *ts.Tensor) *ts.Tensor {
@@ -138,7 +138,7 @@ func main() {
 
 	vs := nn.NewVarStore(device)
 	path := vs.Root()
-	inputVar := path.VarCopy("img", contentImg)
+	inputVar := path.MustVarCopy("img", contentImg)
 	opt, err := nn.DefaultAdamConfig().Build(vs, LearningRate)
 	if err != nil {
 		log.Fatal(err)
@@ -168,7 +168,7 @@ func main() {
 			t.MustDrop()
 		}
 
-		lossMul := sLoss.MustMul1(styleWeight, true)
+		lossMul := sLoss.MustMulScalar(styleWeight, true)
 		loss := lossMul.MustAdd(cLoss, true)
 		opt.BackwardStep(loss)
 

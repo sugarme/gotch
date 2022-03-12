@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/sugarme/gotch"
-	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
-	"github.com/sugarme/gotch/vision"
 	"log"
 	"math"
 	"path/filepath"
 	"sort"
+
+	"github.com/sugarme/gotch"
+	"github.com/sugarme/gotch/nn"
+	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/vision"
 )
 
 const (
@@ -273,7 +274,7 @@ func main() {
 
 	imgTmp1 := imageTs.MustUnsqueeze(0, true)
 	imgTmp2 := imgTmp1.MustTotype(gotch.Float, true)
-	img := imgTmp2.MustDiv1(ts.FloatScalar(255.0), true)
+	img := imgTmp2.MustDivScalar(ts.FloatScalar(255.0), true)
 	predictTmp := model.ForwardT(img, false)
 
 	predictions := predictTmp.MustSqueeze(true)

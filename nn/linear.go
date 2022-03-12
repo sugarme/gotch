@@ -49,14 +49,14 @@ func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 		case c.BsInit == nil:
 			bound := 1.0 / math.Sqrt(float64(inDim))
 			bsInit := NewUniformInit(-bound, bound)
-			bs = vs.NewVar("bias", []int64{outDim}, bsInit)
+			bs = vs.MustNewVar("bias", []int64{outDim}, bsInit)
 		case c.BsInit != nil:
-			bs = vs.NewVar("bias", []int64{outDim}, c.BsInit)
+			bs = vs.MustNewVar("bias", []int64{outDim}, c.BsInit)
 		}
 	}
 
 	return &Linear{
-		Ws: vs.NewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false),
+		Ws: vs.MustNewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false),
 		Bs: bs,
 	}
 }

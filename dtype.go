@@ -3,6 +3,7 @@ package gotch
 import (
 	"fmt"
 	"log"
+
 	// "log"
 	"reflect"
 )
@@ -31,6 +32,7 @@ var (
 	Int   DType = DType{reflect.TypeOf(int32(1))} // 3
 	Int64 DType = DType{reflect.TypeOf(int64(1))} // 4
 	// Half       DType   = DType{reflect.TypeOf(GoFloat16(1))}     // 5
+	Half   DType = DType{reflect.TypeOf(float32(1))} // 5
 	Float  DType = DType{reflect.TypeOf(float32(1))} // 6
 	Double DType = DType{reflect.TypeOf(float64(1))} // 7
 	// ComplexHalf DType  = DType{reflect.TypeOf(GoComplexHalf(1))} // 8
@@ -45,6 +47,7 @@ var dtypeGoType = map[DType]reflect.Type{
 	Int16:  reflect.TypeOf(int16(1)),
 	Int:    reflect.TypeOf(int32(1)),
 	Int64:  reflect.TypeOf(int64(1)),
+	Half:   reflect.TypeOf(float32(1)),
 	Float:  reflect.TypeOf(float32(1)),
 	Double: reflect.TypeOf(float64(1)),
 	Bool:   reflect.TypeOf(true),
@@ -87,6 +90,7 @@ var dtypeCInt = map[DType]CInt{
 	Int16:  2,
 	Int:    3,
 	Int64:  4,
+	Half:   5,
 	Float:  6,
 	Double: 7,
 	Bool:   11,
@@ -137,6 +141,7 @@ var dtypeSize = map[DType]uint{
 	Int16:  2,
 	Int:    4,
 	Int64:  8,
+	Half:   4, // Should it be?
 	Float:  4,
 	Double: 8,
 	Bool:   1,
