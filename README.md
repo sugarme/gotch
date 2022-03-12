@@ -6,7 +6,7 @@
 `gotch` creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ 2169) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
 
 **Some features are**
-- [x] Comprehensive Pytorch tensor APIs (~ 1844) 
+- [x] Comprehensive Pytorch tensor APIs (~ 2169) 
 - [x] Fully featured Pytorch dynamic graph computation
 - [x] JIT interface to run model trained/saved using PyTorch Python API
 - [x] Load pretrained Pytorch models and run inference
@@ -105,7 +105,7 @@ import (
 	"fmt"
 
 	"github.com/sugarme/gotch"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func basicOps() {
@@ -200,7 +200,7 @@ import (
 
     "github.com/sugarme/gotch"
     "github.com/sugarme/gotch/nn"
-    ts "github.com/sugarme/gotch/tensor"
+    "github.com/sugarme/gotch/ts"
 )
 
 type Net struct {
