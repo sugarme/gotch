@@ -7,7 +7,6 @@ import (
 	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/vision"
 	"github.com/sugarme/gotch/vision/aug"
-	// ts "github.com/sugarme/gotch/tensor"
 )
 
 func main() {

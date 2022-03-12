@@ -6,7 +6,7 @@ import (
 	"math"
 
 	"github.com/sugarme/gotch"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // Randomly selects a rectangle region in an torch Tensor image and erases its pixels.

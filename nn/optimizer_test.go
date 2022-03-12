@@ -6,7 +6,7 @@ import (
 
 	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func TestOptimizer(t *testing.T) {

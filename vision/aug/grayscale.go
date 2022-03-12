@@ -3,8 +3,7 @@ package aug
 import (
 	"log"
 
-	ts "github.com/sugarme/gotch/tensor"
-	// "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // GrayScale converts image to grayscale.

@@ -8,7 +8,7 @@ import (
 
 	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // Conv2D + BatchNorm2D + ReLU6

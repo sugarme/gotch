@@ -1,11 +1,11 @@
-package tensor_test
+package ts_test
 
 import (
 	"reflect"
 	"testing"
 
 	"github.com/sugarme/gotch"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func TestIntegerIndex(t *testing.T) {

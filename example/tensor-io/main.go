@@ -4,45 +4,45 @@ import (
 	"fmt"
 
 	"github.com/sugarme/gotch"
-	"github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func main() {
 
-	ts, err := tensor.OfSlice([]float64{1.3, 29.7})
+	x, err := ts.OfSlice([]float64{1.3, 29.7})
 	if err != nil {
 		panic(err)
 	}
 
 	path := "file.pt"
-	ts.MustSave(path)
+	x.MustSave(path)
 
-	loadedTs := tensor.MustLoad(path)
+	loadedTs := ts.MustLoad(path)
 
 	loadedTs.Print()
 
-	ts1 := tensor.MustOfSlice([]float64{1.3, 29.7})
-	ts2 := tensor.MustOfSlice([]float64{2.1, 31.2})
+	ts1 := ts.MustOfSlice([]float64{1.3, 29.7})
+	ts2 := ts.MustOfSlice([]float64{2.1, 31.2})
 
-	var namedTensors []tensor.NamedTensor = []tensor.NamedTensor{
+	var namedTensors []ts.NamedTensor = []ts.NamedTensor{
 		{Name: "ts1", Tensor: ts1},
 		{Name: "ts2", Tensor: ts2},
 	}
 
 	pathMulti := "file_multi.pt"
 
-	// err = tensor.SaveMulti(namedTensors, pathMulti)
+	// err = ts.SaveMulti(namedTensors, pathMulti)
 	// if err != nil {
 	// panic(err)
 	// }
-	err = tensor.SaveMultiNew(namedTensors, pathMulti)
+	err = ts.SaveMultiNew(namedTensors, pathMulti)
 	if err != nil {
 		panic(err)
 	}
 
-	var data []tensor.NamedTensor
+	var data []ts.NamedTensor
 
-	data = tensor.MustLoadMulti(pathMulti)
+	data = ts.MustLoadMulti(pathMulti)
 
 	for _, v := range data {
 		v.Tensor.Print()
@@ -50,18 +50,18 @@ func main() {
 
 	device := gotch.NewCuda()
 
-	data = tensor.MustLoadMultiWithDevice(pathMulti, device)
+	data = ts.MustLoadMultiWithDevice(pathMulti, device)
 	for _, v := range data {
 		v.Tensor.Print()
 	}
 
-	tsString := ts.MustToString(80)
+	tsString := x.MustToString(80)
 
 	fmt.Printf("Tensor String: \n%v\n", tsString)
 
 	imagePath := "mnist-sample.png"
 
-	imageTs, err := tensor.LoadHwc(imagePath)
+	imageTs, err := ts.LoadHwc(imagePath)
 	if err != nil {
 		panic(err)
 	}

@@ -2,7 +2,7 @@ package nn
 
 // A layer-normalization layer.
 import (
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // Layer-normalization config.

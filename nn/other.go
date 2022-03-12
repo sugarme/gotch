@@ -1,7 +1,7 @@
 package nn
 
 import (
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // Dropout:

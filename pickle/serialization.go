@@ -21,7 +21,7 @@ import (
 	"sort"
 
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 const hexMagicNumber = "1950a86a20f9469cfc6c"

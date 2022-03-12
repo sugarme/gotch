@@ -4,7 +4,7 @@ package vision
 
 import (
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func snMaxPool2D(xs *ts.Tensor) *ts.Tensor {

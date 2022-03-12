@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // Transformer is an interface that can transform an image tensor.

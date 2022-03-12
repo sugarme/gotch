@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"image/color"
+
 	// "image/jpeg"
 	"io/ioutil"
 
@@ -15,7 +16,7 @@ import (
 	"golang.org/x/image/font"
 
 	"github.com/sugarme/gotch/example/yolo/freetype"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 var (

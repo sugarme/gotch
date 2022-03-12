@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // TrainableCModule is a trainable version of JIT Pytorch module

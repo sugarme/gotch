@@ -1,10 +1,10 @@
-package tensor_test
+package ts_test
 
 import (
 	"fmt"
 
 	"github.com/sugarme/gotch"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func ExampleTensor_MustArange() {

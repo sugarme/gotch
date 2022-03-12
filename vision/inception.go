@@ -4,7 +4,7 @@ package vision
 
 import (
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func convBn(p *nn.Path, cIn, cOut, ksize, pad, stride int64) ts.ModuleT {
