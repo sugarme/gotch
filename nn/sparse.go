@@ -35,7 +35,7 @@ type Embedding struct {
 // NewEmbedding creates a new Embedding
 func NewEmbedding(vs *Path, numEmbeddings int64, embeddingDim int64, config *EmbeddingConfig) *Embedding {
 	return &Embedding{
-		Ws:     vs.NewVar("weight", []int64{numEmbeddings, embeddingDim}, config.WsInit),
+		Ws:     vs.MustNewVar("weight", []int64{numEmbeddings, embeddingDim}, config.WsInit),
 		config: config,
 	}
 }

@@ -251,6 +251,7 @@ func BatchAccuracyForLogits(vs *VarStore, m ts.ModuleT, xs, ys *ts.Tensor, d got
 
 		logits := m.ForwardT(bImages, false)
 		acc := logits.AccuracyForLogits(bLabels)
+		logits.MustDrop()
 		sumAccuracy += acc.Float64Values()[0] * size
 		sampleCount += size
 

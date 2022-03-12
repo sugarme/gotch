@@ -289,11 +289,11 @@ func NewConv1D(vs *Path, inDim, outDim, k int64, cfg *Conv1DConfig) *Conv1D {
 		bs *ts.Tensor = ts.NewTensor()
 	)
 	if cfg.Bias {
-		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, k)
-	ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 
 	return &Conv1D{
 		Ws:     ws,
@@ -316,11 +316,11 @@ func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg *Conv2DConfig) *Conv2
 		bs *ts.Tensor = ts.NewTensor()
 	)
 	if cfg.Bias {
-		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, k, k)
-	ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 
 	return &Conv2D{
 		Ws:     ws,
@@ -343,11 +343,11 @@ func NewConv3D(vs *Path, inDim, outDim, k int64, cfg *Conv3DConfig) *Conv3D {
 		bs *ts.Tensor = ts.NewTensor()
 	)
 	if cfg.Bias {
-		bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, k, k, k)
-	ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 
 	return &Conv3D{
 		Ws:     ws,
@@ -418,11 +418,11 @@ func NewConv(vs *Path, inDim, outDim int64, ksizes []int64, config interface{}) 
 	case len(ksizes) == 1 && configT.String() == "*nn.Conv1DConfig":
 		cfg := config.(*Conv1DConfig)
 		if cfg.Bias {
-			bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+			bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 		}
 		weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 		weightSize = append(weightSize, ksizes...)
-		ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+		ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 		return &Conv1D{
 			Ws:     ws,
 			Bs:     bs,
@@ -431,11 +431,11 @@ func NewConv(vs *Path, inDim, outDim int64, ksizes []int64, config interface{}) 
 	case len(ksizes) == 2 && configT.String() == "*nn.Conv2DConfig":
 		cfg := config.(*Conv2DConfig)
 		if cfg.Bias {
-			bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+			bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 		}
 		weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 		weightSize = append(weightSize, ksizes...)
-		ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+		ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 		return &Conv2D{
 			Ws:     ws,
 			Bs:     bs,
@@ -444,11 +444,11 @@ func NewConv(vs *Path, inDim, outDim int64, ksizes []int64, config interface{}) 
 	case len(ksizes) == 3 && configT.String() == "*nn.Conv3DConfig":
 		cfg := config.(*Conv3DConfig)
 		if cfg.Bias {
-			bs = vs.NewVar("bias", []int64{outDim}, cfg.BsInit)
+			bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
 		}
 		weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 		weightSize = append(weightSize, ksizes...)
-		ws = vs.NewVar("weight", weightSize, cfg.WsInit)
+		ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
 		return &Conv3D{
 			Ws:     ws,
 			Bs:     bs,

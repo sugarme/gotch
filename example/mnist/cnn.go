@@ -71,8 +71,13 @@ func runCNN1() {
 
 	var ds *vision.Dataset
 	ds = vision.LoadMNISTDir(MnistDirNN)
-	testImages := ds.TestImages
-	testLabels := ds.TestLabels
+	// ds.TrainImages [60000, 784]
+	// ds.TrainLabels [60000, 784]
+	testImages := ds.TestImages // [10000, 784]
+	testLabels := ds.TestLabels // [10000, 784]
+
+	fmt.Printf("testImages: %v\n", testImages.MustSize())
+	fmt.Printf("testLabels: %v\n", testLabels.MustSize())
 
 	device := gotch.CudaIfAvailable()
 	vs := nn.NewVarStore(device)
@@ -87,16 +92,17 @@ func runCNN1() {
 	startTime := time.Now()
 
 	for epoch := 0; epoch < epochsCNN; epoch++ {
-
 		totalSize := ds.TrainImages.MustSize()[0]
 		samples := int(totalSize)
+		// Shuffling
 		index := ts.MustRandperm(int64(totalSize), gotch.Int64, gotch.CPU)
 		imagesTs := ds.TrainImages.MustIndexSelect(0, index, false)
 		labelsTs := ds.TrainLabels.MustIndexSelect(0, index, false)
+		index.MustDrop()
 
 		batches := samples / batchSize
 		batchIndex := 0
-		var epocLoss *ts.Tensor
+		var epocLoss float64
 		for i := 0; i < batches; i++ {
 			start := batchIndex * batchSize
 			size := batchSize
@@ -106,37 +112,33 @@ func runCNN1() {
 			batchIndex += 1
 
 			// Indexing
-			narrowIndex := ts.NewNarrow(int64(start), int64(start+size))
-			bImages := imagesTs.Idx(narrowIndex)
-			bLabels := labelsTs.Idx(narrowIndex)
+			bImages := imagesTs.MustNarrow(0, int64(start), int64(size), false)
+			bLabels := labelsTs.MustNarrow(0, int64(start), int64(size), false)
 
 			bImages = bImages.MustTo(vs.Device(), true)
 			bLabels = bLabels.MustTo(vs.Device(), true)
 
 			logits := net.ForwardT(bImages, true)
+			bImages.MustDrop()
 			loss := logits.CrossEntropyForLogits(bLabels)
+			logits.MustDrop()
+			bLabels.MustDrop()
 
-			// loss = loss.MustSetRequiresGrad(true, false)
+			loss = loss.MustSetRequiresGrad(true, true)
 			opt.BackwardStep(loss)
 
-			epocLoss = loss.MustShallowClone()
-			epocLoss.Detach_()
-
-			// fmt.Printf("completed \t %v batches\t %.2f\n", i, loss.Float64Values()[0])
-
-			bImages.MustDrop()
-			bLabels.MustDrop()
+			epocLoss = loss.Float64Values()[0]
+			loss.MustDrop()
 		}
 
-		// vs.Freeze()
-		testAccuracy := nn.BatchAccuracyForLogits(vs, net, testImages, testLabels, vs.Device(), 1024)
-		// vs.Unfreeze()
-		fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss.Float64Values()[0], testAccuracy*100.0)
-		if testAccuracy > bestAccuracy {
-			bestAccuracy = testAccuracy
-		}
+		ts.NoGrad(func() {
+			testAccuracy := nn.BatchAccuracyForLogits(vs, net, testImages, testLabels, vs.Device(), 1024)
+			fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss, testAccuracy*100.0)
+			if testAccuracy > bestAccuracy {
+				bestAccuracy = testAccuracy
+			}
+		})
 
-		epocLoss.MustDrop()
 		imagesTs.MustDrop()
 		labelsTs.MustDrop()
 	}

@@ -248,8 +248,8 @@ func conv(vs *nn.Path, index uint, p int64, b *Block) (retVal1 int64, retVal2 in
 
 		var res *ts.Tensor
 		if leaky {
-			tmp2Mul := tmp2.MustMul1(ts.FloatScalar(0.1), false)
-			res = tmp2.MustMax1(tmp2Mul, true)
+			tmp2Mul := tmp2.MustMulScalar(ts.FloatScalar(0.1), false)
+			res = tmp2.MustMaximum(tmp2Mul, true)
 			tmp2Mul.MustDrop()
 		} else {
 			res = tmp2
@@ -434,7 +434,7 @@ func detect(xs *ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) *
 	})
 
 	sliceApplyAndSet(xsTs, 0, 4, func(xs *ts.Tensor) *ts.Tensor {
-		return xs.MustMul1(ts.IntScalar(stride), false)
+		return xs.MustMulScalar(ts.IntScalar(stride), false)
 	})
 
 	// TODO: delete all middle tensors.

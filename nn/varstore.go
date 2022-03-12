@@ -187,6 +187,46 @@ func (vs *VarStore) Load(filepath string) error {
 			v.Tensor.Copy_(currTs)
 		})
 	}
+
+	for _, x := range namedTensors {
+		x.Tensor.MustDrop()
+	}
+
+	return nil
+}
+
+// LoadWeights loads pretrained weights to VarStore.
+func (vs *VarStore) LoadWeights(namedTensors []ts.NamedTensor) error {
+	var namedTensorsMap map[string]*ts.Tensor = make(map[string]*ts.Tensor, 0)
+	for _, namedTensor := range namedTensors {
+		namedTensorsMap[namedTensor.Name] = namedTensor.Tensor
+	}
+
+	// Match and in-place copy value (update) from newly loaded tensors
+	// to existing named tensors if name is matched. Throw error otherwise.
+	vs.Lock()
+	defer vs.Unlock()
+
+	for name, v := range vs.vars {
+		// missing variable
+		currTs, ok := namedTensorsMap[name]
+		if !ok {
+			err := fmt.Errorf("VarStore.LoadWeights() failed: there's a tensor with name %q in VarStore, but not found in the loaded weights.\n", name)
+			return err
+		}
+
+		// mismatched shape
+		sourceShape := currTs.MustSize()
+		destShape := v.Tensor.MustSize()
+		if !reflect.DeepEqual(destShape, sourceShape) {
+			err := fmt.Errorf("VarStore.LoadWeights() failed. Mismatched shape error for variable name: %v - At store: %v - At source %v\n", name, destShape, sourceShape)
+			return err
+		}
+
+		ts.NoGrad(func() {
+			v.Tensor.Copy_(currTs)
+		})
+	}
 	return nil
 }
 
@@ -206,6 +246,60 @@ func (vs *VarStore) LoadPartial(filepath string) ([]string, error) {
 		return nil, err
 	}
 
+	var namedTensorsMap map[string]*ts.Tensor = make(map[string]*ts.Tensor, 0)
+	for _, namedTensor := range namedTensors {
+		namedTensorsMap[namedTensor.Name] = namedTensor.Tensor
+	}
+
+	var missingVariables []string
+
+	// Match and in-place copy value (update) from newly loaded tensors
+	// to existing named tensors if name is matched. Throw error otherwise.
+	vs.Lock()
+	defer vs.Unlock()
+
+	for name, v := range vs.vars {
+		var currTs *ts.Tensor
+		var ok bool
+
+		// missing variable
+		if currTs, ok = namedTensorsMap[name]; !ok {
+			missingVariables = append(missingVariables, name)
+			continue
+		}
+
+		// mismatched shape
+		destShape := currTs.MustSize()
+		sourceShape := v.Tensor.MustSize()
+		if !reflect.DeepEqual(destShape, sourceShape) {
+			fmt.Printf("WARNING: Mismatched shape error for variable name: %v - At store: %v - At source %v. Skip loading this weight...\n", name, destShape, sourceShape)
+			missingVariables = append(missingVariables, name)
+			continue
+		}
+
+		ts.NoGrad(func() {
+			v.Tensor.Copy_(currTs)
+		})
+	}
+
+	for _, x := range namedTensors {
+		x.Tensor.MustDrop()
+	}
+
+	return missingVariables, nil
+}
+
+// LoadWeightsPartial loads the VarStore variable values from a file if it exists.
+//
+// Weight values for the tensors currently stored in the var-store and the given file get
+// loaded from the given file. If a variable in the var store is not present in the given file,
+// it is skipped and its values are not updated. This method should be used if pre-trained
+// weight for only parts of the model are available.
+// Note that the set of variables stored in the var-store is not changed, only the values
+// for these tensors are modified.
+//
+// Returns a String Vector containing the names of missing variables.
+func (vs *VarStore) LoadWeightsPartial(namedTensors []ts.NamedTensor) ([]string, error) {
 	var namedTensorsMap map[string]*ts.Tensor = make(map[string]*ts.Tensor, 0)
 	for _, namedTensor := range namedTensors {
 		namedTensorsMap[namedTensor.Name] = namedTensor.Tensor
@@ -284,7 +378,7 @@ func (vs *VarStore) Unfreeze() error {
 //
 // All the variables in this var store have to exist with the same
 // name in the source var store, otherwise an error is returned.
-func (vs *VarStore) Copy(src VarStore) error {
+func (vs *VarStore) Copy(src *VarStore) error {
 	vs.Lock()
 	defer vs.Unlock()
 	src.Lock()
@@ -341,6 +435,34 @@ func (vs *VarStore) Summary() {
 	}
 
 	fmt.Printf("Num of layers: %v\n", len(vars))
+}
+
+// ToDType casts all variables in VarStore to specified DType.
+//
+// NOTE. only float-like types (Half, Float, Double) can ensure convertible.
+func (vs *VarStore) ToDType(dtype gotch.DType) {
+	vs.Root().ToDType(dtype)
+}
+
+// ToHalf casts all float-like variables in VarStore to `Half` dtype.
+//
+// NOTE. float-like includes `Half`, `Float` and `Double` dtype.
+func (vs *VarStore) ToHalf() {
+	vs.Root().ToHalf()
+}
+
+// ToFloat casts all float-like variables in VarStore to `Float` dtype.
+//
+// NOTE. float-like includes `Half`, `Float` and `Double` dtype.
+func (vs *VarStore) ToFloat() {
+	vs.Root().ToFloat()
+}
+
+// ToDouble casts all float-like variables in VarStore to `Double` dtype.
+//
+// NOTE. float-like includes `Half`, `Float` and `Double` dtype.
+func (vs *VarStore) ToDouble() {
+	vs.Root().ToDouble()
 }
 
 // Path methods:
@@ -467,6 +589,23 @@ func (p *Path) Add(name string, x *ts.Tensor, trainable bool, opts ...AddOpt) (*
 	return p.add(name, x, trainable, o.VarType, o.Persistent)
 }
 
+// MustAdd adds a tensor to a given path.
+//
+// Args
+// - name: intention name of variable in VarStore (if duplicated, it will be added a suffix number)
+// - x: tensor holding values to keep in VarStore
+// - trainable: marked whether tensor is trainable.
+// - o.VarType: variable type, i.e., either "parameter" or "buffer"
+// - o.Persistent: whether to save this variables when `VarStore.Save()` is called. Only applied to `buffer` type.
+// Returns a reference to a tensor stored in VarStore.
+func (p *Path) MustAdd(name string, x *ts.Tensor, trainable bool, opts ...AddOpt) *ts.Tensor {
+	x, err := p.Add(name, x, trainable, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return x
+}
+
 func (p *Path) getOrAddWithLock(name string, tensor *ts.Tensor, trainable bool, opts ...AddOpt) (*ts.Tensor, error) {
 	path := p.getpath(name)
 
@@ -480,7 +619,71 @@ func (p *Path) getOrAddWithLock(name string, tensor *ts.Tensor, trainable bool, 
 }
 
 func (p *Path) SetGroup(g uint) {
+	p.varstore.Lock()
+	defer p.varstore.Unlock()
+
+	// TODO. set group for individual variables.
+	// TBD. variables of current path only or all sub paths as well?
+	// For now, just set group for all variable at the path
+	path := strings.Join(p.path, SEP)
+	for name, v := range p.varstore.vars {
+		vpaths := strings.Split(name, SEP)
+		vpath := strings.Join(vpaths[:len(vpaths)-1], SEP)
+		if vpath == path {
+			v.Group = g
+			p.varstore.vars[name] = v
+		}
+	}
 	p.group = g
+}
+
+// ToDType casts all variables in this path and its sub-paths to the specified dtype.
+//
+// NOTE. this method should be used for floating-point conversion, i.e.,
+// "gotch.Float", "gotch.Half", "gotch.Float16", "gotch.Double".
+func (p *Path) ToDType(dtype gotch.DType) {
+	p.varstore.Lock()
+	defer p.varstore.Unlock()
+	path := strings.Join(p.path, SEP)
+	for name, v := range p.varstore.vars {
+		if strings.Contains(name, path) {
+			newVar := v
+			newVar.Tensor = v.Tensor.MustTotype(dtype, true)
+			p.varstore.vars[name] = newVar
+		}
+	}
+}
+
+// toFloat casts all float-like variables in this current path and sub-paths to specified dtype.
+func (p *Path) toFloat(dtype gotch.DType) {
+	p.varstore.Lock()
+	defer p.varstore.Unlock()
+	path := strings.Join(p.path, SEP)
+	for name, v := range p.varstore.vars {
+		if strings.Contains(name, path) {
+			dtype := v.Tensor.DType()
+			if dtype == gotch.Half || dtype == gotch.Float || dtype == gotch.Double {
+				newVar := v
+				newVar.Tensor = v.Tensor.MustTotype(dtype, true)
+				p.varstore.vars[name] = newVar
+			}
+		}
+	}
+}
+
+// ToHalf casts all variables in current path and subpaths to `Half` precision.
+func (p *Path) ToHalf() {
+	p.toFloat(gotch.Half)
+}
+
+// ToFloat casts all variables in current path and subpaths to `Float` precision.
+func (p *Path) ToFloat() {
+	p.toFloat(gotch.Float)
+}
+
+// ToDouble casts all variables in current path and subpaths to `Double` precision.
+func (p *Path) ToDouble() {
+	p.toFloat(gotch.Double)
 }
 
 // ZerosNoTrain creates a new variable initialized with zeros.
@@ -506,6 +709,20 @@ func (p *Path) ZerosNoTrain(name string, dims []int64, opts ...AddOpt) (*ts.Tens
 	return out, nil
 }
 
+// MustZerosNoTrain creates a new variable initialized with zeros.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable will not be trainable so
+// gradients will not be tracked.
+// The variable uses a float tensor initialized with zeros.
+func (p *Path) MustZerosNoTrain(name string, dims []int64, opts ...AddOpt) *ts.Tensor {
+	x, err := p.ZerosNoTrain(name, dims, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return x
+}
+
 // OnesNoTrain creates a new variable initialized with ones.
 //
 // The new variable is named according to the name parameter and
@@ -527,6 +744,20 @@ func (p *Path) OnesNoTrain(name string, dims []int64, opts ...AddOpt) (*ts.Tenso
 	z.MustDrop()
 
 	return out, nil
+}
+
+// MustOnesNoTrain creates a new variable initialized with ones.
+//
+// The new variable is named according to the name parameter and
+// has the specified shape. The variable will not be trainable so
+// gradients will not be tracked.
+// The variable uses a float tensor initialized with ones.
+func (p *Path) MustOnesNoTrain(name string, dims []int64, opts ...AddOpt) *ts.Tensor {
+	x, err := p.OnesNoTrain(name, dims, opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return x
 }
 
 // NewVar creates a new variable.

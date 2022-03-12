@@ -41,10 +41,10 @@ type BatchNorm struct {
 func NewBatchNorm(vs *Path, nd uint, outDim int64, config *BatchNormConfig) *BatchNorm {
 	return &BatchNorm{
 		config:      config,
-		RunningMean: vs.ZerosNoTrain("running_mean", []int64{outDim}),
-		RunningVar:  vs.OnesNoTrain("running_var", []int64{outDim}),
-		Ws:          vs.NewVar("weight", []int64{outDim}, config.WsInit),
-		Bs:          vs.NewVar("bias", []int64{outDim}, config.BsInit),
+		RunningMean: vs.MustZerosNoTrain("running_mean", []int64{outDim}),
+		RunningVar:  vs.MustOnesNoTrain("running_var", []int64{outDim}),
+		Ws:          vs.MustNewVar("weight", []int64{outDim}, config.WsInit),
+		Bs:          vs.MustNewVar("bias", []int64{outDim}, config.BsInit),
 	}
 }
 

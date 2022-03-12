@@ -36,7 +36,7 @@ func TrainableCModuleLoad(p *Path, file string) (*TrainableCModule, error) {
 		// NOTE: return is a newly created and added tensor in varstore.
 		// This tensor is different from input named tensor.
 		// If not using, just ignore it. Drop it, will drop tensor at varstore.
-		_ = p.Add(name, namedTensor.Tensor, requiresGrad)
+		_ = p.MustAdd(name, namedTensor.Tensor, requiresGrad)
 
 		// Clean-up named tensors.
 		namedTensor.Tensor.MustDrop()
@@ -62,7 +62,7 @@ func TrainableCModuleLoadData(p *Path, stream io.Reader) (*TrainableCModule, err
 		// NOTE: return is a newly created and added tensor in varstore.
 		// This tensor is different from input named tensor.
 		// If not using, just ignore it. Drop it, will drop tensor at varstore.
-		_ = p.Add(name, namedTensor.Tensor, requiresGrad)
+		_ = p.MustAdd(name, namedTensor.Tensor, requiresGrad)
 
 		// Clean-up named tensors.
 		namedTensor.Tensor.MustDrop()
