@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	// "math"
 
 	"github.com/sugarme/gotch"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 type RandomCrop struct {

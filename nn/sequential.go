@@ -4,8 +4,7 @@ package nn
 
 import (
 	"github.com/sugarme/gotch"
-	ts "github.com/sugarme/gotch/tensor"
-	// "reflect"
+	"github.com/sugarme/gotch/ts"
 )
 
 // Sequential is a layer (container) that combines multiple other layers.

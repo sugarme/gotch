@@ -1,4 +1,4 @@
-package tensor
+package ts
 
 // #include "stdlib.h"
 import "C"

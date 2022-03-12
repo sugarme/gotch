@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/sugarme/gotch/nn"
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // NOTE: each list element contains multiple convolutions with some specified number

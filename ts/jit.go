@@ -1,4 +1,4 @@
-package tensor
+package ts
 
 // JIT interface to run model trained/saved using PyTorch Python API.
 

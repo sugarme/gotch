@@ -1,4 +1,4 @@
-package tensor
+package ts
 
 // Module interface is a container with only one method `Forward`
 //

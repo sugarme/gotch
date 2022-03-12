@@ -85,7 +85,7 @@ func TestNewMapDataset(t *testing.T) {
 	}
 }
 
-func TestMaptDataset_Len(t *testing.T) {
+func TestMapDataset_Len(t *testing.T) {
 	var data map[string]int = map[string]int{"one": 1, "two": 2}
 	ds, err := dutil.NewMapDataset(data)
 	if err != nil {

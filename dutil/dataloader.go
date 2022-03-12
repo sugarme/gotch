@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	ts "github.com/sugarme/gotch/tensor"
+	"github.com/sugarme/gotch/ts"
 )
 
 // DataLoader combines a dataset and a sampler and provides
