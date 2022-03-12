@@ -6,13 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [Nofix]
+- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
+
+## [0.6.2]
+- Fixed `dutil/MapDataset`
 - [#69] change package name `tensor` -> `ts` for easy coding.
 - [#68] simplify `VarStore` struct and adde more APIs for `VarStore` and `Optimizer`
 - Fixed pickle with zero data length
 - Added `gotch.CleanCache()` API.
-
-## [Nofix]
-- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
 ## [0.6.1]
 - Fixed wrong `cacheDir` and switch off logging.
