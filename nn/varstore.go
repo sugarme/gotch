@@ -606,6 +606,30 @@ func (p *Path) MustAdd(name string, x *ts.Tensor, trainable bool, opts ...AddOpt
 	return x
 }
 
+// Remove removes a variable from `VarStore`
+func (p *Path) Remove(name string) error {
+	p.varstore.Lock()
+	defer p.varstore.Unlock()
+
+	_, ok := p.varstore.vars[name]
+	if !ok {
+		err := fmt.Errorf("Path.Remove() failed: cannot find a variable with name %q in VarStore.", name)
+		return err
+	}
+
+	delete(p.varstore.vars, name)
+	return nil
+}
+
+// MustRemove removes a variable from `VarStore`
+func (p *Path) MustRemove(name string) {
+	err := p.Remove(name)
+	if err != nil {
+		err = fmt.Errorf("Path.MustRemove() failed: %w", err)
+		log.Fatal(err)
+	}
+}
+
 func (p *Path) getOrAddWithLock(name string, tensor *ts.Tensor, trainable bool, opts ...AddOpt) (*ts.Tensor, error) {
 	path := p.getpath(name)
 
