@@ -41,11 +41,7 @@ let excluded_functions =
     ; "linalg_vector_norm"
     ; "linalg_vector_norm_out" 
     ; "linalg_matrix_norm"
-    ; "linalg_matrix_norm_out"
-    ; "_histogramdd_bin_edges"
-    ; "_histogramdd_bin_edges"
-    ; "_histogramdd_from_bin_cts"
-    ; "_linalg_check_errors"]
+    ; "linalg_matrix_norm_out"]
 
 let no_tensor_options =
   Set.of_list
@@ -1348,7 +1344,7 @@ let run ~yaml_filename ~cpp_filename ~ffi_filename ~must_wrapper_filename
   write_wrapper funcs wrapper_filename
 
 let () =
-  run ~yaml_filename:"gen/pytorch/Declarations-v1.11.0.yaml"
+  run ~yaml_filename:"gen/pytorch/Declarations-v1.10.0.yaml"
     ~cpp_filename:"libtch/torch_api_generated"
     ~ffi_filename:"libtch/c-generated.go"
     ~must_wrapper_filename:"ts/must-tensor-generated.go"
