@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GOTCH_VERSION="${GOTCH_VER:-v0.6.2}"
-CUDA_VERSION="${CUDA_VER:-11.1}"
+CUDA_VERSION="${CUDA_VER:-11.3}"
 
 if [ -z $GOPATH ] then
   $GOPATH="$HOME/go"

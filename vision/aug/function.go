@@ -13,7 +13,7 @@ import (
 
 func gaussianKernel1D(ks int64, sigma float64, dtype gotch.DType, device gotch.Device) *ts.Tensor {
 	ksHalf := (ks - 1) / 2
-	x := ts.MustLinspace(ts.IntScalar(-ksHalf), ts.IntScalar(ksHalf), []int64{ks}, dtype, device)
+	x := ts.MustLinspace(ts.IntScalar(-ksHalf), ts.IntScalar(ksHalf), ks, dtype, device)
 
 	// pdf = torch.exp(-0.5 * (x / sigma).pow(2))
 	pdf := x.MustDivScalar(ts.FloatScalar(sigma), true).MustPowTensorScalar(ts.IntScalar(2), true).MustMulScalar(ts.FloatScalar(0.5), true).MustExp(true)
@@ -859,11 +859,11 @@ func perspectiveGrid(coef []float64, ow, oh int64, dtype gotch.DType, device got
 
 	// x_grid = torch.linspace(d, ow * 1.0 + d - 1.0, steps=ow, device=device)
 	endX := float64(ow) + d - 1.0
-	xGrid := ts.MustLinspace(ts.FloatScalar(d), ts.FloatScalar(endX), []int64{ow}, dtype, device)
+	xGrid := ts.MustLinspace(ts.FloatScalar(d), ts.FloatScalar(endX), ow, dtype, device)
 
 	// y_grid = torch.linspace(d, oh * 1.0 + d - 1.0, steps=oh, device=device).unsqueeze_(-1)
 	endY := float64(oh) + d - 1.0
-	yGrid := ts.MustLinspace(ts.FloatScalar(d), ts.FloatScalar(endY), []int64{oh}, dtype, device)
+	yGrid := ts.MustLinspace(ts.FloatScalar(d), ts.FloatScalar(endY), oh, dtype, device)
 
 	// base_grid[..., 0].copy_(x_grid)
 	// base_grid[..., 1].copy_(y_grid)
@@ -1055,11 +1055,11 @@ func genAffineGrid(theta *ts.Tensor, w, h, ow, oh int64) *ts.Tensor {
 
 	startX := float64(-ow)*0.5 + d
 	endX := float64(ow)*0.5 + d - 1.0
-	xGrid := ts.MustLinspace(ts.FloatScalar(startX), ts.FloatScalar(endX), []int64{ow}, dtype, device)
+	xGrid := ts.MustLinspace(ts.FloatScalar(startX), ts.FloatScalar(endX), ow, dtype, device)
 
 	startY := float64(-oh)*0.5 + d
 	endY := float64(oh)*0.5 + d - 1.0
-	yGrid := ts.MustLinspace(ts.FloatScalar(startY), ts.FloatScalar(endY), []int64{oh}, dtype, device).MustUnsqueeze(-1, true)
+	yGrid := ts.MustLinspace(ts.FloatScalar(startY), ts.FloatScalar(endY), oh, dtype, device).MustUnsqueeze(-1, true)
 
 	oneGrid := ts.MustOnes([]int64{ow}, dtype, device)
 
