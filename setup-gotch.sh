@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GOTCH_VERSION="${GOTCH_VER:-v0.6.2}"
+GOTCH_VERSION="${GOTCH_VER:-v0.7.0}"
 CUDA_VERSION="${CUDA_VER:-11.3}"
 
 if [ -z $GOPATH ] then

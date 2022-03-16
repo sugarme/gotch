@@ -6,12 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Added `WsName` and `BsName` fields to `nn.LayerNorm.Config`
-- [#70] Upgraded to libtorch 1.11
-- Added API `Path.Remove()`; `Path.MustRemove()`
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
+
+## [0.7.0]
+- Added `WsName` and `BsName` fields to `nn.LayerNorm.Config`
+- [#70] Upgraded to libtorch 1.11
+- Added API `Path.Remove()`; `Path.MustRemove()`
 
 ## [0.6.2]
 - Fixed `dutil/MapDataset`
