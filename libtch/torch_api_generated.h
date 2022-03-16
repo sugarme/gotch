@@ -109,7 +109,6 @@ void atg__grid_sampler_2d_cpu_fallback_backward(tensor *, tensor grad_output, te
 int atg__has_compatible_shallow_copy_type(tensor self, tensor from);
 int atg__has_same_storage_numel(tensor self, tensor other);
 void atg__histogramdd_from_bin_tensors(tensor *, tensor self, tensor *bins_data, int bins_len, tensor weight, int density);
-void atg__index_copy_(tensor *, tensor self, int64_t dim, tensor index, tensor source);
 void atg__index_put_impl_(tensor *, tensor self, tensor *indices_data, int indices_len, tensor values, int accumulate, int unsafe);
 void atg__indices(tensor *, tensor self);
 int atg__is_zerotensor(tensor self);
@@ -132,7 +131,6 @@ void atg__masked_softmax(tensor *, tensor self, tensor mask);
 void atg__mkldnn_reshape(tensor *, tensor self, int64_t *shape_data, int shape_len);
 void atg__mkldnn_transpose(tensor *, tensor self, int64_t dim0, int64_t dim1);
 void atg__mkldnn_transpose_(tensor *, tensor self, int64_t dim0, int64_t dim1);
-void atg__native_multi_head_self_attention(tensor *, tensor query, tensor qkv_weight, tensor qkv_bias, tensor proj_weight, tensor proj_bias, tensor mask);
 void atg__neg_view(tensor *, tensor self);
 void atg__new_zeros_with_same_feature_meta(tensor *, tensor self, tensor other, int64_t self_num_batch_dims);
 int atg__nnpack_available();

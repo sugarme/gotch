@@ -588,10 +588,6 @@ cbinsLen := *(*C.int)(unsafe.Pointer(&binsLen))
 cdensity := *(*C.int)(unsafe.Pointer(&density)) 
 	C.atg__histogramdd_from_bin_tensors(ptr, self, cbinsDataPtr, cbinsLen, weight, cdensity)
 }
-func Atg_IndexCopy_(ptr *Ctensor, self Ctensor, dim int64, index Ctensor, source Ctensor){
-cdim := *(*C.int64_t)(unsafe.Pointer(&dim)) 
-	C.atg__index_copy_(ptr, self, cdim, index, source)
-}
 func Atg_IndexPutImpl_(ptr *Ctensor, self Ctensor, indicesData []Ctensor, indicesLen int, values Ctensor, accumulate int32, unsafety int32){
 cindicesDataPtr := (*Ctensor)(unsafe.Pointer(&indicesData[0]))
 cindicesLen := *(*C.int)(unsafe.Pointer(&indicesLen))
@@ -694,9 +690,6 @@ func Atg_MkldnnTranspose_(ptr *Ctensor, self Ctensor, dim0 int64, dim1 int64){
 cdim0 := *(*C.int64_t)(unsafe.Pointer(&dim0))
 cdim1 := *(*C.int64_t)(unsafe.Pointer(&dim1)) 
 	C.atg__mkldnn_transpose_(ptr, self, cdim0, cdim1)
-}
-func Atg_NativeMultiHeadSelfAttention(ptr *Ctensor, query Ctensor, qkvWeight Ctensor, qkvBias Ctensor, projWeight Ctensor, projBias Ctensor, mask Ctensor){ 
-	C.atg__native_multi_head_self_attention(ptr, query, qkvWeight, qkvBias, projWeight, projBias, mask)
 }
 func Atg_NegView(ptr *Ctensor, self Ctensor){ 
 	C.atg__neg_view(ptr, self)

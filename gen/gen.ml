@@ -45,7 +45,9 @@ let excluded_functions =
     ; "_histogramdd_bin_edges"
     ; "_histogramdd_bin_edges"
     ; "_histogramdd_from_bin_cts"
-    ; "_linalg_check_errors"]
+    ; "_linalg_check_errors"
+    ; "_index_copy_"
+    ; "_native_multi_head_self_attention"]
 
 let no_tensor_options =
   Set.of_list

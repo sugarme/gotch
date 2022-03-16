@@ -6,7 +6,7 @@
 `gotch` creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (~ 2209) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
 
 **Some features are**
-- [x] Comprehensive Pytorch tensor APIs (~ 1893) 
+- [x] Comprehensive Pytorch tensor APIs (~ 1891) 
 - [x] Fully featured Pytorch dynamic graph computation
 - [x] JIT interface to run model trained/saved using PyTorch Python API
 - [x] Load pretrained Pytorch models and run inference
@@ -16,16 +16,16 @@
 
 `gotch` is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
 
-`gotch` current version is **v0.6.2**
+`gotch` current version is **v0.7.0**
 
 ## Dependencies
 
-- **Libtorch** C++ v1.10.0 library of [Pytorch](https://pytorch.org/)
+- **Libtorch** C++ v1.11.0 library of [Pytorch](https://pytorch.org/)
 
 ## Installation
 
-- Default CUDA version is `11.1` if CUDA is available otherwise using CPU version.
-- Default Pytorch C++ API version is `1.10.0`
+- Default CUDA version is `11.3` if CUDA is available otherwise using CPU version.
+- Default Pytorch C++ API version is `1.11.0`
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
 
@@ -53,7 +53,7 @@
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.6.2 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.7.0 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -66,14 +66,19 @@
 
 #### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
+**IMPORTANT NOTE FOR CUDA 11.1**: 
+- Pytorch has not provided `libtorch-1.11` for CUDA 11.1 yet
+- If you have CUDA 11.1 installed in your machine and try to install `libtorch-1.11` for CUDA 11.3, you might have [linking issue here](https://github.com/pytorch/pytorch/issues/73829)
+- Download and install [nightly libtorch 1.11 for CUDA 11.1](https://download.pytorch.org/libtorch/nightly/cu113/libtorch-cxx11-abi-shared-with-deps-latest.zip) will help `gotch` compiled successfully.
+
 ```bash
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-libtorch.sh
     chmod +x setup-libtorch.sh
 
     # CUDA 10.2
     export CUDA_VER=10.2 && bash setup-libtorch.sh
-    # CUDA 11.1
-    export CUDA_VER=11.1 && bash setup-libtorch.sh
+    # CUDA 11.3
+    export CUDA_VER=11.3 && bash setup-libtorch.sh
 ```
 
 **Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
@@ -91,9 +96,9 @@
     wget https://raw.githubusercontent.com/sugarme/gotch/master/setup-gotch.sh
     chmod +x setup-gotch.sh
     # CUDA 10.2
-    export CUDA_VER=10.2 && export GOTCH_VER=v0.6.2 && bash setup-gotch.sh
-    # CUDA 11.1
-    export CUDA_VER=11.1 && export GOTCH_VER=v0.6.2 && bash setup-gotch.sh
+    export CUDA_VER=10.2 && export GOTCH_VER=v0.7.0 && bash setup-gotch.sh
+    # CUDA 11.3
+    export CUDA_VER=11.3 && export GOTCH_VER=v0.7.0 && bash setup-gotch.sh
 ```
 
 ## Examples

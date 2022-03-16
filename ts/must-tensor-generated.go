@@ -881,14 +881,6 @@ func(ts *Tensor) Must_HistogramddFromBinTensors(bins []Tensor, weight *Tensor, d
   return retVal
 } 
 
-func(ts *Tensor) Must_IndexCopy_(dim int64, index *Tensor, source *Tensor)() { 
-  
-  err := ts._IndexCopy_(dim, index, source)
-  if err != nil { log.Fatal(err) }
-  
-  return 
-} 
-
 func(ts *Tensor) Must_Indices(del bool)(retVal *Tensor) { 
   
   retVal, err := ts._Indices(del)
@@ -1055,14 +1047,6 @@ func(ts *Tensor) Must_MkldnnTranspose_(dim0 int64, dim1 int64)() {
   if err != nil { log.Fatal(err) }
   
   return 
-} 
-
-func Must_NativeMultiHeadSelfAttention(query *Tensor, qkvWeight *Tensor, qkvBias *Tensor, projWeight *Tensor, projBias *Tensor, mask *Tensor)(retVal *Tensor) { 
-  
-  retVal, err := _NativeMultiHeadSelfAttention(query, qkvWeight, qkvBias, projWeight, projBias, mask)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
 } 
 
 func(ts *Tensor) Must_NegView(del bool)(retVal *Tensor) { 

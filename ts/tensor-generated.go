@@ -1531,18 +1531,6 @@ cdensity := int32(0)
   return retVal, err
 } 
 
-func(ts *Tensor) _IndexCopy_(dim int64, index *Tensor, source *Tensor)(err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-    lib.Atg_IndexCopy_(ptr, ts.ctensor, dim, index.ctensor, source.ctensor)
-  if err = TorchErr(); err != nil {
-    return err
-  }
-  ts.ctensor = *ptr
-  
-  return err
-} 
-
 func(ts *Tensor) _Indices(del bool)(retVal *Tensor, err error) { 
   if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
@@ -1834,18 +1822,6 @@ func(ts *Tensor) _MkldnnTranspose_(dim0 int64, dim1 int64)(err error) {
   ts.ctensor = *ptr
   
   return err
-} 
-
-func _NativeMultiHeadSelfAttention(query *Tensor, qkvWeight *Tensor, qkvBias *Tensor, projWeight *Tensor, projBias *Tensor, mask *Tensor)(retVal *Tensor, err error) { 
-  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-  
-    lib.Atg_NativeMultiHeadSelfAttention(ptr, query.ctensor, qkvWeight.ctensor, qkvBias.ctensor, projWeight.ctensor, projBias.ctensor, mask.ctensor)
-  if err = TorchErr(); err != nil {
-    return retVal, err
-  }
-  retVal = &Tensor{ctensor: *ptr}
-  
-  return retVal, err
 } 
 
 func(ts *Tensor) _NegView(del bool)(retVal *Tensor, err error) { 

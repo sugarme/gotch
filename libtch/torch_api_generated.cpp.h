@@ -787,13 +787,6 @@ void atg__histogramdd_from_bin_tensors(tensor *out__, tensor self, tensor *bins_
   )
 }
 
-void atg__index_copy_(tensor *out__, tensor self, int64_t dim, tensor index, tensor source) {
-  PROTECT(
-    auto outputs__ = torch::_index_copy_(*self, dim, *index, *source);
-    out__[0] = new torch::Tensor(outputs__);
-  )
-}
-
 void atg__index_put_impl_(tensor *out__, tensor self, tensor *indices_data, int indices_len, tensor values, int accumulate, int unsafe) {
   PROTECT(
     auto outputs__ = torch::_index_put_impl_(*self, of_carray_tensor_opt(indices_data, indices_len), *values, (bool)accumulate, (bool)unsafe);
@@ -951,13 +944,6 @@ void atg__mkldnn_transpose(tensor *out__, tensor self, int64_t dim0, int64_t dim
 void atg__mkldnn_transpose_(tensor *out__, tensor self, int64_t dim0, int64_t dim1) {
   PROTECT(
     auto outputs__ = torch::_mkldnn_transpose_(*self, dim0, dim1);
-    out__[0] = new torch::Tensor(outputs__);
-  )
-}
-
-void atg__native_multi_head_self_attention(tensor *out__, tensor query, tensor qkv_weight, tensor qkv_bias, tensor proj_weight, tensor proj_bias, tensor mask) {
-  PROTECT(
-    auto outputs__ = torch::_native_multi_head_self_attention(*query, *qkv_weight, *qkv_bias, *proj_weight, *proj_bias, (mask ? *mask : torch::Tensor()));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
