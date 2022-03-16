@@ -12,6 +12,8 @@ type LayerNormConfig struct {
 	ElementwiseAffine bool
 	WsInit            Init
 	BsInit            Init
+	WsName            string // Default="weight", can change to e.g., "gamma"
+	BsName            string // Default="bias", can change to e.g., "beta"
 }
 
 func DefaultLayerNormConfig() *LayerNormConfig {
@@ -21,6 +23,8 @@ func DefaultLayerNormConfig() *LayerNormConfig {
 		ElementwiseAffine: true,
 		WsInit:            NewConstInit(1.0),
 		BsInit:            NewConstInit(0.0),
+		WsName:            "weight",
+		BsName:            "bias",
 	}
 }
 
@@ -39,8 +43,8 @@ func NewLayerNorm(vs *Path, normalizedShape []int64, config *LayerNormConfig) *L
 		bs *ts.Tensor
 	)
 	if config.ElementwiseAffine {
-		ws = vs.MustNewVar("weight", normalizedShape, config.WsInit)
-		bs = vs.MustNewVar("bias", normalizedShape, config.BsInit)
+		ws = vs.MustNewVar(config.WsName, normalizedShape, config.WsInit)
+		bs = vs.MustNewVar(config.BsName, normalizedShape, config.BsInit)
 	}
 
 	return &LayerNorm{config, ws, bs, normalizedShape}
