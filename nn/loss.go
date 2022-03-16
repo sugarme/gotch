@@ -107,3 +107,16 @@ func BCELoss(logits, target *ts.Tensor, opts ...LossFnOption) *ts.Tensor {
 	loss := logits.MustSqueeze(false).MustBinaryCrossEntropyWithLogits(target, ws, posWeight, reduction, true)
 	return loss
 }
+
+// MSELoss calculates Mean-Square Loss.
+//
+// - reductionOpt: either 0 ("none"); 1 ("mean"); 2 ("sum"). Default=mean
+func MSELoss(logits, labels *ts.Tensor, reductionOpt ...int64) *ts.Tensor {
+	reduction := int64(1)
+	if len(reductionOpt) > 0 {
+		reduction = reductionOpt[0]
+	}
+	out := logits.MustMseLoss(labels, reduction, false)
+
+	return out
+}
