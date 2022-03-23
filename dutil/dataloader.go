@@ -98,7 +98,7 @@ func (dl *DataLoader) Next() (interface{}, error) {
 		nextIndex = len(dl.indexes)
 	}
 	for i := dl.currIdx; i < nextIndex; i++ {
-		item, err := dl.dataset.Item(i)
+		item, err := dl.dataset.Item(dl.indexes[i])
 		if err != nil {
 			return nil, err
 		}
