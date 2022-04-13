@@ -3,7 +3,7 @@
 LIBTORCH_VERSION="${LIBTORCH_VER:-1.11.0}"
 CUDA_VERSION="${CUDA_VER:-11.3}"
 
-if [ "${CUDA_VERSION}"=="cpu" ]; then
+if [ "${CUDA_VERSION}" == "cpu" ]; then
   CU_VERSION="cpu"
 else
   CU_VERSION="cu${CUDA_VERSION//./}"
@@ -15,7 +15,7 @@ GOTCH_LIBTORCH="$LIBRARY_PATH/libtorch"
 
 LIBRARY_PATH="$LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
 CPATH="$CPATH:$GOTCH_LIBTORCH/lib:$GOTCH_LIBTORCH/include:$GOTCH_LIBTORCH/include/torch/csrc/api/include"
-if [[ -z "${CUDA_VERSION}"=="cpu" ]]; then
+if [[ "${CUDA_VERSION}" == "cpu" ]]; then
   LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
 else
   LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib:/usr/lib64-nvidia:/usr/local/cuda-${CUDA_VERSION}/lib64"
