@@ -15,5 +15,7 @@ func TestTensor_Format(t *testing.T) {
 	x := ts.MustArange(ts.IntScalar(numels), gotch.Float, gotch.CPU).MustView(shape, true)
 
 	fmt.Printf("%0.1f", x) // print truncated data
+	fmt.Printf("%i", x)    // print truncated data
+
 	// fmt.Printf("%#0.1f", x) // print full data
 }

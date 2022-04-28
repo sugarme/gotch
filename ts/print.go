@@ -319,13 +319,15 @@ func (ts *Tensor) Format(s fmt.State, verb rune) {
 	strides := shapeToStrides(shape)
 	device := ts.MustDevice()
 	dtype := ts.DType().String()
+	defined := ts.MustDefined()
 	if verb == 'i' {
 		fmt.Fprintf(
 			s,
-			"\nTENSOR META:\n\tShape:\t\t%v\n\tDType:\t\t%v\n\tDevice:\t\t%v\n",
+			"\nTENSOR INFO:\n\tShape:\t\t%v\n\tDType:\t\t%v\n\tDevice:\t\t%v\n\tDefined:\t%v\n",
 			shape,
 			dtype,
 			device,
+			defined,
 		)
 		return
 	}
