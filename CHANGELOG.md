@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed incorrect indexing at `dutil/Dataset.Next()`
 - Added `nn.MSELoss()`
 - reworked `ts.Format()`
+- Added conv2d benchmark
 
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
