@@ -10,12 +10,16 @@ Benchmark tensor operation `conv2d` forward propagation:
 - input shape: `[32, 64, 64, 64]`
 - kernel:            `[64, 3, 3]`
 
+```bash
 goos: linux
 goarch: amd64
 pkg: github.com/sugarme/gotch/ts
 cpu: Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
 BenchmarkConv2dCPU-8                 100          21198303 ns/op
 BenchmarkConv2dCUDA-8                100           2201213 ns/op
+```
+
+## `gotch` conv2d benchmark
 
 ```bash
 name          time/op
@@ -23,7 +27,7 @@ Conv2dCPU-8   21.2ms ± 0%
 Conv2dCUDA-8  2.20ms ± 0%
 ```
 
-Benchmark against Pytorch 1.11 CUDA 11 
+## Python `Pytorch` 1.11 CUDA 11 benchmark
 
 ```bash
 conv2d-CPU(x):   56.7 ms
