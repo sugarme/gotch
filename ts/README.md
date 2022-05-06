@@ -17,17 +17,19 @@ pkg: github.com/sugarme/gotch/ts
 cpu: Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz
 BenchmarkConv2dCPU-8                 100          21198303 ns/op
 BenchmarkConv2dCUDA-8                100           2201213 ns/op
+
+CUDA 11.1
+CuDNN 8.0.5
 ```
 
-## `gotch` conv2d benchmark
-
+## `gotch`
 ```bash
 name          time/op
 Conv2dCPU-8   21.2ms ± 0%
 Conv2dCUDA-8  2.20ms ± 0%
 ```
 
-## Python `Pytorch` 1.11 CUDA 11 benchmark
+## Python `Pytorch` 1.11
 
 ```bash
 conv2d-CPU(x):   56.7 ms
@@ -38,7 +40,6 @@ benchmark Python code below
 
 ```python
 import torch
-import torch.nn.functional as F
 import timeit
 
 x = torch.randn(32, 64, 64, 64)
