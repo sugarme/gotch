@@ -1,8 +1,10 @@
 package nn
 
 import (
+	"fmt"
 	"log"
 	"math"
+	"strings"
 
 	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/ts"
@@ -120,24 +122,88 @@ func (u uniformInit) Set(tensor *ts.Tensor) {
 
 // kaiminguniformInit :
 // ====================
-
-type kaimingUniformInit struct{}
-
-func NewKaimingUniformInit() kaimingUniformInit {
-	return kaimingUniformInit{}
+type KaimingOptions struct {
+	NegativeSlope float64
+	Mode          string
+	NonLinearity  string
 }
 
-func (k kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
-	var fanIn int64
-	if len(dims) == 0 {
-		log.Fatalf("KaimingUniformInit method call: dims (%v) should have length >= 1", dims)
-	} else if len(dims) == 1 {
-		fanIn = factorial(dims[0])
-	} else {
-		fanIn = product(dims[1:])
+type KaimingOption func(*KaimingOptions)
+
+func DefaultKaimingOptions() *KaimingOptions {
+	return &KaimingOptions{
+		NegativeSlope: 0.01,
+		Mode:          "fanIn",
+		NonLinearity:  "leaky_relu",
+	}
+}
+
+func WithKaimingMode(v string) KaimingOption {
+	if v != "fanIn" && v != "fanOut" {
+		panic("Mode must be either 'fanIn' or 'fanOut'.")
+	}
+	return func(opt *KaimingOptions) {
+		opt.Mode = v
+	}
+}
+
+func WithKaimingNonLinearity(v string) KaimingOption {
+	return func(opt *KaimingOptions) {
+		opt.NonLinearity = v
+	}
+}
+
+func WithKaimingNegativeSlope(v float64) KaimingOption {
+	return func(opt *KaimingOptions) {
+		opt.NegativeSlope = v
+	}
+}
+
+func NewKaimingOptions(opts ...KaimingOption) *KaimingOptions {
+	options := DefaultKaimingOptions()
+	for _, opt := range opts {
+		opt(options)
 	}
 
-	bound := math.Sqrt(1.0 / float64(fanIn))
+	return options
+}
+
+type kaimingUniformInit struct {
+	NegativeSlope float64
+	Mode          string
+	NonLinearity  string
+}
+
+func NewKaimingUniformInit(opts ...KaimingOption) *kaimingUniformInit {
+	o := DefaultKaimingOptions()
+	for _, opt := range opts {
+		opt(o)
+	}
+
+	return &kaimingUniformInit{
+		NegativeSlope: o.NegativeSlope,
+		Mode:          o.Mode,
+		NonLinearity:  o.NonLinearity,
+	}
+}
+
+func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
+	fanIn, _, err := CalculateFans(dims)
+	if err != nil {
+		panic(err)
+	}
+
+	gain, err := calculateGain(k.NonLinearity, k.NegativeSlope) // default non-linearity="leaky_relu", negative_slope=0.01
+	if err != nil {
+		err = fmt.Errorf("kaimingUniformInit.InitTensor() failed: %v\n", err)
+		panic(err)
+	}
+
+	std := gain / math.Sqrt(float64(fanIn)) // default using fanIn
+
+	// Calculate uniform bounds from standard deviation
+	bound := math.Sqrt(3.0) * std
+
 	kind := gotch.Float
 	retVal = ts.MustZeros(dims, kind, device)
 	retVal.Uniform_(-bound, bound)
@@ -172,16 +238,22 @@ func (k kaimingUniformInit) Set(tensor *ts.Tensor) {
 		log.Fatalf("uniformInit - Set method call error: %v\n", err)
 	}
 
-	var fanIn int64
-	if len(dims) == 0 {
-		log.Fatalf("KaimingUniformInit Set method call: Tensor (%v) should have length >= 1", tensor.MustSize())
-	} else if len(dims) == 1 {
-		fanIn = factorial(dims[0])
-	} else {
-		fanIn = product(dims[1:])
+	fanIn, _, err := CalculateFans(dims)
+	if err != nil {
+		panic(err)
 	}
 
-	bound := math.Sqrt(1.0 / float64(fanIn))
+	gain, err := calculateGain(k.NonLinearity, k.NegativeSlope) // default non-linearity="leaky_relu", negative_slope=0.01
+	if err != nil {
+		err = fmt.Errorf("kaimingUniformInit.Set() failed: %v\n", err)
+		panic(err)
+	}
+
+	std := gain / math.Sqrt(float64(fanIn)) // default using fanIn
+
+	// Calculate uniform bounds from standard deviation
+	bound := math.Sqrt(3.0) * std
+
 	tensor.Uniform_(-bound, bound)
 }
 
@@ -201,4 +273,77 @@ func (gl glorotNInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.
 
 func (gl glorotNInit) Set(tensor *ts.Tensor) {
 	// TODO: implement
+}
+
+// KaimingUniform:
+// ===============
+// Base on Pytorch:
+// https://github.com/pytorch/pytorch/blob/98f40af7e3133e042454efab668a842c4d01176e/torch/nn/init.py#L284
+func calculateFan(shape []int64) (fan map[string]int64, err error) {
+	if len(shape) < 2 {
+		err = fmt.Errorf("calculateFan() failed: fan in and fan out can not be computed for tensor with fewer than 2 dimensions")
+		return
+	}
+
+	fan = make(map[string]int64)
+
+	numInputFmap := shape[1]
+	numOutputFmap := shape[0]
+	var receptiveFieldSize int64 = 1
+	if len(shape) > 2 {
+		// calculate product
+		for _, s := range shape[2:] {
+			receptiveFieldSize *= int64(s)
+		}
+	}
+
+	fan["fanIn"] = numInputFmap * receptiveFieldSize
+	fan["fanOut"] = numOutputFmap * receptiveFieldSize
+
+	return fan, nil
+}
+
+// CalculateFans calculates fan-in and fan-out based on tensor shape.
+func CalculateFans(shape []int64) (fanIn, fanOut int64, err error) {
+	fan, err := calculateFan(shape)
+	return fan["fanIn"], fan["fanOut"], err
+}
+
+// Return the recommended gain value for the given nonlinearity function.
+// Default fn should be `leaky_relu`
+func calculateGain(fn string, paramOpt ...float64) (float64, error) {
+	linearFns := []string{"linear", "conv1d", "conv2d", "conv3d", "conv_transpose1d", "conv_transpose2d", "conv_transpose3d"}
+
+	negativeSlope := 0.01
+	if len(paramOpt) > 0 {
+		negativeSlope = paramOpt[0]
+	}
+
+	fn = strings.ToLower(fn)
+	if contains(linearFns, fn) || fn == "sigmoid" {
+		return 1, nil
+	}
+
+	switch fn {
+	case "tanh":
+		return 5.0 / 3.0, nil
+	case "relu":
+		return math.Sqrt(2.0), nil
+	case "leaky_relu": // default fn
+		return math.Sqrt(2.0 / (1 + math.Pow(negativeSlope, 2))), nil
+	case "selu":
+		return 3.0 / 4, nil // Value found empirically (https://github.com/pytorch/pytorch/pull/50664)
+	default:
+		err := fmt.Errorf("calculateGain() failed: unsupported non-linearity function %q\n", fn)
+		return -1, err
+	}
+}
+
+func contains(items []string, item string) bool {
+	for _, i := range items {
+		if item == i {
+			return true
+		}
+	}
+	return false
 }

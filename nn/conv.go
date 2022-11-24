@@ -4,6 +4,7 @@ package nn
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 
 	"github.com/sugarme/gotch/ts"
@@ -76,14 +77,15 @@ func WithBsInit1D(val Init) Conv1DConfigOpt {
 
 // DefaultConvConfig create a default 1D ConvConfig
 func DefaultConv1DConfig() *Conv1DConfig {
+	negSlope := math.Sqrt(5)
 	return &Conv1DConfig{
 		Stride:   []int64{1},
 		Padding:  []int64{0},
 		Dilation: []int64{1},
 		Groups:   1,
 		Bias:     true,
-		WsInit:   NewKaimingUniformInit(),
-		BsInit:   NewConstInit(float64(0.0)),
+		WsInit:   NewKaimingUniformInit(WithKaimingNegativeSlope(negSlope)),
+		BsInit:   nil,
 	}
 }
 
@@ -165,14 +167,15 @@ func WithBsInit2D(val Init) Conv2DConfigOpt {
 
 // DefaultConvConfig2D creates a default 2D ConvConfig
 func DefaultConv2DConfig() *Conv2DConfig {
+	negSlope := math.Sqrt(5)
 	return &Conv2DConfig{
 		Stride:   []int64{1, 1},
 		Padding:  []int64{0, 0},
 		Dilation: []int64{1, 1},
 		Groups:   1,
 		Bias:     true,
-		WsInit:   NewKaimingUniformInit(),
-		BsInit:   NewConstInit(float64(0.0)),
+		WsInit:   NewKaimingUniformInit(WithKaimingNegativeSlope(negSlope)),
+		BsInit:   nil,
 	}
 }
 
@@ -254,14 +257,15 @@ func WithBsInit3D(val Init) Conv3DConfigOpt {
 
 // DefaultConvConfig3D creates a default 3D ConvConfig
 func DefaultConv3DConfig() *Conv3DConfig {
+	negSlope := math.Sqrt(5)
 	return &Conv3DConfig{
 		Stride:   []int64{1, 1, 1},
 		Padding:  []int64{0, 0, 0},
 		Dilation: []int64{1, 1, 1},
 		Groups:   1,
 		Bias:     true,
-		WsInit:   NewKaimingUniformInit(),
-		BsInit:   NewConstInit(float64(0.0)),
+		WsInit:   NewKaimingUniformInit(WithKaimingNegativeSlope(negSlope)),
+		BsInit:   nil,
 	}
 }
 
@@ -288,12 +292,27 @@ func NewConv1D(vs *Path, inDim, outDim, k int64, cfg *Conv1DConfig) *Conv1D {
 		ws *ts.Tensor
 		bs *ts.Tensor = ts.NewTensor()
 	)
-	if cfg.Bias {
-		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
-	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, k)
 	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
+	if cfg.Bias {
+		switch {
+		case cfg.BsInit == nil:
+			fanIn, _, err := CalculateFans(weightSize)
+			if err != nil {
+				err := fmt.Errorf("NewConv1D() initiate bias failed: %v", err)
+				panic(err)
+			}
+			bound := 0.0
+			if fanIn > 0 {
+				bound = 1 / math.Sqrt(float64(fanIn))
+			}
+			bsInit := NewUniformInit(-bound, bound)
+			bs = vs.MustNewVar("bias", []int64{outDim}, bsInit)
+		case cfg.BsInit != nil:
+			bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
+		}
+	}
 
 	return &Conv1D{
 		Ws:     ws,
@@ -315,12 +334,28 @@ func NewConv2D(vs *Path, inDim, outDim int64, k int64, cfg *Conv2DConfig) *Conv2
 		ws *ts.Tensor
 		bs *ts.Tensor = ts.NewTensor()
 	)
-	if cfg.Bias {
-		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
-	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, k, k)
 	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
+
+	if cfg.Bias {
+		switch {
+		case cfg.BsInit == nil:
+			fanIn, _, err := CalculateFans(weightSize)
+			if err != nil {
+				err := fmt.Errorf("NewConv2D() initiate bias failed: %v", err)
+				panic(err)
+			}
+			bound := 0.0
+			if fanIn > 0 {
+				bound = 1 / math.Sqrt(float64(fanIn))
+			}
+			bsInit := NewUniformInit(-bound, bound)
+			bs = vs.MustNewVar("bias", []int64{outDim}, bsInit)
+		case cfg.BsInit != nil:
+			bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
+		}
+	}
 
 	return &Conv2D{
 		Ws:     ws,
@@ -342,12 +377,28 @@ func NewConv3D(vs *Path, inDim, outDim, k int64, cfg *Conv3DConfig) *Conv3D {
 		ws *ts.Tensor
 		bs *ts.Tensor = ts.NewTensor()
 	)
-	if cfg.Bias {
-		bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
-	}
 	weightSize := []int64{outDim, int64(inDim / cfg.Groups)}
 	weightSize = append(weightSize, k, k, k)
 	ws = vs.MustNewVar("weight", weightSize, cfg.WsInit)
+
+	if cfg.Bias {
+		switch {
+		case cfg.BsInit == nil:
+			fanIn, _, err := CalculateFans(weightSize)
+			if err != nil {
+				err := fmt.Errorf("NewConv3D() initiate bias failed: %v", err)
+				panic(err)
+			}
+			bound := 0.0
+			if fanIn > 0 {
+				bound = 1 / math.Sqrt(float64(fanIn))
+			}
+			bsInit := NewUniformInit(-bound, bound)
+			bs = vs.MustNewVar("bias", []int64{outDim}, bsInit)
+		case cfg.BsInit != nil:
+			bs = vs.MustNewVar("bias", []int64{outDim}, cfg.BsInit)
+		}
+	}
 
 	return &Conv3D{
 		Ws:     ws,

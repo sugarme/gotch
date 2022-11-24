@@ -3,6 +3,7 @@ package nn
 // linear is a fully-connected layer
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/sugarme/gotch"
@@ -19,8 +20,9 @@ type LinearConfig struct {
 // DefaultLinearConfig creates default LinearConfig with
 // weights initiated using KaimingUniform and Bias is set to true
 func DefaultLinearConfig() *LinearConfig {
+	negSlope := math.Sqrt(5)
 	return &LinearConfig{
-		WsInit: NewKaimingUniformInit(),
+		WsInit: NewKaimingUniformInit(WithKaimingNegativeSlope(negSlope)),
 		BsInit: nil,
 		Bias:   true,
 	}
@@ -38,7 +40,6 @@ type Linear struct {
 // outDim - output dimension (y) [output features - columns]
 // NOTE: w will have shape{outDim, inDim}; b will have shape{outDim}
 func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
-
 	var bs *ts.Tensor
 	// bs has size of output dimension
 	switch c.Bias {
@@ -47,7 +48,16 @@ func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 	case true:
 		switch {
 		case c.BsInit == nil:
-			bound := 1.0 / math.Sqrt(float64(inDim))
+			shape := []int64{inDim, outDim}
+			fanIn, _, err := CalculateFans(shape)
+			if err != nil {
+				err := fmt.Errorf("NewLinear() initiate bias failed: %v", err)
+				panic(err)
+			}
+			bound := 0.0
+			if fanIn > 0 {
+				bound = 1 / math.Sqrt(float64(fanIn))
+			}
 			bsInit := NewUniformInit(-bound, bound)
 			bs = vs.MustNewVar("bias", []int64{outDim}, bsInit)
 		case c.BsInit != nil:
