@@ -14,11 +14,11 @@ import (
 const (
 	MnistDirCNN string = "../../data/mnist"
 
-	epochsCNN = 100
+	epochsCNN = 30
 	batchCNN  = 256
 	batchSize = 256
 
-	LrCNN = 1e-4
+	LrCNN = 3 * 1e-4
 )
 
 type Net struct {
@@ -84,6 +84,7 @@ func runCNN1() {
 
 	net := newNet(vs.Root())
 	opt, err := nn.DefaultAdamConfig().Build(vs, LrCNN)
+	// opt, err := nn.DefaultSGDConfig().Build(vs, LrCNN)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -132,7 +133,7 @@ func runCNN1() {
 		}
 
 		ts.NoGrad(func() {
-			testAccuracy := nn.BatchAccuracyForLogits(vs, net, testImages, testLabels, vs.Device(), 1024)
+			testAccuracy := nn.BatchAccuracyForLogits(vs, net, testImages, testLabels, vs.Device(), 1000)
 			fmt.Printf("Epoch: %v\t Loss: %.2f \t Test accuracy: %.2f%%\n", epoch, epocLoss, testAccuracy*100.0)
 			if testAccuracy > bestAccuracy {
 				bestAccuracy = testAccuracy
