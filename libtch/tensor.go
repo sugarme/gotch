@@ -96,7 +96,7 @@ func AtDim(t Ctensor) uint64 {
 
 // void at_shape(tensor, int64_t *);
 func AtShape(t Ctensor, ptr unsafe.Pointer) {
-	c_ptr := (*C.long)(ptr)
+	c_ptr := (*C.int64_t)(ptr)
 	C.at_shape(t, c_ptr)
 }
 
@@ -137,7 +137,7 @@ func AtcSetBenchmarkCudnn(b int) {
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
 func AtDoubleValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) float64 {
 	ctensor := (C.tensor)(ts)
-	cindexes := (*C.long)(indexes)
+	cindexes := (*C.int64_t)(indexes)
 	cindexesLen := *(*C.int)(unsafe.Pointer(&indexesLen))
 	retVal := C.at_double_value_at_indexes(ctensor, cindexes, cindexesLen)
 	return *(*float64)(unsafe.Pointer(&retVal))
@@ -146,7 +146,7 @@ func AtDoubleValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) 
 // int64_t at_int64_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
 func AtInt64ValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) int64 {
 	ctensor := (C.tensor)(ts)
-	cindexes := (*C.long)(indexes)
+	cindexes := (*C.int64_t)(indexes)
 	cindexesLen := *(*C.int)(unsafe.Pointer(&indexesLen))
 	retVal := C.at_int64_value_at_indexes(ctensor, cindexes, cindexesLen)
 	return *(*int64)(unsafe.Pointer(&retVal))
@@ -447,7 +447,7 @@ func AtoAddParametersOld(coptimizer Coptimizer, tensors []Ctensor, ntensors int)
 }
 
 func AtoAddParameter(coptimizer Coptimizer, tensor Ctensor, group uint) {
-	cgroup := *(*C.ulong)(unsafe.Pointer(&group))
+	cgroup := *(*C.size_t)(unsafe.Pointer(&group))
 	C.ato_add_parameter(coptimizer, tensor, cgroup)
 }
 
