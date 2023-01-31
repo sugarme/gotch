@@ -11,7 +11,7 @@ At the end of each training epoch, some sample text is generated and printed.
 Any text file can be used as an input, as long as it's large enough for training.
 A typical example would be the
 [tiny Shakespeare dataset](https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt).
-The training text file should be stored in `data/input.txt`.
+The training text file should be stored in `data/char-rnn/input.txt`.
 
 To run the example:
 
