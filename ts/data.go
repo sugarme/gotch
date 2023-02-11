@@ -226,6 +226,12 @@ func NewTextData(filename string) (*TextData, error) {
 	}, nil
 }
 
+func (tdi *TextDataIter) Progress() float32 {
+	startIndex := (tdi.BatchIndex * tdi.BatchSize)
+	availableIndices := tdi.IndexesLen
+	progress := float32(startIndex) / float32(availableIndices)
+	return progress
+}
 // Labels returns the number of different `character` (rune) used by the dataset.
 func (td *TextData) Labels() (retVal int64) {
 	return int64(len(td.CharForLabel))
