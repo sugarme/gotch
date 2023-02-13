@@ -51,48 +51,134 @@ func Decode(filename string) (map[string]*ts.Tensor, error) {
 		return nil, err
 	}
 
+	dtype := reflect.TypeOf(result).String()
+
 	// Rebuild tensors from Storage tensors
 	namedTensors := make(map[string]*ts.Tensor)
-	dictResult, isOrderedDict := result.(*OrderedDict)
-	if !isOrderedDict {
-		err := fmt.Errorf("Decode() failed: expected 'OrderedDict' type, got %v\n", reflect.TypeOf(result).String())
+	switch dtype {
+	case "*pickle.Dict":
+		dictResult := *result.(*Dict)
+		for _, item := range dictResult {
+			name := item.Key
+			itemTyp := reflect.TypeOf(item.Value).String()
+			switch itemTyp {
+			case "*pickle.Dict": // Nested *pickle.Dict case
+				subResult := *item.Value.(*Dict)
+				for _, subItem := range subResult {
+					subName := subItem.Key
+					x, ok := subItem.Value.(*StorageTensor)
+					if !ok {
+						log.Printf("INFO: Decode() failed: expected 'StorageTensor' type, got %v. Skip decoding parameter %q ...\n", reflect.TypeOf(subItem.Value).String(), subName)
+						continue
+					}
+					data := x.Source.GetData()
+					size := x.Size
+					dtype := x.Source.DType()
+					device := x.Source.Device()
+					stride := x.Stride
+					storageOffset := x.StorageOffset
+					if reflect.ValueOf(data).Len() == 0 {
+						log.Printf("INFO: skip weight %q with zero data length.\n", name.(string))
+						continue
+					}
+
+					// TODO. should we just skip them?
+					if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
+						size = []int64{1}
+						stride = []int64{1}
+					}
+
+					x1 := ts.MustOfSlice(data).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
+					if x.RequiresGrad {
+						x1.MustRequiresGrad_(x.RequiresGrad)
+					}
+
+					namedTensors[name.(string)] = x1
+				}
+
+			default:
+				sx, isStorageTensor := item.Value.(*StorageTensor)
+
+				// if !isStorageTensor {
+				// err := fmt.Errorf("Decode() failed: expected 'StorageTensor' type, got %v\n", reflect.TypeOf(item.Value).String())
+				// return nil, err
+				// }
+				if !isStorageTensor {
+					log.Printf("INFO: Decode() failed: expected 'StorageTensor' type, got %v, with value of %v. Skip decoding parameter %q ...\n", reflect.TypeOf(item.Value).String(), item.Value, name)
+					continue
+				}
+
+				data := sx.Source.GetData()
+				size := sx.Size
+				dtype := sx.Source.DType()
+				device := sx.Source.Device()
+				stride := sx.Stride
+				storageOffset := sx.StorageOffset
+
+				// log.Printf("%q - %q - shape: %v - stride: %v - storageOffset: %v\n", name, sx.Source.Device().Name, sx.Size, sx.Stride, storageOffset)
+				// log.Printf("data: %v\n", data)
+
+				// Dealing with Pytorch `..._tracked` variables.
+				if reflect.ValueOf(data).Len() == 0 {
+					log.Printf("INFO: skip weight %q with zero data length.\n", name.(string))
+					continue
+				}
+
+				// TODO. should we just skip them?
+				if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
+					size = []int64{1}
+					stride = []int64{1}
+				}
+
+				x := ts.MustOfSlice(data).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
+				if sx.RequiresGrad {
+					x.MustRequiresGrad_(sx.RequiresGrad)
+				}
+
+				namedTensors[name.(string)] = x
+			}
+		}
+	case "*pickle.OrderedDict":
+		dictResult := result.(*OrderedDict)
+		for name, item := range dictResult.Map {
+			sx, isStorageTensor := item.Value.(*StorageTensor)
+			if !isStorageTensor {
+				err := fmt.Errorf("Decode() failed: expected 'StorageTensor' type, got %v\n", reflect.TypeOf(item.Value).String())
+				return nil, err
+			}
+
+			data := sx.Source.GetData()
+			size := sx.Size
+			dtype := sx.Source.DType()
+			device := sx.Source.Device()
+			stride := sx.Stride
+			storageOffset := sx.StorageOffset
+
+			// log.Printf("%q - %q - shape: %v - stride: %v - storageOffset: %v\n", name, sx.Source.Device().Name, sx.Size, sx.Stride, storageOffset)
+			// log.Printf("data: %v\n", data)
+
+			// Dealing with Pytorch `..._tracked` variables.
+			if reflect.ValueOf(data).Len() == 0 {
+				log.Printf("INFO: skip weigth %q with zero data length.\n", name.(string))
+				continue
+			}
+
+			// TODO. should we just skip them?
+			if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
+				size = []int64{1}
+				stride = []int64{1}
+			}
+
+			x := ts.MustOfSlice(data).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
+			if sx.RequiresGrad {
+				x.MustRequiresGrad_(sx.RequiresGrad)
+			}
+
+			namedTensors[name.(string)] = x
+		}
+	default:
+		err := fmt.Errorf("Decode() failed: expected '*pickle.OrderedDict' or '*pickle.Dict' type, got %v\n", dtype)
 		return nil, err
-	}
-	for name, item := range dictResult.Map {
-		sx, isStorageTensor := item.Value.(*StorageTensor)
-		if !isStorageTensor {
-			err := fmt.Errorf("Decode() failed: expected 'StorageTensor' type, got %v\n", reflect.TypeOf(item.Value).String())
-			return nil, err
-		}
-
-		data := sx.Source.GetData()
-		size := sx.Size
-		dtype := sx.Source.DType()
-		device := sx.Source.Device()
-		stride := sx.Stride
-		storageOffset := sx.StorageOffset
-
-		// log.Printf("%q - %q - shape: %v - stride: %v - storageOffset: %v\n", name, sx.Source.Device().Name, sx.Size, sx.Stride, storageOffset)
-		// log.Printf("data: %v\n", data)
-
-		// Dealing with Pytorch `..._tracked` variables.
-		if reflect.ValueOf(data).Len() == 0 {
-			log.Printf("INFO: skip weigth %q with zero data length.\n", name.(string))
-			continue
-		}
-
-		// TODO. should we just skip them?
-		if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
-			size = []int64{1}
-			stride = []int64{1}
-		}
-
-		x := ts.MustOfSlice(data).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
-		if sx.RequiresGrad {
-			x.MustRequiresGrad_(sx.RequiresGrad)
-		}
-
-		namedTensors[name.(string)] = x
 	}
 
 	return namedTensors, nil
@@ -161,6 +247,7 @@ func loadZipFile(filename string, newUnpickler func(r io.Reader) Unpickler) (int
 		if !dataTypeOk || !keyOk || !locationOk || !sizeOk {
 			return nil, fmt.Errorf("PersistentLoad: unexpected data types")
 		}
+
 		storage, storageExists := loadedStorages[key]
 		if !storageExists {
 			storage, err = loadTensor(dataType, size, location, key, fileRecords)

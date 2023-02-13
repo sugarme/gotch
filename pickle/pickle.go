@@ -10,6 +10,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"reflect"
+	"runtime"
 )
 
 // This file implements Python Pickle Machinery.
@@ -552,6 +555,7 @@ func loadBinInt1(up *Unpickler) error {
 		err = fmt.Errorf("loadBinInt1() failed: %w", err)
 		return err
 	}
+
 	up.append(int(b))
 
 	return nil
@@ -1007,10 +1011,9 @@ func loadTuple3(up *Unpickler) error {
 	objects := make([]interface{}, 3)
 	var (
 		err error
-		n   int = 0
 	)
 	for i := 2; i >= 0; i-- {
-		objects[n], err = up.stackPop()
+		objects[i], err = up.stackPop()
 		if err != nil {
 			err = fmt.Errorf("loadTuple3() failed: %w", err)
 		}
@@ -1251,6 +1254,7 @@ func loadGlobal(up *Unpickler) error {
 		err = fmt.Errorf("loadGlobal() failed: %w", err)
 		return err
 	}
+
 	up.append(class)
 	return nil
 }
@@ -1378,6 +1382,7 @@ func loadReduce(up *Unpickler) error {
 		err = fmt.Errorf("loadReduce() failed: %w", err)
 		return err
 	}
+
 	callable, callableOk := function.(Callable)
 	if !callableOk {
 		err := fmt.Errorf("REDUCE requires a Callable object: %#v", function)
@@ -1934,4 +1939,8 @@ func Loads(s string) (interface{}, error) {
 	up := NewUnpickler(sr)
 
 	return up.Load()
+}
+
+func GetFunctionName(i interface{}) string {
+	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
