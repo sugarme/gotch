@@ -364,7 +364,7 @@ func AtFree(ts Ctensor) {
 	C.at_free(ts)
 }
 
-//int at_grad_set_enabled(int b);
+// int at_grad_set_enabled(int b);
 func AtGradSetEnabled(b int) int {
 	cbool := *(*C.int)(unsafe.Pointer(&b))
 	cretVal := C.at_grad_set_enabled(cbool)
@@ -869,4 +869,14 @@ func AtoConstantPadNd(ptr *Ctensor, self Ctensor, padData []int64, padLen int, v
 	cpadDataPtr := (*C.int64_t)(unsafe.Pointer(&padData[0]))
 	cpadLen := *(*C.int)(unsafe.Pointer(&padLen))
 	C.ato_constant_pad_nd(ptr, self, cpadDataPtr, cpadLen, value)
+}
+
+// NOTE. TT. added to test new API generated
+func AtgRandn1(sizeData []int64, sizeLen int, optionsKind int32, optionsDevice int32) Ctensor {
+	csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+	csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+	coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+	coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+
+	return C.atg_randn1(csizeDataPtr, csizeLen, coptionsKind, coptionsDevice)
 }

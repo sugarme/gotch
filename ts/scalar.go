@@ -2,25 +2,87 @@ package ts
 
 import (
 	// "unsafe"
+	"fmt"
 	"log"
+	"runtime"
+	"sync/atomic"
 
+	"github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
 )
 
 type Scalar struct {
+	name    string
 	cscalar lib.Cscalar
+}
+
+// free releases C allocated memory.
+func freeCScalar(x *Scalar) error {
+	nbytes := x.nbytes()
+	atomic.AddInt64(&AllocatedMem, -nbytes)
+	lock.Lock()
+	delete(ExistingScalars, x.name)
+	lock.Unlock()
+
+	lib.AtsFree(x.cscalar)
+	if err := TorchErr(); err != nil {
+		return err
+	}
+
+	if gotch.Debug {
+		log.Printf("INFO: Released scalar %q - C memory: %d bytes.\n", x.name, nbytes)
+	}
+
+	return nil
+}
+
+func newScalarName(nameOpt ...string) string {
+	var name string
+	if len(nameOpt) > 0 {
+		name = nameOpt[0]
+	} else {
+		name = fmt.Sprintf("tensor_%06d", TensorCount)
+	}
+
+	return name
+}
+
+func newScalar(cscalar lib.Cscalar, nameOpt ...string) *Scalar {
+	x := &Scalar{
+		cscalar: cscalar,
+		name:    newName(nameOpt...),
+	}
+
+	atomic.AddInt64(&ScalarCount, 1)
+	nbytes := x.nbytes()
+	atomic.AddInt64(&AllocatedMem, nbytes)
+	lock.Lock()
+	ExistingScalars[x.name] = struct{}{}
+	lock.Unlock()
+
+	if gotch.Debug {
+		log.Printf("INFO: scalar %q added - Allocated memory (%d bytes).\n", x.name, nbytes)
+	}
+
+	runtime.SetFinalizer(x, freeCScalar)
+
+	return x
+}
+
+func (sc *Scalar) nbytes() int64 {
+	return 4 // either Int64 or Float64 scalar -> 4 bytes
 }
 
 // IntScalar creates a integer scalar
 func IntScalar(v int64) *Scalar {
 	cscalar := lib.AtsInt(v)
-	return &Scalar{cscalar}
+	return newScalar(cscalar)
 }
 
 // FloatScalar creates a float scalar
 func FloatScalar(v float64) *Scalar {
 	cscalar := lib.AtsFloat(v)
-	return &Scalar{cscalar}
+	return newScalar(cscalar)
 }
 
 // ToInt returns a integer value
@@ -70,5 +132,4 @@ func (sc *Scalar) MustDrop() {
 	if err := TorchErr(); err != nil {
 		log.Fatal(err)
 	}
-
 }

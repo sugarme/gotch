@@ -11,34 +11,172 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"runtime"
+	"sync"
+	"sync/atomic"
+	"time"
 	"unsafe"
 
 	gotch "github.com/sugarme/gotch"
 	lib "github.com/sugarme/gotch/libtch"
 )
 
-type Tensor struct {
-	ctensor lib.Ctensor
-}
+var (
+	TensorCount  int64 // incremental counting created tensors
+	ScalarCount  int64 // incremental counting created scalars
+	AllocatedMem int64 // bytes - keeping track of memory created and still occupied by gotch/tensor (excluding mem allocated by libtorch at C side)
 
-func (ts *Tensor) Ctensor() unsafe.Pointer {
-	return unsafe.Pointer(ts.ctensor)
-}
+	ExistingTensors map[string]struct{} = make(map[string]struct{}) // keep track of existing tensors by name
+	ExistingScalars map[string]struct{} = make(map[string]struct{}) // keep track of existing scalar by name
+	lock            sync.Mutex
+)
 
 // None is an undefined tensor.
 // It can be used in optional tensor parameter where 'None' value used.
 // `ts.MustDefined()` function is used for checking 'null'
 var None = NewTensor()
 
+type bigStruct struct {
+	// lots [1e8]float64
+	lots [1e5]byte
+}
+
+// Tensor is a Go wrapper to a C tensor pointer - 8bytes (64-bits OS)  or 4 bytes (32-bits OS)
+// ctensor is just an opaque C pointer to `torch::Tensor`
+//
+// NOTE.Tensor should be big enough to be in a heap.
+// See. https://stackoverflow.com/questions/10866195
+type Tensor struct {
+	d       *bigStruct
+	name    string
+	ctensor lib.Ctensor
+}
+
+func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
+	if len(nameOpt) == 0 {
+		nameOpt = []string{}
+	}
+	name := newName(nameOpt...)
+
+	x := new(Tensor)
+	x.ctensor = ctensor
+	x.name = name
+	x.d = new(bigStruct)
+
+	atomic.AddInt64(&TensorCount, 1)
+	nbytes := x.nbytes()
+	atomic.AddInt64(&AllocatedMem, nbytes)
+	lock.Lock()
+	ExistingTensors[name] = struct{}{}
+	lock.Unlock()
+
+	if gotch.Debug {
+		log.Printf("INFO: Added tensor %q - Allocated memory: %d bytes.\n", x.name, nbytes)
+	}
+
+	runtime.SetFinalizer(x, freeCTensor)
+
+	return x
+}
+
+func CheckCMemLeak() string {
+	tensors := []string{}
+	for n := range ExistingTensors {
+		tensors = append(tensors, n)
+	}
+	var msg string
+	msg += fmt.Sprintf("============================= C MEMORY CHECK RESULT ==================================\n")
+	msg += fmt.Sprintf("C memory allocated not been released: %v bytes\n", AllocatedMem)
+	msg += fmt.Sprintf("Tensors not been released: %q\n", tensors)
+	msg += fmt.Sprintf("======================================================================================\n")
+	return msg
+}
+
+func CleanUp(sleepTimeOpt ...int) {
+	sleepTime := time.Duration(1000) // 1 second
+	if len(sleepTimeOpt) > 0 {
+		sleepTime = time.Duration(sleepTimeOpt[0])
+	}
+
+	if gotch.Debug {
+		fmt.Printf(CheckCMemLeak())
+		fmt.Println(">>>>>>>>>>>>>>Last runtime.GC() call at ts.CleanUp() <<<<<<<<<<<<<<<<<<<<<<<<<<<")
+	}
+
+	runtime.GC()
+	time.Sleep(time.Millisecond * sleepTime)
+	runtime.GC()
+
+	if gotch.Debug {
+		fmt.Println(">>>>>>>>>>>>>>After last GC called at ts.CleanUp(): <<<<<<<<<<<<<<<<<<<<<<<<<")
+		fmt.Printf(CheckCMemLeak())
+	}
+}
+
+func (ts *Tensor) Ctensor() unsafe.Pointer {
+	return unsafe.Pointer(ts.ctensor)
+}
+
+func free(ts *Tensor) error {
+	lib.AtFree(ts.ctensor)
+	if err := TorchErr(); err != nil {
+		return err
+	}
+
+	if gotch.Debug {
+		log.Println("INFO: ----> C Tensor Released <----")
+	}
+
+	return nil
+}
+
+// free releases C allocated memory.
+func freeCTensor(ts *Tensor) error {
+	nbytes := ts.nbytes()
+	atomic.AddInt64(&AllocatedMem, -nbytes)
+	lock.Lock()
+	defer lock.Unlock()
+	delete(ExistingTensors, ts.name)
+
+	lib.AtFree(ts.ctensor)
+	if err := TorchErr(); err != nil {
+		err := fmt.Errorf("ERROR: failed to release tensor %q - %w", ts.name, err)
+		return err
+	}
+
+	if gotch.Debug {
+		log.Printf("INFO: Released tensor %q - C memory(%d bytes).\n", ts.name, nbytes)
+	}
+
+	return nil
+}
+
+func newName(nameOpt ...string) string {
+	var name string
+	if len(nameOpt) > 0 {
+		name = nameOpt[0]
+	} else {
+		name = fmt.Sprintf("tensor_%06d", TensorCount)
+	}
+
+	return name
+}
+
 // NewTensor creates a new tensor
-func NewTensor() *Tensor {
+func NewTensor(nameOpt ...string) *Tensor {
 	ctensor := lib.AtNewTensor()
-	return &Tensor{ctensor}
+
+	return newTensor(ctensor, nameOpt...)
 }
 
 func FromCtensor(ctensor unsafe.Pointer) *Tensor {
 	cts := (lib.Ctensor)(ctensor)
-	return &Tensor{cts}
+
+	return newTensor(cts)
+}
+
+func (ts *Tensor) Name() string {
+	return ts.name
 }
 
 func (ts *Tensor) Dim() uint64 {
@@ -142,6 +280,23 @@ func (ts *Tensor) Size4() ([]int64, error) {
 	return shape, nil
 }
 
+// nbytes calculates tensor data size in bytes.
+func (ts *Tensor) nbytes() int64 {
+	numel := ts.Numel()
+	if numel == 0 {
+		return 0 // ts.None
+	}
+	dtype := ts.DType()
+	eltSizeInBytes, err := gotch.DTypeSize(dtype)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	nbytes := int64(numel) * int64(eltSizeInBytes)
+
+	return nbytes
+}
+
 func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
 	// Decode sz
 	// 1. Count number of elements in data
@@ -163,18 +318,11 @@ func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
 }
 
 // OfSlice creates tensor from a slice data
-func OfSlice(data interface{}) (*Tensor, error) {
+func OfSlice(data interface{}, nameOpt ...string) (*Tensor, error) {
 	// convert []int -> int32. `binary.Write()` can't write `[]int` because it's not fixed-size!
 	if reflect.TypeOf(data).String() == "[]int" {
 		data = sliceIntToInt32(data.([]int))
 	}
-
-	/*
-		typ, dataLen, err := DataCheck(data)
-		if err != nil {
-			return nil, err
-		}
-	*/
 
 	v := reflect.ValueOf(data)
 	kind := v.Kind().String()
@@ -218,11 +366,12 @@ func OfSlice(data interface{}) (*Tensor, error) {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor, nameOpt...), nil
+	// return newTensor(ctensor), nil
 }
 
 // OfDataSize creates Tensor from input byte data, shape and dtype.
-func OfDataSize(data []byte, shape []int64, dtype gotch.DType) (*Tensor, error) {
+func OfDataSize(data []byte, shape []int64, dtype gotch.DType, nameOpt ...string) (*Tensor, error) {
 
 	elementNum := ElementCount(shape)
 	eltSizeInBytes, err := gotch.DTypeSize(dtype)
@@ -254,7 +403,8 @@ func OfDataSize(data []byte, shape []int64, dtype gotch.DType) (*Tensor, error) 
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor, nameOpt...), nil
+	// return newTensor(ctensor), nil
 }
 
 // MustOfDataSize create Tensor from input byte data and specified shape and dtype
@@ -279,8 +429,8 @@ func MustOfSlice(data interface{}) *Tensor {
 }
 
 // TensorFrom create a tensor from slice of data. It will be panic if error.
-func TensorFrom(data interface{}) *Tensor {
-	ts, err := OfSlice(data)
+func TensorFrom(data interface{}, nameOpt ...string) *Tensor {
+	ts, err := OfSlice(data, nameOpt...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -299,7 +449,7 @@ func (ts *Tensor) Print() {
 }
 
 // NewTensorFromData creates tensor from given data and shape
-func NewTensorFromData(data interface{}, shape []int64) (*Tensor, error) {
+func NewTensorFromData(data interface{}, shape []int64, nameOpt ...string) (*Tensor, error) {
 	// 1. Check whether data and shape match
 	elementNum, err := DataDim(data)
 	if err != nil {
@@ -337,12 +487,11 @@ func NewTensorFromData(data interface{}, shape []int64) (*Tensor, error) {
 	}
 
 	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
-	// defer C.free(unsafe.Pointer(ctensor))
 	if err = TorchErr(); err != nil {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor, nameOpt...), nil
 }
 
 func (ts *Tensor) DType() gotch.DType {
@@ -602,7 +751,7 @@ func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraph
 	var oTensors []Tensor
 	for i := 0; i < len(inputs); i++ {
 		outputPtr := outputsPtr[i]
-		oTensors = append(oTensors, Tensor{ctensor: *outputPtr})
+		oTensors = append(oTensors, *newTensor(*outputPtr))
 	}
 
 	return oTensors, nil
@@ -717,6 +866,10 @@ func (ts *Tensor) MustCopyData(dst interface{}, numel uint) {
 
 // Numel returns the total number of elements stored in a tensor.
 func (ts *Tensor) Numel() uint {
+	if !ts.MustDefined() {
+		return 0 // ts.None case
+	}
+
 	shape := ts.MustSize()
 	return uint(FlattenDim(shape))
 }
@@ -730,7 +883,8 @@ func (ts *Tensor) ShallowClone() (*Tensor, error) {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	name := fmt.Sprintf("%s_cloned", ts.name)
+	return newTensor(ctensor, name), nil
 }
 
 // MustShallowClone returns a new tensor that share storage with the input
@@ -752,7 +906,7 @@ func (ts *Tensor) Get(index int) (*Tensor, error) {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor), nil
 }
 
 // MustGet gets the sub-tensor at the given index. It will panic if error
@@ -804,19 +958,19 @@ func (ts *Tensor) MustSave(path string) {
 }
 
 // Load loads a tensor from a file.
-func Load(path string) (*Tensor, error) {
+func Load(path string, nameOpt ...string) (*Tensor, error) {
 
 	ctensor := lib.AtLoad(path)
 	if err := TorchErr(); err != nil {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor, nameOpt...), nil
 }
 
 // MustLoad loads a tensor to a file. It will panic if error
-func MustLoad(path string) *Tensor {
-	ts, err := Load(path)
+func MustLoad(path string, nameOpt ...string) *Tensor {
+	ts, err := Load(path, nameOpt...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -877,7 +1031,7 @@ func LoadMulti(path string) ([]NamedTensor, error) {
 	for _, v := range data.NamedCtensors {
 		namedTensor := NamedTensor{
 			Name:   v.Name,
-			Tensor: &Tensor{v.Ctensor},
+			Tensor: newTensor(v.Ctensor, v.Name),
 		}
 
 		namedTensors = append(namedTensors, namedTensor)
@@ -912,7 +1066,7 @@ func LoadMultiWithDevice(path string, device gotch.Device) ([]NamedTensor, error
 	for _, v := range data.NamedCtensors {
 		namedTensor := NamedTensor{
 			Name:   v.Name,
-			Tensor: &Tensor{v.Ctensor},
+			Tensor: newTensor(v.Ctensor, v.Name),
 		}
 
 		namedTensors = append(namedTensors, namedTensor)
@@ -959,9 +1113,19 @@ func (ts *Tensor) MustToString(lw int64) string {
 
 // Drop drops (frees) the tensor
 func (ts *Tensor) Drop() error {
+	// TODO. Detect ctensor is valid pointer, then do free otherwise, do nothing to avoid double-free error.
+	// FIXME. Get rid of this method as long as runtime.SetFinalizer() works properly.
+	return nil
+
 	lib.AtFree(ts.ctensor)
 	if err := TorchErr(); err != nil {
 		return err
+	}
+
+	if gotch.Debug {
+		nbytes := ts.nbytes()
+		atomic.AddInt64(&AllocatedMem, -nbytes)
+		log.Printf("INFO: Released tensor %q - C memory(%d bytes).\n", ts.name, nbytes)
 	}
 
 	return nil
@@ -1025,31 +1189,18 @@ func MustGradSetEnabled(b bool) bool {
 }
 
 // NoGrad runs a closure without keeping track of gradients.
-func NoGrad(fn interface{}) {
-
-	// TODO: This is weird but somehow we need to trigger C++ print
-	// to get loss function updated. Probably it is related to
-	// C++ cache clearing.
-	// Next step would be creating a Go func that trigger C++ cache clean
-	// instead of this ugly hacky way.
-	newTs := NewTensor()
-	newTs.Drop()
+func NoGrad(fn func(), sleepTimeOpt ...int) {
+	CleanUp(sleepTimeOpt...)
 
 	// Switch off Grad
-	prev := MustGradSetEnabled(false)
+	MustGradSetEnabled(false)
 
-	// Analyze input as function. If not, throw error
-	f, err := NewFunc(fn)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// invokes the function
-	f.Invoke()
+	fn()
 
 	// Switch on Grad
-	_ = MustGradSetEnabled(prev)
+	MustGradSetEnabled(true)
 
+	CleanUp(sleepTimeOpt...)
 }
 
 func NoGrad1(fn func() interface{}) interface{} {
@@ -1140,7 +1291,7 @@ func (ts *Tensor) Float64Values(delOpt ...bool) []float64 {
 	float64Ts := ts.MustTotype(gotch.Double, false)
 
 	float64Ts.MustCopyData(vec, numel)
-	float64Ts.MustDrop()
+	// float64Ts.MustDrop()
 
 	if del {
 		ts.MustDrop()
@@ -1292,7 +1443,8 @@ func (ts *Tensor) ConstantPadNdWithVal(pad []int64, value *Scalar, del bool) (re
 	if err = TorchErr(); err != nil {
 		return retVal, err
 	}
-	retVal = &Tensor{ctensor: *ptr}
+
+	retVal = newTensor(*ptr)
 
 	return retVal, err
 }

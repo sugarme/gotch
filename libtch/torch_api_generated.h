@@ -1429,6 +1429,9 @@ void atg_randint_low(tensor *, int64_t low, int64_t high, int64_t *size_data, in
 void atg_randint_low_out(tensor *, tensor out, int64_t low, int64_t high, int64_t *size_data, int size_len);
 void atg_randint_out(tensor *, tensor out, int64_t high, int64_t *size_data, int size_len);
 void atg_randn(tensor *, int64_t *size_data, int size_len, int options_kind, int options_device);
+// ---- NOTE. TT. added to test ----
+tensor atg_randn1(int64_t *size_data, int size_len, int options_kind, int options_device);
+// ------ ./ -----------------------
 void atg_randn_like(tensor *, tensor self);
 void atg_randn_out(tensor *, tensor out, int64_t *size_data, int size_len);
 void atg_random_(tensor *, tensor self);

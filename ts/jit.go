@@ -450,7 +450,7 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 			return nil, err
 		}
 		return &IValue{
-			value: Tensor{tensor},
+			value: newTensor(tensor),
 			kind:  TensorVal,
 			name:  "Tensor",
 		}, nil
@@ -1061,7 +1061,7 @@ func (cm *CModule) ForwardTs(tensors []Tensor) (*Tensor, error) {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor), nil
 }
 
 // ForwardIs performs the forward pass for a model on some specified ivalue input.
@@ -1145,7 +1145,7 @@ func (cm *CModule) NamedParameters() ([]NamedTensor, error) {
 	for _, v := range data.NamedCtensors {
 		namedTensor := NamedTensor{
 			Name:   v.Name,
-			Tensor: &Tensor{v.Ctensor},
+			Tensor: newTensor(v.Ctensor),
 		}
 
 		namedTensors = append(namedTensors, namedTensor)

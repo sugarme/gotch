@@ -20,8 +20,8 @@ func TestTextData_NewTextData(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	txt := `héllo`
-	// txt := "h\xC3\xA9llo"
+	// txt := `héllo`
+	txt := "h\xC3\xA9llo"
 	err = ioutil.WriteFile(filePath, []byte(txt), 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -33,7 +33,7 @@ func TestTextData_NewTextData(t *testing.T) {
 	}
 
 	wantData := []float64{0, 1, 2, 3, 3, 4}
-	gotData := textData.CloneData().Float64Values()
+	gotData := textData.Data.Float64Values()
 
 	if !reflect.DeepEqual(wantData, gotData) {
 		t.Errorf("Want data: %v\n", wantData)

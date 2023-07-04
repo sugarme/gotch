@@ -17,7 +17,7 @@ func LoadHwc(path string) (*Tensor, error) {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor), nil
 }
 
 // SaveHwc save an image from tensor. It expects a tensor of shape [height,
@@ -38,5 +38,5 @@ func ResizeHwc(ts *Tensor, outWidth, outHeight int64) (*Tensor, error) {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor), nil
 }

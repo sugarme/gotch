@@ -10271,6 +10271,16 @@ void atg_randn(tensor *out__, int64_t *size_data, int size_len, int options_kind
   )
 }
 
+// ---- NOTE. TT. added to test ----
+tensor atg_randn1(int64_t *size_data, int size_len, int options_kind, int options_device) {
+  PROTECT(torch::Tensor tensor = torch::randn(torch::IntArrayRef(size_data, size_len), at::device(device_of_int(options_device)).dtype(at::ScalarType(options_kind)));
+  
+    return new torch::Tensor(tensor);)
+  
+  return nullptr;
+}
+// ---- ./ -------------------------
+
 void atg_randn_like(tensor *out__, tensor self) {
   PROTECT(
     auto outputs__ = torch::randn_like(*self);
