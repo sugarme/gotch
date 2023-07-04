@@ -567,7 +567,7 @@ func setFromFile(s Storage, r io.Reader) error {
 }
 
 // StorageTensor:
-//===============
+// ===============
 type StorageTensor struct {
 	Source        Storage
 	StorageOffset int64
@@ -629,7 +629,9 @@ func (r *RebuildTensorV2) Call(args ...interface{}) (interface{}, error) {
 	storageOffset, storageOffsetOk := args[1].(int)
 	size, sizeOk := args[2].(*Tuple)
 	stride, strideOk := args[3].(*Tuple)
+
 	requiresGrad, requiresGradOk := args[4].(bool)
+
 	// arg[5] "backward hooks" is unused
 	if !storageOk || !storageOffsetOk || !sizeOk || !strideOk ||
 		!requiresGradOk {
@@ -681,7 +683,9 @@ func tupleToInt64Slice(tuple *Tuple) ([]int64, error) {
 	for i := 0; i < length; i++ {
 		value, ok := tuple.Get(i).(int)
 		if !ok {
-			return nil, fmt.Errorf("tuple of ints expected: %#v", tuple)
+			// return nil, fmt.Errorf("tuple of ints expected. Got %#v", tuple)
+			fmt.Printf("WARNING: tuple of ints expected. Got %#v\n", tuple)
+			continue
 		}
 		slice[i] = int64(value)
 	}
@@ -689,7 +693,7 @@ func tupleToInt64Slice(tuple *Tuple) ([]int64, error) {
 }
 
 // Rebuild Sparse Tensor:
-//=======================
+// =======================
 // ref. https://github.com/pytorch/pytorch/blob/c2255c36ec121fdb998ce3db8deb7508c814b567/torch/_utils.py#L178
 type RebuildSparseTensor struct{}
 

@@ -121,6 +121,7 @@ func main() {
 			if batchCount%500 == 0 {
 				fmt.Printf("Epoch %v - Batch %v \n", epoch, batchCount)
 			}
+			fmt.Printf("dataIter: progress: %v\n", dataIter.Progress())
 		} // infinite for-loop
 
 		sampleStr := sample(data, lstm, linear, device)
