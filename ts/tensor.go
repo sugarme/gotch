@@ -1176,9 +1176,7 @@ func MustGradSetEnabled(b bool) bool {
 }
 
 // NoGrad runs a closure without keeping track of gradients.
-func NoGrad(fn func(), sleepTimeOpt ...int) {
-	CleanUp(sleepTimeOpt...)
-
+func NoGrad(fn func()) {
 	// Switch off Grad
 	MustGradSetEnabled(false)
 
@@ -1186,8 +1184,6 @@ func NoGrad(fn func(), sleepTimeOpt ...int) {
 
 	// Switch on Grad
 	MustGradSetEnabled(true)
-
-	CleanUp(sleepTimeOpt...)
 }
 
 func NoGrad1(fn func() interface{}) interface{} {

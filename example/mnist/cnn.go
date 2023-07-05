@@ -123,8 +123,7 @@ func runCNN1() {
 			if testAccuracy > bestAccuracy {
 				bestAccuracy = testAccuracy
 			}
-
-		}, 3000) // Sleep time in milliseconds. Can be adjusted to available GPU RAMs. Reduce time if having more GPU RAM.
+		})
 	}
 
 	fmt.Printf("Best test accuracy: %.2f%%\n", bestAccuracy*100.0)
