@@ -111,5 +111,4 @@ func TestTextDataIter(t *testing.T) {
 		vals := sum.Int64Values()
 		t.Logf("sum: %v\n", vals)
 	}
-
 }

@@ -78,15 +78,15 @@ func (vs *VarStore) IsEmpty() bool {
 }
 
 // TrainableVariabless returns reference to all trainable variables kept in VarStore.
-func (vs *VarStore) TrainableVariables() []ts.Tensor {
+func (vs *VarStore) TrainableVariables() []*ts.Tensor {
 	vs.Lock()
 	defer vs.Unlock()
 
-	var trainables []ts.Tensor
+	var trainables []*ts.Tensor
 	for _, v := range vs.vars {
 		x := v.Tensor
 		if x.MustRequiresGrad() {
-			trainables = append(trainables, *x)
+			trainables = append(trainables, x)
 		}
 	}
 

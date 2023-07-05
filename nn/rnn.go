@@ -74,7 +74,7 @@ func DefaultRNNConfig() *RNNConfig {
 //
 // https://en.wikipedia.org/wiki/Long_short-term_memory
 type LSTM struct {
-	flatWeights []ts.Tensor
+	flatWeights []*ts.Tensor
 	hiddenDim   int64
 	config      *RNNConfig
 	device      gotch.Device
@@ -89,7 +89,7 @@ func NewLSTM(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) *LSTM {
 	}
 
 	gateDim := 4 * hiddenDim
-	flatWeights := make([]ts.Tensor, 0)
+	flatWeights := make([]*ts.Tensor, 0)
 
 	for i := 0; i < int(cfg.NumLayers); i++ {
 		if i != 0 {
@@ -102,7 +102,7 @@ func NewLSTM(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) *LSTM {
 			bIh := vs.MustZeros(fmt.Sprintf("bias_ih_l%d", i), []int64{gateDim})
 			bHh := vs.MustZeros(fmt.Sprintf("bias_hh_l%d", i), []int64{gateDim})
 
-			flatWeights = append(flatWeights, *wIh, *wHh, *bIh, *bHh)
+			flatWeights = append(flatWeights, wIh, wHh, bIh, bHh)
 
 		case 2: // bi-directional
 			// forward
@@ -110,14 +110,14 @@ func NewLSTM(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) *LSTM {
 			wHh := vs.MustKaimingUniform(fmt.Sprintf("weight_hh_l%d", i), []int64{gateDim, hiddenDim})
 			bIh := vs.MustZeros(fmt.Sprintf("bias_ih_l%d", i), []int64{gateDim})
 			bHh := vs.MustZeros(fmt.Sprintf("bias_hh_l%d", i), []int64{gateDim})
-			flatWeights = append(flatWeights, *wIh, *wHh, *bIh, *bHh)
+			flatWeights = append(flatWeights, wIh, wHh, bIh, bHh)
 
 			// reverse
 			wIhR := vs.MustKaimingUniform(fmt.Sprintf("weight_ih_l%d_reverse", i), []int64{gateDim, inDim})
 			wHhR := vs.MustKaimingUniform(fmt.Sprintf("weight_hh_l%d_reverse", i), []int64{gateDim, hiddenDim})
 			bIhR := vs.MustZeros(fmt.Sprintf("bias_ih_l%d_reverse", i), []int64{gateDim})
 			bHhR := vs.MustZeros(fmt.Sprintf("bias_hh_l%d_reverse", i), []int64{gateDim})
-			flatWeights = append(flatWeights, *wIhR, *wHhR, *bIhR, *bHhR)
+			flatWeights = append(flatWeights, wIhR, wHhR, bIhR, bHhR)
 		}
 	}
 
@@ -188,7 +188,7 @@ func (l *LSTM) Seq(input *ts.Tensor) (*ts.Tensor, State) {
 
 func (l *LSTM) SeqInit(input *ts.Tensor, inState State) (*ts.Tensor, State) {
 
-	output, h, c := input.MustLstm([]ts.Tensor{*inState.(*LSTMState).Tensor1, *inState.(*LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
+	output, h, c := input.MustLstm([]*ts.Tensor{inState.(*LSTMState).Tensor1, inState.(*LSTMState).Tensor2}, l.flatWeights, l.config.HasBiases, l.config.NumLayers, l.config.Dropout, l.config.Train, l.config.Bidirectional, l.config.BatchFirst)
 
 	return output, &LSTMState{
 		Tensor1: h,
@@ -209,7 +209,7 @@ func (gs *GRUState) Value() *ts.Tensor {
 //
 // https://en.wikipedia.org/wiki/Gated_recurrent_unit
 type GRU struct {
-	flatWeights []ts.Tensor
+	flatWeights []*ts.Tensor
 	hiddenDim   int64
 	config      *RNNConfig
 	device      gotch.Device
@@ -223,7 +223,7 @@ func NewGRU(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) (retVal *GRU) {
 	}
 
 	gateDim := 3 * hiddenDim
-	flatWeights := make([]ts.Tensor, 0)
+	flatWeights := make([]*ts.Tensor, 0)
 
 	for i := 0; i < int(cfg.NumLayers); i++ {
 		for n := 0; n < int(numDirections); n++ {
@@ -239,7 +239,7 @@ func NewGRU(vs *Path, inDim, hiddenDim int64, cfg *RNNConfig) (retVal *GRU) {
 			bIh := vs.MustZeros("b_ih", []int64{gateDim})
 			bHh := vs.MustZeros("b_hh", []int64{gateDim})
 
-			flatWeights = append(flatWeights, *wIh, *wHh, *bIh, *bHh)
+			flatWeights = append(flatWeights, wIh, wHh, bIh, bHh)
 		}
 	}
 

@@ -79,7 +79,7 @@ func (m *TrainableCModule) Save(file string) error {
 // ForwardT implements ModuleT for TrainableCModule.
 // NOTE: train parameter will not be used.
 func (m *TrainableCModule) ForwardT(x *ts.Tensor, train bool) *ts.Tensor {
-	retVal, err := m.Inner.ForwardTs([]ts.Tensor{*x})
+	retVal, err := m.Inner.ForwardTs([]*ts.Tensor{x})
 	if err != nil {
 		log.Fatal(err)
 	}

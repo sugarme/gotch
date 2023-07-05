@@ -31,18 +31,17 @@ var (
 	lock            sync.Mutex
 )
 
-// None is an undefined tensor.
+// NOTE. None is an undefined tensor.
 // It can be used in optional tensor parameter where 'None' value used.
 // `ts.MustDefined()` function is used for checking 'null'
 var None = NewTensor()
 
 type bigStruct struct {
-	// lots [1e8]float64
-	lots [1e5]byte
+	lots [1e5]byte // 100k - always on host memory.
 }
 
-// Tensor is a Go wrapper to a C tensor pointer - 8bytes (64-bits OS)  or 4 bytes (32-bits OS)
-// ctensor is just an opaque C pointer to `torch::Tensor`
+// Tensor is a Go wrapper to a C tensor pointer - 8 Bytes (64-bits OS)  or 4 Bytes (32-bits OS)
+// ctensor is just a C pointer to `torch::Tensor`
 //
 // NOTE.Tensor should be big enough to be in a heap.
 // See. https://stackoverflow.com/questions/10866195
@@ -113,21 +112,9 @@ func CleanUp(sleepTimeOpt ...int) {
 	}
 }
 
+// Ctensor return C pointer value.
 func (ts *Tensor) Ctensor() unsafe.Pointer {
 	return unsafe.Pointer(ts.ctensor)
-}
-
-func free(ts *Tensor) error {
-	lib.AtFree(ts.ctensor)
-	if err := TorchErr(); err != nil {
-		return err
-	}
-
-	if gotch.Debug {
-		log.Println("INFO: ----> C Tensor Released <----")
-	}
-
-	return nil
 }
 
 // free releases C allocated memory.
@@ -156,7 +143,7 @@ func newName(nameOpt ...string) string {
 	if len(nameOpt) > 0 {
 		name = nameOpt[0]
 	} else {
-		name = fmt.Sprintf("tensor_%06d", TensorCount)
+		name = fmt.Sprintf("tensor_%09d", TensorCount)
 	}
 
 	return name
@@ -707,7 +694,7 @@ func (ts *Tensor) MustBackward() {
 }
 
 // RunBackward runs the backward ...
-func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraphB bool) ([]Tensor, error) {
+func RunBackward(tensors []*Tensor, inputs []*Tensor, keepGraphB bool, createGraphB bool) ([]*Tensor, error) {
 	// NOTE: outputs is a slice of tensors with length = len(inputs)
 	var outputsPtr []*lib.Ctensor
 	// Are they allocated contigously??? Definitely not.
@@ -748,10 +735,10 @@ func RunBackward(tensors []Tensor, inputs []Tensor, keepGraphB bool, createGraph
 		return nil, err
 	}
 
-	var oTensors []Tensor
+	var oTensors []*Tensor
 	for i := 0; i < len(inputs); i++ {
 		outputPtr := outputsPtr[i]
-		oTensors = append(oTensors, *newTensor(*outputPtr))
+		oTensors = append(oTensors, newTensor(*outputPtr))
 	}
 
 	return oTensors, nil

@@ -39,7 +39,7 @@ func (l *denseLayer) ForwardT(xs *ts.Tensor, train bool) *ts.Tensor {
 	ys := ys5.Apply(l.Conv2)
 	ys5.MustDrop()
 
-	res := ts.MustCat([]ts.Tensor{*xs, *ys}, 1)
+	res := ts.MustCat([]*ts.Tensor{xs, ys}, 1)
 	ys.MustDrop()
 
 	return res

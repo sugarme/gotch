@@ -644,7 +644,7 @@ func (ts *Tensor) _CastShort(nonBlocking bool, del bool) (retVal *Tensor, err er
 	return retVal, err
 }
 
-func _Cat(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func _Cat(tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -660,7 +660,7 @@ func _Cat(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func _CatOut(out *Tensor, tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func _CatOut(out *Tensor, tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -1078,7 +1078,7 @@ func _CudnnInitDropoutState(dropout float64, train bool, dropoutSeed int64, opti
 	return retVal, err
 }
 
-func _CudnnRnn(input *Tensor, weight []Tensor, weightStride0 int64, weightBuf *Tensor, hx *Tensor, cx *Tensor, mode int64, hiddenSize int64, projSize int64, numLayers int64, batchFirst bool, dropout float64, train bool, bidirectional bool, batchSizes []int64, dropoutState *Tensor) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor, retVal4 *Tensor, err error) {
+func _CudnnRnn(input *Tensor, weight []*Tensor, weightStride0 int64, weightBuf *Tensor, hx *Tensor, cx *Tensor, mode int64, hiddenSize int64, projSize int64, numLayers int64, batchFirst bool, dropout float64, train bool, bidirectional bool, batchSizes []int64, dropoutState *Tensor) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor, retVal4 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr0)))
@@ -1114,7 +1114,7 @@ func _CudnnRnn(input *Tensor, weight []Tensor, weightStride0 int64, weightBuf *T
 	return retVal0, retVal1, retVal2, retVal3, retVal4, err
 }
 
-func _CudnnRnnFlattenWeight(weightArr []Tensor, weightStride0 int64, inputSize int64, mode int64, hiddenSize int64, projSize int64, numLayers int64, batchFirst bool, bidirectional bool) (retVal *Tensor, err error) {
+func _CudnnRnnFlattenWeight(weightArr []*Tensor, weightStride0 int64, inputSize int64, mode int64, hiddenSize int64, projSize int64, numLayers int64, batchFirst bool, bidirectional bool) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var cweightArr []lib.Ctensor
@@ -1743,7 +1743,7 @@ func (ts *Tensor) _HasSameStorageNumel(other *Tensor, del bool) (retVal bool, er
 	return retVal, err
 }
 
-func (ts *Tensor) _HistogramddFromBinTensors(bins []Tensor, weight *Tensor, density bool, del bool) (retVal *Tensor, err error) {
+func (ts *Tensor) _HistogramddFromBinTensors(bins []*Tensor, weight *Tensor, density bool, del bool) (retVal *Tensor, err error) {
 	if del {
 		defer ts.MustDrop()
 	}
@@ -2814,7 +2814,7 @@ func (ts *Tensor) _SparseSumDtype(dtype gotch.DType, del bool) (retVal *Tensor, 
 	return retVal, err
 }
 
-func _Stack(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func _Stack(tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -2830,7 +2830,7 @@ func _Stack(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func _StackOut(out *Tensor, tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func _StackOut(out *Tensor, tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -6869,7 +6869,7 @@ func BlackmanWindowPeriodic(windowLength int64, periodic bool, optionsKind gotch
 	return retVal, err
 }
 
-func BlockDiag(tensors []Tensor) (retVal *Tensor, err error) {
+func BlockDiag(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -7005,7 +7005,7 @@ func CanCast(from gotch.DType, to gotch.DType) (retVal bool, err error) {
 	return retVal, err
 }
 
-func CartesianProd(tensors []Tensor) (retVal *Tensor, err error) {
+func CartesianProd(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -7021,7 +7021,7 @@ func CartesianProd(tensors []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func Cat(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func Cat(tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -7037,7 +7037,7 @@ func Cat(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func CatOut(out *Tensor, tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func CatOut(out *Tensor, tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -7152,7 +7152,7 @@ func (ts *Tensor) Celu_() (err error) {
 	return err
 }
 
-func ChainMatmul(matrices []Tensor) (retVal *Tensor, err error) {
+func ChainMatmul(matrices []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var cmatrices []lib.Ctensor
@@ -7168,7 +7168,7 @@ func ChainMatmul(matrices []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func ChainMatmulOut(out *Tensor, matrices []Tensor) (retVal *Tensor, err error) {
+func ChainMatmulOut(out *Tensor, matrices []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var cmatrices []lib.Ctensor
@@ -7747,7 +7747,7 @@ func (ts *Tensor) ColIndices(del bool) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func ColumnStack(tensors []Tensor) (retVal *Tensor, err error) {
+func ColumnStack(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -7763,7 +7763,7 @@ func ColumnStack(tensors []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func ColumnStackOut(out *Tensor, tensors []Tensor) (retVal *Tensor, err error) {
+func ColumnStackOut(out *Tensor, tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -7822,7 +7822,7 @@ func ComplexOut(out *Tensor, real *Tensor, imag *Tensor) (retVal *Tensor, err er
 	return retVal, err
 }
 
-func Concat(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func Concat(tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -7838,7 +7838,7 @@ func Concat(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func ConcatOut(out *Tensor, tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func ConcatOut(out *Tensor, tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -9563,7 +9563,7 @@ func (ts *Tensor) Dropout_(p float64, train bool) (err error) {
 	return err
 }
 
-func Dstack(tensors []Tensor) (retVal *Tensor, err error) {
+func Dstack(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -9579,7 +9579,7 @@ func Dstack(tensors []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func DstackOut(out *Tensor, tensors []Tensor) (retVal *Tensor, err error) {
+func DstackOut(out *Tensor, tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -9637,7 +9637,7 @@ func (ts *Tensor) EigE(e *Tensor, v *Tensor, eigenvectors bool, del bool) (retVa
 	return retVal0, retVal1, err
 }
 
-func Einsum(equation string, tensors []Tensor) (retVal *Tensor, err error) {
+func Einsum(equation string, tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -11420,7 +11420,7 @@ func (ts *Tensor) Flatten(startDim int64, endDim int64, del bool) (retVal *Tenso
 	return retVal, err
 }
 
-func FlattenDenseTensors(tensors []Tensor) (retVal *Tensor, err error) {
+func FlattenDenseTensors(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -12829,7 +12829,7 @@ func GroupNorm(input *Tensor, numGroups int64, weight *Tensor, bias *Tensor, eps
 	return retVal, err
 }
 
-func Gru(input *Tensor, hx *Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func Gru(input *Tensor, hx *Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -12875,7 +12875,7 @@ func GruCell(input *Tensor, hx *Tensor, wIh *Tensor, wHh *Tensor, bIh *Tensor, b
 	return retVal, err
 }
 
-func GruData(data *Tensor, batchSizes *Tensor, hx *Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func GruData(data *Tensor, batchSizes *Tensor, hx *Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -13449,7 +13449,7 @@ func HspmmOut(out *Tensor, mat1 *Tensor, mat2 *Tensor) (retVal *Tensor, err erro
 	return retVal, err
 }
 
-func Hstack(tensors []Tensor) (retVal *Tensor, err error) {
+func Hstack(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -13465,7 +13465,7 @@ func Hstack(tensors []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func HstackOut(out *Tensor, tensors []Tensor) (retVal *Tensor, err error) {
+func HstackOut(out *Tensor, tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -16134,7 +16134,7 @@ func LinalgMatrixRankTolTensor(input *Tensor, tol *Tensor, hermitian bool) (retV
 	return retVal, err
 }
 
-func LinalgMultiDot(tensors []Tensor) (retVal *Tensor, err error) {
+func LinalgMultiDot(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -16150,7 +16150,7 @@ func LinalgMultiDot(tensors []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func LinalgMultiDotOut(out *Tensor, tensors []Tensor) (retVal *Tensor, err error) {
+func LinalgMultiDotOut(out *Tensor, tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -17428,7 +17428,7 @@ func (ts *Tensor) LogsumexpOut(out *Tensor, dim []int64, keepdim bool, del bool)
 	return retVal, err
 }
 
-func Lstm(input *Tensor, hx []Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, err error) {
+func Lstm(input *Tensor, hx []*Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr0)))
@@ -17468,7 +17468,7 @@ func Lstm(input *Tensor, hx []Tensor, params []Tensor, hasBiases bool, numLayers
 	return retVal0, retVal1, retVal2, err
 }
 
-func LstmCell(input *Tensor, hx []Tensor, wIh *Tensor, wHh *Tensor, bIh *Tensor, bHh *Tensor) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func LstmCell(input *Tensor, hx []*Tensor, wIh *Tensor, wHh *Tensor, bIh *Tensor, bHh *Tensor) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -17486,7 +17486,7 @@ func LstmCell(input *Tensor, hx []Tensor, wIh *Tensor, wHh *Tensor, bIh *Tensor,
 	return retVal0, retVal1, err
 }
 
-func LstmData(data *Tensor, batchSizes *Tensor, hx []Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, err error) {
+func LstmData(data *Tensor, batchSizes *Tensor, hx []*Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr0)))
@@ -18818,7 +18818,7 @@ func (ts *Tensor) MiopenDepthwiseConvolution(weight *Tensor, bias *Tensor, paddi
 	return retVal, err
 }
 
-func MiopenRnn(input *Tensor, weight []Tensor, weightStride0 int64, hx *Tensor, cx *Tensor, mode int64, hiddenSize int64, numLayers int64, batchFirst bool, dropout float64, train bool, bidirectional bool, batchSizes []int64, dropoutState *Tensor) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor, retVal4 *Tensor, err error) {
+func MiopenRnn(input *Tensor, weight []*Tensor, weightStride0 int64, hx *Tensor, cx *Tensor, mode int64, hiddenSize int64, numLayers int64, batchFirst bool, dropout float64, train bool, bidirectional bool, batchSizes []int64, dropoutState *Tensor) (retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor, retVal4 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr0)))
@@ -21206,7 +21206,7 @@ func (ts *Tensor) OutputNr(del bool) (retVal int64, err error) {
 	return retVal, err
 }
 
-func PadSequence(sequences []Tensor, batchFirst bool, paddingValue float64) (retVal *Tensor, err error) {
+func PadSequence(sequences []*Tensor, batchFirst bool, paddingValue float64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var csequences []lib.Ctensor
@@ -21972,7 +21972,7 @@ func QuantizedGruCell(input *Tensor, hx *Tensor, wIh *Tensor, wHh *Tensor, bIh *
 	return retVal, err
 }
 
-func QuantizedLstmCell(input *Tensor, hx []Tensor, wIh *Tensor, wHh *Tensor, bIh *Tensor, bHh *Tensor, packedIh *Tensor, packedHh *Tensor, colOffsetsIh *Tensor, colOffsetsHh *Tensor, scaleIh *Scalar, scaleHh *Scalar, zeroPointIh *Scalar, zeroPointHh *Scalar) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func QuantizedLstmCell(input *Tensor, hx []*Tensor, wIh *Tensor, wHh *Tensor, bIh *Tensor, bHh *Tensor, packedIh *Tensor, packedHh *Tensor, colOffsetsIh *Tensor, colOffsetsHh *Tensor, scaleIh *Scalar, scaleHh *Scalar, zeroPointIh *Scalar, zeroPointHh *Scalar) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -23188,7 +23188,7 @@ func (ts *Tensor) RetainsGrad(del bool) (retVal bool, err error) {
 	return retVal, err
 }
 
-func RnnRelu(input *Tensor, hx *Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func RnnRelu(input *Tensor, hx *Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -23234,7 +23234,7 @@ func RnnReluCell(input *Tensor, hx *Tensor, wIh *Tensor, wHh *Tensor, bIh *Tenso
 	return retVal, err
 }
 
-func RnnReluData(data *Tensor, batchSizes *Tensor, hx *Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func RnnReluData(data *Tensor, batchSizes *Tensor, hx *Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -23264,7 +23264,7 @@ func RnnReluData(data *Tensor, batchSizes *Tensor, hx *Tensor, params []Tensor, 
 	return retVal0, retVal1, err
 }
 
-func RnnTanh(input *Tensor, hx *Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func RnnTanh(input *Tensor, hx *Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool, batchFirst bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -23310,7 +23310,7 @@ func RnnTanhCell(input *Tensor, hx *Tensor, wIh *Tensor, wHh *Tensor, bIh *Tenso
 	return retVal, err
 }
 
-func RnnTanhData(data *Tensor, batchSizes *Tensor, hx *Tensor, params []Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
+func RnnTanhData(data *Tensor, batchSizes *Tensor, hx *Tensor, params []*Tensor, hasBiases bool, numLayers int64, dropout float64, train bool, bidirectional bool) (retVal0 *Tensor, retVal1 *Tensor, err error) {
 	ctensorPtr0 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr0)) + unsafe.Sizeof(ctensorPtr0)))
 
@@ -23454,7 +23454,7 @@ func (ts *Tensor) RoundOut(out *Tensor, del bool) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func RowStack(tensors []Tensor) (retVal *Tensor, err error) {
+func RowStack(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -23470,7 +23470,7 @@ func RowStack(tensors []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func RowStackOut(out *Tensor, tensors []Tensor) (retVal *Tensor, err error) {
+func RowStackOut(out *Tensor, tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -26454,7 +26454,7 @@ func (ts *Tensor) SspaddmmOut(out *Tensor, mat1 *Tensor, mat2 *Tensor, del bool)
 	return retVal, err
 }
 
-func Stack(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func Stack(tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -26470,7 +26470,7 @@ func Stack(tensors []Tensor, dim int64) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func StackOut(out *Tensor, tensors []Tensor, dim int64) (retVal *Tensor, err error) {
+func StackOut(out *Tensor, tensors []*Tensor, dim int64) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -29363,7 +29363,7 @@ func (ts *Tensor) ViewDtype(dtype gotch.DType, del bool) (retVal *Tensor, err er
 	return retVal, err
 }
 
-func Vstack(tensors []Tensor) (retVal *Tensor, err error) {
+func Vstack(tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor
@@ -29379,7 +29379,7 @@ func Vstack(tensors []Tensor) (retVal *Tensor, err error) {
 	return retVal, err
 }
 
-func VstackOut(out *Tensor, tensors []Tensor) (retVal *Tensor, err error) {
+func VstackOut(out *Tensor, tensors []*Tensor) (retVal *Tensor, err error) {
 	ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
 
 	var ctensors []lib.Ctensor

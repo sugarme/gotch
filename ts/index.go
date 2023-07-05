@@ -85,26 +85,26 @@ type InsertNewAxis struct{}
 // NewSelect creates an tensor indexer with given index.
 // `index` must be in range of tensor dimension. E.g. tensor shape [2,8]
 // will have size = 2, hence `index` should be in range from [0,2)
-func NewSelect(index int64) Select {
-	return Select{index}
+func NewSelect(index int64) *Select {
+	return &Select{index}
 }
 
-func NewNarrow(start, end int64) Narrow {
-	return Narrow{Start: start, End: end}
+func NewNarrow(start, end int64) *Narrow {
+	return &Narrow{Start: start, End: end}
 }
 
-func NewIndexSelect(ts *Tensor) IndexSelect {
-	return IndexSelect{Index: ts}
+func NewIndexSelect(ts *Tensor) *IndexSelect {
+	return &IndexSelect{Index: ts}
 }
 
-func NewInsertNewAxis() InsertNewAxis {
-	return InsertNewAxis{}
+func NewInsertNewAxis() *InsertNewAxis {
+	return &InsertNewAxis{}
 }
 
-func NewSliceIndex(sl []int64) IndexSelect {
+func NewSliceIndex(sl []int64) *IndexSelect {
 	ts := MustOfSlice(sl)
 
-	return IndexSelect{Index: ts}
+	return &IndexSelect{Index: ts}
 }
 
 // type SelectFn func(int64)
@@ -120,7 +120,7 @@ func NewSliceIndex(sl []int64) IndexSelect {
 // )
 
 type IndexOp interface {
-	Idx(index interface{}) Tensor
+	Idx(index interface{}) *Tensor
 }
 
 // implement IndexOp for Tensor:
@@ -129,7 +129,7 @@ type IndexOp interface {
 // Idx implements `IndexOp` interface for Tensor
 //
 // NOTE:
-// - `index`: expects type `TensorIndexer` or `[]TensorIndexer`
+// - `index`: expects type `TensorIndexer` or `[]*TensorIndexer`
 func (ts *Tensor) Idx(index interface{}) (retVal *Tensor) {
 
 	// indexTyp := reflect.TypeOf(index)
@@ -137,8 +137,9 @@ func (ts *Tensor) Idx(index interface{}) (retVal *Tensor) {
 
 	var indexes []TensorIndexer
 
-	switch indexVal.Kind().String() {
-	case "struct": // T: A
+	typ := indexVal.Kind().String()
+	switch typ {
+	case "ptr": // T: A
 		indexes = append(indexes, index.(TensorIndexer))
 	case "slice": // T: []TensorIndexer
 		switch len(index.([]TensorIndexer)) {
@@ -201,7 +202,7 @@ func (ts *Tensor) indexer(indexSpec []TensorIndexer) (retVal *Tensor, err error)
 	// Make sure number of non-newaxis is not exceed number of dimensions
 	var numNewAxis int = 0
 	for _, ti := range indexSpec {
-		if reflect.TypeOf(ti).Name() == "InsertNewAxis" {
+		if reflect.TypeOf(ti).String() == "*ts.InsertNewAxis" {
 			numNewAxis += 1
 		}
 	}
@@ -218,10 +219,10 @@ func (ts *Tensor) indexer(indexSpec []TensorIndexer) (retVal *Tensor, err error)
 
 	// Make sure tensor conforms the format
 	for _, spec := range indexSpec {
-		// If `spec` is `IndexSelect` type and
-		if reflect.TypeOf(spec).Name() == "IndexSelect" {
-			if reflect.ValueOf(spec).Kind() == reflect.Struct {
-				inputTensor := reflect.ValueOf(spec).FieldByName("Index").Interface().(*Tensor)
+		// If `spec` is `*IndexSelect` type and
+		if reflect.TypeOf(spec).String() == "*ts.IndexSelect" {
+			if reflect.ValueOf(spec).Kind() == reflect.Ptr {
+				inputTensor := reflect.Indirect(reflect.ValueOf(spec)).FieldByName("Index").Interface().(*Tensor)
 
 				// 1. Either its input tensor has dimension > 1, throw error.
 				inputTensorShape, err := inputTensor.Size()
@@ -257,33 +258,32 @@ func (ts *Tensor) indexer(indexSpec []TensorIndexer) (retVal *Tensor, err error)
 
 	// `spec` is a function type implements `TensorIndexer`
 	for _, spec := range indexSpec {
-
-		switch reflect.TypeOf(spec).Name() {
-		case "InsertNewAxis":
+		switch reflect.TypeOf(spec).String() {
+		case "*ts.InsertNewAxis":
 			nextTensor, err = currTensor.Unsqueeze(currIdx, true)
 			if err != nil {
 				return retVal, err
 			}
 			nextIdx = currIdx + 1
-		case "Select": // 1 field: `Index`
-			index := reflect.ValueOf(spec).FieldByName("Index").Interface().(int64)
+		case "*ts.Select": // 1 field: `Index`
+			index := reflect.Indirect(reflect.ValueOf(spec)).FieldByName("Index").Interface().(int64)
 			nextTensor, err = currTensor.Select(currIdx, index, true) // TODO: double-check is `*index` or `index`
 			if err != nil {
 				return retVal, err
 			}
 			nextIdx = currIdx // not advanced because select() squeezes dimension
-		case "Narrow": // 2 fields: `(Start, End int64)`
+		case "*ts.Narrow": // 2 fields: `(Start, End int64)`
 			// TODO: implement for `Unbounded`, `Included`, `Excluded` ranges
 			// NOTE: for now, just implement (Included(start), Excluded(end))` case
-			start := reflect.ValueOf(spec).FieldByName("Start").Interface().(int64)
-			end := reflect.ValueOf(spec).FieldByName("End").Interface().(int64)
+			start := reflect.Indirect(reflect.ValueOf(spec)).FieldByName("Start").Interface().(int64)
+			end := reflect.Indirect(reflect.ValueOf(spec)).FieldByName("End").Interface().(int64)
 			nextTensor, err = currTensor.Narrow(currIdx, start, end-start, true)
 			if err != nil {
 				return retVal, err
 			}
 			nextIdx = currIdx + 1
-		case "IndexSelect": // 1 field `(Index *Tensor)`
-			indexTensor := reflect.ValueOf(spec).FieldByName("Index").Interface().(*Tensor)
+		case "*ts.IndexSelect": // 1 field `(Index *Tensor)`
+			indexTensor := reflect.Indirect(reflect.ValueOf(spec)).FieldByName("Index").Interface().(*Tensor)
 			device, err := currTensor.Device()
 			if err != nil {
 				return retVal, err

@@ -83,8 +83,8 @@ func CFLoadDir(dir string) *Dataset {
 
 	testImages, testLabels := readFile(fmt.Sprintf("%v/test_batch.bin", dirAbs))
 
-	var trainImages []ts.Tensor
-	var trainLabels []ts.Tensor
+	var trainImages []*ts.Tensor
+	var trainLabels []*ts.Tensor
 
 	trainFiles := []string{
 		"data_batch_1.bin",
@@ -96,8 +96,8 @@ func CFLoadDir(dir string) *Dataset {
 
 	for _, f := range trainFiles {
 		img, l := readFile(fmt.Sprintf("%v/%v", dirAbs, f))
-		trainImages = append(trainImages, *img)
-		trainLabels = append(trainLabels, *l)
+		trainImages = append(trainImages, img)
+		trainLabels = append(trainLabels, l)
 	}
 
 	return &Dataset{

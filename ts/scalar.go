@@ -1,7 +1,6 @@
 package ts
 
 import (
-	// "unsafe"
 	"fmt"
 	"log"
 	"runtime"
@@ -41,7 +40,7 @@ func newScalarName(nameOpt ...string) string {
 	if len(nameOpt) > 0 {
 		name = nameOpt[0]
 	} else {
-		name = fmt.Sprintf("tensor_%06d", TensorCount)
+		name = fmt.Sprintf("tensor_%09d", TensorCount)
 	}
 
 	return name
@@ -123,13 +122,17 @@ func (sc *Scalar) ToString() (retVal string, err error) {
 // TODO: Really? after running s.Drop() and s.ToInt()
 // it returns Zero.
 func (sc *Scalar) Drop() (err error) {
-	lib.AtsFree(sc.cscalar)
-	return TorchErr()
+	// TODO. FIXME either remove or rewind for specific scenario
+	return nil
+	// lib.AtsFree(sc.cscalar)
+	// return TorchErr()
 }
 
 func (sc *Scalar) MustDrop() {
-	lib.AtsFree(sc.cscalar)
-	if err := TorchErr(); err != nil {
-		log.Fatal(err)
-	}
+	// TODO. FIXME either remove or rewind for specific scenario
+	return
+	// lib.AtsFree(sc.cscalar)
+	// if err := TorchErr(); err != nil {
+	// log.Fatal(err)
+	// }
 }
