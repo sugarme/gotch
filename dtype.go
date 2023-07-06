@@ -3,8 +3,6 @@ package gotch
 import (
 	"fmt"
 	"log"
-
-	// "log"
 	"reflect"
 )
 
@@ -12,151 +10,148 @@ import (
 type CInt = int32
 
 // DType represents different kind of element that a tensor can hold.
-// It has an embedded `reflect.Type` for type reflection.
-type DType struct {
-	reflect.Type
-}
+// Ref. https://github.com/pytorch/pytorch/blob/a290cbf32b0c282aa60fa521ca5c6cd19c7f779f/c10/core/ScalarType.h
+type DType int
 
-/*
- * // Custom-made Float16 as not exist in Go
- * // Ref: https://github.com/golang/go/issues/32022
- * type GoFloat16 = int16 // not implemented yet
- * type GoComplexHalf = interface{} // not implemented yet!
- *  */
-
-// TODO: double check these Torch DType to Go type
-var (
-	Uint8 DType = DType{reflect.TypeOf(uint8(1))} // 0
-	Int8  DType = DType{reflect.TypeOf(int8(1))}  // 1
-	Int16 DType = DType{reflect.TypeOf(int16(1))} // 2
-	Int   DType = DType{reflect.TypeOf(int32(1))} // 3
-	Int64 DType = DType{reflect.TypeOf(int64(1))} // 4
-	// Half       DType   = DType{reflect.TypeOf(GoFloat16(1))}     // 5
-	Half   DType = DType{reflect.TypeOf(float32(1))} // 5
-	Float  DType = DType{reflect.TypeOf(float32(1))} // 6
-	Double DType = DType{reflect.TypeOf(float64(1))} // 7
-	// ComplexHalf DType  = DType{reflect.TypeOf(GoComplexHalf(1))} // 8
-	// ComplexFloat DType  = DType{reflect.TypeOf(complex64(1))}  // 9
-	// ComplexDouble DType = DType{reflect.TypeOf(complex128(1))} // 10
-	Bool DType = DType{reflect.TypeOf(true)} // 11
+const (
+	Invalid       DType = -1
+	Uint8         DType = 0
+	Int8          DType = 1
+	Int16         DType = 2
+	Int           DType = 3
+	Int64         DType = 4
+	Half          DType = 5
+	Float         DType = 6
+	Double        DType = 7
+	ComplexHalf   DType = 8
+	ComplexFloat  DType = 9
+	ComplexDouble DType = 10
+	Bool          DType = 11
+	QInt8         DType = 12
+	QUInt8        DType = 13
+	QInt32        DType = 14
+	BFloat16      DType = 15
+	// ---not implemented ---
+	QUInt4x2 DType = 16
+	QUInt2x4 DType = 17
+	Bits1x8  DType = 18
+	Bits2x4  DType = 19
+	Bits4x2  DType = 20
+	Bits8    DType = 21
+	Bits16   DType = 22
 )
 
-var dtypeGoType = map[DType]reflect.Type{
-	Uint8:  reflect.TypeOf(uint8(1)),
-	Int8:   reflect.TypeOf(int8(1)),
-	Int16:  reflect.TypeOf(int16(1)),
-	Int:    reflect.TypeOf(int32(1)),
-	Int64:  reflect.TypeOf(int64(1)),
-	Half:   reflect.TypeOf(float32(1)),
-	Float:  reflect.TypeOf(float32(1)),
-	Double: reflect.TypeOf(float64(1)),
-	Bool:   reflect.TypeOf(true),
+var dtype2CKind = map[DType]CInt{
+	Uint8:         0,
+	Int8:          1,
+	Int16:         2,
+	Int:           3,
+	Int64:         4,
+	Half:          5,
+	Float:         6,
+	Double:        7,
+	ComplexHalf:   8,
+	ComplexFloat:  9,
+	ComplexDouble: 10,
+	Bool:          11,
+	QInt8:         12,
+	QUInt8:        13,
+	QInt32:        14,
+	BFloat16:      15,
+	// ---not implemented ---
+	QUInt4x2: 16,
+	QUInt2x4: 17,
+	Bits1x8:  18,
+	Bits2x4:  19,
+	Bits4x2:  20,
+	Bits8:    21,
+	Bits16:   22,
 }
 
-// ToDType infers and returns supported equivalent DType from given Go type
-func ToDType(typ reflect.Type) (retVal DType, err error) {
-	var found = false
-	for key, val := range dtypeGoType {
-		if val == typ {
-			retVal = key
-			found = true
-			break
-		}
+func (dt DType) CKind() CInt {
+	if cint, ok := dtype2CKind[dt]; ok {
+		return cint
 	}
 
-	if !found {
-		err = fmt.Errorf("Unsupported Go type: %v", typ)
-		return DType{}, err
+	if Debug {
+		log.Printf("WARNING: dt.CKind() failed: no corresponding CKind to this DType %v\n", dt)
 	}
-
-	return retVal, nil
+	return -1 // invalid
 }
 
-// ToGoType infers and returns supported equivalent Go type from given DType
-func ToGoType(dtype DType) (retVal reflect.Type, err error) {
-	if _, ok := dtypeGoType[dtype]; !ok {
-		err = fmt.Errorf("Unsupported DType %v", dtype)
-		return nil, err
-	}
-
-	retVal = dtypeGoType[dtype]
-
-	return retVal, nil
+// Back compat
+func (dt DType) CInt() CInt {
+	return dt.CKind()
 }
 
-var dtypeCInt = map[DType]CInt{
-	Uint8:  0,
-	Int8:   1,
-	Int16:  2,
-	Int:    3,
-	Int64:  4,
-	Half:   5,
-	Float:  6,
-	Double: 7,
-	Bool:   11,
+var ckind2DType map[CInt]DType = map[CInt]DType{
+	0:  Uint8,
+	1:  Int8,
+	2:  Int16,
+	3:  Int,
+	4:  Int64,
+	5:  Half,
+	6:  Float,
+	7:  Double,
+	8:  ComplexHalf,
+	9:  ComplexFloat,
+	10: ComplexDouble,
+	11: Bool,
+	12: QInt8,
+	13: QUInt8,
+	14: QInt32,
+	15: BFloat16,
+	// ---not implemented ---
+	16: QUInt4x2,
+	17: QUInt2x4,
+	18: Bits1x8,
+	19: Bits2x4,
+	20: Bits4x2,
+	21: Bits8,
+	22: Bits16,
 }
 
-func DType2CInt(dt DType) (retVal CInt, err error) {
-	if _, ok := dtypeCInt[dt]; !ok {
-		err = fmt.Errorf("Unsupported CInt conversion from DType: %v\n", dt)
+func CKind2DType(ckind int32) DType {
+	if dtype, ok := ckind2DType[ckind]; ok {
+		return dtype
 	}
 
-	retVal = dtypeCInt[dt]
-
-	return retVal, nil
+	if Debug {
+		log.Printf("WARNING: CKind2DType() failed: no corresponding DType to input CInt %v\n", ckind)
+	}
+	return -1 // invalid
 }
 
-func (dt DType) CInt() (retVal CInt) {
-	retVal, err := DType2CInt(dt)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return retVal
+var dtypeSize map[DType]uint = map[DType]uint{
+	Uint8:         1,
+	Int8:          1,
+	Int16:         2,
+	Int:           4,
+	Int64:         8,
+	Half:          2,
+	Float:         4,
+	Double:        8,
+	ComplexHalf:   4,
+	ComplexFloat:  8,
+	ComplexDouble: 16,
+	Bool:          1,
+	QInt8:         1,
+	QUInt8:        1,
+	QInt32:        4,
+	BFloat16:      2,
+	QUInt4x2:      2,
+	QUInt2x4:      1,
+	// ---not implemented ---
+	Bits1x8: 1,
+	Bits2x4: 1,
+	Bits4x2: 1,
+	Bits8:   1,
+	Bits16:  2,
 }
 
-func CInt2DType(v CInt) (dtype DType, err error) {
-	var found = false
-	for key, val := range dtypeCInt {
-		if val == v {
-			dtype = key
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		err = fmt.Errorf("Unsuported DType for CInt %v\n", v)
-		return DType{}, err
-	}
-
-	return dtype, nil
-
-}
-
-// dtypeSize is a map of DType and its size in Bytes
-var dtypeSize = map[DType]uint{
-	Uint8:  1,
-	Int8:   1,
-	Int16:  2,
-	Int:    4,
-	Int64:  8,
-	Half:   4, // Should it be?
-	Float:  4,
-	Double: 8,
-	Bool:   1,
-}
-
-// DTypeSize returns DType size in Bytes
-func DTypeSize(dt DType) (retVal uint, err error) {
-	if _, ok := dtypeSize[dt]; !ok {
-		err = fmt.Errorf("Unsupported conversion DType size in Byte for DType: %v\n", dt)
-		return 99, err
-	}
-
-	retVal = dtypeSize[dt]
-
-	return retVal, nil
+// Size returns dtype size in Bytes.
+func (dt DType) Size() uint {
+	return dtypeSize[dt]
 }
 
 type DTypeDevice struct {
@@ -174,201 +169,228 @@ var (
 	Int64CUDA  DTypeDevice = DTypeDevice{Int64, CudaBuilder(0)}
 )
 
-// Type Inferring:
-// ===============
-
-// DTypeFromData infers returns equavalent DType from given data
-func DTypeFromData(data interface{}) (retVal DType, err error) {
-
-	// NOTE: call `Interface()` to get data type back to interface{} type
-	typ, _, err := dataCheck(reflect.ValueOf(data).Interface(), 0)
-	if err != nil {
-		return retVal, err
-	}
-
-	if typ.Kind() == reflect.Slice {
-		return ToDType(typ.Elem())
-	}
-
-	return ToDType(typ)
+var dtype2GoKind map[DType]reflect.Kind = map[DType]reflect.Kind{
+	Uint8:         reflect.Uint8,
+	Int8:          reflect.Int8,
+	Int16:         reflect.Int16,
+	Int:           reflect.Int32,
+	Int64:         reflect.Int64,
+	Half:          reflect.Uint16, // <- just uint16
+	Float:         reflect.Float32,
+	Double:        reflect.Float64,
+	ComplexHalf:   reflect.Invalid, // no equivalent in Go. Would it be reflect.Float64?
+	ComplexFloat:  reflect.Complex64,
+	ComplexDouble: reflect.Complex128,
+	Bool:          reflect.Bool,
+	QInt8:         reflect.Int8,
+	QUInt8:        reflect.Uint8,
+	QInt32:        reflect.Int32,
+	BFloat16:      reflect.Uint16, // <- just uint16
+	// ---not implemented ---
+	QUInt4x2: reflect.Invalid,
+	QUInt2x4: reflect.Invalid,
+	Bits1x8:  reflect.Invalid,
+	Bits2x4:  reflect.Invalid,
+	Bits4x2:  reflect.Invalid,
+	Bits8:    reflect.Invalid,
+	Bits16:   reflect.Invalid,
 }
 
-// NOTE: 0 is reflect.Kind() of Invalid
-// See: https://golang.org/pkg/reflect/#Kind
-func dataCheck(data interface{}, count int) (k reflect.Type, n int, err error) {
-	v := reflect.ValueOf(data)
-	var goType reflect.Type = reflect.TypeOf(data)
-	var total int = count
-	var round = 0
+func (dt DType) GoKind() reflect.Kind {
+	if kind, ok := dtype2GoKind[dt]; ok && kind != reflect.Invalid {
+		return kind
+	}
 
-	switch v.Kind() {
-	case reflect.Slice, reflect.Array:
-		if round == 0 {
-			round = v.Len()
+	if Debug {
+		log.Printf("WARNING: DType.GoKind() failed: no corresponding Go reflect.Kind to given DType %v\n", dt)
+	}
+
+	return reflect.Invalid
+}
+
+const (
+	// NOTE. reflect.Kind 0-26
+	QUInt8Kind      reflect.Kind = 27
+	QInt8Kind       reflect.Kind = 28
+	QInt32Kind      reflect.Kind = 29
+	Float16Kind     reflect.Kind = 30
+	BFloat16Kind    reflect.Kind = 31
+	QUInt4x2Kind    reflect.Kind = 32
+	QUInt2x4Kind    reflect.Kind = 33
+	Bits1x8Kind     reflect.Kind = 34
+	Bits2x4Kind     reflect.Kind = 35
+	Bits4x2Kind     reflect.Kind = 36
+	Bits8Kind       reflect.Kind = 37
+	Bits16Kind      reflect.Kind = 38
+	ComplexHalfKind reflect.Kind = 39
+)
+
+var goKind2DType map[reflect.Kind]DType = map[reflect.Kind]DType{
+	reflect.Uint8:      Uint8,
+	reflect.Int8:       Int8,
+	reflect.Int16:      Int16,
+	reflect.Int32:      Int,
+	reflect.Int64:      Int64,
+	reflect.Float32:    Float,
+	reflect.Float64:    Double,
+	reflect.Complex64:  ComplexFloat,
+	reflect.Complex128: ComplexDouble,
+	reflect.Bool:       Bool,
+	reflect.Uint16:     Half,
+
+	// Added Kinds
+	QUInt8Kind: QUInt8,
+	QInt8Kind:  QInt8,
+	QInt32Kind: QInt32,
+	// Float16Kind:     Half,
+	BFloat16Kind:    BFloat16,
+	QUInt4x2Kind:    QUInt4x2,
+	QUInt2x4Kind:    QUInt2x4,
+	Bits1x8Kind:     Bits1x8,
+	Bits2x4Kind:     Bits2x4,
+	Bits4x2Kind:     Bits4x2,
+	Bits8Kind:       Bits8,
+	Bits16Kind:      Bits16,
+	ComplexHalfKind: ComplexHalf,
+}
+
+type DTypeOptions struct {
+	HalfDTypePref DType
+	Quantized     bool
+}
+
+type DTypeOpt func(*DTypeOptions)
+
+func DefaultDTypeOptions() *DTypeOptions {
+	return &DTypeOptions{
+		HalfDTypePref: Half,
+		Quantized:     false,
+	}
+}
+
+func HalfDTypePref(v DType) DTypeOpt {
+	if v != Half && v != BFloat16 {
+		if Debug {
+			log.Printf("WARNING: HalfDTypePref(): Ignoring invalid HalfDTypePref. HalfDTypePref either 'gotch.Half' or 'gotch.BFloat16'. Got %v\n", v)
 		}
-		for i := 0; i < v.Len(); i++ {
-			round--
-			goType, total, err = dataCheck(v.Index(i).Interface(), total)
-
-			if err != nil {
-				return reflect.TypeOf(reflect.Zero), 0, err
-			}
-		}
-
-		return goType, total, nil
-
-	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
-		total++
-		if goType.String() != "invalid" {
-			goType = v.Type()
-		}
-	default:
-		err = fmt.Errorf("Input Data: unsupported data structure or type: %v\n", v.Kind())
-		return reflect.TypeOf(reflect.Zero), 0, err
 	}
 
-	return goType, total, nil
-}
-
-// ElementGoType infers and returns Go type of element in given data
-func ElementGoType(data interface{}) (retVal reflect.Type, err error) {
-	dataValue := reflect.ValueOf(data)
-	return elementType(dataValue)
-}
-
-func elementType(data reflect.Value) (dataType reflect.Type, err error) {
-	dataKind := data.Kind()
-	switch dataKind {
-	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
-		dataType = data.Type()
-	case reflect.Slice, reflect.Array:
-		data = data.Elem()
-		dataType, err = elementType(data) // recursively type inferring
-	default:
-		err = fmt.Errorf("Unsupported type for data type %v\n", dataType)
-		return DType{}, err
+	return func(o *DTypeOptions) {
+		o.HalfDTypePref = v
 	}
-
-	return dataType, nil
 }
 
-// DataDType infers and returns data type of tensor data
-func DataDType(v interface{}, shape []int64) (retVal DType, err error) {
-	// assuming that all elements in data have the same type
-	switch {
-	case len(shape) == 0:
-		retVal, err = ElementDType(v)
-	case len(shape) > 0:
-		return ElementDType(v.([]interface{})[0])
-	default:
-		err = fmt.Errorf("Unsupported data type for %v\n", reflect.TypeOf(v))
-		return DType{}, err
+func WithQuantized(v bool) DTypeOpt {
+	return func(o *DTypeOptions) {
+		o.Quantized = v
 	}
-	return DType{}, nil
 }
 
-// ElementDType infers and returns its own tensor data type
-func ElementDType(v interface{}) (retVal DType, err error) {
-	switch v.(type) {
-	case uint8:
-		retVal = Uint8
-	case int8:
-		retVal = Int8
-	case int16:
-		retVal = Int16
-	case int32:
-		retVal = Int
-	case int64:
-		retVal = Int64
-	case float32:
-		retVal = Float
-	case float64:
-		retVal = Double
-	case bool:
-		retVal = Bool
-	default:
-		err = fmt.Errorf("Unsupported data type for %v\n", reflect.TypeOf(v))
-	}
-
-	return retVal, nil
-}
-
-// TypeOf infers and returns element Go type from given tensor DType and shape
-func TypeOf(dt DType, shape []int64) (retVal reflect.Type, err error) {
-	var typ reflect.Type
-	if typ, err = ToGoType(dt); err != nil {
-		return nil, err
+func GoKind2DType(kind reflect.Kind, opts ...DTypeOpt) (DType, error) {
+	o := DefaultDTypeOptions()
+	for _, opt := range opts {
+		opt(o)
 	}
 
 	switch {
-	case len(shape) == 0:
-		return typ, nil
-	case len(shape) > 0:
-		return reflect.SliceOf(typ), nil
+	case kind == reflect.Uint16 && o.HalfDTypePref == Half:
+		return Half, nil
+	case kind == reflect.Uint16 && o.HalfDTypePref == BFloat16:
+		return BFloat16, nil
+	case kind == reflect.Int8 && o.Quantized:
+		return QInt8, nil
+	case kind == reflect.Uint8 && o.Quantized:
+		return QUInt8, nil
+	case kind == reflect.Int32 && o.Quantized:
+		return QInt32, nil
+
 	default:
-		err = fmt.Errorf("Unsupported data type.")
-		return nil, err
+		dtype, ok := goKind2DType[kind]
+		if !ok {
+			err := fmt.Errorf("GoKind2DType() failed: no corresponding DType to given Go reflect.Kind %v\n", kind)
+			return Invalid, err
+		}
+		return dtype, nil
 	}
 }
 
-/*
- * // TypeCheck checks whether data Go type matching DType
- * func TypeCheck(data interface{}, dtype DType) (matched bool, msg string) {
- *   dataValue := reflect.ValueOf(data)
- *   var dataType reflect.Type
- *   var err error
- *   dataType, err = elementType(dataValue)
- *   if err != nil {
- *     msg = fmt.Sprintf("data type: %v, DType: %v\n", dataType, dtype.Kind())
- *     msg += err.Error()
- *     return false, msg
- *   }
- *
- *   matched = dataType == dtype.Type
- *   msg = fmt.Sprintf("data type: %v, DType: %v\n", dataType, dtype.Kind())
- *
- *   return matched, msg
- * }
- *  */
-
-var supportedTypes = map[reflect.Kind]bool{
-	reflect.Uint8:   true,
-	reflect.Int8:    true,
-	reflect.Int16:   true,
-	reflect.Int32:   true,
-	reflect.Int64:   true,
-	reflect.Float32: true,
-	reflect.Float64: true,
-	reflect.Bool:    true,
+var dtype2GoType map[DType]reflect.Type = map[DType]reflect.Type{
+	Uint8:  reflect.TypeOf(uint8(0)),
+	Int8:   reflect.TypeOf(int8(0)),
+	Int16:  reflect.TypeOf(int16(0)),
+	Int:    reflect.TypeOf(int(0)),
+	Int64:  reflect.TypeOf(int64(0)),
+	Half:   reflect.TypeOf(uint16(0)), // <- just uint16
+	Float:  reflect.TypeOf(float32(0)),
+	Double: reflect.TypeOf(float64(0)),
+	// ComplexHalf:   reflect.Invalid, // no equivalent in Go. Would it be reflect.Float64?
+	ComplexFloat:  reflect.TypeOf(complex64(0)),
+	ComplexDouble: reflect.TypeOf(complex128(0)),
+	Bool:          reflect.TypeOf(true),
+	QInt8:         reflect.TypeOf(int8(0)),
+	QUInt8:        reflect.TypeOf(uint8(0)),
+	QInt32:        reflect.TypeOf(int32(0)),
+	BFloat16:      reflect.TypeOf(uint16(0)), // <- just uint16
+	// ---not implemented ---
+	QUInt4x2: reflect.TypeOf(int8(0)),
+	QUInt2x4: reflect.TypeOf(uint8(0)),
+	Bits1x8:  reflect.TypeOf(uint8(0)),
+	Bits2x4:  reflect.TypeOf(uint8(0)),
+	Bits4x2:  reflect.TypeOf(uint8(0)),
+	Bits8:    reflect.TypeOf(uint8(0)),
+	Bits16:   reflect.TypeOf(uint16(0)),
 }
 
-var scalarTypes = map[reflect.Kind]bool{
-	reflect.Bool:       true,
-	reflect.Int:        true,
-	reflect.Int8:       true,
-	reflect.Int16:      true,
-	reflect.Int32:      true,
-	reflect.Int64:      true,
-	reflect.Uint:       true,
-	reflect.Uint8:      true,
-	reflect.Uint16:     true,
-	reflect.Uint32:     true,
-	reflect.Uint64:     true,
-	reflect.Uintptr:    true,
-	reflect.Float32:    true,
-	reflect.Float64:    true,
-	reflect.Complex64:  true,
-	reflect.Complex128: true,
+func (dt DType) GoType() (reflect.Type, error) {
+	typ, ok := dtype2GoType[dt]
+	if !ok {
+		err := fmt.Errorf("DType.GoType() failed: no corresponding Go type to given DType %v\n", typ.String())
+		return nil, err
+	}
+
+	return typ, nil
 }
 
-// IsSupportedScalar checks whether given SCALAR type is supported
-// TODO: check input is a scalar.
-func IsSupportedScalar(k reflect.Kind) bool {
-	// if _, ok := scalarTypes[k]; !ok {
-	// log.Fatalf("Input type: %v is not a Go scalar type.", k)
-	// }
+var dtypeNames map[DType]string = map[DType]string{
+	Uint8:  "Uint8",
+	Int8:   "Int8",
+	Int16:  "Int16",
+	Int:    "Int",
+	Int64:  "Int64",
+	Half:   "Half", // <- just uint16
+	Float:  "Float",
+	Double: "Double",
+	// ComplexHalf:   reflect.Invalid, // no equivalent in Go. Would it be reflect.Float64?
+	ComplexFloat:  "ComplexFloat",
+	ComplexDouble: "ComplexDouble",
+	Bool:          "Bool",
+	QInt8:         "QInt8",
+	QUInt8:        "QUInt8",
+	QInt32:        "QInt32",
+	BFloat16:      "BFloat16", // <- just uint16
+	// ---not implemented ---
+	QUInt4x2: "QUInt4x2",
+	QUInt2x4: "QUInt2x4",
+	Bits1x8:  "Bits1x8",
+	Bits2x4:  "Bits2x4",
+	Bits4x2:  "Bits4x2",
+	Bits8:    "Bits8",
+	Bits16:   "Bits16",
+}
 
-	_, retVal := supportedTypes[k]
+func (dt DType) String() string {
+	return dtypeNames[dt]
+}
 
-	return retVal
+func DTypeFromData(data interface{}) (DType, error) {
+	dataKind := reflect.TypeOf(data).Kind()
+
+	// Data is a slice/array
+	if dataKind == reflect.Slice || dataKind == reflect.Array {
+		elementKind := reflect.TypeOf(data).Elem().Kind()
+		return GoKind2DType(elementKind)
+	}
+
+	// single element
+	return GoKind2DType(dataKind)
 }

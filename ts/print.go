@@ -11,41 +11,7 @@ import (
 )
 
 func (ts *Tensor) ValueGo() interface{} {
-	dtype := ts.DType()
-	numel := ts.Numel()
-	var dst interface{}
-	switch dtype {
-	case gotch.Uint8:
-		dst = make([]uint8, numel)
-	case gotch.Int8:
-		dst = make([]int8, numel)
-	case gotch.Int16:
-		dst = make([]int16, numel)
-	case gotch.Int:
-		dst = make([]int32, numel)
-	case gotch.Int64:
-		dst = make([]int64, numel)
-	case gotch.Float:
-		dst = make([]float32, numel)
-	case gotch.Double:
-		dst = make([]float64, numel)
-	case gotch.Bool:
-		dst = make([]bool, numel)
-	default:
-		err := fmt.Errorf("Unsupported type: `dst` type: %v, tensor DType: %v", dtype, ts.DType())
-		log.Fatal(err)
-	}
-	err := ts.CopyData(dst, ts.Numel())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// convert []int32 -> int
-	if reflect.TypeOf(dst).String() == "[]int32" {
-		dst = sliceInt32ToInt(dst.([]int32))
-	}
-
-	return dst
+	return ts.Vals()
 }
 
 func shapeToSize(shape []int64) int {
@@ -250,8 +216,8 @@ func (f *fmtState) fmtVerb(ts *Tensor) {
 	// var typ T
 	typ := ts.DType()
 
-	switch typ.String() {
-	case "float32", "float64":
+	switch typ {
+	case gotch.Half, gotch.BFloat16, gotch.Float, gotch.Double:
 		switch f.verb {
 		case 'f', 'e', 'E', 'G', 'b':
 			// accepted. Do nothing
@@ -259,7 +225,7 @@ func (f *fmtState) fmtVerb(ts *Tensor) {
 			f.verb = 'g'
 		}
 
-	case "uint8", "int8", "int16", "int32", "int64":
+	case gotch.Uint8, gotch.Int8, gotch.Int16, gotch.Int, gotch.Int64:
 		switch f.verb {
 		case 'b':
 			f.base = 2
@@ -273,7 +239,7 @@ func (f *fmtState) fmtVerb(ts *Tensor) {
 			f.base = 10
 			f.verb = 'd'
 		}
-	case "bool":
+	case gotch.Bool:
 		f.verb = 't'
 	default:
 		f.verb = 'v'
@@ -318,7 +284,7 @@ func (ts *Tensor) Format(s fmt.State, verb rune) {
 	shape := toSliceInt(ts.MustSize())
 	strides := shapeToStrides(shape)
 	device := ts.MustDevice()
-	dtype := ts.DType().String()
+	dtype := ts.DType()
 	defined := ts.MustDefined()
 	if verb == 'i' {
 		fmt.Fprintf(

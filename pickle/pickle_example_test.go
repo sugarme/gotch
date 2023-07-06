@@ -1,6 +1,7 @@
 package pickle_test
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/sugarme/gotch"
@@ -18,10 +19,12 @@ func ExampleLoadInfo() {
 		panic(err)
 	}
 
-	err = pickle.LoadInfo(modelFile)
+	m, err := pickle.LoadModelInfo(modelFile)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println(m)
 
 	// Output:
 	// classifier.0.bias - [4096]
@@ -57,4 +60,25 @@ func ExampleLoadInfo() {
 	// features.7.bias - [128]
 	// features.7.weight - [128 128 3 3]
 	// Num of variables: 32
+	// Tensor DType: Float
+}
+
+func ExampleModelFloat16() {
+	modelName := "HuggingFaceH4/tiny-random-LlamaForCausalLM"
+	url := "https://huggingface.co/HuggingFaceH4/tiny-random-LlamaForCausalLM/resolve/main/pytorch_model.bin"
+
+	modelFile, err := gotch.CachedPath(url, modelName)
+	if err != nil {
+		panic(err)
+	}
+
+	m, err := pickle.LoadModelInfo(modelFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Model DType: %v\n", m.DType())
+
+	// Output:
+	// Model DType: Half
 }

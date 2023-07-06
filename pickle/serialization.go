@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/nn"
 	"github.com/sugarme/gotch/ts"
 )
@@ -60,83 +61,41 @@ func Decode(filename string) (map[string]*ts.Tensor, error) {
 		dictResult := *result.(*Dict)
 		for _, item := range dictResult {
 			name := item.Key
-			itemTyp := reflect.TypeOf(item.Value).String()
-			switch itemTyp {
-			case "*pickle.Dict": // Nested *pickle.Dict case
-				subResult := *item.Value.(*Dict)
-				for _, subItem := range subResult {
-					subName := subItem.Key
-					x, ok := subItem.Value.(*StorageTensor)
-					if !ok {
-						log.Printf("INFO: Decode() failed: expected 'StorageTensor' type, got %v. Skip decoding parameter %q ...\n", reflect.TypeOf(subItem.Value).String(), subName)
-						continue
-					}
-					data := x.Source.GetData()
-					size := x.Size
-					dtype := x.Source.DType()
-					device := x.Source.Device()
-					stride := x.Stride
-					storageOffset := x.StorageOffset
-					if reflect.ValueOf(data).Len() == 0 {
-						log.Printf("INFO: skip weight %q with zero data length.\n", name.(string))
-						continue
-					}
-
-					// TODO. should we just skip them?
-					if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
-						size = []int64{1}
-						stride = []int64{1}
-					}
-
-					x1 := ts.MustOfSlice(data).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
-					if x.RequiresGrad {
-						x1.MustRequiresGrad_(x.RequiresGrad)
-					}
-
-					namedTensors[name.(string)] = x1
-				}
-
-			default:
-				sx, isStorageTensor := item.Value.(*StorageTensor)
-
-				// if !isStorageTensor {
-				// err := fmt.Errorf("Decode() failed: expected 'StorageTensor' type, got %v\n", reflect.TypeOf(item.Value).String())
-				// return nil, err
-				// }
-				if !isStorageTensor {
-					log.Printf("INFO: Decode() failed: expected 'StorageTensor' type, got %v, with value of %v. Skip decoding parameter %q ...\n", reflect.TypeOf(item.Value).String(), item.Value, name)
-					continue
-				}
-
-				data := sx.Source.GetData()
-				size := sx.Size
-				dtype := sx.Source.DType()
-				device := sx.Source.Device()
-				stride := sx.Stride
-				storageOffset := sx.StorageOffset
-
-				// log.Printf("%q - %q - shape: %v - stride: %v - storageOffset: %v\n", name, sx.Source.Device().Name, sx.Size, sx.Stride, storageOffset)
-				// log.Printf("data: %v\n", data)
-
-				// Dealing with Pytorch `..._tracked` variables.
-				if reflect.ValueOf(data).Len() == 0 {
-					log.Printf("INFO: skip weight %q with zero data length.\n", name.(string))
-					continue
-				}
-
-				// TODO. should we just skip them?
-				if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
-					size = []int64{1}
-					stride = []int64{1}
-				}
-
-				x := ts.MustOfSlice(data).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
-				if sx.RequiresGrad {
-					x.MustRequiresGrad_(sx.RequiresGrad)
-				}
-
-				namedTensors[name.(string)] = x
+			sx, isStorageTensor := item.Value.(*StorageTensor)
+			if !isStorageTensor {
+				err := fmt.Errorf("Decode() failed: expected 'StorageTensor' type, got %v\n", reflect.TypeOf(item.Value).String())
+				return nil, err
 			}
+
+			data := sx.Source.GetData()
+			size := sx.Size
+			dtype := sx.Source.DType()
+
+			device := sx.Source.Device()
+			stride := sx.Stride
+			storageOffset := sx.StorageOffset
+
+			// log.Printf("%q - %q - shape: %v - stride: %v - storageOffset: %v\n", name, sx.Source.Device().Name, sx.Size, sx.Stride, storageOffset)
+			// log.Printf("data: %v\n", data)
+
+			// Dealing with Pytorch `..._tracked` variables.
+			if reflect.ValueOf(data).Len() == 0 {
+				log.Printf("INFO: skip weight %q with zero data length.\n", name.(string))
+				continue
+			}
+
+			// TODO. should we just skip them?
+			if reflect.ValueOf(data).Len() == 1 && len(size) == 0 {
+				size = []int64{1}
+				stride = []int64{1}
+			}
+
+			x := ts.MustOfSlice(data, ts.WithDType(dtype)).MustAsStrided(size, stride, []int64{storageOffset}, true).MustTotype(dtype, true).MustTo(device, true)
+			if sx.RequiresGrad {
+				x.MustRequiresGrad_(sx.RequiresGrad)
+			}
+
+			namedTensors[name.(string)] = x
 		}
 	case "*pickle.OrderedDict":
 		dictResult := result.(*OrderedDict)
@@ -581,35 +540,74 @@ func LoadPartial(vs *nn.VarStore, modelFile string) ([]string, error) {
 	return missingVariables, nil
 }
 
-// LoadInfo loads pretrained weights and prints out name and shape of weights.
-func LoadInfo(modelFile string) error {
-	weights, err := Decode(modelFile)
-	if err != nil {
-		err = fmt.Errorf("LoadInfo() failed: %w", err)
-		return err
-	}
+type ModelInfor struct {
+	weights map[string][]int64
+	dtype   gotch.DType
+}
 
-	layers := make([]string, 0, len(weights))
-	for tsName := range weights {
+func NewModelInfor(weights map[string][]int64, dtype gotch.DType) *ModelInfor {
+	return &ModelInfor{
+		weights: weights,
+		dtype:   dtype,
+	}
+}
+
+func (m *ModelInfor) String() string {
+	var summary string
+	layers := make([]string, 0, len(m.weights))
+	for tsName := range m.weights {
 		layers = append(layers, tsName)
 	}
 	sort.Strings(layers)
 	for _, l := range layers {
-		var x *ts.Tensor
-		for tsName, tsVal := range weights {
+		var x []int64
+		for tsName, shape := range m.weights {
 			if tsName == l {
-				x = tsVal
+				x = shape
 				break
 			}
 		}
-		fmt.Printf("%s - %+v\n", l, x.MustSize())
+
+		summary += fmt.Sprintf("%s - %+v\n", l, x)
 	}
 
-	fmt.Printf("Num of variables: %v\n", len(weights))
+	summary += fmt.Sprintf("Num of variables: %v\n", len(m.weights))
+	summary += fmt.Sprintf("Tensor DType: %v\n", m.dtype)
 
-	for _, x := range weights {
-		x.MustDrop()
+	return summary
+}
+
+func (m *ModelInfor) DType() gotch.DType {
+	return m.dtype
+}
+
+func (m *ModelInfor) Parameters() int {
+	return len(m.weights)
+}
+
+// LoadInfo loads pretrained weights and prints out name and shape of weights.
+func LoadModelInfo(modelFile string) (*ModelInfor, error) {
+	weights, err := Decode(modelFile)
+	if err != nil {
+		err = fmt.Errorf("LoadInfo() failed: %w", err)
+		return nil, err
 	}
 
-	return nil
+	w := make(map[string][]int64)
+	var dtype gotch.DType
+	isFirst := true
+	for n, x := range weights {
+		w[n] = x.MustSize()
+
+		if isFirst {
+			dtype = x.DType()
+			isFirst = false
+		}
+	}
+
+	m := NewModelInfor(w, dtype)
+
+	ts.CleanUp()
+
+	return m, nil
 }

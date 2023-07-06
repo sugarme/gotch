@@ -273,27 +273,13 @@ func (ts *Tensor) nbytes() int64 {
 	if numel == 0 {
 		return 0 // ts.None
 	}
-	dtype := ts.DType()
-	eltSizeInBytes, err := gotch.DTypeSize(dtype)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	nbytes := int64(numel) * int64(eltSizeInBytes)
-
-	return nbytes
+	return int64(numel * ts.DType().Size())
 }
 
 func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
-	// Decode sz
-	// 1. Count number of elements in data
-	elementNum := nsize
-	// 2. Element size in bytes
-	eltSizeInBytes, err := gotch.DTypeSize(gotch.Int64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	nbytes := int(eltSizeInBytes) * int(elementNum)
+	dtype := gotch.Int64 // tensor size dtype = int64
+	nbytes := int(nsize) * int(dtype.Size())
 	dataSlice := (*[1 << 30]byte)(ptr)[:nbytes:nbytes]
 	r := bytes.NewReader(dataSlice)
 	dataIn := make([]int64, nsize)
@@ -304,8 +290,49 @@ func decodeSize(ptr unsafe.Pointer, nsize uint64) []int64 {
 	return dataIn
 }
 
+// TensorOptions constructs options to build/rebuild tensor.
+type TensorOptions struct {
+	Name      string
+	DType     gotch.DType
+	Quantized bool
+	// TODO. can expand as needed
+}
+
+type TensorOpt func(*TensorOptions)
+
+func DefaultTensorOptions() *TensorOptions {
+	return &TensorOptions{
+		Name:      "",
+		DType:     gotch.Float,
+		Quantized: false,
+	}
+}
+
+func WithName(v string) TensorOpt {
+	return func(o *TensorOptions) {
+		o.Name = v
+	}
+}
+
+func WithDType(v gotch.DType) TensorOpt {
+	return func(o *TensorOptions) {
+		o.DType = v
+	}
+}
+
+func WithQuantized(v bool) TensorOpt {
+	return func(o *TensorOptions) {
+		o.Quantized = v
+	}
+}
+
 // OfSlice creates tensor from a slice data
-func OfSlice(data interface{}, nameOpt ...string) (*Tensor, error) {
+func OfSlice(data interface{}, opts ...TensorOpt) (*Tensor, error) {
+	o := DefaultTensorOptions()
+	for _, opt := range opts {
+		opt(o)
+	}
+
 	// convert []int -> int32. `binary.Write()` can't write `[]int` because it's not fixed-size!
 	if reflect.TypeOf(data).String() == "[]int" {
 		data = sliceIntToInt32(data.([]int))
@@ -318,10 +345,10 @@ func OfSlice(data interface{}, nameOpt ...string) (*Tensor, error) {
 		return nil, err
 	}
 
-	typ := reflect.TypeOf(data).Elem()
+	elementKind := reflect.TypeOf(data).Elem().Kind()
 	dataLen := v.Len()
 
-	dtype, err := gotch.ToDType(typ)
+	dtype, err := gotch.GoKind2DType(elementKind, gotch.HalfDTypePref(o.DType), gotch.WithQuantized(o.Quantized))
 	if err != nil {
 		return nil, err
 	}
@@ -329,12 +356,7 @@ func OfSlice(data interface{}, nameOpt ...string) (*Tensor, error) {
 	shape := []int64{int64(dataLen)}
 	elementNum := ElementCount(shape)
 
-	eltSizeInBytes, err := gotch.DTypeSize(dtype)
-	if err != nil {
-		return nil, err
-	}
-
-	nbytes := int(eltSizeInBytes) * int(elementNum)
+	nbytes := int(dtype.Size()) * elementNum
 
 	dataPtr, buff := CMalloc(nbytes)
 	defer C.free(unsafe.Pointer(dataPtr))
@@ -343,30 +365,25 @@ func OfSlice(data interface{}, nameOpt ...string) (*Tensor, error) {
 		return nil, err
 	}
 
-	cint, err := gotch.DType2CInt(dtype)
-	if err != nil {
-		return nil, err
-	}
-
-	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
+	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(dtype.Size()), int(dtype.CKind()))
 	if err = TorchErr(); err != nil {
 		return nil, err
 	}
 
-	return newTensor(ctensor, nameOpt...), nil
+	return newTensor(ctensor, o.Name), nil
 	// return newTensor(ctensor), nil
 }
 
 // OfDataSize creates Tensor from input byte data, shape and dtype.
-func OfDataSize(data []byte, shape []int64, dtype gotch.DType, nameOpt ...string) (*Tensor, error) {
-
-	elementNum := ElementCount(shape)
-	eltSizeInBytes, err := gotch.DTypeSize(dtype)
-	if err != nil {
-		return nil, err
+func OfDataSize(data []byte, shape []int64, dtype gotch.DType, opts ...TensorOpt) (*Tensor, error) {
+	o := DefaultTensorOptions()
+	for _, opt := range opts {
+		opt(o)
 	}
 
-	nbytes := int(eltSizeInBytes) * int(elementNum)
+	elementNum := ElementCount(shape)
+
+	nbytes := elementNum * int(dtype.Size())
 
 	if nbytes != len(data) {
 		err := fmt.Errorf("data and shape mismatched for dtype (%v): byte data (%v) - shape (%v).\n", dtype, len(data), shape)
@@ -380,24 +397,19 @@ func OfDataSize(data []byte, shape []int64, dtype gotch.DType, nameOpt ...string
 		return nil, err
 	}
 
-	cint, err := gotch.DType2CInt(dtype)
-	if err != nil {
+	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), dtype.Size(), int(dtype.CKind()))
+	if err := TorchErr(); err != nil {
 		return nil, err
 	}
 
-	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
-	if err = TorchErr(); err != nil {
-		return nil, err
-	}
-
-	return newTensor(ctensor, nameOpt...), nil
+	return newTensor(ctensor, o.Name), nil
 	// return newTensor(ctensor), nil
 }
 
 // MustOfDataSize create Tensor from input byte data and specified shape and dtype
 // or panic if error
-func MustOfDataSize(data []byte, size []int64, dtype gotch.DType) *Tensor {
-	ts, err := OfDataSize(data, size, dtype)
+func MustOfDataSize(data []byte, size []int64, dtype gotch.DType, opts ...TensorOpt) *Tensor {
+	ts, err := OfDataSize(data, size, dtype, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -406,8 +418,8 @@ func MustOfDataSize(data []byte, size []int64, dtype gotch.DType) *Tensor {
 }
 
 // MustOfSlice create a tensor from slice of data. It will be panic if error.
-func MustOfSlice(data interface{}) *Tensor {
-	ts, err := OfSlice(data)
+func MustOfSlice(data interface{}, opts ...TensorOpt) *Tensor {
+	ts, err := OfSlice(data, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -416,8 +428,8 @@ func MustOfSlice(data interface{}) *Tensor {
 }
 
 // TensorFrom create a tensor from slice of data. It will be panic if error.
-func TensorFrom(data interface{}, nameOpt ...string) *Tensor {
-	ts, err := OfSlice(data, nameOpt...)
+func TensorFrom(data interface{}, opts ...TensorOpt) *Tensor {
+	ts, err := OfSlice(data, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -436,7 +448,12 @@ func (ts *Tensor) Print() {
 }
 
 // NewTensorFromData creates tensor from given data and shape
-func NewTensorFromData(data interface{}, shape []int64, nameOpt ...string) (*Tensor, error) {
+func NewTensorFromData(data interface{}, shape []int64, opts ...TensorOpt) (*Tensor, error) {
+	o := DefaultTensorOptions()
+	for _, opt := range opts {
+		opt(o)
+	}
+
 	// 1. Check whether data and shape match
 	elementNum, err := DataDim(data)
 	if err != nil {
@@ -463,33 +480,18 @@ func NewTensorFromData(data interface{}, shape []int64, nameOpt ...string) (*Ten
 		return nil, err
 	}
 
-	eltSizeInBytes, err := gotch.DTypeSize(dtype)
-	if err != nil {
-		return nil, err
-	}
-
-	cint, err := gotch.DType2CInt(dtype)
-	if err != nil {
-		return nil, err
-	}
-
-	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), uint(eltSizeInBytes), int(cint))
+	ctensor := lib.AtTensorOfData(dataPtr, shape, uint(len(shape)), dtype.Size(), int(dtype.CKind()))
 	if err = TorchErr(); err != nil {
 		return nil, err
 	}
 
-	return newTensor(ctensor, nameOpt...), nil
+	return newTensor(ctensor, o.Name), nil
 }
 
 func (ts *Tensor) DType() gotch.DType {
 	cint := lib.AtScalarType(ts.ctensor)
 
-	dtype, err := gotch.CInt2DType(cint)
-	if err != nil {
-		log.Fatalf("Tensor DType error: %v\n", err)
-	}
-
-	return dtype
+	return gotch.CKind2DType(cint)
 }
 
 func (ts *Tensor) Device() (gotch.Device, error) {
@@ -545,6 +547,7 @@ func (ts *Tensor) MustDevice() gotch.Device {
  *   return retVal
  * }
  *  */
+
 // Float64Value returns a float value on tensors holding a single element.
 // An error is returned otherwise.
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
@@ -748,7 +751,6 @@ func RunBackward(tensors []*Tensor, inputs []*Tensor, keepGraphB bool, createGra
 //
 // NOTE: `dst` located in Go memory. Should it be?
 func (ts *Tensor) CopyDataUint8(dst []uint8, numel uint) error {
-
 	// NOTE: we must make sure that `dst` has same len as `numel`. Otherwise,
 	// there will be memory leak and or out of range error.
 	if len(dst) < int(numel) {
@@ -757,12 +759,9 @@ func (ts *Tensor) CopyDataUint8(dst []uint8, numel uint) error {
 	}
 
 	vs := unsafe.Pointer(&dst[0])
-	elt_size_in_bytes, err := gotch.DTypeSize(gotch.Uint8)
-	if err != nil {
-		return err
-	}
-	lib.AtCopyData(ts.ctensor, vs, numel, elt_size_in_bytes)
-	if err = TorchErr(); err != nil {
+	dtype := gotch.Uint8
+	lib.AtCopyData(ts.ctensor, vs, numel, dtype.Size())
+	if err := TorchErr(); err != nil {
 		return err
 	}
 
@@ -784,55 +783,20 @@ func (ts *Tensor) MustCopyDataUint8(dst []uint8, numel uint) {
 // and number of elements to C land. This may break in the future
 // if Go policy changes.
 func (ts *Tensor) CopyData(dst interface{}, numel uint) error {
-
-	gotype, dlen, err := DataCheck(dst)
-	if err != nil {
-		return err
-	}
-
-	dtype, err := gotch.ToDType(gotype)
-	if err != nil {
-		return err
-	}
-
+	dtype, dlen, err := DataCheck(dst)
 	if dlen < int(numel) {
-		err = fmt.Errorf("CopyData Error: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", dlen, numel)
+		err = fmt.Errorf("ts.CopyData() failed: length of destination slice data (%v) is smaller than \nnumber of elements to be copied (%v)", dlen, numel)
 		return err
 	}
-
 	if ts.DType() != dtype {
-		err = fmt.Errorf("Type mismatched: `dst` type: %v, tensor DType: %v", dtype, ts.DType())
+		err = fmt.Errorf("ts.CopyData() failed: Type mismatched: `dst` type: %v, tensor DType: %v", dtype, ts.DType())
 		return err
 	}
 
-	var vs unsafe.Pointer
-	switch dtype {
-	case gotch.Uint8:
-		vs = unsafe.Pointer(&dst.([]uint8)[0])
-	case gotch.Int8:
-		vs = unsafe.Pointer(&dst.([]int8)[0])
-	case gotch.Int16:
-		vs = unsafe.Pointer(&dst.([]int16)[0])
-	case gotch.Int:
-		vs = unsafe.Pointer(&dst.([]int32)[0])
-	case gotch.Int64:
-		vs = unsafe.Pointer(&dst.([]int64)[0])
-	case gotch.Float:
-		vs = unsafe.Pointer(&dst.([]float32)[0])
-	case gotch.Double:
-		vs = unsafe.Pointer(&dst.([]float64)[0])
-	case gotch.Bool:
-		vs = unsafe.Pointer(&dst.([]bool)[0])
-	default:
-		err = fmt.Errorf("Unsupported type: `dst` type: %v, tensor DType: %v", dtype, ts.DType())
-		return err
-	}
+	// Get data pointer
+	dataPtr := reflect.ValueOf(dst).UnsafePointer()
 
-	elt_size_in_bytes, err := gotch.DTypeSize(dtype)
-	if err != nil {
-		return err
-	}
-	lib.AtCopyData(ts.ctensor, vs, numel, elt_size_in_bytes)
+	lib.AtCopyData(ts.ctensor, dataPtr, numel, dtype.Size())
 	if err = TorchErr(); err != nil {
 		return err
 	}
@@ -863,7 +827,6 @@ func (ts *Tensor) Numel() uint {
 
 // ShallowClone returns a new tensor that share storage with the input tensor.
 func (ts *Tensor) ShallowClone() (*Tensor, error) {
-
 	ctensor := lib.AtShallowClone(ts.ctensor)
 
 	if err := TorchErr(); err != nil {
@@ -1309,33 +1272,18 @@ func (ts *Tensor) Int64Values(delOpt ...bool) []int64 {
 // E.g. res := xs.Vals().([]int64)
 func (ts *Tensor) Vals() interface{} {
 	dtype := ts.DType()
-	numel := ts.Numel()
+	numel := int(ts.Numel())
 
-	var retVal interface{}
-
-	switch dtype.Name() {
-	case "uint8":
-		retVal = make([]uint8, numel)
-	case "int8":
-		retVal = make([]int8, numel)
-	case "int16":
-		retVal = make([]int16, numel)
-	case "int32":
-		retVal = make([]int32, numel)
-	case "int64":
-		retVal = make([]int64, numel)
-	case "float32":
-		retVal = make([]float32, numel)
-	case "float64":
-		retVal = make([]float64, numel)
-	case "bool":
-		retVal = make([]bool, numel)
-	default:
-		log.Fatalf("Unsupported dtype (%v)", dtype)
+	typ, err := dtype.GoType()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	ts.CopyData(retVal, numel)
-	return retVal
+	dataSlice := reflect.MakeSlice(reflect.SliceOf(typ), numel, numel).Interface()
+
+	ts.CopyData(dataSlice, uint(numel))
+
+	return dataSlice
 }
 
 // FlatView flattens a tensor.

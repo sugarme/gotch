@@ -101,22 +101,22 @@ func (h *NpyHeader) ToString() (string, error) {
 	shape := strings.Join(shapeStr, ",")
 
 	var descr string
-	switch h.descr.Kind().String() {
-	// case "float16": // NOTE. No float16 in Go primary types. TODO. implement
-	// descr = "f2"
-	case "float32":
+	switch h.descr {
+	case gotch.Half:
+		descr = "f2"
+	case gotch.Float:
 		descr = "f4"
-	case "float64":
+	case gotch.Double:
 		descr = "f8"
-	case "int":
+	case gotch.Int:
 		descr = "i4"
-	case "int64":
+	case gotch.Int64:
 		descr = "i8"
-	case "int16":
+	case gotch.Int16:
 		descr = "i2"
-	case "int8":
+	case gotch.Int8:
 		descr = "i1"
-	case "uint8":
+	case gotch.Uint8:
 		descr = "u1"
 	default:
 		err := fmt.Errorf("Unsupported kind: %v\n", h.descr)
