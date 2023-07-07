@@ -482,6 +482,11 @@ func (vs *VarStore) ToBFloat16() {
 	vs.Root().ToBFloat16()
 }
 
+func (vs *VarStore) ToDevice(device gotch.Device) {
+	p := vs.Root()
+	p.ToDevice(device)
+}
+
 // Path methods:
 // =============
 
@@ -743,6 +748,21 @@ func (p *Path) ToHalf() {
 // ToBFloat16() converts all variables in current path and subpaths to `BFloat16` dtype.
 func (p *Path) ToBFloat16() {
 	p.toFloat(gotch.BFloat16)
+}
+
+func (p *Path) ToDevice(device gotch.Device) {
+	p.varstore.Lock()
+	defer p.varstore.Unlock()
+	path := strings.Join(p.path, SEP)
+	for name, v := range p.varstore.vars {
+		if strings.Contains(name, path) {
+			newVar := v
+			newVar.Tensor = v.Tensor.MustTo(device, true)
+			p.varstore.vars[name] = newVar
+		}
+	}
+
+	ts.CleanUp(2000)
 }
 
 // ZerosNoTrain creates a new variable initialized with zeros.

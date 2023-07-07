@@ -1,7 +1,6 @@
 package nn
 
 import (
-	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/ts"
 )
 
