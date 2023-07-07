@@ -34,6 +34,7 @@ var mu sync.Mutex
 var device gotch.Device = gotch.CudaIfAvailable()
 
 // var dtype gotch.DType = gotch.BFloat16
+
 // var dtype gotch.DType = gotch.Half
 var dtype gotch.DType = gotch.Float
 
