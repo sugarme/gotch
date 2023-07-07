@@ -394,3 +394,30 @@ func DTypeFromData(data interface{}) (DType, error) {
 	// single element
 	return GoKind2DType(dataKind)
 }
+
+// IsFloatDType returns whether dtype is floating point data type.
+func IsFloatDType(dtype DType) bool {
+	switch dtype {
+	case Double, Float, Half, BFloat16:
+		return true
+
+	default:
+		return false
+	}
+}
+
+// Default DType:
+// ==============
+var DefaultDType DType = Float
+
+// SetDefaultDType set DefaultDType to new value and return the previous one.
+func SetDefaultDType(dtype DType) DType {
+	odtype := DefaultDType
+	DefaultDType = dtype
+
+	if Debug {
+		log.Printf("INFO: gotch 'DefaultDType' has changed to %v. Remember to change back to previous default to avoid unexpected outcome.\n", dtype)
+	}
+
+	return odtype
+}

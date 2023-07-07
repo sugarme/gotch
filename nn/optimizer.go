@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 
-	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/ts"
 )
 
@@ -418,6 +417,10 @@ func (opt *Optimizer) ClipGradNorm(max float64, opts ...ClipOpt) error {
 	)
 
 	device := opt.varstore.device
+
+	// FIXME. What about mixed-precision?
+	dtype := parameters[0].DType()
+
 	if o.NormType == math.Inf(1) {
 		for _, v := range opt.varstore.vars {
 			n := v.Tensor.MustGrad(false).MustDetach(true).MustAbs(true).MustMax(true).MustTo(device, true)
@@ -431,14 +434,14 @@ func (opt *Optimizer) ClipGradNorm(max float64, opts ...ClipOpt) error {
 
 			// NOTE. tensor.Norm() is going to be deprecated. So use linalg_norm
 			// Ref. https://pytorch.org/docs/stable/generated/torch.linalg.norm.html#torch.linalg.norm
-			x := v.Tensor.MustGrad(false).MustDetach(true).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, gotch.Float, true)
+			x := v.Tensor.MustGrad(false).MustDetach(true).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, dtype, true)
 			norms = append(norms, x)
 		}
 	}
 
 	// totalNorm = ts.MustStack(norms, 0).MustNorm(true).MustAddScalar(ts.FloatScalar(1e-6), true)
 	// total_norm = torch.norm(torch.stack([torch.norm(p.grad.detach(), norm_type).to(device) for p in parameters]), norm_type)
-	totalNorm = ts.MustStack(norms, 0).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, gotch.Float, true)
+	totalNorm = ts.MustStack(norms, 0).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, dtype, true)
 	for _, x := range norms {
 		x.MustDrop()
 	}

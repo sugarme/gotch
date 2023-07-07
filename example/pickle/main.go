@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/sugarme/gotch"
@@ -25,8 +26,10 @@ func main() {
 		panic(err)
 	}
 
-	err = pickle.LoadInfo(modelFile)
+	m, err := pickle.LoadModelInfo(modelFile)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println(m)
 }

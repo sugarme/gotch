@@ -149,7 +149,9 @@ func (l *LSTM) ZeroState(batchDim int64) State {
 
 	layerDim := l.config.NumLayers * numDirections
 	shape := []int64{layerDim, batchDim, l.hiddenDim}
-	zeros := ts.MustZeros(shape, gotch.Float, l.device)
+
+	dtype := l.flatWeights[0].DType()
+	zeros := ts.MustZeros(shape, dtype, l.device)
 
 	retVal := &LSTMState{
 		Tensor1: zeros.MustShallowClone(),
@@ -269,7 +271,8 @@ func (g *GRU) ZeroState(batchDim int64) State {
 	layerDim := g.config.NumLayers * numDirections
 	shape := []int64{layerDim, batchDim, g.hiddenDim}
 
-	tensor := ts.MustZeros(shape, gotch.Float, g.device)
+	dtype := g.flatWeights[0].DType()
+	tensor := ts.MustZeros(shape, dtype, g.device)
 
 	return &GRUState{Tensor: tensor}
 }

@@ -12,7 +12,7 @@ import (
 
 type Init interface {
 	// creates a new tensor with specified initiation
-	InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor)
+	InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor)
 
 	// re-initializes (in-place) an existing tensor with the specified initiation
 	Set(tensor *ts.Tensor)
@@ -25,18 +25,24 @@ type constInit struct {
 	value float64
 }
 
+var _ Init = new(constInit)
+
 func NewConstInit(v float64) constInit {
 	return constInit{v}
 }
 
-func (c constInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
+func (c constInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
+	}
+
 	var err error
-	kind := gotch.Float
 	switch {
 	case c.value == 0.0:
-		retVal = ts.MustZeros(dims, kind, device)
+		retVal = ts.MustZeros(dims, dtype, device)
 	case c.value == 1.0:
-		retVal = ts.MustOnes(dims, kind, device)
+		retVal = ts.MustOnes(dims, dtype, device)
 	default:
 		data := make([]float64, ts.FlattenDim(dims))
 		for i := range data {
@@ -68,17 +74,24 @@ type randnInit struct {
 	stdev float64
 }
 
+var _ Init = new(randnInit)
+
 func NewRandnInit(mean, stdev float64) randnInit {
 	return randnInit{mean, stdev}
 }
 
-func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
-	// if r.mean == 0 && math.Abs(r.stdev-1) <= math.SmallestNonzeroFloat64 {
-	if r.mean == 0 {
-		return ts.MustRandn(dims, gotch.Float, device)
+func (r randnInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
 	}
 
-	initTs := ts.MustRandn(dims, gotch.Float, device)
+	// if r.mean == 0 && math.Abs(r.stdev-1) <= math.SmallestNonzeroFloat64 {
+	if r.mean == 0 {
+		return ts.MustRandn(dims, dtype, device)
+	}
+
+	initTs := ts.MustRandn(dims, dtype, device)
 	return initTs.MustMulScalar(ts.FloatScalar(r.stdev), true).MustAddScalar(ts.FloatScalar(r.mean), true)
 }
 
@@ -101,14 +114,20 @@ type uniformInit struct {
 	up float64
 }
 
+var _ Init = new(uniformInit)
+
 func NewUniformInit(lo, up float64) uniformInit {
 	return uniformInit{lo, up}
 }
 
-func (u uniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
+func (u uniformInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
+	}
+
 	var err error
-	kind := gotch.Float
-	retVal = ts.MustZeros(dims, kind, device)
+	retVal = ts.MustZeros(dims, dtype, device)
 	retVal.Uniform_(u.lo, u.up)
 	if err != nil {
 		log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
@@ -174,6 +193,8 @@ type kaimingUniformInit struct {
 	NonLinearity  string
 }
 
+var _ Init = new(kaimingUniformInit)
+
 func NewKaimingUniformInit(opts ...KaimingOption) *kaimingUniformInit {
 	o := DefaultKaimingOptions()
 	for _, opt := range opts {
@@ -187,7 +208,12 @@ func NewKaimingUniformInit(opts ...KaimingOption) *kaimingUniformInit {
 	}
 }
 
-func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
+func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
+	}
+
 	fanIn, _, err := CalculateFans(dims)
 	if err != nil {
 		panic(err)
@@ -204,8 +230,7 @@ func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retV
 	// Calculate uniform bounds from standard deviation
 	bound := math.Sqrt(3.0) * std
 
-	kind := gotch.Float
-	retVal = ts.MustZeros(dims, kind, device)
+	retVal = ts.MustZeros(dims, dtype, device)
 	retVal.Uniform_(-bound, bound)
 
 	return retVal

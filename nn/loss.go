@@ -68,7 +68,7 @@ func CrossEntropyLoss(logits, target *ts.Tensor, opts ...LossFnOption) *ts.Tenso
 	reduction := options.Reduction
 	ignoreIndex := options.IgnoreIndex
 
-	logSm := logits.MustLogSoftmax(-1, gotch.Float, false)
+	logSm := logits.MustLogSoftmax(-1, dtype, false)
 	loss := logSm.MustNllLoss(target, ws, reduction, ignoreIndex, true)
 	ws.MustDrop()
 

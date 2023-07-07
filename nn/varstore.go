@@ -417,12 +417,21 @@ func (vs *VarStore) Summary() {
 		layers = append(layers, name)
 	}
 	sort.Strings(layers)
+	var dtype gotch.DType
+	isFirst := true
 	for _, l := range layers {
 		var x *ts.Tensor
 		var isBuffer bool
 		for name, v := range vars {
 			if name == l {
 				x = v.Tensor
+
+				// Get DType of first tensor for representation only
+				if isFirst {
+					dtype = x.DType()
+				}
+				isFirst = false
+
 				isBuffer = v.Type == "buffer"
 				break
 			}
@@ -435,25 +444,19 @@ func (vs *VarStore) Summary() {
 	}
 
 	fmt.Printf("Num of layers: %v\n", len(vars))
+	fmt.Printf("DType: %v\n", dtype)
 }
 
 // ToDType casts all variables in VarStore to specified DType.
 //
-// NOTE. only float-like types (Half, Float, Double) can ensure convertible.
+// NOTE. only float-like types (Half, BFloat16, Float, Double) can ensure convertible.
 func (vs *VarStore) ToDType(dtype gotch.DType) {
 	vs.Root().ToDType(dtype)
 }
 
-// ToHalf casts all float-like variables in VarStore to `Half` dtype.
-//
-// NOTE. float-like includes `Half`, `Float` and `Double` dtype.
-func (vs *VarStore) ToHalf() {
-	vs.Root().ToHalf()
-}
-
 // ToFloat casts all float-like variables in VarStore to `Float` dtype.
 //
-// NOTE. float-like includes `Half`, `Float` and `Double` dtype.
+// NOTE. float-like includes `Half`,`BFloat16`, `Float` and `Double` dtype.
 func (vs *VarStore) ToFloat() {
 	vs.Root().ToFloat()
 }
@@ -463,6 +466,20 @@ func (vs *VarStore) ToFloat() {
 // NOTE. float-like includes `Half`, `Float` and `Double` dtype.
 func (vs *VarStore) ToDouble() {
 	vs.Root().ToDouble()
+}
+
+// ToHalf casts all float-like variables in VarStore to `Half` dtype.
+//
+// NOTE. float-like includes `Half`, `Float` and `Double` dtype.
+func (vs *VarStore) ToHalf() {
+	vs.Root().ToHalf()
+}
+
+// ToBFloat16 casts all float-like variables in VarStore to `BFloat16` dtype.
+//
+// NOTE. float-like includes `Half`, `Float` and `Double` dtype.
+func (vs *VarStore) ToBFloat16() {
+	vs.Root().ToBFloat16()
 }
 
 // Path methods:
@@ -664,7 +681,7 @@ func (p *Path) SetGroup(g uint) {
 // ToDType casts all variables in this path and its sub-paths to the specified dtype.
 //
 // NOTE. this method should be used for floating-point conversion, i.e.,
-// "gotch.Float", "gotch.Half", "gotch.Float16", "gotch.Double".
+// "gotch.Float", "gotch.Half", "gotch.BFloat16", "gotch.Double".
 func (p *Path) ToDType(dtype gotch.DType) {
 	p.varstore.Lock()
 	defer p.varstore.Unlock()
@@ -686,7 +703,7 @@ func (p *Path) toFloat(dtype gotch.DType) {
 	for name, v := range p.varstore.vars {
 		if strings.Contains(name, path) {
 			dtype := v.Tensor.DType()
-			if dtype == gotch.Half || dtype == gotch.Float || dtype == gotch.Double {
+			if gotch.IsFloatDType(dtype) {
 				newVar := v
 				newVar.Tensor = v.Tensor.MustTotype(dtype, true)
 				p.varstore.vars[name] = newVar
@@ -695,19 +712,37 @@ func (p *Path) toFloat(dtype gotch.DType) {
 	}
 }
 
-// ToHalf casts all variables in current path and subpaths to `Half` precision.
+// ToFloat casts all variables in current path and subpaths to `Float` precision.
+func (p *Path) ToFloat(floatDTypeOpt ...gotch.DType) {
+	dtype := gotch.Float
+	if len(floatDTypeOpt) > 0 {
+		dt := floatDTypeOpt[0]
+		if !gotch.IsFloatDType(dt) {
+			// Ingore the option
+			if gotch.Debug {
+				log.Printf("WARNING: nn.Path.ToFloat() input dtype is invalid float DType %v. Just ignoring...\n", dt)
+			}
+		} else {
+			dtype = dt
+		}
+	}
+
+	p.toFloat(dtype)
+}
+
+// ToDouble casts all variables in current path and subpaths to `Double` precision dtype.
+func (p *Path) ToDouble() {
+	p.toFloat(gotch.Double)
+}
+
+// ToHalf casts all variables in current path and subpaths to `Half` precision dtype.
 func (p *Path) ToHalf() {
 	p.toFloat(gotch.Half)
 }
 
-// ToFloat casts all variables in current path and subpaths to `Float` precision.
-func (p *Path) ToFloat() {
-	p.toFloat(gotch.Float)
-}
-
-// ToDouble casts all variables in current path and subpaths to `Double` precision.
-func (p *Path) ToDouble() {
-	p.toFloat(gotch.Double)
+// ToBFloat16() converts all variables in current path and subpaths to `BFloat16` dtype.
+func (p *Path) ToBFloat16() {
+	p.toFloat(gotch.BFloat16)
 }
 
 // ZerosNoTrain creates a new variable initialized with zeros.
@@ -718,7 +753,8 @@ func (p *Path) ToDouble() {
 // The variable uses a float tensor initialized with zeros.
 func (p *Path) ZerosNoTrain(name string, dims []int64, opts ...AddOpt) (*ts.Tensor, error) {
 	device := p.Device()
-	z, err := ts.Zeros(dims, gotch.Float, device)
+	dtype := gotch.DefaultDType
+	z, err := ts.Zeros(dims, dtype, device)
 	if err != nil {
 		err = fmt.Errorf("Path.ZerosNoTrain() failed: %w", err)
 		return nil, err
@@ -755,7 +791,8 @@ func (p *Path) MustZerosNoTrain(name string, dims []int64, opts ...AddOpt) *ts.T
 // The variable uses a float tensor initialized with ones.
 func (p *Path) OnesNoTrain(name string, dims []int64, opts ...AddOpt) (*ts.Tensor, error) {
 	device := p.Device()
-	z, err := ts.Ones(dims, gotch.Float, device)
+	dtype := gotch.DefaultDType
+	z, err := ts.Ones(dims, dtype, device)
 	if err != nil {
 		err = fmt.Errorf("Path.OneNoTrain() failed: %w", err)
 		return nil, err
@@ -792,7 +829,8 @@ func (p *Path) MustOnesNoTrain(name string, dims []int64, opts ...AddOpt) *ts.Te
 // The variable uses a float tensor initialized as per the
 // related argument.
 func (p *Path) NewVar(name string, dims []int64, ini Init, opts ...AddOpt) (*ts.Tensor, error) {
-	v := ini.InitTensor(dims, p.varstore.device)
+	dtype := gotch.DefaultDType
+	v := ini.InitTensor(dims, p.varstore.device, dtype)
 	out, err := p.Add(name, v, true, opts...)
 	if err != nil {
 		return nil, err
@@ -1098,7 +1136,8 @@ func (e *Entry) MustOrOnes(dims []int64, opts ...AddOpt) *ts.Tensor {
 
 // OrOnesNoTrain returns the existing entry if found, otherwise create a new variable.
 func (e *Entry) OrOnesNoTrain(dims []int64, opts ...AddOpt) (*ts.Tensor, error) {
-	o := ts.MustOnes(dims, gotch.Float, e.path.Device())
+	dtype := gotch.DefaultDType
+	o := ts.MustOnes(dims, dtype, e.path.Device())
 	out, err := e.path.getOrAddWithLock(e.name, o, true, opts...)
 	if err != nil {
 		return nil, err
@@ -1161,7 +1200,8 @@ func (e *Entry) MustOrUniform(dims []int64, lo, up float64, opts ...AddOpt) *ts.
 
 // OrZerosNoTrain returns the existing entry if found, otherwise create a new variable.
 func (e *Entry) OrZerosNoTrain(dims []int64, opts ...AddOpt) (*ts.Tensor, error) {
-	z := ts.MustZeros(dims, gotch.Float, e.path.Device())
+	dtype := gotch.DefaultDType
+	z := ts.MustZeros(dims, dtype, e.path.Device())
 	out, err := e.path.getOrAddWithLock(e.name, z, true, opts...)
 	if err != nil {
 		return nil, err

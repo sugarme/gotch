@@ -40,11 +40,14 @@ type Linear struct {
 // outDim - output dimension (y) [output features - columns]
 // NOTE: w will have shape{outDim, inDim}; b will have shape{outDim}
 func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
+	dtype := gotch.DefaultDType
 	var bs *ts.Tensor
 	// bs has size of output dimension
 	switch c.Bias {
 	case false:
-		bs = ts.MustZeros([]int64{outDim}, gotch.Float, vs.Device())
+		// FIXME. do we need this? or just remove it and in the `Forward` creating on-fly
+		// with same dtype and device to the input.
+		bs = ts.MustZeros([]int64{outDim}, dtype, vs.Device())
 	case true:
 		switch {
 		case c.BsInit == nil:
@@ -87,20 +90,19 @@ func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 //
 // Example:
 //
-// 	inDim := 3
-// 	outDim := 2
-// 	batchSize := 4
-// 	weights: 2x3
-// 	[ 1 1 1
-// 		1 1 1 ]
+//	inDim := 3
+//	outDim := 2
+//	batchSize := 4
+//	weights: 2x3
+//	[ 1 1 1
+//		1 1 1 ]
 //
-// 	input node: 3x4
-// 	[ 1 1 1
-// 	  1 1 1
-// 	  1 1 1
-// 		1 1 1 ]
+//	input node: 3x4
+//	[ 1 1 1
+//	  1 1 1
+//	  1 1 1
+//		1 1 1 ]
 func (l *Linear) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
-
 	mul := xs.MustMatmul(l.Ws, false)
 	return mul.MustAdd(l.Bs, true)
 }
@@ -109,7 +111,6 @@ func (l *Linear) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
 //
 // NOTE: train param will not be used.
 func (l *Linear) ForwardT(xs *ts.Tensor, train bool) (retVal *ts.Tensor) {
-
 	mul := xs.MustMatmul(l.Ws, false)
 	return mul.MustAdd(l.Bs, true)
 }
