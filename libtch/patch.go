@@ -4,9 +4,24 @@ package libtch
 
 //#include "stdbool.h"
 //#include "torch_api.h"
+/*
+bool is_null(int* pointer) {
+  if (NULL == pointer) {
+    return true;
+  }
+  return false;
+}
+*/
 import "C"
 
 import "unsafe"
+
+func IsNull(ctensor Ctensor) bool {
+	// return C.is_null(ctensor)
+	ret := C.is_null((*C.int)(unsafe.Pointer(ctensor)))
+
+	return (bool)(ret)
+}
 
 // NOTE: 9 patches for pattern of **return tensor pointer**: `tensor *atg_FUNCTION_NAME()`:
 // tensor *atg_align_tensors(tensor *tensors_data, int tensors_len);

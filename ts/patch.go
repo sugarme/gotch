@@ -215,8 +215,8 @@ func AlignTensors(tensors []*Tensor) (retVal []*Tensor, err error) {
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -257,8 +257,8 @@ func BroadcastTensors(tensors []*Tensor) (retVal []*Tensor, err error) {
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -294,9 +294,8 @@ func (ts *Tensor) Chunk(chunks int64, dim int64) (retVal []*Tensor, err error) {
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		// calculate the next pointer value
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -336,8 +335,8 @@ func Meshgrid(tensors []*Tensor) (retVal []*Tensor, err error) {
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -367,8 +366,8 @@ func (ts *Tensor) NonzeroNumpy() (retVal []*Tensor, err error) {
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -413,9 +412,8 @@ func (ts *Tensor) Split(splitSize, dim int64) (retVal []*Tensor, err error) {
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		// calculate the next pointer value
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -460,9 +458,8 @@ func (ts *Tensor) SplitWithSizes(splitSizes []int64, dim int64) (retVal []*Tenso
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		// calculate the next pointer value
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -488,7 +485,6 @@ func (ts *Tensor) MustSplitWithSizes(splitSizes []int64, dim int64, del bool) (r
 
 // tensor *atg_unbind(tensor self, int64_t dim);
 func (ts *Tensor) Unbind(dim int64) (retVal []*Tensor, err error) {
-
 	ctensorsPtr := lib.AtgUnbind(ts.ctensor, dim)
 	if err = TorchErr(); err != nil {
 		return retVal, err
@@ -496,9 +492,10 @@ func (ts *Tensor) Unbind(dim int64) (retVal []*Tensor, err error) {
 
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
+
 	for {
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
@@ -532,8 +529,8 @@ func Where(condition Tensor) (retVal []*Tensor, err error) {
 	currentPtr := ctensorsPtr
 	retVal = append(retVal, newTensor(*currentPtr))
 	for {
-		nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currentPtr)) + unsafe.Sizeof(currentPtr)))
-		if nextPtr == nil {
+		nextPtr := (*lib.Ctensor)(unsafe.Add(unsafe.Pointer(currentPtr), unsafe.Sizeof(currentPtr)))
+		if *nextPtr == nil {
 			break
 		}
 
