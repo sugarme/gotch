@@ -192,7 +192,7 @@ func (vs *VarStore) Load(filepath string) error {
 		x.Tensor.MustDrop()
 	}
 
-	ts.CleanUp(2000) // 2 seconds
+	ts.CleanUp()
 
 	return nil
 }
@@ -230,7 +230,7 @@ func (vs *VarStore) LoadWeights(namedTensors []ts.NamedTensor) error {
 		})
 	}
 
-	ts.CleanUp(2000)
+	ts.CleanUp()
 
 	return nil
 }
@@ -291,7 +291,7 @@ func (vs *VarStore) LoadPartial(filepath string) ([]string, error) {
 		x.Tensor.MustDrop()
 	}
 
-	ts.CleanUp(2000)
+	ts.CleanUp()
 
 	return missingVariables, nil
 }
@@ -343,7 +343,7 @@ func (vs *VarStore) LoadWeightsPartial(namedTensors []ts.NamedTensor) ([]string,
 		})
 	}
 
-	ts.CleanUp(2000)
+	ts.CleanUp()
 
 	return missingVariables, nil
 }
@@ -415,7 +415,7 @@ func (vs *VarStore) Copy(src *VarStore) error {
 		srcDevTs.MustDrop()
 	}
 
-	ts.CleanUp(2000)
+	ts.CleanUp()
 
 	return nil
 }
@@ -727,7 +727,7 @@ func (p *Path) toFloat(dtype gotch.DType) {
 		}
 	}
 
-	ts.CleanUp(2000) // 2 seconds
+	ts.CleanUp()
 }
 
 // ToFloat casts all variables in current path and subpaths to `Float` precision.
@@ -775,7 +775,7 @@ func (p *Path) ToDevice(device gotch.Device) {
 		}
 	}
 
-	ts.CleanUp(2000) // 2 seconds
+	ts.CleanUp()
 }
 
 // ZerosNoTrain creates a new variable initialized with zeros.

@@ -2,17 +2,14 @@ package ts
 
 // Other tensor methods
 
-import (
-	"github.com/sugarme/gotch"
-)
-
 // CrossEntropyForLogits computes the cross-entropy loss based on some logits and targets.
 func (ts *Tensor) CrossEntropyForLogits(targets *Tensor) (retVal *Tensor) {
 	weight := NewTensor()
 	reduction := int64(1) // Mean of loss
 	ignoreIndex := int64(-100)
 
-	logSm := ts.MustLogSoftmax(-1, gotch.Float, false)
+	dtype := ts.DType()
+	logSm := ts.MustLogSoftmax(-1, dtype, false)
 	return logSm.MustNllLoss(targets, weight, reduction, ignoreIndex, true)
 }
 
@@ -21,7 +18,8 @@ func (ts *Tensor) CrossEntropyForLogits(targets *Tensor) (retVal *Tensor) {
 func (ts *Tensor) AccuracyForLogits(targets *Tensor) (retVal *Tensor) {
 	argmax := ts.MustArgmax([]int64{-1}, false, false)
 	eq1 := argmax.MustEqTensor(targets, true)
-	return eq1.MustTotype(gotch.Float, true).MustMean(gotch.Float, true)
+	dtype := ts.DType()
+	return eq1.MustTotype(dtype, true).MustMean(dtype, true)
 }
 
 func (ts *Tensor) MaxPool2DDefault(ksize int64, del bool) (retVal *Tensor) {

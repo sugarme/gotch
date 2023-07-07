@@ -80,36 +80,32 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 
 func CheckCMemLeak() string {
 	tensors := []string{}
+	lock.Lock()
 	for n := range ExistingTensors {
 		tensors = append(tensors, n)
 	}
+	memUsed := AllocatedMem
+	lock.Unlock()
+
 	var msg string
 	msg += fmt.Sprintf("============================= C MEMORY CHECK RESULT ==================================\n")
-	msg += fmt.Sprintf("C memory allocated not been released: %v bytes\n", AllocatedMem)
+	msg += fmt.Sprintf("C memory allocated not been released: %v bytes\n", memUsed)
 	msg += fmt.Sprintf("Tensors not been released: %q\n", tensors)
 	msg += fmt.Sprintf("======================================================================================\n")
+
 	return msg
 }
 
+// CleanUp calls double runtime.GC() with sleep time in between.
 func CleanUp(sleepTimeOpt ...int) {
 	sleepTime := time.Duration(1000) // 1 second
 	if len(sleepTimeOpt) > 0 {
 		sleepTime = time.Duration(sleepTimeOpt[0])
 	}
 
-	if gotch.Debug {
-		fmt.Printf(CheckCMemLeak())
-		fmt.Println(">>>>>>>>>>>>>>Last runtime.GC() call at ts.CleanUp() <<<<<<<<<<<<<<<<<<<<<<<<<<<")
-	}
-
 	runtime.GC()
 	time.Sleep(time.Millisecond * sleepTime)
 	runtime.GC()
-
-	if gotch.Debug {
-		fmt.Println(">>>>>>>>>>>>>>After last GC called at ts.CleanUp(): <<<<<<<<<<<<<<<<<<<<<<<<<")
-		fmt.Printf(CheckCMemLeak())
-	}
 }
 
 // Ctensor return C pointer value.
@@ -119,10 +115,16 @@ func (ts *Tensor) Ctensor() unsafe.Pointer {
 
 // free releases C allocated memory.
 func freeCTensor(ts *Tensor) error {
-	nbytes := ts.nbytes()
-	atomic.AddInt64(&AllocatedMem, -nbytes)
 	lock.Lock()
 	defer lock.Unlock()
+
+	// Just return if it has been deleted previously!
+	if unsafe.Pointer(ts.ctensor) == nil {
+		return nil
+	}
+
+	nbytes := ts.nbytes()
+	atomic.AddInt64(&AllocatedMem, -nbytes)
 	delete(ExistingTensors, ts.name)
 
 	lib.AtFree(ts.ctensor)
@@ -134,6 +136,9 @@ func freeCTensor(ts *Tensor) error {
 	if gotch.Debug {
 		log.Printf("INFO: Released tensor %q - C memory(%d bytes).\n", ts.name, nbytes)
 	}
+
+	// IMPORTANT. make it nil so won't double free.
+	ts.ctensor = nil
 
 	return nil
 }
@@ -1063,22 +1068,7 @@ func (ts *Tensor) MustToString(lw int64) string {
 
 // Drop drops (frees) the tensor
 func (ts *Tensor) Drop() error {
-	// TODO. Detect ctensor is valid pointer, then do free otherwise, do nothing to avoid double-free error.
-	// FIXME. Get rid of this method as long as runtime.SetFinalizer() works properly.
-	return nil
-
-	lib.AtFree(ts.ctensor)
-	if err := TorchErr(); err != nil {
-		return err
-	}
-
-	if gotch.Debug {
-		nbytes := ts.nbytes()
-		atomic.AddInt64(&AllocatedMem, -nbytes)
-		log.Printf("INFO: Released tensor %q - C memory(%d bytes).\n", ts.name, nbytes)
-	}
-
-	return nil
+	return freeCTensor(ts)
 }
 
 // MustDrop drops the tensor. It will be panic if error
