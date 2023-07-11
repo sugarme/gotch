@@ -1379,3 +1379,51 @@ func (ts *Tensor) MustConstantPadNdWithVal(pad []int64, value *Scalar, del bool)
 
 	return retVal
 }
+
+// TT. Added some torch.cuda APIs for handling CUDA qt
+
+// CudaCurrentDevice get device index of current CUDA device.
+func CudaCurrentDevice() (int, error) {
+	currentDeviceIndex := lib.AtcGetDevice()
+	if err := TorchErr(); err != nil {
+		err = fmt.Errorf("ts.CudaCurrentDevice() failed: %w\n", err)
+		return -99, err
+	}
+
+	return currentDeviceIndex, nil
+}
+
+// CudaSetDevice set new cuda device index and returns previous cuda index.
+func CudaSetDevice(cudaDeviceIndex int) (int, error) {
+	currentDeviceIndex, err := CudaCurrentDevice()
+	if err != nil {
+		err = fmt.Errorf("ts.CudaSetDevice() failed: %w\n", err)
+		return -99, err
+	}
+
+	lib.AtcSetDevice(cudaDeviceIndex)
+	if err := TorchErr(); err != nil {
+		err = fmt.Errorf("ts.CudaSetDevice() failed: %w\n", err)
+		return -99, err
+	}
+	return currentDeviceIndex, nil
+}
+
+// CudaSynchronize waits for all kernels in all streams on a CUDA device to complete.
+func CudaSynchronize(cudaDeviceIndexOpt ...int) error {
+	var cudaDeviceIndex int
+	var err error
+	if len(cudaDeviceIndexOpt) > 0 {
+		cudaDeviceIndex = cudaDeviceIndexOpt[0]
+	} else {
+		cudaDeviceIndex, err = CudaCurrentDevice()
+		if err != nil {
+			err := fmt.Errorf("ts.CudaSynchronize() failed: %w\n", err)
+			return err
+		}
+	}
+
+	lib.AtcSynchronize(int64(cudaDeviceIndex))
+
+	return TorchErr()
+}

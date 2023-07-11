@@ -155,6 +155,12 @@ int atc_cuda_device_count();
 int atc_cuda_is_available();
 int atc_cudnn_is_available();
 void atc_set_benchmark_cudnn(int b);
+void atc_synchronize(int64_t device_index);
+
+// TT. added for testing qt
+// ref. https://github.com/pytorch/pytorch/issues/14959 
+int atc_get_device();
+void atc_set_device(int device_index);
 
 module atm_load(char *);
 module atm_load_on_device(char *, int device);

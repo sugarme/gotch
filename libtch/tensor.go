@@ -134,6 +134,24 @@ func AtcSetBenchmarkCudnn(b int) {
 	C.atc_set_benchmark_cudnn(cb)
 }
 
+// void atc_synchronize(int64_t device_index);
+func AtcSynchronize(deviceIndex int64) {
+	cDeviceIndex := *(*C.int64_t)(unsafe.Pointer(&deviceIndex))
+	C.atc_synchronize(cDeviceIndex)
+}
+
+// int atc_get_device();
+func AtcGetDevice() int {
+	cDeviceIndex := C.atc_get_device()
+	return int(cDeviceIndex)
+}
+
+// int atc_set_device(int device_index);
+func AtcSetDevice(deviceIndex int) int {
+	cDeviceIndex := C.int(deviceIndex)
+	return int(cDeviceIndex)
+}
+
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
 func AtDoubleValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) float64 {
 	ctensor := (C.tensor)(ts)

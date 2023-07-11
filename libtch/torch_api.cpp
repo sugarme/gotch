@@ -7,6 +7,7 @@
 #include<torch/script.h>
 #include<stdexcept>
 #include<vector>
+#include "ATen/core/interned_strings.h"
 #include "torch_api.h"
 
 
@@ -45,9 +46,10 @@ c10::List<c10::optional<torch::Tensor>> of_carray_tensor_opt(torch::Tensor **vs,
 }
 
 at::Device device_of_int(int d) {
-  if (d < 0)
-    return at::Device(at::kCPU);
-  return at::Device(at::kCUDA, /*index=*/d);
+    if (d == -3) return at::Device(at::kVulkan);
+    // if (d == -2) return at::Device(at::kMPS);
+    if (d < 0) return at::Device(at::kCPU);
+    return at::Device(at::kCUDA, /*index=*/d);
 }
 tensor at_new_tensor() {
   PROTECT(return new torch::Tensor();)
@@ -176,7 +178,7 @@ bool at_autocast_set_enabled(bool b) {
 int at_device(tensor t) {
   PROTECT(auto device = t->device(); if (device.type() == at::kCPU) return -1;
           if (device.type() == at::kCUDA) return device.index();)
-  return -2;
+  return -99; // error
 }
 
 void at_backward(tensor t, int keep_graph, int create_graph) {
@@ -751,6 +753,31 @@ int atc_cudnn_is_available() {
 
 void atc_set_benchmark_cudnn(int b) {
   at::globalContext().setBenchmarkCuDNN(b);
+}
+
+void atc_synchronize(int64_t device_index) {
+  PROTECT(return torch::cuda::synchronize(device_index);)
+}
+
+// returns current CUDA device index.
+int atc_get_device(){
+  PROTECT(
+  at::Device d(at::kCUDA);
+  auto *g = c10::impl::getDeviceGuardImpl(d.type());
+  d = g->getDevice();
+  return d.index();
+  )
+  return -99; // error
+}
+
+// set new cuda device with input device index.
+void atc_set_device(int device_index){
+  PROTECT(
+  at::Device new_device(at::kCUDA);
+  new_device = device_of_int(device_index);
+  auto *g = c10::impl::getDeviceGuardImpl(new_device.type());
+  g->setDevice(new_device);
+  )
 }
 
 module atm_load(char *filename) {
