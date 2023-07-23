@@ -167,3 +167,25 @@ func TestTensor_Stride(t *testing.T) {
 		t.Errorf("want %v, got %v\n", want, got)
 	}
 }
+
+func TestTensor_IsContiguous(t *testing.T) {
+	shape := []int64{2, 3, 4}
+	x := ts.MustRand(shape, gotch.Float, gotch.CPU)
+
+	got := x.MustIsContiguous()
+	want := true
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v\n", want, got)
+	}
+}
+
+func TestTensor_IsMkldnn(t *testing.T) {
+	shape := []int64{2, 3, 4}
+	x := ts.MustRand(shape, gotch.Float, gotch.CPU)
+
+	got := x.MustIsMkldnn()
+	want := false
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v\n", want, got)
+	}
+}

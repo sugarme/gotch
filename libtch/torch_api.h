@@ -46,6 +46,7 @@ size_t at_dim(tensor);
 void at_shape(tensor, int64_t *);
 void at_stride(tensor, int64_t *);
 int at_scalar_type(tensor);
+int at_is_contiguous(tensor);
 
 void at__amp_non_finite_check_and_unscale(tensor, tensor, tensor);
 

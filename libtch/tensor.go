@@ -59,12 +59,6 @@ func NewTensor() Ctensor {
 	return C.at_new_tensor()
 }
 
-// int at_device(tensor);
-func AtDevice(ts Ctensor) int {
-	cint := C.at_device(ts)
-	return *(*int)(unsafe.Pointer(&cint))
-}
-
 // tensor at_tensor_of_data(void *vs, int64_t *dims, size_t ndims, size_t element_size_in_bytes, int type);
 func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_bytes uint, kind int) Ctensor {
 
@@ -86,6 +80,30 @@ func AtPrint(t Ctensor) {
 // void *at_data_ptr(tensor);
 func AtDataPtr(t Ctensor) unsafe.Pointer {
 	return C.at_data_ptr(t)
+}
+
+// int at_defined(tensor);
+func AtDefined(ts Ctensor) bool {
+	retVal := C.at_defined(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// int at_is_mkldnn(tensor);
+func AtIsMkldnn(ts Ctensor) bool {
+	retVal := C.at_is_mkldnn(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// int at_is_sparse(tensor);
+func AtIsSparse(ts Ctensor) bool {
+	retVal := C.at_is_sparse(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// int at_device(tensor);
+func AtDevice(ts Ctensor) int {
+	cint := C.at_device(ts)
+	return *(*int)(unsafe.Pointer(&cint))
 }
 
 // size_t at_dim(tensor);
@@ -110,6 +128,12 @@ func AtStride(t Ctensor, ptr unsafe.Pointer) {
 func AtScalarType(t Ctensor) int32 {
 	result := C.at_scalar_type(t)
 	return *(*int32)(unsafe.Pointer(&result))
+}
+
+// int at_is_contiguous(tensor);
+func AtIsContiguous(ts Ctensor) bool {
+	retVal := C.at_is_contiguous(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
 }
 
 func GetAndResetLastErr() *C.char {
@@ -179,18 +203,6 @@ func AtInt64ValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) i
 // int at_requires_grad(tensor);
 func AtRequiresGrad(ts Ctensor) bool {
 	retVal := C.at_requires_grad(ts)
-	return *(*bool)(unsafe.Pointer(&retVal))
-}
-
-// int at_defined(tensor);
-func AtDefined(ts Ctensor) bool {
-	retVal := C.at_defined(ts)
-	return *(*bool)(unsafe.Pointer(&retVal))
-}
-
-// int at_is_sparse(tensor);
-func AtIsSparse(ts Ctensor) bool {
-	retVal := C.at_is_sparse(ts)
 	return *(*bool)(unsafe.Pointer(&retVal))
 }
 

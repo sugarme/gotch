@@ -713,6 +713,52 @@ func (ts *Tensor) IsSparse() (bool, error) {
 
 	return state, nil
 }
+func (ts *Tensor) MustIsSparse() bool {
+	state, err := ts.IsSparse()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return state
+}
+
+// IsContiguous returns true is the tensor is contiguous.
+func (ts *Tensor) IsContiguous() (bool, error) {
+	state := lib.AtIsContiguous(ts.ctensor)
+
+	if err := TorchErr(); err != nil {
+		return false, err
+	}
+
+	return state, nil
+}
+func (ts *Tensor) MustIsContiguous() bool {
+	state, err := ts.IsContiguous()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return state
+}
+
+// IsMkldnn returns true is the tensor is mkldnn.
+func (ts *Tensor) IsMkldnn() (bool, error) {
+	state := lib.AtIsMkldnn(ts.ctensor)
+
+	if err := TorchErr(); err != nil {
+		return false, err
+	}
+
+	return state, nil
+}
+func (ts *Tensor) MustIsMkldnn() bool {
+	state, err := ts.IsMkldnn()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return state
+}
 
 // ZeroGrad zeroes the gradient tensor attached to this tensor if defined.
 func (ts *Tensor) ZeroGrad() {
