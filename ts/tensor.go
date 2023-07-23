@@ -674,6 +674,15 @@ func (ts *Tensor) DataPtr() (unsafe.Pointer, error) {
 	return datPtr, nil
 }
 
+func (ts *Tensor) MustDataPtr() unsafe.Pointer {
+	p, err := ts.DataPtr()
+	if err != nil {
+		panic(err)
+	}
+
+	return p
+}
+
 // Defined returns true is the tensor is defined.
 func (ts *Tensor) Defined() (bool, error) {
 	state := lib.AtDefined(ts.ctensor)
