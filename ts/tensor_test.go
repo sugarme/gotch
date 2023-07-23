@@ -156,3 +156,14 @@ func TestCudaCurrentDevice(t *testing.T) {
 	}
 	t.Logf("Cuda index AFTER set: %v\n", cudaIdxAfter) // 0
 }
+
+func TestTensor_Stride(t *testing.T) {
+	shape := []int64{2, 3, 4}
+	x := ts.MustRand(shape, gotch.Float, gotch.CPU)
+
+	got := x.MustStride()
+	want := []int64{12, 4, 1}
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v\n", want, got)
+	}
+}

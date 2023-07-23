@@ -212,6 +212,34 @@ func (ts *Tensor) MustSize() []int64 {
 	return shape
 }
 
+func (ts *Tensor) Stride() ([]int64, error) {
+	dim := lib.AtDim(ts.ctensor)
+	sz := make([]int64, dim)
+	szPtr, err := DataAsPtr(sz)
+	if err != nil {
+		return nil, err
+	}
+	defer C.free(unsafe.Pointer(szPtr))
+
+	lib.AtStride(ts.ctensor, szPtr)
+	if err = TorchErr(); err != nil {
+		return nil, err
+	}
+
+	strides := decodeSize(szPtr, dim)
+
+	return strides, nil
+}
+
+func (ts *Tensor) MustStride() []int64 {
+	strides, err := ts.Stride()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return strides
+}
+
 // Size1 returns the tensor size for 1D tensors.
 func (ts *Tensor) Size1() (int64, error) {
 	shape, err := ts.Size()
