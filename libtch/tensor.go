@@ -100,6 +100,12 @@ func AtShape(t Ctensor, ptr unsafe.Pointer) {
 	C.at_shape(t, c_ptr)
 }
 
+// void at_stride(tensor, int64_t *);
+func AtStride(t Ctensor, ptr unsafe.Pointer) {
+	c_ptr := (*C.int64_t)(ptr)
+	C.at_stride(t, c_ptr)
+}
+
 // int at_scalar_type(tensor);
 func AtScalarType(t Ctensor) int32 {
 	result := C.at_scalar_type(t)

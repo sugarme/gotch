@@ -40,11 +40,15 @@ type bigStruct struct {
 	lots [1e5]byte // 100k - always on host memory.
 }
 
-// Tensor is a Go wrapper to a C tensor pointer - 8 Bytes (64-bits OS)  or 4 Bytes (32-bits OS)
-// ctensor is just a C pointer to `torch::Tensor`
+// Tensor is a Go wrapper of a "C tensor pointer" - 8 Bytes (64-bits OS)
+// or 4 Bytes (32-bits OS).
+// `ctensor` is just a "C pointer" to `torch::Tensor` (torch::Tensor *lib.Ctensor)
 //
-// NOTE.Tensor should be big enough to be in a heap.
-// See. https://stackoverflow.com/questions/10866195
+// NOTE.Tensor should be big enough to be in heap memory.
+// (yes, we choose to place tensor consistently in heap memory so that
+// it can be targeted by Go garbage collector).
+//
+// For heap allocation see. https://stackoverflow.com/questions/10866195
 type Tensor struct {
 	d       *bigStruct
 	name    string
