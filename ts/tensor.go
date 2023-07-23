@@ -82,6 +82,11 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 	return x
 }
 
+// New creates new tensor from C tensor.
+func New(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
+	return newTensor(ctensor, nameOpt...)
+}
+
 func CheckCMemLeak() string {
 	tensors := []string{}
 	lock.Lock()
