@@ -306,6 +306,11 @@ func ReadNpy(filepath string) (*Tensor, error) {
 		return nil, err
 	}
 
+	// NOTE(TT.). case tensor 1 element with shape = []
+	if len(data) > 0 && len(header.shape) == 0 {
+		header.shape = []int64{1}
+	}
+
 	return OfDataSize(data, header.shape, header.descr)
 }
 
@@ -346,6 +351,11 @@ func ReadNpz(filePath string) ([]NamedTensor, error) {
 		data, err = ioutil.ReadAll(rc)
 		if err != nil {
 			return nil, err
+		}
+
+		// NOTE(TT.). case tensor 1 element with shape = []
+		if len(data) > 0 && len(header.shape) == 0 {
+			header.shape = []int64{1}
 		}
 
 		tensor, err := OfDataSize(data, header.shape, header.descr)
