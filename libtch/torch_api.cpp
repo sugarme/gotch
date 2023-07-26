@@ -1,15 +1,14 @@
-#include<torch/csrc/autograd/engine.h>
-#include<torch/csrc/jit/runtime/graph_executor.h>
+#include "torch_api.h"
+#include "ATen/core/interned_strings.h"
+#include <ATen/autocast_mode.h>
+#include <stdexcept>
+#include <torch/csrc/autograd/engine.h>
 #include <torch/csrc/jit/passes/fixup_trace_scope_blocks.h>
 #include <torch/csrc/jit/passes/normalize_ops.h>
-#include<torch/torch.h>
-#include<ATen/autocast_mode.h>
-#include<torch/script.h>
-#include<stdexcept>
-#include<vector>
-#include "ATen/core/interned_strings.h"
-#include "torch_api.h"
-
+#include <torch/csrc/jit/runtime/graph_executor.h>
+#include <torch/script.h>
+#include <torch/torch.h>
+#include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -37,19 +36,23 @@ vector<torch::Tensor> of_carray_tensor(torch::Tensor **vs, int len) {
   return result;
 }
 
-c10::List<c10::optional<torch::Tensor>> of_carray_tensor_opt(torch::Tensor **vs, int len) {
+c10::List<c10::optional<torch::Tensor>> of_carray_tensor_opt(torch::Tensor **vs,
+                                                             int len) {
   vector<c10::optional<torch::Tensor>> result;
   for (int i = 0; i < len; ++i) {
-    result.push_back(vs[i] != nullptr ? c10::optional<torch::Tensor>(*(vs[i])) : c10::nullopt);
+    result.push_back(vs[i] != nullptr ? c10::optional<torch::Tensor>(*(vs[i]))
+                                      : c10::nullopt);
   }
   return c10::List<c10::optional<torch::Tensor>>(result);
 }
 
 at::Device device_of_int(int d) {
-    if (d == -3) return at::Device(at::kVulkan);
-    // if (d == -2) return at::Device(at::kMPS);
-    if (d < 0) return at::Device(at::kCPU);
-    return at::Device(at::kCUDA, /*index=*/d);
+  if (d == -3)
+    return at::Device(at::kVulkan);
+  // if (d == -2) return at::Device(at::kMPS);
+  if (d < 0)
+    return at::Device(at::kCPU);
+  return at::Device(at::kCUDA, /*index=*/d);
 }
 tensor at_new_tensor() {
   PROTECT(return new torch::Tensor();)
@@ -83,19 +86,20 @@ tensor at_tensor_of_data(void *vs, int64_t *dims, size_t ndims,
 
 void at_copy_data(tensor tensor, void *vs, size_t numel,
                   size_t elt_size_in_bytes) {
-  PROTECT(if (elt_size_in_bytes != tensor->element_size()) throw std::
-              invalid_argument("incoherent element sizes in bytes");
-          if (numel > tensor->numel()) throw std::invalid_argument(
-              "target numel is larger than tensor numel");
-          if (tensor->device().type() != at::kCPU) {
-            torch::Tensor tmp_tensor = tensor->to(at::kCPU).contiguous();
-            void *tensor_data = tmp_tensor.data_ptr();
-            memcpy(vs, tensor_data, numel * elt_size_in_bytes);
-          } else {
-            auto tmp_tensor = tensor->contiguous();
-            void *tensor_data = tmp_tensor.data_ptr();
-            memcpy(vs, tensor_data, numel * elt_size_in_bytes);
-          })
+  PROTECT(
+      if (elt_size_in_bytes != tensor->element_size()) throw std::
+          invalid_argument("incoherent element sizes in bytes");
+      if (numel > tensor->numel()) throw std::invalid_argument(
+          "target numel is larger than tensor numel");
+      if (tensor->device().type() != at::kCPU) {
+        torch::Tensor tmp_tensor = tensor->to(at::kCPU).contiguous();
+        void *tensor_data = tmp_tensor.data_ptr();
+        memcpy(vs, tensor_data, numel * elt_size_in_bytes);
+      } else {
+        auto tmp_tensor = tensor->contiguous();
+        void *tensor_data = tmp_tensor.data_ptr();
+        memcpy(vs, tensor_data, numel * elt_size_in_bytes);
+      })
 }
 
 tensor at_shallow_clone(tensor t) {
@@ -146,16 +150,15 @@ int at_is_contiguous(tensor t) {
   return -1;
 }
 
-
 // void at__amp_non_finite_check_and_unscale(tensor t, tensor found_inf, tensor
 // inf_scale) { PROTECT( at::_amp_non_finite_check_and_unscale_(*t, *found_inf,
 // *inf_scale);
 // )
 // }
-void at__amp_non_finite_check_and_unscale(tensor t, tensor found_inf, tensor inf_scale) {
-  PROTECT(
-    at::_amp_foreach_non_finite_check_and_unscale_(*t, *found_inf, *inf_scale);
-  )
+void at__amp_non_finite_check_and_unscale(tensor t, tensor found_inf,
+                                          tensor inf_scale) {
+  PROTECT(at::_amp_foreach_non_finite_check_and_unscale_(*t, *found_inf,
+                                                         *inf_scale);)
 }
 
 void at_autocast_clear_cache() { at::autocast::clear_cache(); }
@@ -415,12 +418,12 @@ void at_run_backward(tensor *tensors, int ntensors, tensor *inputs, int ninputs,
       for (int i = 0; i < ntensors; ++i)
           grads.push_back(torch::ones_like(*tensors[i]));
 
-      auto vl = torch::autograd::Engine::get_default_engine().execute(roots, grads, keep_graph, create_graph, false, inputs_);
+      auto vl = torch::autograd::Engine::get_default_engine().execute(
+          roots, grads, keep_graph, create_graph, false, inputs_);
       for (int i = 0; i < ninputs; ++i) {
         outputs[i] = static_cast<tensor>(new torch::autograd::Variable(vl[i]));
       })
 }
-
 
 optimizer ato_adam(double learning_rate, double beta1, double beta2,
                    double weight_decay) {
@@ -518,11 +521,11 @@ void ato_set_learning_rate_group(optimizer t, size_t group,
           set_lr_group<torch::optim::SGDOptions>(t, group, learning_rate);)
 }
 
-void ato_constant_pad_nd(tensor *out__, tensor self, int64_t *pad_data, int pad_len, scalar value) {
-  PROTECT(
-      auto outputs__ = torch::constant_pad_nd(*self, torch::IntArrayRef(pad_data, pad_len), *value);
-    out__[0] = new torch::Tensor(outputs__);
-  )
+void ato_constant_pad_nd(tensor *out__, tensor self, int64_t *pad_data,
+                         int pad_len, scalar value) {
+  PROTECT(auto outputs__ = torch::constant_pad_nd(
+              *self, torch::IntArrayRef(pad_data, pad_len), *value);
+          out__[0] = new torch::Tensor(outputs__);)
 }
 
 // ============ set/get learning rates ==============================
@@ -544,15 +547,17 @@ template <class T> void set_lrs(optimizer t, double *learning_rates) {
 }
 
 void ato_set_learning_rates(optimizer t, double *lrs, int lrs_num) {
-  PROTECT(int ngroup = t->param_groups().size(); if (lrs == nullptr) {
-    throw std::invalid_argument("Input learning rates should not be null");
-  } if (ngroup != lrs_num) {
-    throw std::invalid_argument("Size of input learning rates is unequal to "
-                                "number of parameter groups.");
-  } set_lrs<torch::optim::AdamOptions>(t, lrs);
-          set_lrs<torch::optim::AdamWOptions>(t, lrs);
-          set_lrs<torch::optim::RMSpropOptions>(t, lrs);
-          set_lrs<torch::optim::SGDOptions>(t, lrs);)
+  PROTECT(
+      int ngroup = t->param_groups().size(); if (lrs == nullptr) {
+        throw std::invalid_argument("Input learning rates should not be null");
+      } if (ngroup != lrs_num) {
+        throw std::invalid_argument(
+            "Size of input learning rates is unequal to "
+            "number of parameter groups.");
+      } set_lrs<torch::optim::AdamOptions>(t, lrs);
+      set_lrs<torch::optim::AdamWOptions>(t, lrs);
+      set_lrs<torch::optim::RMSpropOptions>(t, lrs);
+      set_lrs<torch::optim::SGDOptions>(t, lrs);)
 }
 
 template <class T> void get_lrs(optimizer t, vector<double> &lrs) {
@@ -766,24 +771,19 @@ void atc_synchronize(int64_t device_index) {
 }
 
 // returns current CUDA device index.
-int atc_get_device(){
-  PROTECT(
-  at::Device d(at::kCUDA);
-  auto *g = c10::impl::getDeviceGuardImpl(d.type());
-  d = g->getDevice();
-  return d.index();
-  )
+int atc_get_device() {
+  PROTECT(at::Device d(at::kCUDA);
+          auto *g = c10::impl::getDeviceGuardImpl(d.type()); d = g->getDevice();
+          return d.index();)
   return -99; // error
 }
 
 // set new cuda device with input device index.
-void atc_set_device(int device_index){
-  PROTECT(
-  at::Device new_device(at::kCUDA);
-  new_device = device_of_int(device_index);
-  auto *g = c10::impl::getDeviceGuardImpl(new_device.type());
-  g->setDevice(new_device);
-  )
+void atc_set_device(int device_index) {
+  PROTECT(at::Device new_device(at::kCUDA);
+          new_device = device_of_int(device_index);
+          auto *g = c10::impl::getDeviceGuardImpl(new_device.type());
+          g->setDevice(new_device);)
 }
 
 module atm_load(char *filename) {
@@ -1040,13 +1040,14 @@ void ati_to_generic_list(ivalue i, ivalue *outputs, int noutputs) {
 }
 
 void ati_to_generic_dict(ivalue i, ivalue *outputs, int noutputs) {
-  PROTECT(auto dict = i->toGenericDict(); if (dict.size() != noutputs) {
-    throw std::invalid_argument("unexpected dict size");
-  } int k = 0;
-          for (auto it = dict.begin(); it != dict.end(); ++it) {
-            outputs[k++] = new torch::jit::IValue(it->key());
-            outputs[k++] = new torch::jit::IValue(it->value());
-          })
+  PROTECT(
+      auto dict = i->toGenericDict(); if (dict.size() != noutputs) {
+        throw std::invalid_argument("unexpected dict size");
+      } int k = 0;
+      for (auto it = dict.begin(); it != dict.end(); ++it) {
+        outputs[k++] = new torch::jit::IValue(it->key());
+        outputs[k++] = new torch::jit::IValue(it->value());
+      })
 }
 
 void ati_to_int_list(ivalue i, int64_t *outputs, int noutputs) {
