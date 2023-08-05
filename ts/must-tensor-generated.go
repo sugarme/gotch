@@ -3961,9 +3961,9 @@ func MustArangeStart(start *Scalar, end *Scalar, optionsKind gotch.DType, option
   return retVal
 } 
 
-func MustArangeStartStep(start *Scalar, end *Scalar, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
+func MustArangeStartStep(start *Scalar, end *Scalar, step *Scalar, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
   
-  retVal, err := ArangeStartStep(start, end, optionsKind, optionsDevice)
+  retVal, err := ArangeStartStep(start, end, step, optionsKind, optionsDevice)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -4465,9 +4465,9 @@ func(ts *Tensor) MustAvgPool3dOut(out *Tensor, kernelSize []int64, stride []int6
   return retVal
 } 
 
-func(ts *Tensor) MustBaddbmm(batch1 *Tensor, batch2 *Tensor, del bool)(retVal *Tensor) { 
+func(ts *Tensor) MustBaddbmm(batch1 *Tensor, batch2 *Tensor, beta *Scalar, alpha *Scalar, del bool)(retVal *Tensor) { 
   
-  retVal, err := ts.Baddbmm(batch1, batch2, del)
+  retVal, err := ts.Baddbmm(batch1, batch2, beta, alpha, del)
   if err != nil { log.Fatal(err) }
   
   return retVal

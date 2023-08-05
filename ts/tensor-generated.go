@@ -9327,10 +9327,10 @@ func ArangeStart(start *Scalar, end *Scalar, optionsKind gotch.DType, optionsDev
 // func.returns = `fixed 1`: 
 // --------------------------
 
-func ArangeStartStep(start *Scalar, end *Scalar, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor, err error) { 
+func ArangeStartStep(start *Scalar, end *Scalar, step *Scalar, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor, err error) { 
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
-    lib.AtgArangeStartStep(ptr, start.cscalar, end.cscalar, optionsKind.CInt(), optionsDevice.CInt())
+    lib.AtgArangeStartStep(ptr, start.cscalar, end.cscalar, step.cscalar, optionsKind.CInt(), optionsDevice.CInt())
   if err = TorchErr(); err != nil {
     err = fmt.Errorf("ArangeStartStep() failed: %w", err)
     return retVal, err
@@ -10585,11 +10585,11 @@ var cdivisorOverrideVal int64 = 0
 // func.returns = `fixed 1`: 
 // --------------------------
 
-func(ts *Tensor) Baddbmm(batch1 *Tensor, batch2 *Tensor, del bool)(retVal *Tensor, err error) { 
+func(ts *Tensor) Baddbmm(batch1 *Tensor, batch2 *Tensor, beta *Scalar, alpha *Scalar, del bool)(retVal *Tensor, err error) { 
   if del { defer ts.MustDrop() }
   ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
   
-    lib.AtgBaddbmm(ptr, ts.ctensor, batch1.ctensor, batch2.ctensor)
+    lib.AtgBaddbmm(ptr, ts.ctensor, batch1.ctensor, batch2.ctensor, beta.cscalar, alpha.cscalar)
   if err = TorchErr(); err != nil {
     err = fmt.Errorf("Baddbmm() failed: %w", err)
     return retVal, err

@@ -2068,7 +2068,7 @@ void atg__slow_conv2d_backward(tensor *out__, tensor grad_input, tensor grad_wei
 
 void atg__sobol_engine_draw(tensor *out__, tensor quasi, int64_t n, tensor sobolstate, int64_t dimension, int64_t num_generated, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_sobol_engine_draw(*quasi, n, *sobolstate, dimension, num_generated, at::ScalarType(dtype));
+    auto outputs__ = torch::_sobol_engine_draw(*quasi, n, *sobolstate, dimension, num_generated, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(std::get<0>(outputs__));
     out__[1] = new torch::Tensor(std::get<1>(outputs__));
   )
@@ -2223,28 +2223,28 @@ void atg__sparse_csc_tensor_unsafe(tensor *out__, tensor ccol_indices, tensor ro
 
 void atg__sparse_csr_prod(tensor *out__, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_sparse_csr_prod(*self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::_sparse_csr_prod(*self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg__sparse_csr_prod_dim_dtype_out(tensor *out__, tensor out, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_sparse_csr_prod_out(*out, *self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::_sparse_csr_prod_out(*out, *self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg__sparse_csr_sum(tensor *out__, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_sparse_csr_sum(*self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::_sparse_csr_sum(*self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg__sparse_csr_sum_dim_dtype_out(tensor *out__, tensor out, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_sparse_csr_sum_out(*out, *self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::_sparse_csr_sum_out(*out, *self, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -2279,7 +2279,7 @@ void atg__sparse_log_softmax_backward_data_out(tensor *out__, tensor out, tensor
 
 void atg__sparse_log_softmax_int(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_sparse_log_softmax(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::_sparse_log_softmax(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -2336,7 +2336,7 @@ void atg__sparse_softmax_backward_data_out(tensor *out__, tensor out, tensor gra
 
 void atg__sparse_softmax_int(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_sparse_softmax(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::_sparse_softmax(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -2629,14 +2629,14 @@ tensor *atg__to_cpu(tensor *tensors_data, int tensors_len) {
 
 void atg__to_dense(tensor *out__, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = self->_to_dense(at::ScalarType(dtype));
+    auto outputs__ = self->_to_dense(dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg__to_dense_out(tensor *out__, tensor out, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = torch::_to_dense_out(*out, *self, at::ScalarType(dtype));
+    auto outputs__ = torch::_to_dense_out(*out, *self, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -3640,9 +3640,9 @@ void atg_arange_start(tensor *out__, scalar start, scalar end, int options_kind,
   )
 }
 
-void atg_arange_start_step(tensor *out__, scalar start, scalar end, int options_kind, int options_device) {
+void atg_arange_start_step(tensor *out__, scalar start, scalar end, scalar step, int options_kind, int options_device) {
   PROTECT(
-    auto outputs__ = torch::arange(*start, *end, at::device(device_of_int(options_device)).dtype(at::ScalarType(options_kind)));
+    auto outputs__ = torch::arange(*start, *end, *step, at::device(device_of_int(options_device)).dtype(at::ScalarType(options_kind)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -4120,9 +4120,9 @@ void atg_avg_pool3d_out(tensor *out__, tensor out, tensor self, int64_t *kernel_
   )
 }
 
-void atg_baddbmm(tensor *out__, tensor self, tensor batch1, tensor batch2) {
+void atg_baddbmm(tensor *out__, tensor self, tensor batch1, tensor batch2, scalar beta, scalar alpha) {
   PROTECT(
-    auto outputs__ = torch::baddbmm(*self, *batch1, *batch2);
+    auto outputs__ = torch::baddbmm(*self, *batch1, *batch2, *beta, *alpha);
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -5910,14 +5910,14 @@ void atg_cummin_out(tensor *out__, tensor values, tensor indices, tensor self, i
 
 void atg_cumprod(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::cumprod(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::cumprod(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_cumprod_(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = self->cumprod_(dim, at::ScalarType(dtype));
+    auto outputs__ = self->cumprod_(dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -5931,28 +5931,28 @@ void atg_cumprod_backward(tensor *out__, tensor grad, tensor input, int64_t dim,
 
 void atg_cumprod_out(tensor *out__, tensor out, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::cumprod_out(*out, *self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::cumprod_out(*out, *self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_cumsum(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::cumsum(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::cumsum(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_cumsum_(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = self->cumsum_(dim, at::ScalarType(dtype));
+    auto outputs__ = self->cumsum_(dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_cumsum_out(tensor *out__, tensor out, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::cumsum_out(*out, *self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::cumsum_out(*out, *self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -9912,28 +9912,28 @@ void atg_linalg_multi_dot_out(tensor *out__, tensor out, tensor *tensors_data, i
 
 void atg_linalg_norm(tensor *out__, tensor self, scalar ord, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::linalg_norm(*self, *ord, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::linalg_norm(*self, *ord, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_linalg_norm_ord_str(tensor *out__, tensor self, char* ord_ptr, int ord_len, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::linalg_norm(*self, std::string(ord_ptr, ord_len), dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::linalg_norm(*self, std::string(ord_ptr, ord_len), dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_linalg_norm_ord_str_out(tensor *out__, tensor out, tensor self, char* ord_ptr, int ord_len, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::linalg_norm_out(*out, *self, std::string(ord_ptr, ord_len), dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::linalg_norm_out(*out, *self, std::string(ord_ptr, ord_len), dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_linalg_norm_out(tensor *out__, tensor out, tensor self, scalar ord, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::linalg_norm_out(*out, *self, *ord, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::linalg_norm_out(*out, *self, *ord, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -10314,14 +10314,14 @@ void atg_log_sigmoid_out(tensor *out__, tensor out, tensor self) {
 
 void atg_log_softmax(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::log_softmax(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::log_softmax(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_log_softmax_int_out(tensor *out__, tensor out, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::log_softmax_out(*out, *self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::log_softmax_out(*out, *self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -10953,21 +10953,21 @@ void atg_maximum_out(tensor *out__, tensor out, tensor self, tensor other) {
 
 void atg_mean(tensor *out__, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = torch::mean(*self, at::ScalarType(dtype));
+    auto outputs__ = torch::mean(*self, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_mean_dim(tensor *out__, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::mean(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::mean(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_mean_out(tensor *out__, tensor out, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::mean_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::mean_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -11742,14 +11742,14 @@ void atg_nan_to_num_out(tensor *out__, tensor out, tensor self, double nan_v, ui
 
 void atg_nanmean(tensor *out__, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::nanmean(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::nanmean(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_nanmean_out(tensor *out__, tensor out, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::nanmean_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::nanmean_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -11814,14 +11814,14 @@ void atg_nanquantile_scalar_out(tensor *out__, tensor out, tensor self, double q
 
 void atg_nansum(tensor *out__, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::nansum(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::nansum(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_nansum_out(tensor *out__, tensor out, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::nansum_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::nansum_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -11961,14 +11961,14 @@ void atg_native_norm_out(tensor *out__, tensor out, tensor self) {
 
 void atg_native_norm_scalaropt_dim_dtype(tensor *out__, tensor self, scalar p, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::native_norm(*self, *p, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::native_norm(*self, *p, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_native_norm_scalaropt_dim_dtype_out(tensor *out__, tensor out, tensor self, scalar p, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::native_norm_out(*out, *self, *p, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::native_norm_out(*out, *self, *p, torch::IntArrayRef(dim_data, dim_len), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -12702,28 +12702,28 @@ void atg_prelu(tensor *out__, tensor self, tensor weight) {
 
 void atg_prod(tensor *out__, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = torch::prod(*self, at::ScalarType(dtype));
+    auto outputs__ = torch::prod(*self, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_prod_dim_int(tensor *out__, tensor self, int64_t dim, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::prod(*self, dim, (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::prod(*self, dim, (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_prod_int_out(tensor *out__, tensor out, tensor self, int64_t dim, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::prod_out(*out, *self, dim, (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::prod_out(*out, *self, dim, (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_prod_out(tensor *out__, tensor out, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = torch::prod_out(*out, *self, at::ScalarType(dtype));
+    auto outputs__ = torch::prod_out(*out, *self, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -14593,14 +14593,14 @@ void atg_soft_margin_loss_out(tensor *out__, tensor out, tensor self, tensor tar
 
 void atg_softmax(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::softmax(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::softmax(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_softmax_int_out(tensor *out__, tensor out, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::softmax_out(*out, *self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::softmax_out(*out, *self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -15528,7 +15528,7 @@ void atg_special_log_ndtr_out(tensor *out__, tensor out, tensor self) {
 
 void atg_special_log_softmax(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::special_log_softmax(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::special_log_softmax(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -15913,7 +15913,7 @@ void atg_special_sinc_out(tensor *out__, tensor out, tensor self) {
 
 void atg_special_softmax(tensor *out__, tensor self, int64_t dim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::special_softmax(*self, dim, at::ScalarType(dtype));
+    auto outputs__ = torch::special_softmax(*self, dim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -16437,28 +16437,28 @@ void atg_subtract_scalar_(tensor *out__, tensor self, scalar other) {
 
 void atg_sum(tensor *out__, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = torch::sum(*self, at::ScalarType(dtype));
+    auto outputs__ = torch::sum(*self, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_sum_dim_intlist(tensor *out__, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::sum(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::sum(*self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_sum_intlist_out(tensor *out__, tensor out, tensor self, int64_t *dim_data, int dim_len, int keepdim, int dtype) {
   PROTECT(
-    auto outputs__ = torch::sum_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, at::ScalarType(dtype));
+    auto outputs__ = torch::sum_out(*out, *self, dim_data == nullptr ? c10::nullopt : c10::optional<torch::IntArrayRef>(torch::IntArrayRef(dim_data, dim_len)), (bool)keepdim, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
 
 void atg_sum_out(tensor *out__, tensor out, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = torch::sum_out(*out, *self, at::ScalarType(dtype));
+    auto outputs__ = torch::sum_out(*out, *self, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -16732,7 +16732,7 @@ void atg_to(tensor *out__, tensor self, int device) {
 
 void atg_to_dense(tensor *out__, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = self->to_dense(at::ScalarType(dtype));
+    auto outputs__ = self->to_dense(dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -16767,7 +16767,7 @@ void atg_to_dtype_layout(tensor *out__, tensor self, int options_kind, int optio
 
 void atg_to_mkldnn(tensor *out__, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = self->to_mkldnn(at::ScalarType(dtype));
+    auto outputs__ = self->to_mkldnn(dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }
@@ -16781,7 +16781,7 @@ void atg_to_mkldnn_backward(tensor *out__, tensor grad, tensor input) {
 
 void atg_to_mkldnn_out(tensor *out__, tensor out, tensor self, int dtype) {
   PROTECT(
-    auto outputs__ = torch::to_mkldnn_out(*out, *self, at::ScalarType(dtype));
+    auto outputs__ = torch::to_mkldnn_out(*out, *self, dtype < 0 ? c10::nullopt : c10::optional<at::ScalarType>(at::ScalarType(dtype)));
     out__[0] = new torch::Tensor(outputs__);
   )
 }

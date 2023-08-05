@@ -255,9 +255,9 @@ func rgb2Gray(x *ts.Tensor, outChanOpt ...int64) *ts.Tensor {
 	}
 
 	rgbTs := x.MustUnbind(-3, false)
-	r := &rgbTs[0]
-	g := &rgbTs[1]
-	b := &rgbTs[2]
+	r := rgbTs[0]
+	g := rgbTs[1]
+	b := rgbTs[2]
 
 	// This implementation closely follows the TF one:
 	// https://github.com/tensorflow/tensorflow/blob/v2.3.0/tensorflow/python/ops/image_ops_impl.py#L2105-L2138
@@ -453,7 +453,7 @@ func hsv2RGB(x *ts.Tensor) *ts.Tensor {
 	a3 := ts.MustStack([]*ts.Tensor{p, p, t, v, v, q}, -3)
 	a4 := ts.MustStack([]*ts.Tensor{a1, a2, a3}, -4)
 
-	out := ts.MustEinsum("...ijk, ...xijk -> ...xjk", []*ts.Tensor{mask, a4})
+	out := ts.MustEinsum("...ijk, ...xijk -> ...xjk", []*ts.Tensor{mask, a4}, []int64{0, 1})
 
 	// Delete intermediate tensors
 	h.MustDrop()
@@ -579,7 +579,7 @@ func crop(x *ts.Tensor, top, left, height, width int64) *ts.Tensor {
 		x2 := x1T.Idx(wNar)
 		x1T.MustDrop()
 		out := x2.MustT(true)
-		chans[i] = *out
+		chans[i] = out
 	}
 
 	cropTs := ts.MustStack(chans, 0)

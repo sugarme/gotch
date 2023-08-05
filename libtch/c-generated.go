@@ -2666,10 +2666,10 @@ coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
 coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice)) 
 	C.atg_arange_start(ptr, start , end , coptionsKind, coptionsDevice)
 }
-func AtgArangeStartStep(ptr *Ctensor, start Cscalar, end Cscalar, optionsKind int32, optionsDevice int32){
+func AtgArangeStartStep(ptr *Ctensor, start Cscalar, end Cscalar, step Cscalar, optionsKind int32, optionsDevice int32){
 coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
 coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice)) 
-	C.atg_arange_start_step(ptr, start , end , coptionsKind, coptionsDevice)
+	C.atg_arange_start_step(ptr, start , end , step , coptionsKind, coptionsDevice)
 }
 func AtgArccos(ptr *Ctensor, self Ctensor){ 
 	C.atg_arccos(ptr, self)
@@ -3004,8 +3004,8 @@ cdivisorOverrideVal := *(*C.int64_t)(unsafe.Pointer(&divisorOverrideVal))
 cdivisorOverrideNull := *(*C.uint8_t)(unsafe.Pointer(&divisorOverrideNull)) 
 	C.atg_avg_pool3d_out(ptr, out, self, ckernelSizeDataPtr, ckernelSizeLen, cstrideDataPtr, cstrideLen, cpaddingDataPtr, cpaddingLen, cceilMode, ccountIncludePad, cdivisorOverrideVal, cdivisorOverrideNull)
 }
-func AtgBaddbmm(ptr *Ctensor, self Ctensor, batch1 Ctensor, batch2 Ctensor){ 
-	C.atg_baddbmm(ptr, self, batch1, batch2)
+func AtgBaddbmm(ptr *Ctensor, self Ctensor, batch1 Ctensor, batch2 Ctensor, beta Cscalar, alpha Cscalar){ 
+	C.atg_baddbmm(ptr, self, batch1, batch2, beta , alpha )
 }
 func AtgBaddbmm_(ptr *Ctensor, self Ctensor, batch1 Ctensor, batch2 Ctensor){ 
 	C.atg_baddbmm_(ptr, self, batch1, batch2)
