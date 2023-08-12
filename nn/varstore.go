@@ -567,6 +567,7 @@ func (p *Path) add(name string, newTs *ts.Tensor, trainable bool, varType string
 		tensor *ts.Tensor
 		err    error
 	)
+
 	if trainable {
 		tensor, err = newTs.SetRequiresGrad(true, false)
 		if err != nil {
@@ -877,12 +878,18 @@ func (p *Path) MustOnesNoTrain(name string, dims []int64, opts ...AddOpt) *ts.Te
 // related argument.
 func (p *Path) NewVar(name string, dims []int64, ini Init, opts ...AddOpt) (*ts.Tensor, error) {
 	dtype := gotch.DefaultDType
-	v := ini.InitTensor(dims, p.varstore.device, dtype)
+	// v := ini.InitTensor(dims, p.varstore.device, dtype)
+	var v *ts.Tensor
+
+	v = ini.InitTensor(dims, p.varstore.device, dtype)
+
 	out, err := p.Add(name, v, true, opts...)
 	if err != nil {
 		return nil, err
 	}
+
 	v.MustDrop()
+
 	return out, err
 }
 

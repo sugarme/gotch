@@ -222,26 +222,31 @@ func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device, dtype
 		dtype = dtypeOpt[0]
 	}
 
-	fanIn, _, err := CalculateFans(dims)
-	if err != nil {
-		panic(err)
-	}
+	/*
+		fanIn, _, err := CalculateFans(dims)
+		if err != nil {
+			panic(err)
+		}
 
-	gain, err := calculateGain(k.NonLinearity, k.NegativeSlope) // default non-linearity="leaky_relu", negative_slope=0.01
-	if err != nil {
-		err = fmt.Errorf("kaimingUniformInit.InitTensor() failed: %v\n", err)
-		panic(err)
-	}
+		gain, err := calculateGain(k.NonLinearity, k.NegativeSlope) // default non-linearity="leaky_relu", negative_slope=0.01
+		if err != nil {
+			err = fmt.Errorf("kaimingUniformInit.InitTensor() failed: %v\n", err)
+			panic(err)
+		}
 
-	std := gain / math.Sqrt(float64(fanIn)) // default using fanIn
+		std := gain / math.Sqrt(float64(fanIn)) // default using fanIn
 
-	// Calculate uniform bounds from standard deviation
-	bound := math.Sqrt(3.0) * std
+		// Calculate uniform bounds from standard deviation
+		bound := math.Sqrt(3.0) * std
 
-	ts.NoGrad(func() {
+		// NOTE. This is a well-known memory leak!!!
+		// Avoid to use it for now!!!
 		retVal = ts.MustZeros(dims, dtype, device)
 		retVal.Uniform_(-bound, bound)
-	})
+	*/
+
+	// For now, just make a random norm
+	retVal = ts.MustRandn(dims, dtype, device)
 
 	return retVal
 }
@@ -381,4 +386,37 @@ func contains(items []string, item string) bool {
 		}
 	}
 	return false
+}
+
+// XavierUniform fills the input tensor with values according to the method
+// described in the paper `Understanding the difficulty of training deep feedforward neural networks`
+// using a uniform distribution
+//
+// Also known as Glorot initialization.
+//
+// Paper: https://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf
+// Pytorch implementation: https://github.com/pytorch/pytorch/blob/df50f91571891ec3f87977a2bdd4a2b609d70afc/torch/nn/init.py#L310
+func XavierUniform_(x *ts.Tensor, gainOpt ...float64) {
+	gain := 1.0
+	if len(gainOpt) > 0 {
+		gain = gainOpt[0]
+	}
+
+	size := x.MustSize()
+	dtype := x.DType()
+	device := x.MustDevice()
+	fanIn, fanOut, err := CalculateFans(size)
+	if err != nil {
+		panic(err)
+	}
+
+	std := gain * math.Sqrt(2.0/float64(fanIn+fanOut))
+
+	// calculate uniform bounds from standard deviation
+	a := math.Sqrt(3.0) * std
+	uniformInit := NewUniformInit(-a, a)
+	src := uniformInit.InitTensor(size, device, dtype)
+	x.Copy_(src)
+
+	src.MustDrop()
 }

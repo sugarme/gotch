@@ -21,6 +21,8 @@ type LinearConfig struct {
 func DefaultLinearConfig() *LinearConfig {
 	negSlope := math.Sqrt(5)
 	return &LinearConfig{
+		// NOTE. KaimingUniform cause mem leak due to ts.Uniform()!!!
+		// Avoid using it now.
 		WsInit: NewKaimingUniformInit(WithKaimingNegativeSlope(negSlope)),
 		BsInit: nil,
 		Bias:   true,
@@ -60,8 +62,10 @@ func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 		}
 	}
 
+	ws := vs.MustNewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false)
+
 	return &Linear{
-		Ws: vs.MustNewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false),
+		Ws: ws,
 		Bs: bs,
 	}
 }
