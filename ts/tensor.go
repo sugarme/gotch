@@ -129,7 +129,9 @@ func freeCTensor(ts *Tensor) error {
 
 	// Just return if it has been deleted previously!
 	if unsafe.Pointer(ts.ctensor) == nil {
-		log.Printf("INFO: ctensor is nil. Nothing to delete here...\n")
+		if gotch.Debug {
+			log.Printf("INFO: ctensor is nil. Nothing to delete here...\n")
+		}
 		return nil
 	}
 

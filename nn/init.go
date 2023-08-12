@@ -245,7 +245,7 @@ func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device, dtype
 		retVal.Uniform_(-bound, bound)
 	*/
 
-	// For now, just make a random norm
+	// NOTE. For now, just make a random norm
 	retVal = ts.MustRandn(dims, dtype, device)
 
 	return retVal

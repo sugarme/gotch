@@ -100,7 +100,11 @@ func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 //		1 1 1 ]
 func (l *Linear) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
 	mul := xs.MustMatmul(l.Ws, false)
-	return mul.MustAdd(l.Bs, true)
+	if l.Bs != nil {
+		return mul.MustAdd(l.Bs, true)
+	} else {
+		return mul
+	}
 }
 
 // ForwardT implements ModuleT interface for Linear layer.
