@@ -86,13 +86,17 @@ func (r randnInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...got
 		dtype = dtypeOpt[0]
 	}
 
-	// if r.mean == 0 && math.Abs(r.stdev-1) <= math.SmallestNonzeroFloat64 {
-	if r.mean == 0 {
-		return ts.MustRandn(dims, dtype, device)
-	}
+	ts.NoGrad(func() {
+		// if r.mean == 0 && math.Abs(r.stdev-1) <= math.SmallestNonzeroFloat64 {
+		if r.mean == 0 {
+			retVal = ts.MustRandn(dims, dtype, device)
+		}
 
-	initTs := ts.MustRandn(dims, dtype, device)
-	return initTs.MustMulScalar(ts.FloatScalar(r.stdev), true).MustAddScalar(ts.FloatScalar(r.mean), true)
+		initTs := ts.MustRandn(dims, dtype, device)
+		retVal = initTs.MustMulScalar(ts.FloatScalar(r.stdev), true).MustAddScalar(ts.FloatScalar(r.mean), true)
+	})
+
+	return retVal
 }
 
 func (r randnInit) Set(tensor *ts.Tensor) {
@@ -101,9 +105,11 @@ func (r randnInit) Set(tensor *ts.Tensor) {
 		log.Fatalf("randInit - Set method call error: %v\n", err)
 	}
 
-	initTs := r.InitTensor(dims, tensor.MustDevice())
-	tensor.Copy_(initTs)
-	initTs.MustDrop()
+	ts.NoGrad(func() {
+		initTs := r.InitTensor(dims, tensor.MustDevice())
+		tensor.Copy_(initTs)
+		initTs.MustDrop()
+	})
 }
 
 // uniformInit :
@@ -127,11 +133,13 @@ func (u uniformInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...g
 	}
 
 	var err error
-	retVal = ts.MustZeros(dims, dtype, device)
-	retVal.Uniform_(u.lo, u.up)
-	if err != nil {
-		log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
-	}
+	ts.NoGrad(func() {
+		retVal = ts.MustZeros(dims, dtype, device)
+		retVal.Uniform_(u.lo, u.up)
+		if err != nil {
+			log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
+		}
+	})
 	return retVal
 }
 
@@ -230,8 +238,10 @@ func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device, dtype
 	// Calculate uniform bounds from standard deviation
 	bound := math.Sqrt(3.0) * std
 
-	retVal = ts.MustZeros(dims, dtype, device)
-	retVal.Uniform_(-bound, bound)
+	ts.NoGrad(func() {
+		retVal = ts.MustZeros(dims, dtype, device)
+		retVal.Uniform_(-bound, bound)
+	})
 
 	return retVal
 }

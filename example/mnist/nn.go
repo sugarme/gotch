@@ -5,6 +5,7 @@ import (
 	"log"
 	"runtime"
 
+	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/nn"
 	"github.com/sugarme/gotch/ts"
 	"github.com/sugarme/gotch/vision"
@@ -14,14 +15,13 @@ const (
 	ImageDimNN    int64 = 784
 	HiddenNodesNN int64 = 128
 	LabelNN       int64 = 10
-	// MnistDirNN    string = "../../data/mnist"
-	MnistDirNN string = "/mnt/projects/numbat/data/mnist"
 
 	epochsNN = 200
 
 	LrNN = 1e-3
 )
 
+var MnistDirNN string = fmt.Sprintf("%s/%s", gotch.CachedDir, "mnist")
 var l nn.Linear
 
 func netInit(vs *nn.Path) ts.Module {

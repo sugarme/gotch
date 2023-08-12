@@ -458,6 +458,20 @@ func (vs *VarStore) Summary() {
 	fmt.Printf("DType: %v\n", dtype)
 }
 
+// Destroy deletes all tensors in varstore and set it to nil.
+func (vs *VarStore) Destroy() {
+	vs.Lock()
+	for n, v := range vs.vars {
+		v.Tensor.MustDrop()
+
+		delete(vs.vars, n)
+	}
+
+	vs.Unlock()
+
+	vs = nil
+}
+
 // ToDType casts all variables in VarStore to specified DType.
 //
 // NOTE. only float-like types (Half, BFloat16, Float, Double) can ensure convertible.
