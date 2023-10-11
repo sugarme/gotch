@@ -505,14 +505,6 @@ func(ts *Tensor) Must_CholeskySolveHelperOut(out *Tensor, a *Tensor, upper bool,
   return retVal
 } 
 
-func Must_ChunkGradOutputsEfficientAttention(query *Tensor, key *Tensor, value *Tensor, isCausal bool)(retVal bool) { 
-  
-  retVal, err := _ChunkGradOutputsEfficientAttention(query, key, value, isCausal)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) Must_Coalesce(del bool)(retVal *Tensor) { 
   
   retVal, err := ts._Coalesce(del)
@@ -721,6 +713,22 @@ func(ts *Tensor) Must_CopyFromOut(out *Tensor, dst *Tensor, nonBlocking bool, de
   return retVal
 } 
 
+func Must_CsltCompress(input *Tensor)(retVal *Tensor) { 
+  
+  retVal, err := _CsltCompress(input)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func Must_CsltSparseMm(compressedA *Tensor, denseB *Tensor, bias *Tensor, transposeResult bool)(retVal *Tensor) { 
+  
+  retVal, err := _CsltSparseMm(compressedA, denseB, bias, transposeResult)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
 func Must_CtcLoss(logProbs *Tensor, targets *Tensor, inputLengths []int64, targetLengths []int64, blank int64, zeroInfinity bool)(retVal0 *Tensor, retVal1 *Tensor) { 
   
   retVal0, retVal1, err := _CtcLoss(logProbs, targets, inputLengths, targetLengths, blank, zeroInfinity)
@@ -849,22 +857,6 @@ func Must_CudnnRnnOut(out0 *Tensor, out1 *Tensor, out2 *Tensor, out3 *Tensor, ou
   return retVal0, retVal1, retVal2, retVal3, retVal4
 } 
 
-func Must_CufftGetPlanCacheMaxSize(deviceIndex int64)(retVal int64) { 
-  
-  retVal, err := _CufftGetPlanCacheMaxSize(deviceIndex)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func Must_CufftGetPlanCacheSize(deviceIndex int64)(retVal int64) { 
-  
-  retVal, err := _CufftGetPlanCacheSize(deviceIndex)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) Must_DebugHasInternalOverlap(del bool)(retVal int64) { 
   
   retVal, err := ts._DebugHasInternalOverlap(del)
@@ -913,12 +905,12 @@ func Must_DirichletGradOut(out *Tensor, x *Tensor, alpha *Tensor, total *Tensor)
   return retVal
 } 
 
-func Must_EfficientAttentionBackward(gradOut_ *Tensor, query *Tensor, key *Tensor, value *Tensor, out *Tensor, logsumexp *Tensor, isCausal bool, chunkGradOutputs bool)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
+func Must_EfficientAttentionBackward(gradOut_ *Tensor, query *Tensor, key *Tensor, value *Tensor, bias *Tensor, out *Tensor, cuSeqlensQ *Tensor, cuSeqlensK *Tensor, maxSeqlenK int64, maxSeqlenQ int64, logsumexp *Tensor, dropoutP float64, philoxSeed *Tensor, philoxOffset *Tensor, customMaskType int64, biasRequiresGrad bool, scale []float64, numSplitsKey []int64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor) { 
   
-  retVal0, retVal1, retVal2, err := _EfficientAttentionBackward(gradOut_, query, key, value, out, logsumexp, isCausal, chunkGradOutputs)
+  retVal0, retVal1, retVal2, retVal3, err := _EfficientAttentionBackward(gradOut_, query, key, value, bias, out, cuSeqlensQ, cuSeqlensK, maxSeqlenK, maxSeqlenQ, logsumexp, dropoutP, philoxSeed, philoxOffset, customMaskType, biasRequiresGrad, scale, numSplitsKey)
   if err != nil { log.Fatal(err) }
   
-  return retVal0, retVal1, retVal2
+  return retVal0, retVal1, retVal2, retVal3
 } 
 
 func Must_Efficientzerotensor(size []int64, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
@@ -1177,9 +1169,17 @@ func(ts *Tensor) Must_FftR2cOut(out *Tensor, dim []int64, normalization int64, o
   return retVal
 } 
 
-func Must_FlashAttentionBackward(gradOut *Tensor, query *Tensor, key *Tensor, value *Tensor, out *Tensor, logsumexp *Tensor, cumSeqQ *Tensor, cumSeqK *Tensor, maxQ int64, maxK int64, dropoutP float64, isCausal bool, philoxSeed int64, philoxOffset int64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
+func(ts *Tensor) Must_FillMemEffDropoutMask_(dropoutP float64, seed int64, offset int64)() { 
   
-  retVal0, retVal1, retVal2, err := _FlashAttentionBackward(gradOut, query, key, value, out, logsumexp, cumSeqQ, cumSeqK, maxQ, maxK, dropoutP, isCausal, philoxSeed, philoxOffset)
+  err := ts._FillMemEffDropoutMask_(dropoutP, seed, offset)
+  if err != nil { log.Fatal(err) }
+  
+  return 
+} 
+
+func Must_FlashAttentionBackward(gradOut *Tensor, query *Tensor, key *Tensor, value *Tensor, out *Tensor, logsumexp *Tensor, cumSeqQ *Tensor, cumSeqK *Tensor, maxQ int64, maxK int64, dropoutP float64, isCausal bool, philoxSeed *Tensor, philoxOffset *Tensor, scale []float64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
+  
+  retVal0, retVal1, retVal2, err := _FlashAttentionBackward(gradOut, query, key, value, out, logsumexp, cumSeqQ, cumSeqK, maxQ, maxK, dropoutP, isCausal, philoxSeed, philoxOffset, scale)
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1, retVal2
@@ -1196,6 +1196,30 @@ func(ts *Tensor) Must_Foobar(arg1 bool, arg2 bool, arg3 bool, del bool)(retVal *
 func(ts *Tensor) Must_FoobarOut(out *Tensor, arg1 bool, arg2 bool, arg3 bool, del bool)(retVal *Tensor) { 
   
   retVal, err := ts._FoobarOut(out, arg1, arg2, arg3, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_FunctionalAssertAsync(assertMsg string, depToken *Tensor, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._FunctionalAssertAsync(assertMsg, depToken, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func Must_FunctionalSymConstrainRange(size *Scalar, min []int64, max []int64, depToken *Tensor)(retVal *Tensor) { 
+  
+  retVal, err := _FunctionalSymConstrainRange(size, min, max, depToken)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func Must_FunctionalSymConstrainRangeForSize(size *Scalar, min []int64, max []int64, depToken *Tensor)(retVal *Tensor) { 
+  
+  retVal, err := _FunctionalSymConstrainRangeForSize(size, min, max, depToken)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -1241,9 +1265,9 @@ func(ts *Tensor) Must_FusedMovingAvgObsFqHelperOut(out0 *Tensor, out1 *Tensor, o
   return retVal0, retVal1
 } 
 
-func Must_FusedSdpChoice(query *Tensor, key *Tensor, value *Tensor, attnMask *Tensor, dropoutP float64, isCausal bool)(retVal int64) { 
+func Must_FusedSdpChoice(query *Tensor, key *Tensor, value *Tensor, attnMask *Tensor, dropoutP float64, isCausal bool, scale []float64)(retVal int64) { 
   
-  retVal, err := _FusedSdpChoice(query, key, value, attnMask, dropoutP, isCausal)
+  retVal, err := _FusedSdpChoice(query, key, value, attnMask, dropoutP, isCausal, scale)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -1380,6 +1404,22 @@ func(ts *Tensor) Must_IndicesCopy(del bool)(retVal *Tensor) {
 func(ts *Tensor) Must_IndicesCopyOut(out *Tensor, del bool)(retVal *Tensor) { 
   
   retVal, err := ts._IndicesCopyOut(out, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_IntMm(mat2 *Tensor, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._IntMm(mat2, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_IntMmOut(out *Tensor, mat2 *Tensor, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._IntMmOut(out, mat2, del)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -1559,6 +1599,14 @@ func(ts *Tensor) Must_LuWithInfo(pivot bool, checkErrors bool, del bool)(retVal0
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1, retVal2
+} 
+
+func Must_MakeDepToken(optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
+  
+  retVal, err := _MakeDepToken(optionsKind, optionsDevice)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
 } 
 
 func Must_MakeDual(primal *Tensor, tangent *Tensor, level int64)(retVal *Tensor) { 
@@ -1769,28 +1817,28 @@ func Must_NativeBatchNormLegitNoStatsOut(out *Tensor, saveMean *Tensor, saveInvs
   return retVal0, retVal1, retVal2
 } 
 
+func Must_NativeBatchNormLegitNoTraining(input *Tensor, weight *Tensor, bias *Tensor, runningMean *Tensor, runningVar *Tensor, momentum float64, eps float64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
+  
+  retVal0, retVal1, retVal2, err := _NativeBatchNormLegitNoTraining(input, weight, bias, runningMean, runningVar, momentum, eps)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal0, retVal1, retVal2
+} 
+
+func Must_NativeBatchNormLegitNoTrainingOut(out0 *Tensor, out1 *Tensor, out2 *Tensor, input *Tensor, weight *Tensor, bias *Tensor, runningMean *Tensor, runningVar *Tensor, momentum float64, eps float64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
+  
+  retVal0, retVal1, retVal2, err := _NativeBatchNormLegitNoTrainingOut(out0, out1, out2, input, weight, bias, runningMean, runningVar, momentum, eps)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal0, retVal1, retVal2
+} 
+
 func Must_NativeBatchNormLegitOut(out *Tensor, saveMean *Tensor, saveInvstd *Tensor, input *Tensor, weight *Tensor, bias *Tensor, runningMean *Tensor, runningVar *Tensor, training bool, momentum float64, eps float64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
   
   retVal0, retVal1, retVal2, err := _NativeBatchNormLegitOut(out, saveMean, saveInvstd, input, weight, bias, runningMean, runningVar, training, momentum, eps)
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1, retVal2
-} 
-
-func Must_NativeDecoderOnlyMultiHeadAttention(query *Tensor, key *Tensor, value *Tensor, embedDim int64, numHead int64, qkvWeight *Tensor, qkvBias *Tensor, projWeight *Tensor, projBias *Tensor, mask *Tensor, incrKey *Tensor, incrValue *Tensor, needWeights bool, averageAttnWeights bool)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor) { 
-  
-  retVal0, retVal1, retVal2, retVal3, err := _NativeDecoderOnlyMultiHeadAttention(query, key, value, embedDim, numHead, qkvWeight, qkvBias, projWeight, projBias, mask, incrKey, incrValue, needWeights, averageAttnWeights)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal0, retVal1, retVal2, retVal3
-} 
-
-func Must_NativeDecoderOnlyMultiHeadAttentionOut(out0 *Tensor, out1 *Tensor, out2 *Tensor, out3 *Tensor, query *Tensor, key *Tensor, value *Tensor, embedDim int64, numHead int64, qkvWeight *Tensor, qkvBias *Tensor, projWeight *Tensor, projBias *Tensor, mask *Tensor, incrKey *Tensor, incrValue *Tensor, needWeights bool, averageAttnWeights bool)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor) { 
-  
-  retVal0, retVal1, retVal2, retVal3, err := _NativeDecoderOnlyMultiHeadAttentionOut(out0, out1, out2, out3, query, key, value, embedDim, numHead, qkvWeight, qkvBias, projWeight, projBias, mask, incrKey, incrValue, needWeights, averageAttnWeights)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal0, retVal1, retVal2, retVal3
 } 
 
 func Must_NativeMultiHeadAttention(query *Tensor, key *Tensor, value *Tensor, embedDim int64, numHead int64, qkvWeight *Tensor, qkvBias *Tensor, projWeight *Tensor, projBias *Tensor, mask *Tensor, needWeights bool, averageAttnWeights bool, maskType []int64)(retVal0 *Tensor, retVal1 *Tensor) { 
@@ -1881,7 +1929,7 @@ func(ts *Tensor) Must_NestedSumBackward(grad *Tensor, dim []int64, keepdim bool,
   return retVal
 } 
 
-func(ts *Tensor) Must_NestedViewFromBuffer(nestedSize *Tensor, nestedStrides *Tensor, offsets []int64, del bool)(retVal *Tensor) { 
+func(ts *Tensor) Must_NestedViewFromBuffer(nestedSize *Tensor, nestedStrides *Tensor, offsets *Tensor, del bool)(retVal *Tensor) { 
   
   retVal, err := ts._NestedViewFromBuffer(nestedSize, nestedStrides, offsets, del)
   if err != nil { log.Fatal(err) }
@@ -1889,7 +1937,7 @@ func(ts *Tensor) Must_NestedViewFromBuffer(nestedSize *Tensor, nestedStrides *Te
   return retVal
 } 
 
-func(ts *Tensor) Must_NestedViewFromBufferCopy(nestedSize *Tensor, nestedStrides *Tensor, offsets []int64, del bool)(retVal *Tensor) { 
+func(ts *Tensor) Must_NestedViewFromBufferCopy(nestedSize *Tensor, nestedStrides *Tensor, offsets *Tensor, del bool)(retVal *Tensor) { 
   
   retVal, err := ts._NestedViewFromBufferCopy(nestedSize, nestedStrides, offsets, del)
   if err != nil { log.Fatal(err) }
@@ -1897,7 +1945,7 @@ func(ts *Tensor) Must_NestedViewFromBufferCopy(nestedSize *Tensor, nestedStrides
   return retVal
 } 
 
-func(ts *Tensor) Must_NestedViewFromBufferCopyOut(out *Tensor, nestedSize *Tensor, nestedStrides *Tensor, offsets []int64, del bool)(retVal *Tensor) { 
+func(ts *Tensor) Must_NestedViewFromBufferCopyOut(out *Tensor, nestedSize *Tensor, nestedStrides *Tensor, offsets *Tensor, del bool)(retVal *Tensor) { 
   
   retVal, err := ts._NestedViewFromBufferCopyOut(out, nestedSize, nestedStrides, offsets, del)
   if err != nil { log.Fatal(err) }
@@ -2153,44 +2201,68 @@ func Must_SaturateWeightToFp16(weight *Tensor)(retVal *Tensor) {
   return retVal
 } 
 
-func Must_ScaledDotProductAttention(query *Tensor, key *Tensor, value *Tensor, attnMask *Tensor, dropoutP float64, needAttnWeights bool, isCausal bool)(retVal0 *Tensor, retVal1 *Tensor) { 
+func Must_ScaledDotProductAttentionMath(query *Tensor, key *Tensor, value *Tensor, attnMask *Tensor, dropoutP float64, isCausal bool, dropoutMask *Tensor, scale []float64)(retVal0 *Tensor, retVal1 *Tensor) { 
   
-  retVal0, retVal1, err := _ScaledDotProductAttention(query, key, value, attnMask, dropoutP, needAttnWeights, isCausal)
+  retVal0, retVal1, err := _ScaledDotProductAttentionMath(query, key, value, attnMask, dropoutP, isCausal, dropoutMask, scale)
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1
 } 
 
-func Must_ScaledDotProductAttentionMath(query *Tensor, key *Tensor, value *Tensor, attnMask *Tensor, dropoutP float64, isCausal bool, dropoutMask *Tensor)(retVal0 *Tensor, retVal1 *Tensor) { 
+func Must_ScaledDotProductEfficientAttention(query *Tensor, key *Tensor, value *Tensor, attnBias *Tensor, computeLogSumexp bool, dropoutP float64, isCausal bool, scale []float64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor, retVal3 *Tensor) { 
   
-  retVal0, retVal1, err := _ScaledDotProductAttentionMath(query, key, value, attnMask, dropoutP, isCausal, dropoutMask)
+  retVal0, retVal1, retVal2, retVal3, err := _ScaledDotProductEfficientAttention(query, key, value, attnBias, computeLogSumexp, dropoutP, isCausal, scale)
   if err != nil { log.Fatal(err) }
   
-  return retVal0, retVal1
+  return retVal0, retVal1, retVal2, retVal3
 } 
 
-func Must_ScaledDotProductEfficientAttention(query *Tensor, key *Tensor, value *Tensor, computeLogSumexp bool, isCausal bool)(retVal0 *Tensor, retVal1 *Tensor) { 
+func Must_ScaledDotProductFlashAttentionBackward(gradOut *Tensor, query *Tensor, key *Tensor, value *Tensor, out *Tensor, logsumexp *Tensor, cumSeqQ *Tensor, cumSeqK *Tensor, maxQ int64, maxK int64, dropoutP float64, isCausal bool, philoxSeed *Tensor, philoxOffset *Tensor, scale []float64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
   
-  retVal0, retVal1, err := _ScaledDotProductEfficientAttention(query, key, value, computeLogSumexp, isCausal)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal0, retVal1
-} 
-
-func Must_ScaledDotProductEfficientAttentionBackward(gradOut_ *Tensor, query *Tensor, key *Tensor, value *Tensor, out *Tensor, logsumexp *Tensor, isCausal bool, chunkGradOutputs bool)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
-  
-  retVal0, retVal1, retVal2, err := _ScaledDotProductEfficientAttentionBackward(gradOut_, query, key, value, out, logsumexp, isCausal, chunkGradOutputs)
+  retVal0, retVal1, retVal2, err := _ScaledDotProductFlashAttentionBackward(gradOut, query, key, value, out, logsumexp, cumSeqQ, cumSeqK, maxQ, maxK, dropoutP, isCausal, philoxSeed, philoxOffset, scale)
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1, retVal2
 } 
 
-func Must_ScaledDotProductFlashAttentionBackward(gradOut *Tensor, query *Tensor, key *Tensor, value *Tensor, out *Tensor, logsumexp *Tensor, cumSeqQ *Tensor, cumSeqK *Tensor, maxQ int64, maxK int64, dropoutP float64, isCausal bool, philoxSeed int64, philoxOffset int64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
+func(ts *Tensor) Must_ScaledMm(mat2 *Tensor, bias *Tensor, outDtype gotch.DType, scaleA *Tensor, scaleB *Tensor, scaleResult *Tensor, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
   
-  retVal0, retVal1, retVal2, err := _ScaledDotProductFlashAttentionBackward(gradOut, query, key, value, out, logsumexp, cumSeqQ, cumSeqK, maxQ, maxK, dropoutP, isCausal, philoxSeed, philoxOffset)
+  retVal0, retVal1, err := ts._ScaledMm(mat2, bias, outDtype, scaleA, scaleB, scaleResult, del)
   if err != nil { log.Fatal(err) }
   
-  return retVal0, retVal1, retVal2
+  return retVal0, retVal1
+} 
+
+func(ts *Tensor) Must_ScaledMmOut(out *Tensor, outAmax *Tensor, mat2 *Tensor, bias *Tensor, outDtype gotch.DType, scaleA *Tensor, scaleB *Tensor, scaleResult *Tensor, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
+  
+  retVal0, retVal1, err := ts._ScaledMmOut(out, outAmax, mat2, bias, outDtype, scaleA, scaleB, scaleResult, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal0, retVal1
+} 
+
+func(ts *Tensor) Must_ScatterReduce(dim int64, index *Tensor, src *Tensor, reduce string, includeSelf bool, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ScatterReduce(dim, index, src, reduce, includeSelf, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ScatterReduce_(dim int64, index *Tensor, src *Tensor, reduce string, includeSelf bool)() { 
+  
+  err := ts._ScatterReduce_(dim, index, src, reduce, includeSelf)
+  if err != nil { log.Fatal(err) }
+  
+  return 
+} 
+
+func(ts *Tensor) Must_ScatterReduceTwoOut(out *Tensor, dim int64, index *Tensor, src *Tensor, reduce string, includeSelf bool, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ScatterReduceTwoOut(out, dim, index, src, reduce, includeSelf, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
 } 
 
 func Must_SegmentReduceBackward(grad *Tensor, output *Tensor, data *Tensor, reduce string, lengths *Tensor, offsets *Tensor, axis int64, initial *Scalar)(retVal *Tensor) { 
@@ -2353,9 +2425,9 @@ func Must_SparseCompressedTensorUnsafe(compressedIndices *Tensor, plainIndices *
   return retVal
 } 
 
-func Must_SparseCooTensorUnsafe(indices *Tensor, values *Tensor, size []int64, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
+func Must_SparseCooTensorUnsafe(indices *Tensor, values *Tensor, size []int64, optionsKind gotch.DType, optionsDevice gotch.Device, isCoalesced bool)(retVal *Tensor) { 
   
-  retVal, err := _SparseCooTensorUnsafe(indices, values, size, optionsKind, optionsDevice)
+  retVal, err := _SparseCooTensorUnsafe(indices, values, size, optionsKind, optionsDevice, isCoalesced)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -2369,17 +2441,17 @@ func Must_SparseCooTensorWithDims(sparseDim int64, denseDim int64, size []int64,
   return retVal
 } 
 
-func Must_SparseCooTensorWithDimsAndTensors(sparseDim int64, denseDim int64, size []int64, indices *Tensor, values *Tensor, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
+func Must_SparseCooTensorWithDimsAndTensors(sparseDim int64, denseDim int64, size []int64, indices *Tensor, values *Tensor, optionsKind gotch.DType, optionsDevice gotch.Device, isCoalesced bool)(retVal *Tensor) { 
   
-  retVal, err := _SparseCooTensorWithDimsAndTensors(sparseDim, denseDim, size, indices, values, optionsKind, optionsDevice)
+  retVal, err := _SparseCooTensorWithDimsAndTensors(sparseDim, denseDim, size, indices, values, optionsKind, optionsDevice, isCoalesced)
   if err != nil { log.Fatal(err) }
   
   return retVal
 } 
 
-func Must_SparseCooTensorWithDimsAndTensorsOut(out *Tensor, sparseDim int64, denseDim int64, size []int64, indices *Tensor, values *Tensor)(retVal *Tensor) { 
+func Must_SparseCooTensorWithDimsAndTensorsOut(out *Tensor, sparseDim int64, denseDim int64, size []int64, indices *Tensor, values *Tensor, isCoalesced bool)(retVal *Tensor) { 
   
-  retVal, err := _SparseCooTensorWithDimsAndTensorsOut(out, sparseDim, denseDim, size, indices, values)
+  retVal, err := _SparseCooTensorWithDimsAndTensorsOut(out, sparseDim, denseDim, size, indices, values, isCoalesced)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -2481,6 +2553,22 @@ func(ts *Tensor) Must_SparseLogSoftmaxOut(out *Tensor, dim int64, halfToFloat bo
   return retVal
 } 
 
+func(ts *Tensor) Must_SparseMaskProjection(mask *Tensor, accumulateMatches bool, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._SparseMaskProjection(mask, accumulateMatches, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_SparseMaskProjectionOut(out *Tensor, mask *Tensor, accumulateMatches bool, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._SparseMaskProjectionOut(out, mask, accumulateMatches, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
 func Must_SparseMm(sparse *Tensor, dense *Tensor)(retVal *Tensor) { 
   
   retVal, err := _SparseMm(sparse, dense)
@@ -2503,6 +2591,14 @@ func(ts *Tensor) Must_SparseMmReduceImpl(other *Tensor, reduce string, del bool)
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1
+} 
+
+func Must_SparseSemiStructuredLinear(input *Tensor, weight *Tensor, meta *Tensor, bias *Tensor, activation string)(retVal *Tensor) { 
+  
+  retVal, err := _SparseSemiStructuredLinear(input, weight, meta, bias, activation)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
 } 
 
 func(ts *Tensor) Must_SparseSoftmax(dim int64, halfToFloat bool, del bool)(retVal *Tensor) { 
@@ -2753,6 +2849,22 @@ func(ts *Tensor) Must_TestCheckTensor(del bool)(retVal *Tensor) {
   return retVal
 } 
 
+func(ts *Tensor) Must_TestFunctorchFallback(other *Tensor, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._TestFunctorchFallback(other, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_TestFunctorchFallbackOut(out *Tensor, other *Tensor, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._TestFunctorchFallbackOut(out, other, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
 func Must_TestOptionalFilledIntlist(values *Tensor, addends []int64)(retVal *Tensor) { 
   
   retVal, err := _TestOptionalFilledIntlist(values, addends)
@@ -2849,17 +2961,121 @@ func(ts *Tensor) Must_ToCopyOut(out *Tensor, nonBlocking bool, del bool)(retVal 
   return retVal
 } 
 
-func(ts *Tensor) Must_ToDense(dtype gotch.DType, del bool)(retVal *Tensor) { 
+func(ts *Tensor) Must_ToDense(dtype gotch.DType, maskedGrad bool, del bool)(retVal *Tensor) { 
   
-  retVal, err := ts._ToDense(dtype, del)
+  retVal, err := ts._ToDense(dtype, maskedGrad, del)
   if err != nil { log.Fatal(err) }
   
   return retVal
 } 
 
-func(ts *Tensor) Must_ToDenseOut(out *Tensor, dtype gotch.DType, del bool)(retVal *Tensor) { 
+func(ts *Tensor) Must_ToDenseOut(out *Tensor, dtype gotch.DType, maskedGrad bool, del bool)(retVal *Tensor) { 
   
-  retVal, err := ts._ToDenseOut(out, dtype, del)
+  retVal, err := ts._ToDenseOut(out, dtype, maskedGrad, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparse(layout Layout, blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparse(layout, blocksize, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseBsc(blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseBsc(blocksize, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseBscOut(out *Tensor, blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseBscOut(out, blocksize, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseBsr(blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseBsr(blocksize, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseBsrOut(out *Tensor, blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseBsrOut(out, blocksize, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseCsc(denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseCsc(denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseCscOut(out *Tensor, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseCscOut(out, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseCsr(denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseCsr(denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseCsrOut(out *Tensor, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseCsrOut(out, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseOut(out *Tensor, layout Layout, blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseOut(out, layout, blocksize, denseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func Must_ToSparseSemiStructured(dense *Tensor)(retVal0 *Tensor, retVal1 *Tensor) { 
+  
+  retVal0, retVal1, err := _ToSparseSemiStructured(dense)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal0, retVal1
+} 
+
+func(ts *Tensor) Must_ToSparseSparseDim(sparseDim int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseSparseDim(sparseDim, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_ToSparseSparseDimOut(out *Tensor, sparseDim int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._ToSparseSparseDimOut(out, sparseDim, del)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -2876,22 +3092,6 @@ func Must_TransformBiasRescaleQkv(qkv *Tensor, qkvBias *Tensor, numHeads int64)(
 func Must_TransformBiasRescaleQkvOut(out0 *Tensor, out1 *Tensor, out2 *Tensor, qkv *Tensor, qkvBias *Tensor, numHeads int64)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
   
   retVal0, retVal1, retVal2, err := _TransformBiasRescaleQkvOut(out0, out1, out2, qkv, qkvBias, numHeads)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal0, retVal1, retVal2
-} 
-
-func Must_TransformerDecoderOnlyLayerFwd(src *Tensor, embedDim int64, numHeads int64, qkvWeight *Tensor, qkvBias *Tensor, projWeight *Tensor, projBias *Tensor, useGelu bool, normFirst bool, eps float64, normWeight1 *Tensor, normBias1 *Tensor, normWeight2 *Tensor, normBias2 *Tensor, ffnWeight1 *Tensor, ffnBias1 *Tensor, ffnWeight2 *Tensor, ffnBias2 *Tensor, mask *Tensor, incrKey *Tensor, incrValue *Tensor)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
-  
-  retVal0, retVal1, retVal2, err := _TransformerDecoderOnlyLayerFwd(src, embedDim, numHeads, qkvWeight, qkvBias, projWeight, projBias, useGelu, normFirst, eps, normWeight1, normBias1, normWeight2, normBias2, ffnWeight1, ffnBias1, ffnWeight2, ffnBias2, mask, incrKey, incrValue)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal0, retVal1, retVal2
-} 
-
-func Must_TransformerDecoderOnlyLayerFwdOut(out0 *Tensor, out1 *Tensor, out2 *Tensor, src *Tensor, embedDim int64, numHeads int64, qkvWeight *Tensor, qkvBias *Tensor, projWeight *Tensor, projBias *Tensor, useGelu bool, normFirst bool, eps float64, normWeight1 *Tensor, normBias1 *Tensor, normWeight2 *Tensor, normBias2 *Tensor, ffnWeight1 *Tensor, ffnBias1 *Tensor, ffnWeight2 *Tensor, ffnBias2 *Tensor, mask *Tensor, incrKey *Tensor, incrValue *Tensor)(retVal0 *Tensor, retVal1 *Tensor, retVal2 *Tensor) { 
-  
-  retVal0, retVal1, retVal2, err := _TransformerDecoderOnlyLayerFwdOut(out0, out1, out2, src, embedDim, numHeads, qkvWeight, qkvBias, projWeight, projBias, useGelu, normFirst, eps, normWeight1, normBias1, normWeight2, normBias2, ffnWeight1, ffnBias1, ffnWeight2, ffnBias2, mask, incrKey, incrValue)
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1, retVal2
@@ -2999,6 +3199,22 @@ func Must_UnpackDual(dual *Tensor, level int64)(retVal0 *Tensor, retVal1 *Tensor
   if err != nil { log.Fatal(err) }
   
   return retVal0, retVal1
+} 
+
+func(ts *Tensor) Must_UnsafeIndex(indices []*Tensor, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._UnsafeIndex(indices, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) Must_UnsafeIndexPut(indices []*Tensor, values *Tensor, accumulate bool, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts._UnsafeIndexPut(indices, values, accumulate, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
 } 
 
 func(ts *Tensor) Must_UnsafeView(size []int64, del bool)(retVal *Tensor) { 
@@ -4529,17 +4745,17 @@ func MustBatchNorm(input *Tensor, weight *Tensor, bias *Tensor, runningMean *Ten
   return retVal
 } 
 
-func MustBatchNormBackwardElemt(gradOut *Tensor, input *Tensor, mean *Tensor, invstd *Tensor, weight *Tensor, meanDy *Tensor, meanDyXmu *Tensor, count *Tensor)(retVal *Tensor) { 
+func MustBatchNormBackwardElemt(gradOut *Tensor, input *Tensor, mean *Tensor, invstd *Tensor, weight *Tensor, sumDy *Tensor, sumDyXmu *Tensor, count *Tensor)(retVal *Tensor) { 
   
-  retVal, err := BatchNormBackwardElemt(gradOut, input, mean, invstd, weight, meanDy, meanDyXmu, count)
+  retVal, err := BatchNormBackwardElemt(gradOut, input, mean, invstd, weight, sumDy, sumDyXmu, count)
   if err != nil { log.Fatal(err) }
   
   return retVal
 } 
 
-func MustBatchNormBackwardElemtOut(out *Tensor, gradOut *Tensor, input *Tensor, mean *Tensor, invstd *Tensor, weight *Tensor, meanDy *Tensor, meanDyXmu *Tensor, count *Tensor)(retVal *Tensor) { 
+func MustBatchNormBackwardElemtOut(out *Tensor, gradOut *Tensor, input *Tensor, mean *Tensor, invstd *Tensor, weight *Tensor, sumDy *Tensor, sumDyXmu *Tensor, count *Tensor)(retVal *Tensor) { 
   
-  retVal, err := BatchNormBackwardElemtOut(out, gradOut, input, mean, invstd, weight, meanDy, meanDyXmu, count)
+  retVal, err := BatchNormBackwardElemtOut(out, gradOut, input, mean, invstd, weight, sumDy, sumDyXmu, count)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -7140,6 +7356,22 @@ func(ts *Tensor) MustEmptyLikeOut(out *Tensor, del bool)(retVal *Tensor) {
 func MustEmptyOut(out *Tensor, size []int64)(retVal *Tensor) { 
   
   retVal, err := EmptyOut(out, size)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func MustEmptyPermuted(size []int64, physicalLayout []int64, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
+  
+  retVal, err := EmptyPermuted(size, physicalLayout, optionsKind, optionsDevice)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func MustEmptyPermutedOut(out *Tensor, size []int64, physicalLayout []int64)(retVal *Tensor) { 
+  
+  retVal, err := EmptyPermutedOut(out, size, physicalLayout)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -12121,6 +12353,14 @@ func(ts *Tensor) MustMinOut(out *Tensor, other *Tensor, del bool)(retVal *Tensor
   return retVal
 } 
 
+func(ts *Tensor) MustMinUnaryOut(out *Tensor, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts.MinUnaryOut(out, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
 func(ts *Tensor) MustMinimum(other *Tensor, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.Minimum(other, del)
@@ -13385,6 +13625,22 @@ func(ts *Tensor) MustNonzeroOut(out *Tensor, del bool)(retVal *Tensor) {
   return retVal
 } 
 
+func(ts *Tensor) MustNonzeroStatic(size int64, fillValue int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts.NonzeroStatic(size, fillValue, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) MustNonzeroStaticOut(out *Tensor, size int64, fillValue int64, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts.NonzeroStaticOut(out, size, fillValue, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
 func(ts *Tensor) MustNorm(del bool)(retVal *Tensor) { 
   
   retVal, err := ts.Norm(del)
@@ -14172,6 +14428,22 @@ func(ts *Tensor) MustQuantizedMaxPool2d(kernelSize []int64, stride []int64, padd
 func(ts *Tensor) MustQuantizedMaxPool2dOut(out *Tensor, kernelSize []int64, stride []int64, padding []int64, dilation []int64, ceilMode bool, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.QuantizedMaxPool2dOut(out, kernelSize, stride, padding, dilation, ceilMode, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) MustQuantizedMaxPool3d(kernelSize []int64, stride []int64, padding []int64, dilation []int64, ceilMode bool, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts.QuantizedMaxPool3d(kernelSize, stride, padding, dilation, ceilMode, del)
+  if err != nil { log.Fatal(err) }
+  
+  return retVal
+} 
+
+func(ts *Tensor) MustQuantizedMaxPool3dOut(out *Tensor, kernelSize []int64, stride []int64, padding []int64, dilation []int64, ceilMode bool, del bool)(retVal *Tensor) { 
+  
+  retVal, err := ts.QuantizedMaxPool3dOut(out, kernelSize, stride, padding, dilation, ceilMode, del)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -15289,9 +15561,9 @@ func MustScalarTensorOut(out *Tensor, s *Scalar)(retVal *Tensor) {
   return retVal
 } 
 
-func MustScaledDotProductAttention(query *Tensor, key *Tensor, value *Tensor, attnMask *Tensor, dropoutP float64, isCausal bool)(retVal *Tensor) { 
+func MustScaledDotProductAttention(query *Tensor, key *Tensor, value *Tensor, attnMask *Tensor, dropoutP float64, isCausal bool, scale []float64)(retVal *Tensor) { 
   
-  retVal, err := ScaledDotProductAttention(query, key, value, attnMask, dropoutP, isCausal)
+  retVal, err := ScaledDotProductAttention(query, key, value, attnMask, dropoutP, isCausal, scale)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -16209,17 +16481,17 @@ func MustSparseCooTensor(size []int64, optionsKind gotch.DType, optionsDevice go
   return retVal
 } 
 
-func MustSparseCooTensorIndices(indices *Tensor, values *Tensor, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
+func MustSparseCooTensorIndices(indices *Tensor, values *Tensor, optionsKind gotch.DType, optionsDevice gotch.Device, isCoalesced bool)(retVal *Tensor) { 
   
-  retVal, err := SparseCooTensorIndices(indices, values, optionsKind, optionsDevice)
+  retVal, err := SparseCooTensorIndices(indices, values, optionsKind, optionsDevice, isCoalesced)
   if err != nil { log.Fatal(err) }
   
   return retVal
 } 
 
-func MustSparseCooTensorIndicesSize(indices *Tensor, values *Tensor, size []int64, optionsKind gotch.DType, optionsDevice gotch.Device)(retVal *Tensor) { 
+func MustSparseCooTensorIndicesSize(indices *Tensor, values *Tensor, size []int64, optionsKind gotch.DType, optionsDevice gotch.Device, isCoalesced bool)(retVal *Tensor) { 
   
-  retVal, err := SparseCooTensorIndicesSize(indices, values, size, optionsKind, optionsDevice)
+  retVal, err := SparseCooTensorIndicesSize(indices, values, size, optionsKind, optionsDevice, isCoalesced)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -17897,7 +18169,7 @@ func(ts *Tensor) MustStd(unbiased bool, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) MustStdCorrection(dim []int64, correction []int64, keepdim bool, del bool)(retVal *Tensor) { 
+func(ts *Tensor) MustStdCorrection(dim []int64, correction *Scalar, keepdim bool, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.StdCorrection(dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }
@@ -17905,7 +18177,7 @@ func(ts *Tensor) MustStdCorrection(dim []int64, correction []int64, keepdim bool
   return retVal
 } 
 
-func(ts *Tensor) MustStdCorrectionOut(out *Tensor, dim []int64, correction []int64, keepdim bool, del bool)(retVal *Tensor) { 
+func(ts *Tensor) MustStdCorrectionOut(out *Tensor, dim []int64, correction *Scalar, keepdim bool, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.StdCorrectionOut(out, dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }
@@ -17929,7 +18201,7 @@ func(ts *Tensor) MustStdMean(unbiased bool, del bool)(retVal0 *Tensor, retVal1 *
   return retVal0, retVal1
 } 
 
-func(ts *Tensor) MustStdMeanCorrection(dim []int64, correction []int64, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
+func(ts *Tensor) MustStdMeanCorrection(dim []int64, correction *Scalar, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
   
   retVal0, retVal1, err := ts.StdMeanCorrection(dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }
@@ -17937,7 +18209,7 @@ func(ts *Tensor) MustStdMeanCorrection(dim []int64, correction []int64, keepdim 
   return retVal0, retVal1
 } 
 
-func(ts *Tensor) MustStdMeanCorrectionOut(out0 *Tensor, out1 *Tensor, dim []int64, correction []int64, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
+func(ts *Tensor) MustStdMeanCorrectionOut(out0 *Tensor, out1 *Tensor, dim []int64, correction *Scalar, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
   
   retVal0, retVal1, err := ts.StdMeanCorrectionOut(out0, out1, dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }
@@ -18353,17 +18625,17 @@ func(ts *Tensor) MustTo(device gotch.Device, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) MustToDense(dtype gotch.DType, del bool)(retVal *Tensor) { 
+func(ts *Tensor) MustToDense(dtype gotch.DType, maskedGrad bool, del bool)(retVal *Tensor) { 
   
-  retVal, err := ts.ToDense(dtype, del)
+  retVal, err := ts.ToDense(dtype, maskedGrad, del)
   if err != nil { log.Fatal(err) }
   
   return retVal
 } 
 
-func MustToDenseBackward(grad *Tensor, input *Tensor)(retVal *Tensor) { 
+func MustToDenseBackward(grad *Tensor, input *Tensor, maskedGrad bool)(retVal *Tensor) { 
   
-  retVal, err := ToDenseBackward(grad, input)
+  retVal, err := ToDenseBackward(grad, input, maskedGrad)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -18457,25 +18729,9 @@ func(ts *Tensor) MustToSparseBsc(blocksize []int64, denseDim []int64, del bool)(
   return retVal
 } 
 
-func(ts *Tensor) MustToSparseBscOut(out *Tensor, blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.ToSparseBscOut(out, blocksize, denseDim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) MustToSparseBsr(blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.ToSparseBsr(blocksize, denseDim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) MustToSparseBsrOut(out *Tensor, blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.ToSparseBsrOut(out, blocksize, denseDim, del)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -18489,14 +18745,6 @@ func(ts *Tensor) MustToSparseCsc(denseDim []int64, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) MustToSparseCscOut(out *Tensor, denseDim []int64, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.ToSparseCscOut(out, denseDim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) MustToSparseCsr(denseDim []int64, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.ToSparseCsr(denseDim, del)
@@ -18505,33 +18753,9 @@ func(ts *Tensor) MustToSparseCsr(denseDim []int64, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) MustToSparseCsrOut(out *Tensor, denseDim []int64, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.ToSparseCsrOut(out, denseDim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) MustToSparseOut(out *Tensor, layout Layout, blocksize []int64, denseDim []int64, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.ToSparseOut(out, layout, blocksize, denseDim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
 func(ts *Tensor) MustToSparseSparseDim(sparseDim int64, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.ToSparseSparseDim(sparseDim, del)
-  if err != nil { log.Fatal(err) }
-  
-  return retVal
-} 
-
-func(ts *Tensor) MustToSparseSparseDimOut(out *Tensor, sparseDim int64, del bool)(retVal *Tensor) { 
-  
-  retVal, err := ts.ToSparseSparseDimOut(out, sparseDim, del)
   if err != nil { log.Fatal(err) }
   
   return retVal
@@ -19305,7 +19529,7 @@ func(ts *Tensor) MustVar(unbiased bool, del bool)(retVal *Tensor) {
   return retVal
 } 
 
-func(ts *Tensor) MustVarCorrection(dim []int64, correction []int64, keepdim bool, del bool)(retVal *Tensor) { 
+func(ts *Tensor) MustVarCorrection(dim []int64, correction *Scalar, keepdim bool, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.VarCorrection(dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }
@@ -19313,7 +19537,7 @@ func(ts *Tensor) MustVarCorrection(dim []int64, correction []int64, keepdim bool
   return retVal
 } 
 
-func(ts *Tensor) MustVarCorrectionOut(out *Tensor, dim []int64, correction []int64, keepdim bool, del bool)(retVal *Tensor) { 
+func(ts *Tensor) MustVarCorrectionOut(out *Tensor, dim []int64, correction *Scalar, keepdim bool, del bool)(retVal *Tensor) { 
   
   retVal, err := ts.VarCorrectionOut(out, dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }
@@ -19337,7 +19561,7 @@ func(ts *Tensor) MustVarMean(unbiased bool, del bool)(retVal0 *Tensor, retVal1 *
   return retVal0, retVal1
 } 
 
-func(ts *Tensor) MustVarMeanCorrection(dim []int64, correction []int64, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
+func(ts *Tensor) MustVarMeanCorrection(dim []int64, correction *Scalar, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
   
   retVal0, retVal1, err := ts.VarMeanCorrection(dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }
@@ -19345,7 +19569,7 @@ func(ts *Tensor) MustVarMeanCorrection(dim []int64, correction []int64, keepdim 
   return retVal0, retVal1
 } 
 
-func(ts *Tensor) MustVarMeanCorrectionOut(out0 *Tensor, out1 *Tensor, dim []int64, correction []int64, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
+func(ts *Tensor) MustVarMeanCorrectionOut(out0 *Tensor, out1 *Tensor, dim []int64, correction *Scalar, keepdim bool, del bool)(retVal0 *Tensor, retVal1 *Tensor) { 
   
   retVal0, retVal1, err := ts.VarMeanCorrectionOut(out0, out1, dim, correction, keepdim, del)
   if err != nil { log.Fatal(err) }

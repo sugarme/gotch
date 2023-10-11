@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
+# [0.9.0]
+- Upgrade libtorch v2.1.0
 
 # [0.8.0]
 - Upgrade libtorch v2.0.0

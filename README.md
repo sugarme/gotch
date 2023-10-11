@@ -3,10 +3,10 @@
 
 ## Overview
 
-`gotch` creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (>2500) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
+`gotch` creates a thin wrapper to Pytorch C++ APIs (Libtorch) to make use of its already optimized C++ tensor APIs (3039) and dynamic graph computation with CUDA support and provides idiomatic Go APIs for developing and implementing Deep Learning in Go.
 
 **Some features are**
-- [x] Comprehensive Pytorch tensor APIs
+- [x] Comprehensive Pytorch tensor APIs (2525)
 - [x] Fully featured Pytorch dynamic graph computation
 - [x] JIT interface to run model trained/saved using PyTorch Python API
 - [x] Load pretrained Pytorch models and run inference
@@ -16,16 +16,17 @@
 
 `gotch` is in active development mode and may have API breaking changes. Feel free to pull request, report issues or discuss any concerns. All contributions are welcome. 
 
-`gotch` current version is **v0.8.0**
+`gotch` current version is **v0.9.0**
 
 ## Dependencies
 
-- **Libtorch** C++ v2.0.1 library of [Pytorch](https://pytorch.org/)
+- **Libtorch** C++ v2.1.0 library of [Pytorch](https://pytorch.org/)
+- Clang-17/Clang++-17 compilers
 
 ## Installation
 
 - Default CUDA version is `11.8` if CUDA is available otherwise using CPU version.
-- Default Pytorch C++ API version is `2.0.1`
+- Default Pytorch C++ API version is `2.1.0`
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
 
@@ -34,7 +35,7 @@
 #### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
 ```bash
-    wget https://github.com/sugarme/gotch/releases/download/v0.8.0/setup-libtorch.sh
+    wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-libtorch.sh
     chmod +x setup-libtorch.sh
     export CUDA_VER=cpu && bash setup-libtorch.sh
 ```
@@ -51,9 +52,9 @@
 #### Step 2: Setup gotch
 
 ```bash
-    wget https://github.com/sugarme/gotch/releases/download/v0.8.0/setup-gotch.sh
+    wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.8.0 && bash setup-gotch.sh
+    export CUDA_VER=cpu && export GOTCH_VER=v0.9.0 && bash setup-gotch.sh
 ```
 
 ### GPU
@@ -67,7 +68,7 @@
 #### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
 ```bash
-    wget https://github.com/sugarme/gotch/releases/download/v0.8.0/setup-libtorch.sh
+    wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-libtorch.sh
     chmod +x setup-libtorch.sh
 
     export CUDA_VER=11.8 && bash setup-libtorch.sh
@@ -85,9 +86,9 @@
 #### Step 2: Setup gotch
 
 ```bash
-    wget https://github.com/sugarme/gotch/releases/download/v0.8.0/setup-gotch.sh
+    wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-gotch.sh
     chmod +x setup-gotch.sh
-    export CUDA_VER=11.8 && export GOTCH_VER=v0.8.0 && bash setup-gotch.sh
+    export CUDA_VER=11.8 && export GOTCH_VER=v0.9.0 && bash setup-gotch.sh
 ```
 
 ## Examples
