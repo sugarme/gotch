@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 
-	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/ts"
 )
 
@@ -387,12 +386,12 @@ func WithErrorIfNonFinite(v bool) ClipOpt {
 	}
 }
 
-/// Clips gradient L2 norm over all trainable parameters.
+// / Clips gradient L2 norm over all trainable parameters.
 //
 // The norm is computed over all gradients together, as if they were
 // concatenated into a single vector.
 //
-/// Args:
+// / Args:
 // - max: max norm of the gradient
 // - o.NormType. Type of the used p-norm, can be "inf" for infinity norm. Default= 2.0
 // - o.ErrorIfNonFinite bool. If true, throw error if total norm of the gradients from paramters is "nan", "inf" or "-inf". Default=false
@@ -413,15 +412,19 @@ func (opt *Optimizer) ClipGradNorm(max float64, opts ...ClipOpt) error {
 	}
 
 	var (
-		norms     []ts.Tensor
+		norms     []*ts.Tensor
 		totalNorm *ts.Tensor
 	)
 
 	device := opt.varstore.device
+
+	// FIXME. What about mixed-precision?
+	dtype := parameters[0].DType()
+
 	if o.NormType == math.Inf(1) {
 		for _, v := range opt.varstore.vars {
 			n := v.Tensor.MustGrad(false).MustDetach(true).MustAbs(true).MustMax(true).MustTo(device, true)
-			norms = append(norms, *n)
+			norms = append(norms, n)
 		}
 		// total_norm = norms[0] if len(norms) == 1 else torch.max(torch.stack(norms))
 		totalNorm = ts.MustStack(norms, 0).MustMax(true)
@@ -431,14 +434,14 @@ func (opt *Optimizer) ClipGradNorm(max float64, opts ...ClipOpt) error {
 
 			// NOTE. tensor.Norm() is going to be deprecated. So use linalg_norm
 			// Ref. https://pytorch.org/docs/stable/generated/torch.linalg.norm.html#torch.linalg.norm
-			x := v.Tensor.MustGrad(false).MustDetach(true).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, gotch.Float, true)
-			norms = append(norms, *x)
+			x := v.Tensor.MustGrad(false).MustDetach(true).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, dtype, true)
+			norms = append(norms, x)
 		}
 	}
 
 	// totalNorm = ts.MustStack(norms, 0).MustNorm(true).MustAddScalar(ts.FloatScalar(1e-6), true)
 	// total_norm = torch.norm(torch.stack([torch.norm(p.grad.detach(), norm_type).to(device) for p in parameters]), norm_type)
-	totalNorm = ts.MustStack(norms, 0).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, gotch.Float, true)
+	totalNorm = ts.MustStack(norms, 0).MustLinalgNorm(ts.FloatScalar(o.NormType), nil, false, dtype, true)
 	for _, x := range norms {
 		x.MustDrop()
 	}
@@ -556,7 +559,7 @@ func (opt *Optimizer) ParamGroupNum() int {
 	return int(ngroup)
 }
 
-func (opt *Optimizer) AddParamGroup(tensors []ts.Tensor) {
+func (opt *Optimizer) AddParamGroup(tensors []*ts.Tensor) {
 	err := opt.opt.AddParamGroup(tensors)
 	if err != nil {
 		log.Fatalf("Optimizer - ParamGroupNum  method call error: %v\n", err)

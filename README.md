@@ -24,8 +24,13 @@
 
 ## Installation
 
+<<<<<<< HEAD
 - Default CUDA version is `11.8` if CUDA is available otherwise using CPU version.
 - Default Pytorch C++ API version is `1.11.0`
+=======
+- Default CUDA version is `11.7` if CUDA is available otherwise using CPU version.
+- Default Pytorch C++ API version is `2.0.1`
+>>>>>>> 83394ef0933537921d2765ccb5e9043671e2edb8
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
 
@@ -69,8 +74,12 @@
 ```bash
     wget https://github.com/sugarme/gotch/releases/download/v0.8.0/setup-libtorch.sh
     chmod +x setup-libtorch.sh
+<<<<<<< HEAD
 
     export CUDA_VER=11.8 && bash setup-libtorch.sh
+=======
+    export CUDA_VER=11.7 && bash setup-libtorch.sh
+>>>>>>> 83394ef0933537921d2765ccb5e9043671e2edb8
 ```
 
 **Update Environment**: in Debian/Ubuntu, add/update the following lines to `.bashrc` file
@@ -87,7 +96,12 @@
 ```bash
     wget https://github.com/sugarme/gotch/releases/download/v0.8.0/setup-gotch.sh
     chmod +x setup-gotch.sh
+<<<<<<< HEAD
     export CUDA_VER=11.8 && export GOTCH_VER=v0.8.0 && bash setup-gotch.sh
+=======
+    # CUDA 11.7
+    export CUDA_VER=11.7 && export GOTCH_VER=v0.8.0 && bash setup-gotch.sh
+>>>>>>> 83394ef0933537921d2765ccb5e9043671e2edb8
 ```
 
 ## Examples

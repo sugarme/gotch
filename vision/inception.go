@@ -81,7 +81,7 @@ func inceptionA(p *nn.Path, cIn, cPool int64) ts.ModuleT {
 		bpoolTmp := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, []int64{9}, false)
 		bpoolTs := bpoolTmp.ApplyT(bpool, train)
 
-		res := ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
+		res := ts.MustCat([]*ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1)
 
 		return res
 	})
@@ -104,7 +104,7 @@ func inceptionB(p *nn.Path, cIn int64) ts.ModuleT {
 
 		bpoolTs := inMaxPool2D(xs, 3, 2)
 
-		res := ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *bpoolTs}, 1)
+		res := ts.MustCat([]*ts.Tensor{b1Ts, b2Ts, bpoolTs}, 1)
 
 		return res
 	})
@@ -148,7 +148,7 @@ func inceptionC(p *nn.Path, cIn int64, c7 int64) ts.ModuleT {
 		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, []int64{9}, false)
 		bpoolTs := bpTmp1.ApplyT(bpool, train)
 
-		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
+		return ts.MustCat([]*ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1)
 	})
 }
 
@@ -177,7 +177,7 @@ func inceptionD(p *nn.Path, cIn int64) ts.ModuleT {
 
 		bpoolTs := inMaxPool2D(xs, 3, 2)
 
-		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *bpoolTs}, 1)
+		return ts.MustCat([]*ts.Tensor{b1Ts, b2Ts, bpoolTs}, 1)
 
 	})
 }
@@ -202,19 +202,19 @@ func inceptionE(p *nn.Path, cIn int64) ts.ModuleT {
 		b2Tmp := xs.ApplyT(b21, train)
 		b2aTs := b2Tmp.ApplyT(b22a, train)
 		b2bTs := b2Tmp.ApplyT(b22b, train)
-		b2Ts := ts.MustCat([]ts.Tensor{*b2aTs, *b2bTs}, 1)
+		b2Ts := ts.MustCat([]*ts.Tensor{b2aTs, b2bTs}, 1)
 
 		b3Tmp1 := xs.ApplyT(b31, train)
 		b3Tmp2 := b3Tmp1.ApplyT(b32, train)
 		b3Tmp1.MustDrop()
 		b3aTs := b3Tmp2.ApplyT(b33a, train)
 		b3bTs := b3Tmp2.ApplyT(b33b, train)
-		b3Ts := ts.MustCat([]ts.Tensor{*b3aTs, *b3bTs}, 1)
+		b3Ts := ts.MustCat([]*ts.Tensor{b3aTs, b3bTs}, 1)
 
 		bpTmp1 := xs.MustAvgPool2d([]int64{3, 3}, []int64{1, 1}, []int64{1, 1}, false, true, []int64{9}, false)
 		bpoolTs := bpTmp1.ApplyT(bpool, train)
 
-		return ts.MustCat([]ts.Tensor{*b1Ts, *b2Ts, *b3Ts, *bpoolTs}, 1)
+		return ts.MustCat([]*ts.Tensor{b1Ts, b2Ts, b3Ts, bpoolTs}, 1)
 	})
 
 }

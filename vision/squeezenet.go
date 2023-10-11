@@ -31,7 +31,7 @@ func fire(p *nn.Path, cIn int64, cSqueeze int64, cExp1 int64, cExp3 int64) ts.Mo
 		exp3Tmp := tmp2.Apply(exp3)
 		exp3Ts := exp3Tmp.MustRelu(true)
 
-		return ts.MustCat([]ts.Tensor{*exp1Ts, *exp3Ts}, 1)
+		return ts.MustCat([]*ts.Tensor{exp1Ts, exp3Ts}, 1)
 	})
 }
 

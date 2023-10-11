@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/ts"
 )
 
@@ -22,6 +21,8 @@ type LinearConfig struct {
 func DefaultLinearConfig() *LinearConfig {
 	negSlope := math.Sqrt(5)
 	return &LinearConfig{
+		// NOTE. KaimingUniform cause mem leak due to ts.Uniform()!!!
+		// Avoid using it now.
 		WsInit: NewKaimingUniformInit(WithKaimingNegativeSlope(negSlope)),
 		BsInit: nil,
 		Bias:   true,
@@ -41,11 +42,7 @@ type Linear struct {
 // NOTE: w will have shape{outDim, inDim}; b will have shape{outDim}
 func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 	var bs *ts.Tensor
-	// bs has size of output dimension
-	switch c.Bias {
-	case false:
-		bs = ts.MustZeros([]int64{outDim}, gotch.Float, vs.Device())
-	case true:
+	if c.Bias {
 		switch {
 		case c.BsInit == nil:
 			shape := []int64{inDim, outDim}
@@ -65,8 +62,10 @@ func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 		}
 	}
 
+	ws := vs.MustNewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false)
+
 	return &Linear{
-		Ws: vs.MustNewVar("weight", []int64{outDim, inDim}, c.WsInit).MustT(false),
+		Ws: ws,
 		Bs: bs,
 	}
 }
@@ -87,29 +86,31 @@ func NewLinear(vs *Path, inDim, outDim int64, c *LinearConfig) *Linear {
 //
 // Example:
 //
-// 	inDim := 3
-// 	outDim := 2
-// 	batchSize := 4
-// 	weights: 2x3
-// 	[ 1 1 1
-// 		1 1 1 ]
+//	inDim := 3
+//	outDim := 2
+//	batchSize := 4
+//	weights: 2x3
+//	[ 1 1 1
+//		1 1 1 ]
 //
-// 	input node: 3x4
-// 	[ 1 1 1
-// 	  1 1 1
-// 	  1 1 1
-// 		1 1 1 ]
+//	input node: 3x4
+//	[ 1 1 1
+//	  1 1 1
+//	  1 1 1
+//		1 1 1 ]
 func (l *Linear) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
-
 	mul := xs.MustMatmul(l.Ws, false)
-	return mul.MustAdd(l.Bs, true)
+	if l.Bs != nil {
+		return mul.MustAdd(l.Bs, true)
+	} else {
+		return mul
+	}
 }
 
 // ForwardT implements ModuleT interface for Linear layer.
 //
 // NOTE: train param will not be used.
 func (l *Linear) ForwardT(xs *ts.Tensor, train bool) (retVal *ts.Tensor) {
-
 	mul := xs.MustMatmul(l.Ws, false)
 	return mul.MustAdd(l.Bs, true)
 }

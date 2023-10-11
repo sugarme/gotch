@@ -3,6 +3,10 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
+
+#include <stdexcept>
+#include <torch/torch.h>
+using namespace std;
 thread_local char *torch_last_err = nullptr;
 
 extern "C" {
@@ -46,6 +50,7 @@ size_t at_dim(tensor);
 void at_shape(tensor, int64_t *);
 void at_stride(tensor, int64_t *);
 int at_scalar_type(tensor);
+int at_is_contiguous(tensor);
 
 void at__amp_non_finite_check_and_unscale(tensor, tensor, tensor);
 
@@ -105,13 +110,8 @@ void at_set_num_threads(int n_threads);
 
 void at_free(tensor);
 
-void at_run_backward(tensor *tensors,
-                      int ntensors,
-                      tensor *inputs,
-                      int ninputs,
-                      tensor *outputs,
-                      int keep_graph,
-                      int create_graph);
+void at_run_backward(tensor *tensors, int ntensors, tensor *inputs, int ninputs,
+                     tensor *outputs, int keep_graph, int create_graph);
 
 optimizer ato_adam(double learning_rate, double beta1, double beta2,
                    double weight_decay);
@@ -141,8 +141,10 @@ int64_t ato_param_group_num(optimizer);
 void ato_get_learning_rates(optimizer, double *lrs, int *ngroup);
 void ato_add_param_group(optimizer, tensor *params, int param_num);
 
-// TT. added option pad value. Original generated API `atg_constant_pad_nd` no option of adding pad value.
-void ato_constant_pad_nd(tensor *, tensor self, int64_t *pad_data, int pad_len, scalar value);
+// TT. added option pad value. Original generated API `atg_constant_pad_nd` no
+// option of adding pad value.
+void ato_constant_pad_nd(tensor *, tensor self, int64_t *pad_data, int pad_len,
+                         scalar value);
 
 scalar ats_int(int64_t);
 scalar ats_float(double);
@@ -155,6 +157,12 @@ int atc_cuda_device_count();
 int atc_cuda_is_available();
 int atc_cudnn_is_available();
 void atc_set_benchmark_cudnn(int b);
+void atc_synchronize(int64_t device_index);
+
+// TT. added for testing qt
+// ref. https://github.com/pytorch/pytorch/issues/14959
+int atc_get_device();
+void atc_set_device(int device_index);
 
 module atm_load(char *);
 module atm_load_on_device(char *, int device);
@@ -212,6 +220,11 @@ void ati_free(ivalue);
 
 #ifdef __cplusplus
 }; // extern "C"
-#endif
 
+std::vector<torch::Tensor> of_carray_tensor(torch::Tensor **vs, int len);
+at::Device device_of_int(int d);
+c10::List<c10::optional<torch::Tensor>> of_carray_tensor_opt(torch::Tensor **vs,
+                                                             int len);
+
+#endif
 #endif

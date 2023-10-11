@@ -255,9 +255,9 @@ func rgb2Gray(x *ts.Tensor, outChanOpt ...int64) *ts.Tensor {
 	}
 
 	rgbTs := x.MustUnbind(-3, false)
-	r := &rgbTs[0]
-	g := &rgbTs[1]
-	b := &rgbTs[2]
+	r := rgbTs[0]
+	g := rgbTs[1]
+	b := rgbTs[2]
 
 	// This implementation closely follows the TF one:
 	// https://github.com/tensorflow/tensorflow/blob/v2.3.0/tensorflow/python/ops/image_ops_impl.py#L2105-L2138
@@ -311,9 +311,9 @@ func adjustSaturation(x *ts.Tensor, sat float64) *ts.Tensor {
 
 func rgb2HSV(x *ts.Tensor) *ts.Tensor {
 	rgbTs := x.MustUnbind(-3, false)
-	r := &rgbTs[0]
-	g := &rgbTs[1]
-	b := &rgbTs[2]
+	r := rgbTs[0]
+	g := rgbTs[1]
+	b := rgbTs[2]
 
 	// # Implementation is based on https://github.com/python-pillow/Pillow/blob/4174d4267616897df3746d315d5a2d0f82c656ee/
 	// # src/libImaging/Convert.c#L330
@@ -383,7 +383,7 @@ func rgb2HSV(x *ts.Tensor) *ts.Tensor {
 	h3 := h2.MustFmod(ts.FloatScalar(1.0), true)                                               // delete h2
 
 	// torch.stack((h, s, maxc), dim=-3)
-	out := ts.MustStack([]ts.Tensor{*h3, *s, *maxC}, -3)
+	out := ts.MustStack([]*ts.Tensor{h3, s, maxC}, -3)
 
 	// Delete intermediate tensors
 	r.MustDrop()
@@ -409,9 +409,9 @@ func rgb2HSV(x *ts.Tensor) *ts.Tensor {
 
 func hsv2RGB(x *ts.Tensor) *ts.Tensor {
 	hsvTs := x.MustUnbind(-3, false)
-	h := &hsvTs[0]
-	s := &hsvTs[1]
-	v := &hsvTs[2]
+	h := hsvTs[0]
+	s := hsvTs[1]
+	v := hsvTs[2]
 	// i = torch.floor(h * 6.0)
 	i := h.MustMulScalar(ts.FloatScalar(6.0), false).MustFloor(true)
 	// f = (h * 6.0) - i
@@ -448,12 +448,12 @@ func hsv2RGB(x *ts.Tensor) *ts.Tensor {
 	// a2 = torch.stack((t, v, v, q, p, p), dim=-3)
 	// a3 = torch.stack((p, p, t, v, v, q), dim=-3)
 	// a4 = torch.stack((a1, a2, a3), dim=-4)
-	a1 := ts.MustStack([]ts.Tensor{*v, *q, *p, *p, *t, *v}, -3)
-	a2 := ts.MustStack([]ts.Tensor{*t, *v, *v, *q, *p, *p}, -3)
-	a3 := ts.MustStack([]ts.Tensor{*p, *p, *t, *v, *v, *q}, -3)
-	a4 := ts.MustStack([]ts.Tensor{*a1, *a2, *a3}, -4)
+	a1 := ts.MustStack([]*ts.Tensor{v, q, p, p, t, v}, -3)
+	a2 := ts.MustStack([]*ts.Tensor{t, v, v, q, p, p}, -3)
+	a3 := ts.MustStack([]*ts.Tensor{p, p, t, v, v, q}, -3)
+	a4 := ts.MustStack([]*ts.Tensor{a1, a2, a3}, -4)
 
-	out := ts.MustEinsum("...ijk, ...xijk -> ...xjk", []ts.Tensor{*mask, *a4})
+	out := ts.MustEinsum("...ijk, ...xijk -> ...xjk", []*ts.Tensor{mask, a4}, []int64{0, 1})
 
 	// Delete intermediate tensors
 	h.MustDrop()
@@ -491,13 +491,13 @@ func adjustHue(x *ts.Tensor, hue float64) *ts.Tensor {
 	hsvImg := rgb2HSV(imgFl)
 
 	hsvTs := hsvImg.MustUnbind(-3, true)
-	h := &hsvTs[0]
-	s := &hsvTs[1]
-	v := &hsvTs[2]
+	h := hsvTs[0]
+	s := hsvTs[1]
+	v := hsvTs[2]
 	// h = (h + hue_factor) % 1.0
 	hAdj := h.MustAddScalar(ts.FloatScalar(hue), false).MustRemainder(ts.FloatScalar(1.0), true)
 
-	hsvAdj := ts.MustStack([]ts.Tensor{*hAdj, *s, *v}, -3)
+	hsvAdj := ts.MustStack([]*ts.Tensor{hAdj, s, v}, -3)
 
 	imgHueAdj := hsv2RGB(hsvAdj)
 
@@ -568,7 +568,7 @@ func crop(x *ts.Tensor, top, left, height, width int64) *ts.Tensor {
 	dim := x.MustSize()
 	c := dim[0]
 
-	var chans []ts.Tensor = make([]ts.Tensor, c)
+	var chans []*ts.Tensor = make([]*ts.Tensor, c)
 	hNar := ts.NewNarrow(top, top+height)
 	wNar := ts.NewNarrow(left, left+width)
 	for i := 0; i < int(c); i++ {
@@ -579,7 +579,7 @@ func crop(x *ts.Tensor, top, left, height, width int64) *ts.Tensor {
 		x2 := x1T.Idx(wNar)
 		x1T.MustDrop()
 		out := x2.MustT(true)
-		chans[i] = *out
+		chans[i] = out
 	}
 
 	cropTs := ts.MustStack(chans, 0)
@@ -728,7 +728,7 @@ func applyGridTransform(x, gridInput *ts.Tensor, mode string, fillValue []float6
 	// dummy = torch.ones((img.shape[0], 1, img.shape[2], img.shape[3]), dtype=img.dtype, device=img.device)
 	// img = torch.cat((img, dummy), dim=1)
 	dummy := ts.MustOnes([]int64{img.MustSize()[0], 1, img.MustSize()[2], img.MustSize()[3]}, img.DType(), img.MustDevice())
-	imgCat := ts.MustCat([]ts.Tensor{*img, *dummy}, 1)
+	imgCat := ts.MustCat([]*ts.Tensor{img, dummy}, 1)
 	dummy.MustDrop()
 	img.MustDrop()
 
@@ -779,9 +779,9 @@ func applyGridTransform(x, gridInput *ts.Tensor, mode string, fillValue []float6
 // (x, y) -> ( (ax + by + c) / (gx + hy + 1), (dx + ey + f) / (gx + hy + 1) )
 // Args:
 // - startpoints (list of list of ints): List containing four lists of two integers corresponding to four corners
-// ``[top-left, top-right, bottom-right, bottom-left]`` of the original image.
+// “[top-left, top-right, bottom-right, bottom-left]“ of the original image.
 // - endpoints (list of list of ints): List containing four lists of two integers corresponding to four corners
-// ``[top-left, top-right, bottom-right, bottom-left]`` of the transformed image.
+// “[top-left, top-right, bottom-right, bottom-left]“ of the transformed image.
 // Returns:
 // - octuple (a, b, c, d, e, f, g, h) for transforming each pixel.
 func perspectiveCoeff(startPoints, endPoints [][]int64) []float64 {
@@ -929,7 +929,7 @@ func perspective(x *ts.Tensor, startPoints, endPoints [][]int64, mode string, fi
 
 // Apply affine transformation on the image keeping image center invariant.
 //
-//If the image is torch Tensor, it is expected
+// If the image is torch Tensor, it is expected
 // to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.
 // Args:
 // - img (Tensor): image to transform.
@@ -940,8 +940,8 @@ func perspective(x *ts.Tensor, startPoints, endPoints [][]int64, mode string, fi
 // If a sequence is specified, the first value corresponds to a shear parallel to the x axis, while
 // the second value corresponds to a shear parallel to the y axis.
 // - interpolation (InterpolationMode): Desired interpolation enum defined by
-// :class:`torchvision.transforms.InterpolationMode`. Default is ``InterpolationMode.NEAREST``.
-// If input is Tensor, only ``InterpolationMode.NEAREST``, ``InterpolationMode.BILINEAR`` are supported.
+// :class:`torchvision.transforms.InterpolationMode`. Default is “InterpolationMode.NEAREST“.
+// If input is Tensor, only “InterpolationMode.NEAREST“, “InterpolationMode.BILINEAR“ are supported.
 // - fill (sequence or number, optional): Pixel fill value for the area outside the transformed
 // image. If given a number, the value is used for all bands respectively.
 func affine(img *ts.Tensor, angle float64, translations []int64, scale float64, shear []float64, interpolationMode string, fillValue []float64) *ts.Tensor {
@@ -982,17 +982,19 @@ func affine(img *ts.Tensor, angle float64, translations []int64, scale float64, 
 // As it is explained in PIL.Image.rotate
 // We need compute INVERSE of affine transformation matrix: M = T * C * RSS * C^-1
 // where T is translation matrix: [1, 0, tx | 0, 1, ty | 0, 0, 1]
-//       C is translation matrix to keep center: [1, 0, cx | 0, 1, cy | 0, 0, 1]
-//       RSS is rotation with scale and shear matrix
-//       RSS(a, s, (sx, sy)) =
-//       = R(a) * S(s) * SHy(sy) * SHx(sx)
-//       = [ s*cos(a - sy)/cos(sy), s*(-cos(a - sy)*tan(x)/cos(y) - sin(a)), 0 ]
-//         [ s*sin(a + sy)/cos(sy), s*(-sin(a - sy)*tan(x)/cos(y) + cos(a)), 0 ]
-//         [ 0                    , 0                                      , 1 ]
+//
+//	C is translation matrix to keep center: [1, 0, cx | 0, 1, cy | 0, 0, 1]
+//	RSS is rotation with scale and shear matrix
+//	RSS(a, s, (sx, sy)) =
+//	= R(a) * S(s) * SHy(sy) * SHx(sx)
+//	= [ s*cos(a - sy)/cos(sy), s*(-cos(a - sy)*tan(x)/cos(y) - sin(a)), 0 ]
+//	  [ s*sin(a + sy)/cos(sy), s*(-sin(a - sy)*tan(x)/cos(y) + cos(a)), 0 ]
+//	  [ 0                    , 0                                      , 1 ]
 //
 // where R is a rotation matrix, S is a scaling matrix, and SHx and SHy are the shears:
 // SHx(s) = [1, -tan(s)] and SHy(s) = [1      , 0]
-//          [0, 1      ]              [-tan(s), 1]
+//
+//	[0, 1      ]              [-tan(s), 1]
 //
 // Thus, the inverse is M^-1 = C * RSS^-1 * C^-1 * T^-1
 func getInverseAffineMatrix(center []float64, angle float64, translate []float64, scale float64, shear []float64) []float64 {
@@ -1345,11 +1347,11 @@ func equalize(img *ts.Tensor) *ts.Tensor {
 	}
 
 	// batched images
-	var images []ts.Tensor
+	var images []*ts.Tensor
 	for i := 0; i < int(shape[0]); i++ {
 		x := img.MustSelect(0, int64(i), false)
 		o := equalizeSingleImage(x)
-		images = append(images, *o)
+		images = append(images, o)
 		x.MustDrop()
 	}
 
@@ -1363,12 +1365,12 @@ func equalize(img *ts.Tensor) *ts.Tensor {
 
 func equalizeSingleImage(img *ts.Tensor) *ts.Tensor {
 	dim := img.MustSize()
-	var scaledChans []ts.Tensor = make([]ts.Tensor, int(dim[0]))
+	var scaledChans []*ts.Tensor = make([]*ts.Tensor, int(dim[0]))
 	for i := 0; i < int(dim[0]); i++ {
 		cTs := img.MustSelect(0, int64(i), false)
 		scaledChan := scaleChannel(cTs)
 		cTs.MustDrop()
-		scaledChans[i] = *scaledChan
+		scaledChans[i] = scaledChan
 	}
 
 	out := ts.MustStack(scaledChans, 0)

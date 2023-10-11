@@ -69,7 +69,7 @@ func Sgd(lr, momentum, dampening, wd float64, nesterov bool) (*COptimizer, error
 }
 
 // AddParameters adds parameters as a slice of tensors to optimizer
-func (co *COptimizer) AddParameters(tensors []Tensor) error {
+func (co *COptimizer) AddParameters(tensors []*Tensor) error {
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
 		ctensors = append(ctensors, t.ctensor)
@@ -127,7 +127,7 @@ func (co *COptimizer) ParamGroupNum() (int64, error) {
 	return ngroup, nil
 }
 
-func (co *COptimizer) AddParamGroup(tensors []Tensor) error {
+func (co *COptimizer) AddParamGroup(tensors []*Tensor) error {
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
 		ctensors = append(ctensors, t.ctensor)

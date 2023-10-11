@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/sugarme/gotch"
+	"github.com/sugarme/gotch/half"
 )
 
 // This file implements Pytorch storage data types.
@@ -67,7 +68,8 @@ func (s *HalfStorageClass) New(size int, location string) Storage {
 
 type HalfStorage struct {
 	BaseStorage
-	Data []float32
+	// Data []float32
+	Data []half.Float16
 }
 
 var _ Storage = &HalfStorage{}
@@ -77,7 +79,7 @@ func (s *HalfStorage) SetFromFile(r io.Reader) error {
 }
 
 func (s *HalfStorage) SetFromFileWithSize(r io.Reader, size int) error {
-	data := make([]float32, size)
+	data := make([]half.Float16, size)
 	br := NewLimitedBufferReader(r, size, 2, 512)
 	for i := 0; i < size; i++ {
 		bytes, err := br.ReadNext()
@@ -85,7 +87,7 @@ func (s *HalfStorage) SetFromFileWithSize(r io.Reader, size int) error {
 			return err
 		}
 		u16 := binary.LittleEndian.Uint16(bytes)
-		data[i] = math.Float32frombits(FloatBits16to32(u16))
+		data[i] = half.Float16(u16)
 	}
 	s.Data = data
 	return nil
@@ -96,10 +98,66 @@ func (s *HalfStorage) GetData() interface{} {
 }
 
 func (s *HalfStorage) DType() gotch.DType {
-	return gotch.Float
+	return gotch.Half
 }
 
 func (s *HalfStorage) Device() gotch.Device {
+	switch s.Location {
+	case "cuda":
+		return gotch.CudaIfAvailable()
+	default:
+		return gotch.CPU
+	}
+}
+
+// BFloat16Storage:
+// ================
+type BFloat16StorageClass struct{}
+
+var _ StorageClass = &BFloat16StorageClass{}
+
+func (s *BFloat16StorageClass) New(size int, location string) Storage {
+	return &BFloat16Storage{
+		BaseStorage: BaseStorage{Size: size, Location: location},
+		Data:        nil,
+	}
+}
+
+type BFloat16Storage struct {
+	BaseStorage
+	Data []half.BFloat16
+}
+
+var _ Storage = &BFloat16Storage{}
+
+func (s *BFloat16Storage) SetFromFile(r io.Reader) error {
+	return setFromFile(s, r)
+}
+
+func (s *BFloat16Storage) SetFromFileWithSize(r io.Reader, size int) error {
+	data := make([]half.BFloat16, size)
+	br := NewLimitedBufferReader(r, size, 2, 512)
+	for i := 0; i < size; i++ {
+		bytes, err := br.ReadNext()
+		if err != nil {
+			return err
+		}
+		u16 := binary.LittleEndian.Uint16(bytes)
+		data[i] = half.BFloat16(u16)
+	}
+	s.Data = data
+	return nil
+}
+
+func (s *BFloat16Storage) GetData() interface{} {
+	return s.Data
+}
+
+func (s *BFloat16Storage) DType() gotch.DType {
+	return gotch.BFloat16
+}
+
+func (s *BFloat16Storage) Device() gotch.Device {
 	switch s.Location {
 	case "cuda":
 		return gotch.CudaIfAvailable()

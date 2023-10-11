@@ -101,22 +101,22 @@ func (h *NpyHeader) ToString() (string, error) {
 	shape := strings.Join(shapeStr, ",")
 
 	var descr string
-	switch h.descr.Kind().String() {
-	// case "float16": // NOTE. No float16 in Go primary types. TODO. implement
-	// descr = "f2"
-	case "float32":
+	switch h.descr {
+	case gotch.Half:
+		descr = "f2"
+	case gotch.Float:
 		descr = "f4"
-	case "float64":
+	case gotch.Double:
 		descr = "f8"
-	case "int":
+	case gotch.Int:
 		descr = "i4"
-	case "int64":
+	case gotch.Int64:
 		descr = "i8"
-	case "int16":
+	case gotch.Int16:
 		descr = "i2"
-	case "int8":
+	case gotch.Int8:
 		descr = "i1"
-	case "uint8":
+	case gotch.Uint8:
 		descr = "u1"
 	default:
 		err := fmt.Errorf("Unsupported kind: %v\n", h.descr)
@@ -306,6 +306,11 @@ func ReadNpy(filepath string) (*Tensor, error) {
 		return nil, err
 	}
 
+	// NOTE(TT.). case tensor 1 element with shape = []
+	if len(data) > 0 && len(header.shape) == 0 {
+		header.shape = []int64{1}
+	}
+
 	return OfDataSize(data, header.shape, header.descr)
 }
 
@@ -346,6 +351,11 @@ func ReadNpz(filePath string) ([]NamedTensor, error) {
 		data, err = ioutil.ReadAll(rc)
 		if err != nil {
 			return nil, err
+		}
+
+		// NOTE(TT.). case tensor 1 element with shape = []
+		if len(data) > 0 && len(header.shape) == 0 {
+			header.shape = []int64{1}
 		}
 
 		tensor, err := OfDataSize(data, header.shape, header.descr)

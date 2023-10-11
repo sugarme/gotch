@@ -32,27 +32,18 @@ func sample(data *ts.TextData, lstm *nn.LSTM, linear *nn.Linear, device gotch.De
 
 		state := lstm.Step(input, inState)
 
-		// 1. Delete inState tensors (from C land memory)
-		inState.(*nn.LSTMState).Tensor1.MustDrop()
-		inState.(*nn.LSTMState).Tensor2.MustDrop()
-		// 2. Then update with current state
+		// Update with current state
 		inState = state
-		// 3. Delete intermediate tensors
-		input.MustDrop()
-		inputView.MustDrop()
 
 		forwardTs := linear.Forward(state.(*nn.LSTMState).H()).MustSqueezeDim(0, true).MustSoftmax(-1, gotch.Float, true)
 		sampledY := forwardTs.MustMultinomial(1, false, true)
 		lastLabel = sampledY.Int64Values()[0]
-		sampledY.MustDrop()
 		char := data.LabelForChar(lastLabel)
 
 		runes = append(runes, char)
-	}
 
-	// Delete the last state
-	inState.(*nn.LSTMState).Tensor1.MustDrop()
-	inState.(*nn.LSTMState).Tensor2.MustDrop()
+		ts.CleanUp(100)
+	}
 
 	return string(runes)
 }
@@ -93,42 +84,31 @@ func main() {
 
 			batchNarrow := batchTs.MustNarrow(1, 0, SeqLen, false)
 			xsOnehot := batchNarrow.Onehot(labels).MustTo(device, true) // [256, 180, 65]
-			batchNarrow.MustDrop()
 
 			ys := batchTs.MustNarrow(1, 1, SeqLen, true).MustTotype(gotch.Int64, true).MustTo(device, true).MustView([]int64{BatchSize * SeqLen}, true)
 
-			lstmOut, outState := lstm.Seq(xsOnehot)
-			// NOTE. Although outState will not be used. There a hidden memory usage
-			// on C land memory that is needed to free up. Don't use `_`
-			outState.(*nn.LSTMState).Tensor1.MustDrop()
-			outState.(*nn.LSTMState).Tensor2.MustDrop()
-			xsOnehot.MustDrop()
+			lstmOut, _ := lstm.Seq(xsOnehot)
 
 			logits := linear.Forward(lstmOut)
-			lstmOut.MustDrop()
 			lossView := logits.MustView([]int64{BatchSize * SeqLen, labels}, true)
-
 			loss := lossView.CrossEntropyForLogits(ys)
-			ys.MustDrop()
-			lossView.MustDrop()
 
 			opt.BackwardStepClip(loss, 0.5)
 			sumLoss += loss.Float64Values()[0]
 			cntLoss += 1.0
-			loss.MustDrop()
 
 			batchCount++
 			if batchCount%500 == 0 {
-				fmt.Printf("Epoch %v - Batch %v \n", epoch, batchCount)
+				fmt.Printf("\nEpoch %v - Batch %v \n", epoch, batchCount)
 			}
-			fmt.Printf("dataIter: progress: %v\n", dataIter.Progress())
+			// fmt.Printf("dataIter: progress: %v\n", dataIter.Progress())
+			fmt.Print(".")
+
+			ts.CleanUp(100)
 		} // infinite for-loop
 
 		sampleStr := sample(data, lstm, linear, device)
-		fmt.Printf("Epoch %v - Loss: %v \n", epoch, sumLoss/cntLoss)
+		fmt.Printf("\nEpoch %v - Loss: %v \n", epoch, sumLoss/cntLoss)
 		fmt.Println(sampleStr)
-
-		dataIter.Data.MustDrop()
-		dataIter.Indexes.MustDrop()
 	}
 }

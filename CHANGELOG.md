@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reworked `ts.Format()`
 - Added conv2d benchmark
 - Fixed #88 memory leak at `example/char-rnn`
+- Added missing tensor `Stride()` and `MustDataPtr()`, `IsMkldnn`, `MustIsMkldnn`, `IsContiguous`, `MustIsContiguous`
+- Added ts `New()`
 
 ## [0.7.0]
 - Added `WsName` and `BsName` fields to `nn.LayerNorm.Config`

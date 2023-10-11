@@ -12,7 +12,7 @@ import (
 
 type Init interface {
 	// creates a new tensor with specified initiation
-	InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor)
+	InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor)
 
 	// re-initializes (in-place) an existing tensor with the specified initiation
 	Set(tensor *ts.Tensor)
@@ -25,18 +25,24 @@ type constInit struct {
 	value float64
 }
 
+var _ Init = new(constInit)
+
 func NewConstInit(v float64) constInit {
 	return constInit{v}
 }
 
-func (c constInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
+func (c constInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
+	}
+
 	var err error
-	kind := gotch.Float
 	switch {
 	case c.value == 0.0:
-		retVal = ts.MustZeros(dims, kind, device)
+		retVal = ts.MustZeros(dims, dtype, device)
 	case c.value == 1.0:
-		retVal = ts.MustOnes(dims, kind, device)
+		retVal = ts.MustOnes(dims, dtype, device)
 	default:
 		data := make([]float64, ts.FlattenDim(dims))
 		for i := range data {
@@ -68,18 +74,29 @@ type randnInit struct {
 	stdev float64
 }
 
+var _ Init = new(randnInit)
+
 func NewRandnInit(mean, stdev float64) randnInit {
 	return randnInit{mean, stdev}
 }
 
-func (r randnInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
-	// if r.mean == 0 && math.Abs(r.stdev-1) <= math.SmallestNonzeroFloat64 {
-	if r.mean == 0 {
-		return ts.MustRandn(dims, gotch.Float, device)
+func (r randnInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
 	}
 
-	initTs := ts.MustRandn(dims, gotch.Float, device)
-	return initTs.MustMulScalar(ts.FloatScalar(r.stdev), true).MustAddScalar(ts.FloatScalar(r.mean), true)
+	ts.NoGrad(func() {
+		// if r.mean == 0 && math.Abs(r.stdev-1) <= math.SmallestNonzeroFloat64 {
+		if r.mean == 0 {
+			retVal = ts.MustRandn(dims, dtype, device)
+		}
+
+		initTs := ts.MustRandn(dims, dtype, device)
+		retVal = initTs.MustMulScalar(ts.FloatScalar(r.stdev), true).MustAddScalar(ts.FloatScalar(r.mean), true)
+	})
+
+	return retVal
 }
 
 func (r randnInit) Set(tensor *ts.Tensor) {
@@ -88,9 +105,11 @@ func (r randnInit) Set(tensor *ts.Tensor) {
 		log.Fatalf("randInit - Set method call error: %v\n", err)
 	}
 
-	initTs := r.InitTensor(dims, tensor.MustDevice())
-	tensor.Copy_(initTs)
-	initTs.MustDrop()
+	ts.NoGrad(func() {
+		initTs := r.InitTensor(dims, tensor.MustDevice())
+		tensor.Copy_(initTs)
+		initTs.MustDrop()
+	})
 }
 
 // uniformInit :
@@ -101,18 +120,26 @@ type uniformInit struct {
 	up float64
 }
 
+var _ Init = new(uniformInit)
+
 func NewUniformInit(lo, up float64) uniformInit {
 	return uniformInit{lo, up}
 }
 
-func (u uniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
-	var err error
-	kind := gotch.Float
-	retVal = ts.MustZeros(dims, kind, device)
-	retVal.Uniform_(u.lo, u.up)
-	if err != nil {
-		log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
+func (u uniformInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
 	}
+
+	var err error
+	ts.NoGrad(func() {
+		retVal = ts.MustZeros(dims, dtype, device)
+		retVal.Uniform_(u.lo, u.up)
+		if err != nil {
+			log.Fatalf("uniformInit - InitTensor method call error: %v\n", err)
+		}
+	})
 	return retVal
 }
 
@@ -174,6 +201,8 @@ type kaimingUniformInit struct {
 	NonLinearity  string
 }
 
+var _ Init = new(kaimingUniformInit)
+
 func NewKaimingUniformInit(opts ...KaimingOption) *kaimingUniformInit {
 	o := DefaultKaimingOptions()
 	for _, opt := range opts {
@@ -187,26 +216,37 @@ func NewKaimingUniformInit(opts ...KaimingOption) *kaimingUniformInit {
 	}
 }
 
-func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device) (retVal *ts.Tensor) {
-	fanIn, _, err := CalculateFans(dims)
-	if err != nil {
-		panic(err)
+func (k *kaimingUniformInit) InitTensor(dims []int64, device gotch.Device, dtypeOpt ...gotch.DType) (retVal *ts.Tensor) {
+	dtype := gotch.DefaultDType
+	if len(dtypeOpt) > 0 {
+		dtype = dtypeOpt[0]
 	}
 
-	gain, err := calculateGain(k.NonLinearity, k.NegativeSlope) // default non-linearity="leaky_relu", negative_slope=0.01
-	if err != nil {
-		err = fmt.Errorf("kaimingUniformInit.InitTensor() failed: %v\n", err)
-		panic(err)
-	}
+	/*
+		fanIn, _, err := CalculateFans(dims)
+		if err != nil {
+			panic(err)
+		}
 
-	std := gain / math.Sqrt(float64(fanIn)) // default using fanIn
+		gain, err := calculateGain(k.NonLinearity, k.NegativeSlope) // default non-linearity="leaky_relu", negative_slope=0.01
+		if err != nil {
+			err = fmt.Errorf("kaimingUniformInit.InitTensor() failed: %v\n", err)
+			panic(err)
+		}
 
-	// Calculate uniform bounds from standard deviation
-	bound := math.Sqrt(3.0) * std
+		std := gain / math.Sqrt(float64(fanIn)) // default using fanIn
 
-	kind := gotch.Float
-	retVal = ts.MustZeros(dims, kind, device)
-	retVal.Uniform_(-bound, bound)
+		// Calculate uniform bounds from standard deviation
+		bound := math.Sqrt(3.0) * std
+
+		// NOTE. This is a well-known memory leak!!!
+		// Avoid to use it for now!!!
+		retVal = ts.MustZeros(dims, dtype, device)
+		retVal.Uniform_(-bound, bound)
+	*/
+
+	// NOTE. For now, just make a random norm
+	retVal = ts.MustRandn(dims, dtype, device)
 
 	return retVal
 }
@@ -346,4 +386,37 @@ func contains(items []string, item string) bool {
 		}
 	}
 	return false
+}
+
+// XavierUniform fills the input tensor with values according to the method
+// described in the paper `Understanding the difficulty of training deep feedforward neural networks`
+// using a uniform distribution
+//
+// Also known as Glorot initialization.
+//
+// Paper: https://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf
+// Pytorch implementation: https://github.com/pytorch/pytorch/blob/df50f91571891ec3f87977a2bdd4a2b609d70afc/torch/nn/init.py#L310
+func XavierUniform_(x *ts.Tensor, gainOpt ...float64) {
+	gain := 1.0
+	if len(gainOpt) > 0 {
+		gain = gainOpt[0]
+	}
+
+	size := x.MustSize()
+	dtype := x.DType()
+	device := x.MustDevice()
+	fanIn, fanOut, err := CalculateFans(size)
+	if err != nil {
+		panic(err)
+	}
+
+	std := gain * math.Sqrt(2.0/float64(fanIn+fanOut))
+
+	// calculate uniform bounds from standard deviation
+	a := math.Sqrt(3.0) * std
+	uniformInit := NewUniformInit(-a, a)
+	src := uniformInit.InitTensor(size, device, dtype)
+	x.Copy_(src)
+
+	src.MustDrop()
 }
