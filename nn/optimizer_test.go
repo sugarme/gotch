@@ -38,11 +38,13 @@ func TestOptimizer(t *testing.T) {
 
 	// Optimization loop
 	for i := 0; i < 50; i++ {
-		logits := model.ForwardT(x, true)
+		logits := model.Forward(x)
 		loss := logits.MustMseLoss(y, 1, true)
 		if i%10 == 0 {
 			fmt.Printf("Loss: %.3f\n", loss.MustView([]int64{-1}, false).MustFloat64Value([]int64{0}))
 		}
+
+		loss.MustRequiresGrad_(true)
 		opt.BackwardStep(loss)
 		loss.MustDrop()
 	}
