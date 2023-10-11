@@ -44,6 +44,7 @@ func TestOptimizer(t *testing.T) {
 			fmt.Printf("Loss: %.3f\n", loss.MustView([]int64{-1}, false).MustFloat64Value([]int64{0}))
 		}
 		opt.BackwardStep(loss)
+		loss.MustDrop()
 	}
 
 	loss := x.Apply(model).MustMseLoss(y, 1, true)
