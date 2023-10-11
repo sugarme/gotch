@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 var (
-	CachedDir   string = "NOT_SETTING"
-	gotchEnvKey string = "GOTCH_CACHE"
+	CachedDir     string = "NOT_SETTING"
+	gotchEnvKey   string = "GOTCH_CACHE"
+	gotchDebugKey string = "GOTCH_DEBUG"
+	Debug         bool   = false
 )
 
 func init() {
@@ -16,10 +19,13 @@ func init() {
 	CachedDir = fmt.Sprintf("%s/.cache/gotch", homeDir) // default dir: "{$HOME}/.cache/gotch"
 
 	initEnv()
-	// log.Printf("INFO: CacheDir=%q\n", CacheDir)
 }
 
 func initEnv() {
+	if v, err := strconv.ParseBool(os.Getenv(gotchDebugKey)); err == nil {
+		Debug = v
+	}
+
 	val := os.Getenv(gotchEnvKey)
 	if val != "" {
 		CachedDir = val

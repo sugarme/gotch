@@ -113,10 +113,15 @@ var ModelUrls map[string]string = map[string]string{
 // 1. Resolves input string to a  fullpath cached filename candidate.
 // 2. Check it at `CachedDir`, if exists, then return the candidate. If not
 // 3. Retrieves and Caches data to `CachedDir` and returns path to cached data
-func CachedPath(filenameOrUrl string) (resolvedPath string, err error) {
+func CachedPath(filenameOrUrl string, folderOpt ...string) (resolvedPath string, err error) {
 	filename := path.Base(filenameOrUrl)
 	// Resolves to "candidate" filename at `CachedDir`
-	cachedFileCandidate := fmt.Sprintf("%s/%s", CachedDir, filename)
+	fullPath := CachedDir
+	if len(folderOpt) > 0 {
+		fullPath = fmt.Sprintf("%v/%v", CachedDir, folderOpt[0])
+	}
+
+	cachedFileCandidate := fmt.Sprintf("%s/%s", fullPath, filename)
 
 	// 1. Cached candidate file exists
 	if _, err := os.Stat(cachedFileCandidate); err == nil {

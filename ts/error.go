@@ -5,6 +5,7 @@ import "C"
 
 import (
 	"fmt"
+	"runtime/debug"
 	"unsafe"
 
 	lib "github.com/sugarme/gotch/libtch"
@@ -41,7 +42,8 @@ func TorchErr() error {
 	cptr := (*C.char)(lib.GetAndResetLastErr())
 	errStr := ptrToString(cptr)
 	if errStr != "" {
-		return fmt.Errorf("Libtorch API Error: %v\n", errStr)
+		trace := string(debug.Stack())
+		return fmt.Errorf("Libtorch API Error: %v\n%v\n", errStr, trace)
 	}
 
 	return nil

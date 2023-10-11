@@ -46,7 +46,7 @@ func (s *Sequential) AddFn(fn ts.Module) {
 }
 
 // ForwardAll applies the forward pass and returns the output for each layer.
-func (s *Sequential) ForwardAll(xs *ts.Tensor, opts ...uint8) (retVal []ts.Tensor) {
+func (s *Sequential) ForwardAll(xs *ts.Tensor, opts ...uint8) (retVal []*ts.Tensor) {
 
 	var n uint8 = uint8(len(s.layers))
 	if len(opts) > 0 {
@@ -54,11 +54,11 @@ func (s *Sequential) ForwardAll(xs *ts.Tensor, opts ...uint8) (retVal []ts.Tenso
 	}
 
 	if s.IsEmpty() {
-		return []ts.Tensor{*xs.MustShallowClone()}
+		return []*ts.Tensor{xs.MustShallowClone()}
 	}
 
 	for i := 0; i < int(n); i++ {
-		retVal = append(retVal, *s.layers[i].Forward(xs))
+		retVal = append(retVal, s.layers[i].Forward(xs))
 	}
 
 	return retVal
@@ -85,15 +85,15 @@ func (s *Sequential) Forward(xs *ts.Tensor) (retVal *ts.Tensor) {
 	}
 
 	// forward sequentially
-	outs := make([]ts.Tensor, len(s.layers))
+	outs := make([]*ts.Tensor, len(s.layers))
 	for i := 0; i < len(s.layers); i++ {
 		if i == 0 {
-			outs[0] = *s.layers[i].Forward(xs)
+			outs[0] = s.layers[i].Forward(xs)
 			defer outs[0].MustDrop()
 		} else if i == len(s.layers)-1 {
-			return s.layers[i].Forward(&outs[i-1])
+			return s.layers[i].Forward(outs[i-1])
 		} else {
-			outs[i] = *s.layers[i].Forward(&outs[i-1])
+			outs[i] = s.layers[i].Forward(outs[i-1])
 			defer outs[i].MustDrop()
 		}
 	}
@@ -106,7 +106,7 @@ type SequentialT struct {
 	layers []ts.ModuleT
 }
 
-/// SeqT creates a new empty sequential layer.
+// / SeqT creates a new empty sequential layer.
 func SeqT() *SequentialT {
 	return &SequentialT{
 		layers: make([]ts.ModuleT, 0),
@@ -139,15 +139,15 @@ func (s *SequentialT) ForwardT(xs *ts.Tensor, train bool) *ts.Tensor {
 	}
 
 	// forward sequentially
-	outs := make([]ts.Tensor, len(s.layers))
+	outs := make([]*ts.Tensor, len(s.layers))
 	for i := 0; i < len(s.layers); i++ {
 		if i == 0 {
-			outs[0] = *s.layers[i].ForwardT(xs, train)
+			outs[0] = s.layers[i].ForwardT(xs, train)
 			defer outs[0].MustDrop()
 		} else if i == len(s.layers)-1 {
-			return s.layers[i].ForwardT(&outs[i-1], train)
+			return s.layers[i].ForwardT(outs[i-1], train)
 		} else {
-			outs[i] = *s.layers[i].ForwardT(&outs[i-1], train)
+			outs[i] = s.layers[i].ForwardT(outs[i-1], train)
 			defer outs[i].MustDrop()
 		}
 	}
@@ -179,7 +179,7 @@ func (s *SequentialT) AddFnT(fn ts.ModuleT) {
 }
 
 // ForwardAll applies the forward pass and returns the output for each layer.
-func (s *SequentialT) ForwardAllT(xs *ts.Tensor, train bool, opts ...uint8) (retVal []ts.Tensor) {
+func (s *SequentialT) ForwardAllT(xs *ts.Tensor, train bool, opts ...uint8) (retVal []*ts.Tensor) {
 
 	var n uint8 = uint8(len(s.layers))
 	if len(opts) > 0 {
@@ -187,13 +187,13 @@ func (s *SequentialT) ForwardAllT(xs *ts.Tensor, train bool, opts ...uint8) (ret
 	}
 
 	if s.IsEmpty() {
-		return []ts.Tensor{*xs.MustShallowClone()}
+		return []*ts.Tensor{xs.MustShallowClone()}
 	}
 
 	currTs := xs
 	for i := 0; i < int(n); i++ {
 		res := s.layers[i].ForwardT(currTs, train)
-		retVal = append(retVal, *res)
+		retVal = append(retVal, res)
 		currTs = res
 	}
 

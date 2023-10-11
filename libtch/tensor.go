@@ -59,12 +59,6 @@ func NewTensor() Ctensor {
 	return C.at_new_tensor()
 }
 
-// int at_device(tensor);
-func AtDevice(ts Ctensor) int {
-	cint := C.at_device(ts)
-	return *(*int)(unsafe.Pointer(&cint))
-}
-
 // tensor at_tensor_of_data(void *vs, int64_t *dims, size_t ndims, size_t element_size_in_bytes, int type);
 func AtTensorOfData(vs unsafe.Pointer, dims []int64, ndims uint, elt_size_in_bytes uint, kind int) Ctensor {
 
@@ -88,6 +82,30 @@ func AtDataPtr(t Ctensor) unsafe.Pointer {
 	return C.at_data_ptr(t)
 }
 
+// int at_defined(tensor);
+func AtDefined(ts Ctensor) bool {
+	retVal := C.at_defined(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// int at_is_mkldnn(tensor);
+func AtIsMkldnn(ts Ctensor) bool {
+	retVal := C.at_is_mkldnn(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// int at_is_sparse(tensor);
+func AtIsSparse(ts Ctensor) bool {
+	retVal := C.at_is_sparse(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
+}
+
+// int at_device(tensor);
+func AtDevice(ts Ctensor) int {
+	cint := C.at_device(ts)
+	return *(*int)(unsafe.Pointer(&cint))
+}
+
 // size_t at_dim(tensor);
 func AtDim(t Ctensor) uint64 {
 	result := C.at_dim(t)
@@ -100,10 +118,22 @@ func AtShape(t Ctensor, ptr unsafe.Pointer) {
 	C.at_shape(t, c_ptr)
 }
 
+// void at_stride(tensor, int64_t *);
+func AtStride(t Ctensor, ptr unsafe.Pointer) {
+	c_ptr := (*C.int64_t)(ptr)
+	C.at_stride(t, c_ptr)
+}
+
 // int at_scalar_type(tensor);
 func AtScalarType(t Ctensor) int32 {
 	result := C.at_scalar_type(t)
 	return *(*int32)(unsafe.Pointer(&result))
+}
+
+// int at_is_contiguous(tensor);
+func AtIsContiguous(ts Ctensor) bool {
+	retVal := C.at_is_contiguous(ts)
+	return *(*bool)(unsafe.Pointer(&retVal))
 }
 
 func GetAndResetLastErr() *C.char {
@@ -134,6 +164,24 @@ func AtcSetBenchmarkCudnn(b int) {
 	C.atc_set_benchmark_cudnn(cb)
 }
 
+// void atc_synchronize(int64_t device_index);
+func AtcSynchronize(deviceIndex int64) {
+	cDeviceIndex := *(*C.int64_t)(unsafe.Pointer(&deviceIndex))
+	C.atc_synchronize(cDeviceIndex)
+}
+
+// int atc_get_device();
+func AtcGetDevice() int {
+	cDeviceIndex := C.atc_get_device()
+	return int(cDeviceIndex)
+}
+
+// int atc_set_device(int device_index);
+func AtcSetDevice(deviceIndex int) int {
+	cDeviceIndex := C.int(deviceIndex)
+	return int(cDeviceIndex)
+}
+
 // double at_double_value_at_indexes(tensor, int64_t *indexes, int indexes_len);
 func AtDoubleValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) float64 {
 	ctensor := (C.tensor)(ts)
@@ -155,18 +203,6 @@ func AtInt64ValueAtIndexes(ts Ctensor, indexes unsafe.Pointer, indexesLen int) i
 // int at_requires_grad(tensor);
 func AtRequiresGrad(ts Ctensor) bool {
 	retVal := C.at_requires_grad(ts)
-	return *(*bool)(unsafe.Pointer(&retVal))
-}
-
-// int at_defined(tensor);
-func AtDefined(ts Ctensor) bool {
-	retVal := C.at_defined(ts)
-	return *(*bool)(unsafe.Pointer(&retVal))
-}
-
-// int at_is_sparse(tensor);
-func AtIsSparse(ts Ctensor) bool {
-	retVal := C.at_is_sparse(ts)
 	return *(*bool)(unsafe.Pointer(&retVal))
 }
 
@@ -364,7 +400,7 @@ func AtFree(ts Ctensor) {
 	C.at_free(ts)
 }
 
-//int at_grad_set_enabled(int b);
+// int at_grad_set_enabled(int b);
 func AtGradSetEnabled(b int) int {
 	cbool := *(*C.int)(unsafe.Pointer(&b))
 	cretVal := C.at_grad_set_enabled(cbool)
@@ -870,3 +906,13 @@ func AtoConstantPadNd(ptr *Ctensor, self Ctensor, padData []int64, padLen int, v
 	cpadLen := *(*C.int)(unsafe.Pointer(&padLen))
 	C.ato_constant_pad_nd(ptr, self, cpadDataPtr, cpadLen, value)
 }
+
+// // NOTE. TT. added to test new API generated
+// func AtgRandn1(sizeData []int64, sizeLen int, optionsKind int32, optionsDevice int32) Ctensor {
+// csizeDataPtr := (*C.int64_t)(unsafe.Pointer(&sizeData[0]))
+// csizeLen := *(*C.int)(unsafe.Pointer(&sizeLen))
+// coptionsKind := *(*C.int)(unsafe.Pointer(&optionsKind))
+// coptionsDevice := *(*C.int)(unsafe.Pointer(&optionsDevice))
+//
+// return C.atg_randn1(csizeDataPtr, csizeLen, coptionsKind, coptionsDevice)
+// }

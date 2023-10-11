@@ -169,7 +169,7 @@ func (in *ImageNet) hasSuffix(path string) bool {
 }
 
 func (in *ImageNet) loadImageFromDir(dir string) (*ts.Tensor, error) {
-	var images []ts.Tensor
+	var images []*ts.Tensor
 
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -188,7 +188,7 @@ func (in *ImageNet) loadImageFromDir(dir string) (*ts.Tensor, error) {
 			return nil, err
 		}
 
-		images = append(images, *img)
+		images = append(images, img)
 	}
 
 	if len(images) == 0 {
@@ -243,10 +243,10 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 	// fmt.Printf("Classess: %v\n", classes)
 
 	var (
-		trainImages []ts.Tensor
-		trainLabels []ts.Tensor
-		testImages  []ts.Tensor
-		testLabels  []ts.Tensor
+		trainImages []*ts.Tensor
+		trainLabels []*ts.Tensor
+		testImages  []*ts.Tensor
+		testLabels  []*ts.Tensor
 	)
 
 	for labelIdx, labelDir := range classes {
@@ -261,10 +261,10 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 		}
 
 		ntrainTs := trainTs.MustSize()[0]
-		trainImages = append(trainImages, *trainTs)
+		trainImages = append(trainImages, trainTs)
 
 		trainLabelOnes := ts.MustOnes([]int64{ntrainTs}, gotch.Int64, gotch.CPU)
-		trainLabels = append(trainLabels, *trainLabelOnes.MustMulScalar(ts.IntScalar(labelIndex), true))
+		trainLabels = append(trainLabels, trainLabelOnes.MustMulScalar(ts.IntScalar(labelIndex), true))
 
 		// test
 		testDir := fmt.Sprintf("%v/%v", validPath, labelDir)
@@ -274,10 +274,10 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 			return nil, err
 		}
 		ntestTs := testTs.MustSize()[0]
-		testImages = append(testImages, *testTs)
+		testImages = append(testImages, testTs)
 
 		testLabelOnes := ts.MustOnes([]int64{ntestTs}, gotch.Int64, gotch.CPU)
-		testLabels = append(testLabels, *testLabelOnes.MustMulScalar(ts.IntScalar(labelIndex), true))
+		testLabels = append(testLabels, testLabelOnes.MustMulScalar(ts.IntScalar(labelIndex), true))
 	}
 
 	trainImageTs := ts.MustCat(trainImages, 0)
@@ -298,7 +298,7 @@ func (in *ImageNet) LoadFromDir(path string) (*Dataset, error) {
 	}, nil
 }
 
-func dropTsSlice(tensors []ts.Tensor) {
+func dropTsSlice(tensors []*ts.Tensor) {
 	for i := 0; i < len(tensors); i++ {
 		tensors[i].MustDrop()
 	}

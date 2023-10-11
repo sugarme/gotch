@@ -75,7 +75,7 @@ func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 		if err := w.WriteByte(b); err != nil {
 			return err
 		}
-	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
+	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Uint16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 		if err := binary.Write(w, nativeEndian, v.Interface()); err != nil {
 			return err
 		}
@@ -86,14 +86,14 @@ func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 		if v.Kind() == reflect.Slice {
 			expected := int(shape[0])
 			if v.Len() != expected {
-				return fmt.Errorf("mismatched slice lengths: %d and %d", v.Len(), expected)
+				return fmt.Errorf("EncodeTensor() failed: mismatched slice lengths: %d and %d", v.Len(), expected)
 			}
 		}
 
 		// Optimisation: if only one dimension is left we can use binary.Write() directly for this slice
 		if len(shape) == 1 && v.Len() > 0 {
 			switch v.Index(0).Kind() {
-			case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
+			case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Uint16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 				return binary.Write(w, nativeEndian, v.Interface())
 			}
 		}
@@ -107,7 +107,7 @@ func EncodeTensor(w *bytes.Buffer, v reflect.Value, shape []int64) error {
 		}
 
 	default:
-		return fmt.Errorf("unsupported type %v", v.Type())
+		return fmt.Errorf("EncodeTensor() failed: unsupported type %v", v.Type())
 	}
 	return nil
 }
@@ -122,7 +122,7 @@ func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 			return err
 		}
 		ptr.Elem().SetBool(b == 1)
-	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
+	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Uint16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 		if err := binary.Read(r, nativeEndian, ptr.Interface()); err != nil {
 			return err
 		}
@@ -134,7 +134,7 @@ func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 		// Optimization: if only one dimension is left we can use binary.Read() directly for this slice
 		if len(shape) == 1 && val.Len() > 0 {
 			switch val.Index(0).Kind() {
-			case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
+			case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Uint16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64:
 				return binary.Read(r, nativeEndian, val.Interface())
 			}
 		}
@@ -152,10 +152,10 @@ func DecodeTensor(r *bytes.Reader, shape []int64, typ reflect.Type, ptr reflect.
 }
 
 // ElementCount counts number of element in the tensor given a shape
-func ElementCount(shape []int64) int64 {
-	n := int64(1)
+func ElementCount(shape []int64) int {
+	n := 1
 	for _, d := range shape {
-		n *= d
+		n *= int(d)
 	}
 	return n
 }
@@ -163,54 +163,48 @@ func ElementCount(shape []int64) int64 {
 // DataDim returns number of elements in data
 // NOTE: only support scalar and (nested) slice/array of scalar type
 func DataDim(data interface{}) (retVal int, err error) {
-
 	_, count, err := dataCheck(reflect.ValueOf(data).Interface(), 0)
 
 	return count, err
 }
 
 // DataCheck checks the input data for element Go type and number of elements.
-// It will return errors if element type is not supported.
-func DataCheck(data interface{}) (k reflect.Type, n int, err error) {
-
+// It will return errors if element dtype is not supported.
+func DataCheck(data interface{}) (dtype gotch.DType, n int, err error) {
 	return dataCheck(reflect.ValueOf(data).Interface(), 0)
 }
 
 // NOTE: 0 is reflect.Kind() of Invalid
 // See: https://golang.org/pkg/reflect/#Kind
-func dataCheck(data interface{}, count int) (k reflect.Type, n int, err error) {
+func dataCheck(data interface{}, count int) (dtype gotch.DType, n int, err error) {
 	v := reflect.ValueOf(data)
-	var goType reflect.Type = reflect.TypeOf(data)
 	var total int = count
 	var round = 0
 
-	switch v.Kind() {
-	case reflect.Slice, reflect.Array:
+	if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
 		if round == 0 {
 			round = v.Len()
 		}
 		for i := 0; i < v.Len(); i++ {
 			round--
-			goType, total, err = dataCheck(v.Index(i).Interface(), total)
+			dtype, total, err = dataCheck(v.Index(i).Interface(), total)
 
 			if err != nil {
-				return reflect.TypeOf(reflect.Zero), 0, err
+				return gotch.Invalid, 0, err
 			}
 		}
 
-		return goType, total, nil
-
-	case reflect.Uint8, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64, reflect.Bool:
-		total++
-		if goType.String() != "invalid" {
-			goType = v.Type()
-		}
-	default:
-		err = fmt.Errorf("Input Data: unsupported data structure or type: %v\n", v.Kind())
-		return reflect.TypeOf(reflect.Zero), 0, err
+		return dtype, total, nil
 	}
 
-	return goType, total, nil
+	total += 1
+	dtype, err = gotch.GoKind2DType(v.Kind())
+	if err != nil {
+		err = fmt.Errorf("DataCheck() failed: unsupported data structure or type: %v\n", v.Kind())
+		return gotch.Invalid, 0, err
+	}
+
+	return dtype, total, nil
 }
 
 // DataAsPtr write to C memory and returns a C pointer.
@@ -219,25 +213,19 @@ func dataCheck(data interface{}, count int) (k reflect.Type, n int, err error) {
 // Supported data types are scalar, slice/array of scalar type equivalent to
 // DType.
 func DataAsPtr(data interface{}) (dataPtr unsafe.Pointer, err error) {
-
 	// 1. Count number of elements in data
 	elementNum, err := DataDim(data)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. Element size in bytes
+	// 2. Number of bytes
 	dtype, err := gotch.DTypeFromData(data)
 	if err != nil {
 		return nil, err
 	}
 
-	eltSizeInBytes, err := gotch.DTypeSize(dtype)
-	if err != nil {
-		return nil, err
-	}
-
-	nbytes := int(eltSizeInBytes) * int(elementNum)
+	nbytes := int(dtype.Size()) * int(elementNum)
 
 	// 3. Get C pointer and prepare C memory buffer for writing
 	dataPtr, buff := CMalloc(nbytes)

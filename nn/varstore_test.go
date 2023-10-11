@@ -1,10 +1,12 @@
 package nn_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/sugarme/gotch"
 	"github.com/sugarme/gotch/nn"
@@ -132,4 +134,44 @@ func TestSaveLoad(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed deleting varstore saved file: %v\n", filenameAbs)
 	}
+}
+
+// Test whether create params in varstore can cause memory blow-up due to accumulate gradient.
+func TestVarstore_Memcheck(t *testing.T) {
+	gotch.PrintMemStats("Start")
+	device := gotch.CPU
+	vs := nn.NewVarStore(device)
+	params := 1000
+
+	path := vs.Root()
+	// dims := []int64{1024, 1024}
+	config := nn.DefaultLinearConfig()
+	inDim := int64(1024)
+	outDim := int64(1024)
+	var layers []nn.Linear
+	for i := 0; i < params; i++ {
+		ts.NoGrad(func() {
+			name := fmt.Sprintf("param_%v", i)
+			l := nn.NewLinear(path.Sub(name), inDim, outDim, config)
+			layers = append(layers, *l)
+			// x := ts.MustRandn(dims, gotch.DefaultDType, device)
+			// path.MustAdd(name, x, false)
+			// x.MustDrop()
+		})
+	}
+
+	// vs.Summary()
+
+	fmt.Printf("vs created...\n")
+	// printMemStats("After varstore created")
+
+	vs.Destroy()
+	ts.CleanUp()
+
+	fmt.Printf("vs deleted...\n")
+
+	// printMemStats("After varstore deleted")
+
+	time.Sleep(time.Second * 10)
+	gotch.PrintMemStats("Final")
 }

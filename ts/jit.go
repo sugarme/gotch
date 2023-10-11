@@ -22,25 +22,23 @@ type CIValue struct {
 	civalue lib.Civalue
 }
 
-type IValueKind struct {
-	reflect.Type
-}
+type IValueKind int
 
-var (
-	NoneVal        IValueKind = IValueKind{reflect.TypeOf(nil)}
-	TensorVal      IValueKind = IValueKind{reflect.TypeOf(Tensor{})}
-	DoubleVal      IValueKind = IValueKind{reflect.TypeOf(float64(1))}
-	IntVal         IValueKind = IValueKind{reflect.TypeOf(int64(1))}
-	BoolVal        IValueKind = IValueKind{reflect.TypeOf(true)}
-	TupleVal       IValueKind = IValueKind{reflect.TypeOf([]IValue{})}
-	IntListVal     IValueKind = IValueKind{reflect.TypeOf([]int64{})}
-	DoubleListVal  IValueKind = IValueKind{reflect.TypeOf([]float64{})}
-	BoolListVal    IValueKind = IValueKind{reflect.TypeOf([]bool{})}
-	StringVal      IValueKind = IValueKind{reflect.TypeOf("")}
-	TensorListVal  IValueKind = IValueKind{reflect.TypeOf([]Tensor{})}
-	GenericListVal IValueKind = IValueKind{reflect.TypeOf([]IValue{})}
-	GenericDictVal IValueKind = IValueKind{reflect.TypeOf(map[IValue]IValue{})} // 2 elements. ? map[IValue]IValue
-	GenericVal     IValueKind = IValueKind{reflect.TypeOf(IValue{})}
+const (
+	NoneVal        IValueKind = iota
+	TensorVal                 // *Tensor
+	DoubleVal                 // float64
+	IntVal                    // int64
+	BoolVal                   // bool
+	TupleVal                  // []*IValue
+	IntListVal                // []int64
+	DoubleListVal             // []float64
+	BoolListVal               // []bool
+	StringVal                 // string
+	TensorListVal             // []*Tensor
+	GenericListVal            // []*IValue
+	GenericDictVal            // map[IValue]IValue - 2 elements
+	GenericVal                // *IValue
 )
 
 type IValue struct {
@@ -51,7 +49,6 @@ type IValue struct {
 
 // NewIValue creates a new IValue from given value of various types.
 func NewIValue(v interface{}) *IValue {
-
 	retVal := &IValue{value: v}
 	if v == nil {
 		retVal.kind = NoneVal
@@ -62,7 +59,7 @@ func NewIValue(v interface{}) *IValue {
 	inputTypeStr := reflect.TypeOf(v).Kind().String()
 
 	switch inputTypeStr {
-	case "Tensor":
+	case "*Tensor":
 		retVal.kind = TensorVal
 		retVal.name = "Tensor"
 	case "float64":
@@ -87,17 +84,7 @@ func NewIValue(v interface{}) *IValue {
 		retVal.kind = StringVal
 		retVal.name = "String"
 	case "slice":
-		fmt.Printf("slice elem type: %q\n", reflect.TypeOf(v).Elem().Kind().String())
 		switch reflect.TypeOf(v).Elem().Kind().String() {
-		case "IValue":
-			switch len(v.([]IValue)) {
-			case 2:
-				retVal.kind = TupleVal
-				retVal.name = "Tuple"
-			default:
-				retVal.kind = GenericListVal
-				retVal.name = "GenericList"
-			}
 		case "int64":
 			retVal.kind = IntListVal
 			retVal.name = "IntList"
@@ -119,31 +106,38 @@ func NewIValue(v interface{}) *IValue {
 		case "bool":
 			retVal.kind = BoolListVal
 			retVal.name = "BoolList"
-		case "struct": // NOTE: only supported `Tensor` type
+		case "ptr": // NOTE: only supported `*Tensor` type
 			val := reflect.Indirect(reflect.ValueOf(v))
 			switch {
-			// 1. Tuple (Tensor, Tensor)
-			case val.Type() == reflect.TypeOf([]Tensor{}) && val.Len() == 2:
+			// 1. Tuple (*Tensor, *Tensor)
+			case val.Type().String() == "[]*ts.Tensor" && val.Len() == 2:
 				retVal.kind = TensorListVal
 				retVal.name = "Tuple"
-				retVal.value = v.([]Tensor)
+				retVal.value = v.([]*Tensor)
 
-				// 2. List (Tensor, Tensor, ...)
-			case val.Type() == reflect.TypeOf([]Tensor{}) && val.Len() > 2:
+				// 2. List (*Tensor, *Tensor, ...)
+			case val.Type().String() == "[]*ts.Tensor" && val.Len() > 2:
 				retVal.kind = TensorListVal
 				retVal.name = "TensorList"
-				retVal.value = v.([]Tensor)
+				retVal.value = v.([]*Tensor)
+			case val.Type().String() == "[]*ts.IValue" && val.Len() == 2:
+				retVal.kind = TupleVal
+				retVal.name = "Tuple"
+				retVal.value = v.([]*IValue)
+			case val.Type().String() == "[]*ts.IValue" && val.Len() > 2, val.Type().String() == "[]*ts.IValue" && val.Len() == 1:
+				retVal.kind = GenericListVal
+				retVal.name = "GenericList"
 			default:
-				log.Fatalf("NewIValue method call - 'slice -> struct' case - Unsupported type (%v)\n", reflect.TypeOf(v).Kind().String())
+				log.Fatalf("NewIValue method call - 'slice -> struct' case - Unsupported type (%v)\n", val.Type().String())
 			}
 		}
 	case "map":
 		// TODO: exclude map of type other than IValue type
 		retVal.kind = GenericDictVal
 		retVal.name = "GenericDict"
-	case "struct":
+	case "ptr":
 		val := reflect.Indirect(reflect.ValueOf(v))
-		fieldName := val.Type().Field(0).Name
+		fieldName := val.Type().Field(2).Name
 		switch fieldName {
 		case "ctensor":
 			retVal.kind = TensorVal
@@ -172,7 +166,7 @@ func (iv *IValue) ToCIValue() (*CIValue, error) {
 		return &CIValue{civalue: cval}, nil
 
 	case "Tensor":
-		cval := lib.AtiTensor(iv.value.(Tensor).ctensor)
+		cval := lib.AtiTensor(iv.value.(*Tensor).ctensor)
 		if err := TorchErr(); err != nil {
 			return nil, err
 		}
@@ -203,7 +197,7 @@ func (iv *IValue) ToCIValue() (*CIValue, error) {
 	case "Tuple":
 		val := reflect.Indirect(reflect.ValueOf(iv.value))
 		switch {
-		// 1. Tuple is (Tensor, Tensor)
+		// 1. Tuple is (*Tensor, *Tensor)
 		case val.Type() == reflect.TypeOf([]Tensor{}):
 			var v []Tensor = iv.value.([]Tensor)
 			var cvals []lib.Civalue
@@ -223,9 +217,9 @@ func (iv *IValue) ToCIValue() (*CIValue, error) {
 			}
 			return &CIValue{civalue: tuple}, nil
 
-		// 2. Tuple is (IValue, IValue)
+		// 2. Tuple is (*IValue, *IValue)
 		default:
-			var v []IValue = iv.value.([]IValue)
+			var v []*IValue = iv.value.([]*IValue)
 			var cvals []lib.Civalue
 			for _, i := range v {
 				cval, err := i.ToCIValue()
@@ -328,7 +322,7 @@ func (iv *IValue) ToCIValue() (*CIValue, error) {
 		return &CIValue{civalue: cval}, nil
 
 	case "TensorList":
-		var vals []Tensor = iv.value.([]Tensor)
+		var vals []*Tensor = iv.value.([]*Tensor)
 		var cvals []lib.Ctensor
 		for _, i := range vals {
 			cvals = append(cvals, i.ctensor)
@@ -450,7 +444,7 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 			return nil, err
 		}
 		return &IValue{
-			value: Tensor{tensor},
+			value: newTensor(tensor),
 			kind:  TensorVal,
 			name:  "Tensor",
 		}, nil
@@ -518,14 +512,14 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 		elemName := v.Name()
 		switch elemName {
 		case "Tensor":
-			var vals []Tensor
+			var vals []*Tensor
 			for _, civalue := range civalues {
 				v, err := IValueFromC(&civalue)
 				if err != nil {
 					return nil, err
 				}
 
-				vals = append(vals, v.Value().(Tensor))
+				vals = append(vals, v.Value().(*Tensor))
 			}
 			if len == 2 {
 				return &IValue{
@@ -725,12 +719,12 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 		}
 
 		// 3. Get values
-		var tensors []Tensor
-		tensors = append(tensors, Tensor{ctensor: *ptr1})
+		var tensors []*Tensor
+		tensors = append(tensors, newTensor(*ptr1))
 		currPtr := ptr1
 		for i := 1; i < int(len); i++ {
 			nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1)))
-			tensors = append(tensors, Tensor{ctensor: *nextPtr})
+			tensors = append(tensors, newTensor(*nextPtr))
 			currPtr = nextPtr
 		}
 
@@ -1017,7 +1011,7 @@ func ModuleLoadDataOnDevice(stream io.Reader, device gotch.Device) (*CModule, er
 }
 
 // ForwardTs performs the forward pass for a model on some specified tensor inputs.
-func (cm *CModule) ForwardTs(tensors []Tensor) (*Tensor, error) {
+func (cm *CModule) ForwardTs(tensors []*Tensor) (*Tensor, error) {
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
 		ctensors = append(ctensors, t.ctensor)
@@ -1061,11 +1055,11 @@ func (cm *CModule) ForwardTs(tensors []Tensor) (*Tensor, error) {
 		return nil, err
 	}
 
-	return &Tensor{ctensor}, nil
+	return newTensor(ctensor), nil
 }
 
 // ForwardIs performs the forward pass for a model on some specified ivalue input.
-func (cm *CModule) ForwardIs(ivalues []IValue) (*IValue, error) {
+func (cm *CModule) ForwardIs(ivalues []*IValue) (*IValue, error) {
 
 	var civalues []lib.Civalue
 	for _, i := range ivalues {
@@ -1145,7 +1139,7 @@ func (cm *CModule) NamedParameters() ([]NamedTensor, error) {
 	for _, v := range data.NamedCtensors {
 		namedTensor := NamedTensor{
 			Name:   v.Name,
-			Tensor: &Tensor{v.Ctensor},
+			Tensor: newTensor(v.Ctensor),
 		}
 
 		namedTensors = append(namedTensors, namedTensor)
@@ -1194,7 +1188,7 @@ func (cm *CModule) SetEval() {
 // Forwad implements Module interface for CModule.
 func (cm *CModule) Forward(tensor *Tensor) (*Tensor, error) {
 
-	var tensors []Tensor = []Tensor{*tensor}
+	var tensors []*Tensor = []*Tensor{tensor}
 	return cm.ForwardTs(tensors)
 }
 

@@ -26,7 +26,7 @@ func (it *Iterable) Next() (item interface{}, ok bool) {
 	}
 
 	var err error
-	switch it.ItemKind.Kind().String() {
+	switch it.ItemKind.GoKind().String() {
 	case "int64":
 		item, err = it.Content.Int64Value([]int64{it.Index})
 		if err != nil {

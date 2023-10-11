@@ -232,6 +232,7 @@ func (tdi *TextDataIter) Progress() float32 {
 	progress := float32(startIndex) / float32(availableIndices)
 	return progress
 }
+
 // Labels returns the number of different `character` (rune) used by the dataset.
 func (td *TextData) Labels() (retVal int64) {
 	return int64(len(td.CharForLabel))
@@ -281,12 +282,12 @@ func (tdi *TextDataIter) Next() (*Tensor, bool) {
 	indexes := indexesTs.Int64Values()
 	indexesTs.MustDrop()
 
-	var batch []Tensor
+	var batch []*Tensor
 
 	for _, idx := range indexes {
 		narrowIdx := NewNarrow(idx, idx+tdi.SeqLen)
 		idxTs := tdi.Data.Idx(narrowIdx)
-		batch = append(batch, *idxTs)
+		batch = append(batch, idxTs)
 	}
 
 	retVal := MustStack(batch, 0)

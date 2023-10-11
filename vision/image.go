@@ -212,7 +212,7 @@ func LoadAndResize(path string, outW int64, outH int64) (*ts.Tensor, error) {
 // LoadDir loads all the images in a directory.
 func LoadDir(dir string, outW int64, outH int64) (*ts.Tensor, error) {
 	var filePaths []string // "dir/filename.ext"
-	var tensors []ts.Tensor
+	var tensors []*ts.Tensor
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		err = fmt.Errorf("LoadDir - Read directory error: %v\n", err)
@@ -228,7 +228,7 @@ func LoadDir(dir string, outW int64, outH int64) (*ts.Tensor, error) {
 			err = fmt.Errorf("LoadDir - LoadAndResize method call error: %v\n", err)
 			return nil, err
 		}
-		tensors = append(tensors, *tensor)
+		tensors = append(tensors, tensor)
 	}
 
 	stackedTs, err := ts.Stack(tensors, 0)

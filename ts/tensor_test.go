@@ -131,3 +131,61 @@ func TestOfSlice(t *testing.T) {
 		t.Errorf("Got dtype: %v\n", got)
 	}
 }
+
+func TestCudaCurrentDevice(t *testing.T) {
+	cudaIdx, err := ts.CudaCurrentDevice()
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("current CUDA index: %v\n", cudaIdx) // should be 0 if having 1 GPU device
+
+	x := ts.MustZeros([]int64{2, 3, 4}, gotch.Float, gotch.CudaIfAvailable())
+	currentCudaIndex := x.MustDevice().Value
+	t.Logf("x current cuda index: %v\n", currentCudaIndex) // 0
+
+	previousCudaIndex, err := ts.CudaSetDevice(currentCudaIndex)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("Cuda index BEFORE set: %v\n", previousCudaIndex) // 0
+
+	cudaIdxAfter, err := ts.CudaCurrentDevice()
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("Cuda index AFTER set: %v\n", cudaIdxAfter) // 0
+}
+
+func TestTensor_Stride(t *testing.T) {
+	shape := []int64{2, 3, 4}
+	x := ts.MustRand(shape, gotch.Float, gotch.CPU)
+
+	got := x.MustStride()
+	want := []int64{12, 4, 1}
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v\n", want, got)
+	}
+}
+
+func TestTensor_IsContiguous(t *testing.T) {
+	shape := []int64{2, 3, 4}
+	x := ts.MustRand(shape, gotch.Float, gotch.CPU)
+
+	got := x.MustIsContiguous()
+	want := true
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v\n", want, got)
+	}
+}
+
+func TestTensor_IsMkldnn(t *testing.T) {
+	shape := []int64{2, 3, 4}
+	x := ts.MustRand(shape, gotch.Float, gotch.CPU)
+
+	got := x.MustIsMkldnn()
+	want := false
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v\n", want, got)
+	}
+}
