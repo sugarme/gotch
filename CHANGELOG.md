@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [0.8.0]
 - Upgrade libtorch v2.0.0
+- Upgrade Go version 1.20
 - Switched to use hybrid of Go garbage collection and manually memory management
 - Fixed #100 #102
 - Fixed incorrect indexing at `dutil/Dataset.Next()`
