@@ -6,14 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [Nofix]
+- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
+
+
+# [0.8.0]
+- Upgrade libtorch v2.0.0
+- Switched to use hybrid of Go garbage collection and manually memory management
+- Fixed #100 #102
 - Fixed incorrect indexing at `dutil/Dataset.Next()`
 - Added `nn.MSELoss()`
 - reworked `ts.Format()`
 - Added conv2d benchmark
 - Fixed #88 memory leak at `example/char-rnn`
-
-## [Nofix]
-- ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
 ## [0.7.0]
 - Added `WsName` and `BsName` fields to `nn.LayerNorm.Config`
@@ -213,3 +219,5 @@ Same as [0.3.10]
 [#45]: https://github.com/sugarme/gotch/issues/45
 [#48]: https://github.com/sugarme/gotch/issues/48
 [#58]: https://github.com/sugarme/gotch/issues/58
+[#100]: https://github.com/sugarme/gotch/issues/100
+[#102]: https://github.com/sugarme/gotch/issues/102
