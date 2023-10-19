@@ -17,8 +17,10 @@ type Scalar struct {
 
 // free releases C allocated memory.
 func freeCScalar(x *Scalar) error {
-	nbytes := x.nbytes()
-	atomic.AddInt64(&AllocatedMem, -nbytes)
+	if gotch.Debug {
+		nbytes := x.nbytes()
+		atomic.AddInt64(&AllocatedMem, -nbytes)
+	}
 	lock.Lock()
 	delete(ExistingScalars, x.name)
 	lock.Unlock()
@@ -53,8 +55,10 @@ func newScalar(cscalar lib.Cscalar, nameOpt ...string) *Scalar {
 	}
 
 	atomic.AddInt64(&ScalarCount, 1)
-	nbytes := x.nbytes()
-	atomic.AddInt64(&AllocatedMem, nbytes)
+	if gotch.Debug {
+		nbytes := x.nbytes()
+		atomic.AddInt64(&AllocatedMem, nbytes)
+	}
 	lock.Lock()
 	ExistingScalars[x.name] = struct{}{}
 	lock.Unlock()
