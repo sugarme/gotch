@@ -20,6 +20,8 @@ func freeCScalar(x *Scalar) error {
 	if gotch.Debug {
 		nbytes := x.nbytes()
 		atomic.AddInt64(&AllocatedMem, -nbytes)
+
+		log.Printf("INFO: Released scalar %q - C memory: %d bytes.\n", x.name, nbytes)
 	}
 	lock.Lock()
 	delete(ExistingScalars, x.name)
@@ -28,10 +30,6 @@ func freeCScalar(x *Scalar) error {
 	lib.AtsFree(x.cscalar)
 	if err := TorchErr(); err != nil {
 		return err
-	}
-
-	if gotch.Debug {
-		log.Printf("INFO: Released scalar %q - C memory: %d bytes.\n", x.name, nbytes)
 	}
 
 	return nil
@@ -58,14 +56,12 @@ func newScalar(cscalar lib.Cscalar, nameOpt ...string) *Scalar {
 	if gotch.Debug {
 		nbytes := x.nbytes()
 		atomic.AddInt64(&AllocatedMem, nbytes)
+
+		log.Printf("INFO: scalar %q added - Allocated memory (%d bytes).\n", x.name, nbytes)
 	}
 	lock.Lock()
 	ExistingScalars[x.name] = struct{}{}
 	lock.Unlock()
-
-	if gotch.Debug {
-		log.Printf("INFO: scalar %q added - Allocated memory (%d bytes).\n", x.name, nbytes)
-	}
 
 	runtime.SetFinalizer(x, freeCScalar)
 
