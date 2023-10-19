@@ -66,8 +66,12 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 	x.d = new(bigStruct)
 
 	atomic.AddInt64(&TensorCount, 1)
-	nbytes := x.nbytes()
-	atomic.AddInt64(&AllocatedMem, nbytes)
+	if gotch.Debug {
+		nbytes := x.nbytes()
+		atomic.AddInt64(&AllocatedMem, nbytes)
+
+		log.Printf("INFO: Added tensor %q - Allocated memory: %d bytes.\n", x.name, nbytes)
+	}
 	lock.Lock()
 	name := newName(nameOpt...)
 	if _, ok := ExistingTensors[name]; ok {
@@ -77,10 +81,6 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 	lock.Unlock()
 
 	x.name = name
-
-	if gotch.Debug {
-		log.Printf("INFO: Added tensor %q - Allocated memory: %d bytes.\n", x.name, nbytes)
-	}
 
 	x.calledFrom = "newTensor()"
 
@@ -169,6 +169,10 @@ func freeCTensor(ts *Tensor) error {
 
 	// IMPORTANT. make it nil so won't double free.
 	ts.ctensor = nil
+
+	// Clear SetFinalizer on ts so no double free tensor.
+	// Ref. https://pkg.go.dev/runtime#SetFinalizer
+	runtime.SetFinalizer(ts, nil)
 
 	return nil
 }
@@ -1189,10 +1193,6 @@ func (ts *Tensor) Drop() error {
 	if ts.ctensor == nil {
 		return nil
 	}
-
-	// Clear SetFinalizer on ts so no double free tensor.
-	// Ref. https://pkg.go.dev/runtime#SetFinalizer
-	runtime.SetFinalizer(ts, nil)
 
 	ts.calledFrom = "ts.Drop()"
 	return freeCTensor(ts)
