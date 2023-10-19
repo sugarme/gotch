@@ -60,7 +60,6 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 	if len(nameOpt) == 0 {
 		nameOpt = []string{}
 	}
-	name := newName(nameOpt...)
 
 	x := new(Tensor)
 	x.ctensor = ctensor
@@ -70,6 +69,7 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 	nbytes := x.nbytes()
 	atomic.AddInt64(&AllocatedMem, nbytes)
 	lock.Lock()
+	name := newName(nameOpt...)
 	if _, ok := ExistingTensors[name]; ok {
 		name = fmt.Sprintf("%s_%09d", name, TensorCount)
 	}

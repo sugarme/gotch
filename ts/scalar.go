@@ -49,13 +49,13 @@ func newScalarName(nameOpt ...string) string {
 func newScalar(cscalar lib.Cscalar, nameOpt ...string) *Scalar {
 	x := &Scalar{
 		cscalar: cscalar,
-		name:    newName(nameOpt...),
 	}
 
 	atomic.AddInt64(&ScalarCount, 1)
 	nbytes := x.nbytes()
 	atomic.AddInt64(&AllocatedMem, nbytes)
 	lock.Lock()
+	x.name = newName(nameOpt...)
 	ExistingScalars[x.name] = struct{}{}
 	lock.Unlock()
 
