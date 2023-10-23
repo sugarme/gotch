@@ -65,6 +65,7 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 	x.ctensor = ctensor
 	x.d = new(bigStruct)
 
+	lock.Lock()
 	atomic.AddInt64(&TensorCount, 1)
 	if gotch.Debug {
 		nbytes := x.nbytes()
@@ -72,7 +73,6 @@ func newTensor(ctensor lib.Ctensor, nameOpt ...string) *Tensor {
 
 		log.Printf("INFO: Added tensor %q - Allocated memory: %d bytes.\n", x.name, nbytes)
 	}
-	lock.Lock()
 	name := newName(nameOpt...)
 	if _, ok := ExistingTensors[name]; ok {
 		name = fmt.Sprintf("%s_%09d", name, TensorCount)
