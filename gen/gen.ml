@@ -974,7 +974,8 @@ let write_wrapper funcs filename =
                 pm ")(%s) { \n" (Func.go_return_type func ~fallible:true) ;
                 if is_method && not is_inplace then
                   pm "  if del { defer ts.MustDrop() }\n" ;
-                pm "  ptr := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))\n" ;
+                pm "  var untypedPtr uintptr\n" ;
+                pm "  ptr := (*lib.Ctensor)(unsafe.Pointer(&untypedPtr))\n" ;
                 pm "  \n" ;
                 pm "  %s" (Func.go_binding_body func) ;
                 pm "  %s(ptr, %s)\n" cfunc_name (Func.go_binding_args func) ;
@@ -1006,10 +1007,11 @@ let write_wrapper funcs filename =
                   pm "  if del { defer ts.MustDrop() }\n" ;
                 for i = 0 to ntensors - 1 do
                   (* pc "    out__[%d] = new torch::Tensor(std::get<%d>(outputs__));" i i *)
-                  if i = 0 then
-                    pm
-                      "  ctensorPtr0 := \
-                       (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))\n"
+                  if i = 0 then begin
+                    pm "  var untypedPtr uintptr\n" ;
+                    pm "  ctensorPtr0 := \
+                       (*lib.Ctensor)(unsafe.Pointer(&untypedPtr))\n" ;
+                  end
                   else
                     pm
                       "  ctensorPtr%d := \
