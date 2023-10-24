@@ -17,14 +17,14 @@ func LoadHwc(path string) (*Tensor, error) {
 		return nil, err
 	}
 
-	return newTensor(ctensor), nil
+	return newTensor(&ctensor), nil
 }
 
 // SaveHwc save an image from tensor. It expects a tensor of shape [height,
 // width, channels]
 func SaveHwc(ts *Tensor, path string) error {
 
-	lib.AtSaveImage(ts.ctensor, path)
+	lib.AtSaveImage(*ts.ctensor, path)
 	return TorchErr()
 }
 
@@ -32,11 +32,11 @@ func SaveHwc(ts *Tensor, path string) error {
 // On success returns a tensor of shape [height, width, channels].
 func ResizeHwc(ts *Tensor, outWidth, outHeight int64) (*Tensor, error) {
 
-	ctensor := lib.AtResizeImage(ts.ctensor, outWidth, outHeight)
+	ctensor := lib.AtResizeImage(*ts.ctensor, outWidth, outHeight)
 	err := TorchErr()
 	if err != nil {
 		return nil, err
 	}
 
-	return newTensor(ctensor), nil
+	return newTensor(&ctensor), nil
 }

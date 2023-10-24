@@ -166,7 +166,7 @@ func (iv *IValue) ToCIValue() (*CIValue, error) {
 		return &CIValue{civalue: cval}, nil
 
 	case "Tensor":
-		cval := lib.AtiTensor(iv.value.(*Tensor).ctensor)
+		cval := lib.AtiTensor(*iv.value.(*Tensor).ctensor)
 		if err := TorchErr(); err != nil {
 			return nil, err
 		}
@@ -325,7 +325,7 @@ func (iv *IValue) ToCIValue() (*CIValue, error) {
 		var vals []*Tensor = iv.value.([]*Tensor)
 		var cvals []lib.Ctensor
 		for _, i := range vals {
-			cvals = append(cvals, i.ctensor)
+			cvals = append(cvals, *i.ctensor)
 		}
 		list := lib.AtiTensorList(cvals, len(cvals))
 		if err := TorchErr(); err != nil {
@@ -444,7 +444,7 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 			return nil, err
 		}
 		return &IValue{
-			value: newTensor(tensor),
+			value: newTensor(&tensor),
 			kind:  TensorVal,
 			name:  "Tensor",
 		}, nil
@@ -720,11 +720,11 @@ func IValueFromC(cval *CIValue) (*IValue, error) {
 
 		// 3. Get values
 		var tensors []*Tensor
-		tensors = append(tensors, newTensor(*ptr1))
+		tensors = append(tensors, newTensor(ptr1))
 		currPtr := ptr1
 		for i := 1; i < int(len); i++ {
 			nextPtr := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(currPtr)) + unsafe.Sizeof(ptr1)))
-			tensors = append(tensors, newTensor(*nextPtr))
+			tensors = append(tensors, newTensor(nextPtr))
 			currPtr = nextPtr
 		}
 
@@ -1014,7 +1014,7 @@ func ModuleLoadDataOnDevice(stream io.Reader, device gotch.Device) (*CModule, er
 func (cm *CModule) ForwardTs(tensors []*Tensor) (*Tensor, error) {
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
+		ctensors = append(ctensors, *t.ctensor)
 	}
 
 	// NOTE: Write a slice of ctensors to C memory and get the pointer
@@ -1055,7 +1055,7 @@ func (cm *CModule) ForwardTs(tensors []*Tensor) (*Tensor, error) {
 		return nil, err
 	}
 
-	return newTensor(ctensor), nil
+	return newTensor(&ctensor), nil
 }
 
 // ForwardIs performs the forward pass for a model on some specified ivalue input.
@@ -1139,7 +1139,7 @@ func (cm *CModule) NamedParameters() ([]NamedTensor, error) {
 	for _, v := range data.NamedCtensors {
 		namedTensor := NamedTensor{
 			Name:   v.Name,
-			Tensor: newTensor(v.Ctensor),
+			Tensor: newTensor(&v.Ctensor),
 		}
 
 		namedTensors = append(namedTensors, namedTensor)

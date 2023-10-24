@@ -612,8 +612,8 @@ module Func = struct
         let name = go_variable arg.arg_name in
         match arg.arg_type with
         | Tensor ->
-            if String.( = ) name "self" then "ts.ctensor"
-            else Printf.sprintf "%s.ctensor" name
+            if String.( = ) name "self" then "*ts.ctensor"
+            else Printf.sprintf "*%s.ctensor" name
         | Scalar -> Printf.sprintf "%s.cscalar" name
         | Bool -> Printf.sprintf "c%s" name
         | ScalarType | ScalarTypeOption -> Printf.sprintf "%s.CInt()" name
@@ -628,7 +628,7 @@ module Func = struct
         | TensorOptList -> Printf.sprintf "c%s, len(c%s)" name name
         | Int64Option -> Printf.sprintf "c%sVal, c%sNull" name name
         | DoubleOption -> Printf.sprintf "c%sVal, c%sNull" name name
-        | TensorOption -> Printf.sprintf "%s.ctensor" name
+        | TensorOption -> Printf.sprintf "*%s.ctensor" name
         | Layout -> Printf.sprintf "int8(%s)" name
         | LayoutOption -> Printf.sprintf "int8(%s)" name 
         | _ -> name )
@@ -672,12 +672,12 @@ module Func = struct
         | TensorOptList ->
             Printf.sprintf
               "var c%s []lib.Ctensor\n\
-              \  for _, t := range %s {c%s = append(c%s, t.ctensor)}\n"
+              \  for _, t := range %s {c%s = append(c%s, *t.ctensor)}\n"
               an an an an
         | TensorList ->
             Printf.sprintf
               "var c%s []lib.Ctensor\n\
-              \  for _, t := range %s {c%s = append(c%s, t.ctensor)}\n"
+              \  for _, t := range %s {c%s = append(c%s, *t.ctensor)}\n"
               an an an an
         | Layout | LayoutOption -> "" 
         | TensorOptions -> "" )
@@ -984,9 +984,14 @@ let write_wrapper funcs filename =
                   (Func.go_return_notype func ~fallible:true) ;
                 pm "  }\n" ;
                 (* NOTE. if in_place method, no retVal return *)
-                if not (Func.is_inplace func) then
-                  pm "  retVal = newTensor(*ptr, \"%s\")\n" gofunc_name
-                else pm "  ts.ctensor = *ptr\n" ;
+                if not (Func.is_inplace func) then begin
+                  pm "  retVal = newTensor(ptr, \"%s\")\n" gofunc_name ;
+                  pm "  retVal.malloccedCtensor = true\n" ;
+                end
+                else begin
+                  pm "  ts.ctensor = ptr\n" ;
+                  pm "  ts.malloccedCtensor = true\n" ;
+                end;
                 pm "  \n" ;
                 pm "  return %s\n" (Func.go_return_notype func ~fallible:true) ;
                 pm "} \n"
@@ -1028,10 +1033,15 @@ let write_wrapper funcs filename =
                 pm "  }\n" ;
                 (* NOTE. if in_place method, no retVal return *)
                 if not (Func.is_inplace func) then
-                  for i = 0 to ntensors - 1 do
-                    pm "  retVal%d = newTensor(*ctensorPtr%d, \"%s_%d\")\n" i i gofunc_name i
+                  for i = 0 to ntensors - 1 do begin
+                    pm "  retVal%d = newTensor(ctensorPtr%d, \"%s_%d\")\n" i i gofunc_name i;
+                    pm "  retVal%d.malloccedCtensor = true\n" i ;
+                  end
                   done
-                else pm "  ts.ctensor = *ptr\n" ;
+                else begin
+                  pm "  ts.ctensor = ptr\n" ;
+                  pm "  ts.malloccedCtensor = true\n" ;
+                end;
                 pm "  \n" ;
                 pm "  return %s\n" (Func.go_return_notype func ~fallible:true) ;
                 pm "} \n"

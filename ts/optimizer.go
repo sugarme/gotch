@@ -72,7 +72,7 @@ func Sgd(lr, momentum, dampening, wd float64, nesterov bool) (*COptimizer, error
 func (co *COptimizer) AddParameters(tensors []*Tensor) error {
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
+		ctensors = append(ctensors, *t.ctensor)
 	}
 
 	ntensors := len(tensors)
@@ -85,7 +85,7 @@ func (co *COptimizer) AddParameters(tensors []*Tensor) error {
 
 // AddParameter adds a single parameter to parameter group.
 func (co *COptimizer) AddParameter(param *Tensor, group uint) error {
-	lib.AtoAddParameter(co.coptimizer, param.ctensor, group)
+	lib.AtoAddParameter(co.coptimizer, *param.ctensor, group)
 
 	return TorchErr()
 }
@@ -130,7 +130,7 @@ func (co *COptimizer) ParamGroupNum() (int64, error) {
 func (co *COptimizer) AddParamGroup(tensors []*Tensor) error {
 	var ctensors []lib.Ctensor
 	for _, t := range tensors {
-		ctensors = append(ctensors, t.ctensor)
+		ctensors = append(ctensors, *t.ctensor)
 	}
 
 	ntensors := len(tensors)
