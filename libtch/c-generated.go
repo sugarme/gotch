@@ -919,13 +919,13 @@ calignCorners := *(*C.int)(unsafe.Pointer(&alignCorners))
 }
 func Atg_HasCompatibleShallowCopyType(self Ctensor, from Ctensor) bool{
 	 cResult := C.atg__has_compatible_shallow_copy_type(self, from)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func Atg_HasSameStorageNumel(self Ctensor, other Ctensor) bool{
 	 cResult := C.atg__has_same_storage_numel(self, other)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -993,7 +993,7 @@ func Atg_IsAnyTrue(ptr *Ctensor, self Ctensor){
 }
 func Atg_IsZerotensor(self Ctensor) bool{
 	 cResult := C.atg__is_zerotensor(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -1355,7 +1355,7 @@ cselfNumBatchDims := *(*C.int64_t)(unsafe.Pointer(&selfNumBatchDims))
 }
 func Atg_NnpackAvailable() bool{
 	 cResult := C.atg__nnpack_available()
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -2450,20 +2450,20 @@ ctargetLengthsDataPtr := (*C.int64_t)(unsafe.Pointer(&targetLengthsData[0]))
 ctargetLengthsLen := *(*C.int)(unsafe.Pointer(&targetLengthsLen))
 cblank := *(*C.int64_t)(unsafe.Pointer(&blank))
 	 cResult := C.atg__use_cudnn_ctc_loss(logProbs, targets, cinputLengthsDataPtr, cinputLengthsLen, ctargetLengthsDataPtr, ctargetLengthsLen, cblank)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func Atg_UseCudnnCtcLossTensor(logProbs Ctensor, targets Ctensor, inputLengths Ctensor, targetLengths Ctensor, blank int64) bool{
 cblank := *(*C.int64_t)(unsafe.Pointer(&blank))
 	 cResult := C.atg__use_cudnn_ctc_loss_tensor(logProbs, targets, inputLengths, targetLengths, cblank)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func Atg_UseCudnnRnnFlattenWeight() bool{
 	 cResult := C.atg__use_cudnn_rnn_flatten_weight()
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -2732,7 +2732,7 @@ crtol := *(*C.double)(unsafe.Pointer(&rtol))
 catol := *(*C.double)(unsafe.Pointer(&atol))
 cequalNan := *(*C.int)(unsafe.Pointer(&equalNan))
 	 cResult := C.atg_allclose(self, other, crtol, catol, cequalNan)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -3509,7 +3509,7 @@ func AtgCanCast(from int32, to int32) bool{
 cfrom := *(*C.int)(unsafe.Pointer(&from))
 cto := *(*C.int)(unsafe.Pointer(&to))
 	 cResult := C.atg_can_cast(cfrom, cto)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -4291,7 +4291,7 @@ func AtgCudnnGridSamplerOut(ptr *Ctensor, out Ctensor, self Ctensor, grid Ctenso
 }
 func AtgCudnnIsAcceptable(self Ctensor) bool{
 	 cResult := C.atg_cudnn_is_acceptable(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -4791,7 +4791,7 @@ func AtgEqTensorOut(ptr *Ctensor, out Ctensor, self Ctensor, other Ctensor){
 }
 func AtgEqual(self Ctensor, other Ctensor) bool{
 	 cResult := C.atg_equal(self, other)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -6294,86 +6294,86 @@ func AtgInverseOut(ptr *Ctensor, out Ctensor, self Ctensor){
 }
 func AtgIsCoalesced(self Ctensor) bool{
 	 cResult := C.atg_is_coalesced(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsComplex(self Ctensor) bool{
 	 cResult := C.atg_is_complex(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsConj(self Ctensor) bool{
 	 cResult := C.atg_is_conj(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsDistributed(self Ctensor) bool{
 	 cResult := C.atg_is_distributed(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsFloatingPoint(self Ctensor) bool{
 	 cResult := C.atg_is_floating_point(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsInference(self Ctensor) bool{
 	 cResult := C.atg_is_inference(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsLeaf(self Ctensor) bool{
 	 cResult := C.atg_is_leaf(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsNeg(self Ctensor) bool{
 	 cResult := C.atg_is_neg(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsNonzero(self Ctensor) bool{
 	 cResult := C.atg_is_nonzero(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsPinned(self Ctensor, device int32) bool{
 cdevice := *(*C.int)(unsafe.Pointer(&device))
 	 cResult := C.atg_is_pinned(self, cdevice)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsSameSize(self Ctensor, other Ctensor) bool{
 	 cResult := C.atg_is_same_size(self, other)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsSetTo(self Ctensor, tensor Ctensor) bool{
 	 cResult := C.atg_is_set_to(self, tensor)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsSigned(self Ctensor) bool{
 	 cResult := C.atg_is_signed(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
 func AtgIsVulkanAvailable() bool{
 	 cResult := C.atg_is_vulkan_available()
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }
@@ -9602,7 +9602,7 @@ func AtgResolveNeg(ptr *Ctensor, self Ctensor){
 }
 func AtgRetainsGrad(self Ctensor) bool{
 	 cResult := C.atg_retains_grad(self)
-	 cbool := *(*int)(unsafe.Pointer(&cResult))
+	 cbool := (int)(cResult)
 	 if cbool == 1{return true}
 	 return false
 }

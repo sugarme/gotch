@@ -1356,7 +1356,7 @@ let write_ffi funcs filename =
                 (Func.c_go_args_list_body func) ;
               pm "\t cResult := C.atg_%s(%s)" exported_name
                 (Func.c_go_args_list_notype func) ;
-              pm "\t cbool := *(*int)(unsafe.Pointer(&cResult))" ;
+              pm "\t cbool := (int)(cResult)" ;
               pm "\t if cbool == 1{return true}" ;
               pm "\t return false" ;
               pm "}"
