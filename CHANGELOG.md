@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Nofix]
 - ctype `long` caused compiling error in MacOS as noted on [#44]. Not working on linux box.
 
+# [0.9.1]
+- [#111, #112, #113] Fixed concurrency memory leak 
+- [#118] Fixed incorrect cbool conversion
+
 # [0.9.0]
 - Upgrade libtorch v2.1.0
 
@@ -226,3 +230,7 @@ Same as [0.3.10]
 [#58]: https://github.com/sugarme/gotch/issues/58
 [#100]: https://github.com/sugarme/gotch/issues/100
 [#102]: https://github.com/sugarme/gotch/issues/102
+[#111]: https://github.com/sugarme/gotch/issues/111
+[#112]: https://github.com/sugarme/gotch/issues/112
+[#113]: https://github.com/sugarme/gotch/issues/113
+[#118]: https://github.com/sugarme/gotch/issues/118
