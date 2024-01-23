@@ -190,7 +190,7 @@ func report(pred *ts.Tensor, img *ts.Tensor, w int64, h int64) *ts.Tensor {
 	initialW := size3[2]
 
 	imageTmp := img.MustTotype(gotch.Float, false)
-	image := imageTmp.MustDiv1(ts.FloatScalar(255.0), true)
+	image := imageTmp.MustDiv(ts.MustOfSlice([]float32{255.0}), true)
 
 	var wRatio float64 = float64(initialW) / float64(w)
 	var hRatio float64 = float64(initialH) / float64(h)
@@ -215,7 +215,7 @@ func report(pred *ts.Tensor, img *ts.Tensor, w int64, h int64) *ts.Tensor {
 		}
 	}
 
-	imgTmp := image.MustMul1(ts.FloatScalar(255.0), true)
+	imgTmp := image.MustMul(ts.MustOfSlice([]float32{255.0}), true)
 	retVal := imgTmp.MustTotype(gotch.Uint8, true)
 
 	return retVal

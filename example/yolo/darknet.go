@@ -398,7 +398,7 @@ func detect(xs *ts.Tensor, imageHeight int64, classes int64, anchors []Anchor) *
 
 	xOffset := a.MustView([]int64{-1, 1}, true)
 	yOffset := b.MustView([]int64{-1, 1}, true)
-	xyOffsetTmp1 := ts.MustCat([]ts.Tensor{*xOffset, *yOffset}, 1)
+	xyOffsetTmp1 := ts.MustCat([]*ts.Tensor{xOffset, yOffset}, 1)
 	xyOffsetTmp2 := xyOffsetTmp1.MustRepeat([]int64{1, nanchors}, true)
 	xyOffsetTmp3 := xyOffsetTmp2.MustView([]int64{-1, 2}, true)
 	xyOffset := xyOffsetTmp3.MustUnsqueeze(0, true)
@@ -492,7 +492,7 @@ func (dn *Darknet) BuildModel(vs *nn.Path) nn.FuncT {
 	retVal := nn.NewFuncT(func(xs *ts.Tensor, train bool) *ts.Tensor {
 
 		var prevYs []ts.Tensor = make([]ts.Tensor, 0)
-		var detections []ts.Tensor = make([]ts.Tensor, 0)
+		var detections []*ts.Tensor = make([]*ts.Tensor, 0)
 
 		// NOTE: we will delete all tensors in prevYs after looping
 		for _, b := range blocks {
@@ -508,9 +508,9 @@ func (dn *Darknet) BuildModel(vs *nn.Path) nn.FuncT {
 				ysTs = layer.Val.ForwardT(xsTs, train)
 			case "Route":
 				route := b.Bl.(Route)
-				var layers []ts.Tensor
+				var layers []*ts.Tensor
 				for _, i := range route.TsIdxs {
-					layers = append(layers, prevYs[int(i)])
+					layers = append(layers, &prevYs[int(i)])
 				}
 				ysTs = ts.MustCat(layers, 1)
 
@@ -529,7 +529,7 @@ func (dn *Darknet) BuildModel(vs *nn.Path) nn.FuncT {
 
 				dt := detect(xsTs, imageHeight, classes, anchors)
 
-				detections = append(detections, *dt)
+				detections = append(detections, dt)
 
 				ysTs = ts.NewTensor()
 
