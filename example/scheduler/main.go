@@ -36,7 +36,7 @@ func main() {
 	zerosTs := ts.MustZeros([]int64{2, 2}, gotch.Float, device)
 	onesTs := ts.MustOnes([]int64{3, 5}, gotch.Float, device)
 
-	o.AddParamGroup([]ts.Tensor{*zerosTs, *onesTs})
+	o.AddParamGroup([]*ts.Tensor{zerosTs, onesTs})
 	fmt.Printf("New num of param groups: %v\n", o.ParamGroupNum())
 
 	fmt.Printf("New LRs: %+v\n", o.GetLRs())

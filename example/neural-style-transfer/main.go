@@ -153,13 +153,13 @@ func main() {
 		sLoss := ts.MustZeros([]int64{1}, gotch.Float, device)
 		cLoss := ts.MustZeros([]int64{1}, gotch.Float, device)
 		for _, idx := range StyleIndexes {
-			l := styleLoss(&inputLayers[idx], &styleLayers[idx])
+			l := styleLoss(inputLayers[idx], styleLayers[idx])
 			sLoss = sLoss.MustAdd(l, true)
 			l.MustDrop()
 		}
 		for _, idx := range ContentIndexes {
 			// NOTE: set `del` = true called panic at GPU train (tested on Colab)
-			l := inputLayers[idx].MustMseLoss(&contentLayers[idx], int64(ts.ReductionMean), false)
+			l := inputLayers[idx].MustMseLoss(contentLayers[idx], int64(ts.ReductionMean), false)
 			cLoss = cLoss.MustAdd(l, true)
 			l.MustDrop()
 		}

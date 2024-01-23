@@ -81,7 +81,7 @@ func (d *Decoder) forward(xs *ts.Tensor, state *nn.GRUState, encOutputs *ts.Tens
 	// NOTE. forwardTs shape: [1, 256] state [1, 1, 256]
 	// hence, just get state[0] of 3D tensor state
 	stateTs := state.Value().MustShallowClone().MustView([]int64{1, -1}, true)
-	catTs := ts.MustCat([]ts.Tensor{*forwardTs, *stateTs}, 1)
+	catTs := ts.MustCat([]*ts.Tensor{forwardTs, stateTs}, 1)
 	stateTs.MustDrop()
 
 	// NOTE. d.attn Ws shape : [512, 10]
@@ -103,14 +103,14 @@ func (d *Decoder) forward(xs *ts.Tensor, state *nn.GRUState, encOutputs *ts.Tens
 	} else {
 		shape := []int64{sz1, MaxLength - sz2, sz3}
 		zerosTs := ts.MustZeros(shape, gotch.Float, d.device)
-		encOutputsTs = ts.MustCat([]ts.Tensor{*encOutputs, *zerosTs}, 1)
+		encOutputsTs = ts.MustCat([]*ts.Tensor{encOutputs, zerosTs}, 1)
 		zerosTs.MustDrop()
 	}
 
-	attnApplied := attnWeights.MustBmm(encOutputsTs, true).MustSqueeze1(1, true)
+	attnApplied := attnWeights.MustBmm(encOutputsTs, true).MustSqueezeDim(1, true)
 	encOutputsTs.MustDrop()
 
-	cTs := ts.MustCat([]ts.Tensor{*forwardTs, *attnApplied}, 1)
+	cTs := ts.MustCat([]*ts.Tensor{forwardTs, attnApplied}, 1)
 	forwardTs.MustDrop()
 	attnApplied.MustDrop()
 	aTs := cTs.Apply(d.attnCombine)
@@ -145,13 +145,13 @@ func newModel(vs *nn.Path, ilang Lang, olang Lang, hiddenDim int64) *Model {
 
 func (m *Model) trainLoss(input []int, target []int) *ts.Tensor {
 	state := m.encoder.gru.ZeroState(1)
-	var encOutputs []ts.Tensor
+	var encOutputs []*ts.Tensor
 
 	for _, v := range input {
 		s := ts.MustOfSlice([]int64{int64(v)}).MustTo(m.device, true)
 		outTs, outState := m.encoder.forward(s, state.(*nn.GRUState))
 		s.MustDrop()
-		encOutputs = append(encOutputs, *outTs)
+		encOutputs = append(encOutputs, outTs)
 		state.(*nn.GRUState).Tensor.MustDrop()
 		state = outState
 	}
@@ -205,13 +205,13 @@ func (m *Model) trainLoss(input []int, target []int) *ts.Tensor {
 
 func (m *Model) predict(input []int) []int {
 	state := m.encoder.gru.ZeroState(1)
-	var encOutputs []ts.Tensor
+	var encOutputs []*ts.Tensor
 
 	for _, v := range input {
 		s := ts.MustOfSlice([]int64{int64(v)}).MustTo(m.device, true)
 		outTs, outState := m.encoder.forward(s, state.(*nn.GRUState))
 
-		encOutputs = append(encOutputs, *outTs)
+		encOutputs = append(encOutputs, outTs)
 		state.(*nn.GRUState).Tensor.MustDrop()
 		state = outState
 	}
