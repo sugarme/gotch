@@ -32,6 +32,10 @@ func init() {
 	}
 }
 
+func ManualSeed(seed int64) {
+	C.at_manual_seed(C.long(seed))
+}
+
 // NOTE: C.tensor is a C pointer to torch::Tensor
 type Ctensor = C.tensor
 type Cscalar = C.scalar
