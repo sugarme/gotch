@@ -1,4 +1,4 @@
-// +build gotch_gpu
+//go:build gotch_gpu
 
 package libtch
 

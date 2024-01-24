@@ -1,6 +1,13 @@
-// +build gotch_cuda
+//go:build gotch_gpu
 
 package ts_test
+
+import (
+	"testing"
+
+	"github.com/sugarme/gotch"
+	"github.com/sugarme/gotch/ts"
+)
 
 func TestCudaCurrentDevice(t *testing.T) {
 	cudaIdx, err := ts.CudaCurrentDevice()
