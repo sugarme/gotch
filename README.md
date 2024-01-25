@@ -30,9 +30,9 @@
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
 
-### CPU
+### Step 1: Setup libtorch (skip this step if a valid libtorch is already installed on your machine)
 
-#### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
+#### CPU
 
 ```bash
     wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-libtorch.sh
@@ -49,23 +49,13 @@
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib"
 ```
 
-#### Step 2: Setup gotch
-
-```bash
-    wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-gotch.sh
-    chmod +x setup-gotch.sh
-    export CUDA_VER=cpu && export GOTCH_VER=v0.9.1 && bash setup-gotch.sh
-```
-
-### GPU
+#### GPU
 
 **NOTE**: make sure your machine has working CUDA. 
 - Check version: `nvidia-smi`
 - [Install nvidia driver here](https://www.nvidia.com/Download/Find.aspx?lang=en)
 - [Install CUDA here](https://developer.nvidia.com/cuda-downloads)
 - [Install CuDNN here](https://developer.nvidia.com/rdp/cudnn-download#)
-
-#### Step 1: Setup libtorch (skip this step if a valid libtorch already installed in your machine!)
 
 ```bash
     wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-libtorch.sh
@@ -83,13 +73,16 @@
     LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$GOTCH_LIBTORCH/lib:/usr/lib64-nvidia:/usr/local/cuda-${CUDA_VERSION}/lib64"
 ```
 
-#### Step 2: Setup gotch
+## Install gotch
 
-```bash
-    wget https://github.com/sugarme/gotch/releases/download/v0.9.0/setup-gotch.sh
-    chmod +x setup-gotch.sh
-    export CUDA_VER=11.8 && export GOTCH_VER=v0.9.1 && bash setup-gotch.sh
-```
+Gotch can be installed with a simple `go get github.com/sugarme/gotch@latest`. By default `gotch` is set up to only use
+your CPU, even if you have a GPU version of libtorch installed. To compile for GPU use you need to specify the
+`gotch_gpu` [build tag](https://pkg.go.dev/cmd/go#hdr-Build_constraints). For example, to build an executable that uses
+`gotch` and wants GPU access you'd build your app like `go build -tags=gotch_gpu ./...`.
+
+Note: due to [an open Golang issue](https://github.com/golang/go/issues/24355) if you've built an executable against
+gotch and then you re-build changing the build tag (adding or removing the `gotch_gpu` tag) you will have to clear your
+go cache like: `go clean -cache -testcache`.
 
 ## Examples
 
