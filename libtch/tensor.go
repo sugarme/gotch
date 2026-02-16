@@ -101,9 +101,10 @@ func AtIsSparse(ts Ctensor) bool {
 }
 
 // int at_device(tensor);
+// PyTorch 2.10.0: Use direct type conversion instead of unsafe pointer casting
 func AtDevice(ts Ctensor) int {
 	cint := C.at_device(ts)
-	return *(*int)(unsafe.Pointer(&cint))
+	return int(cint)
 }
 
 // size_t at_dim(tensor);
@@ -149,6 +150,12 @@ func AtcCudaDeviceCount() int32 {
 // int atc_cuda_is_available();
 func AtcCudaIsAvailable() bool {
 	result := C.atc_cuda_is_available()
+	return *(*bool)(unsafe.Pointer(&result))
+}
+
+// int atc_mps_is_available();
+func AtcMpsIsAvailable() bool {
+	result := C.atc_mps_is_available()
 	return *(*bool)(unsafe.Pointer(&result))
 }
 
@@ -401,10 +408,12 @@ func AtFree(ts Ctensor) {
 }
 
 // int at_grad_set_enabled(int b);
+// PyTorch 2.10.0: Use direct type conversion instead of unsafe pointer casting
+// to avoid reading garbage memory (C.int is 32-bit, Go int is 64-bit)
 func AtGradSetEnabled(b int) int {
-	cbool := *(*C.int)(unsafe.Pointer(&b))
+	cbool := C.int(b)
 	cretVal := C.at_grad_set_enabled(cbool)
-	return *(*int)(unsafe.Pointer(&cretVal))
+	return int(cretVal)
 }
 
 /*

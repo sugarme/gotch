@@ -73,6 +73,7 @@ let excluded_functions =
     ; "sym_size"
     ; "sym_stride"
     ; "sym_storage_offset"
+    ; "_sparse_semi_structured_addmm"
     ]
 
 let no_tensor_options =
@@ -1441,7 +1442,7 @@ let run ~yaml_filename ~cpp_filename ~ffi_filename ~must_wrapper_filename
 
 
 let () =
-  run ~yaml_filename:"gen/pytorch/Declarations-v2.1.0.yaml"
+  run ~yaml_filename:"gen/pytorch/Declarations-v2.10.0.yaml"
     ~cpp_filename:"libtch/torch_api_generated"
     ~ffi_filename:"libtch/c-generated.go"
     ~must_wrapper_filename:"ts/must-tensor-generated.go"

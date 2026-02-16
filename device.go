@@ -12,9 +12,11 @@ type Device struct {
 }
 
 type Cuda Device
+type Mps Device
 
 var (
 	CPU  Device = Device{Name: "CPU", Value: -1}
+	MPS  Mps    = Mps{Name: "MPS", Value: -2}
 	CUDA Cuda   = Cuda{Name: "CUDA", Value: 0}
 )
 
@@ -32,6 +34,14 @@ func NewCuda() Device {
 	}
 
 	return CudaBuilder(0)
+}
+
+// MPS methods:
+// ============
+
+// IsAvailable returns true if MPS (Metal Performance Shaders) support is available
+func (m Mps) IsAvailable() bool {
+	return lib.AtcMpsIsAvailable()
 }
 
 // Cuda methods:
@@ -74,6 +84,8 @@ func (d Device) CInt() CInt {
 	switch {
 	case d.Name == "CPU":
 		return -1
+	case d.Name == "MPS":
+		return -2
 	case d.Name == "CUDA":
 		// TODO: create a function to retrieve cuda_index
 		var deviceIndex int = d.Value
@@ -87,7 +99,9 @@ func (d Device) CInt() CInt {
 func (d Device) OfCInt(v CInt) Device {
 	switch {
 	case v == -1:
-		return Device{Name: "CPU", Value: 1}
+		return Device{Name: "CPU", Value: -1}
+	case v == -2:
+		return Device{Name: "MPS", Value: -2}
 	case v >= 0:
 		return CudaBuilder(uint(v))
 	default:
@@ -120,6 +134,28 @@ func CudaIfAvailable() Device {
 	switch {
 	case CUDA.IsAvailable():
 		return CudaBuilder(0)
+	default:
+		return CPU
+	}
+}
+
+// MPSIfAvailable returns an MPS device if available, else CPU.
+func MPSIfAvailable() Device {
+	switch {
+	case MPS.IsAvailable():
+		return Device{Name: "MPS", Value: -2}
+	default:
+		return CPU
+	}
+}
+
+// BestAvailableDevice returns the best available device (CUDA > MPS > CPU).
+func BestAvailableDevice() Device {
+	switch {
+	case CUDA.IsAvailable():
+		return CudaBuilder(0)
+	case MPS.IsAvailable():
+		return Device{Name: "MPS", Value: -2}
 	default:
 		return CPU
 	}

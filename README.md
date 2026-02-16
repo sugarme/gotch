@@ -20,13 +20,13 @@
 
 ## Dependencies
 
-- **Libtorch** C++ v2.1.0 library of [Pytorch](https://pytorch.org/)
+- **Libtorch** C++ v2.10.0 library of [Pytorch](https://pytorch.org/)
 - Clang-17/Clang++-17 compilers
 
 ## Installation
 
 - Default CUDA version is `11.8` if CUDA is available otherwise using CPU version.
-- Default Pytorch C++ API version is `2.1.0`
+- Default Pytorch C++ API version is `2.10.0`
 
 **NOTE**: `libtorch` will be installed at **`/usr/local/lib`**
 
@@ -265,6 +265,20 @@ func main() {
 ## Getting Started
 
 - See [pkg.go.dev](https://pkg.go.dev/github.com/sugarme/gotch?tab=doc) for APIs detail.
+
+For unit tests use:
+- make test
+
+## PyTorch 2.10.0 Upgrade Notes
+
+This version includes critical fixes for PyTorch 2.10.0 compatibility:
+- Fixed gradient state management (thread-local in PyTorch 2.10.0)
+- Fixed FFI type conversion bugs (C.int → Go int)
+
+To validate FFI conversions:
+```bash
+make ffi-validate
+```
 
 ## License
 

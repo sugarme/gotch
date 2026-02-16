@@ -17,10 +17,11 @@ func (ts *Tensor) Lstm(hxData []*Tensor, paramsData []*Tensor, hasBiases bool, n
 
 	// NOTE: `atg_lstm` will create 3 consecutive Ctensors in memory of C land. The first
 	// Ctensor will have address given by `ctensorPtr1` here.
-	// The next pointers can be calculated based on `ctensorPtr1`
-	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(0)))
-	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + unsafe.Sizeof(ctensorPtr1)))
-	ctensorPtr3 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr2)) + unsafe.Sizeof(ctensorPtr1)))
+	// PyTorch 2.10.0: Allocate proper space for 3 tensor pointers
+	tensorPtrSize := unsafe.Sizeof(lib.Ctensor(nil))
+	ctensorPtr1 := (*lib.Ctensor)(unsafe.Pointer(C.malloc(C.size_t(tensorPtrSize * 3))))
+	ctensorPtr2 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr1)) + tensorPtrSize))
+	ctensorPtr3 := (*lib.Ctensor)(unsafe.Pointer(uintptr(unsafe.Pointer(ctensorPtr2)) + tensorPtrSize))
 
 	var chxData []lib.Ctensor
 	for _, t := range hxData {

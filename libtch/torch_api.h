@@ -155,6 +155,7 @@ void ats_free(scalar);
 
 int atc_cuda_device_count();
 int atc_cuda_is_available();
+int atc_mps_is_available();
 int atc_cudnn_is_available();
 void atc_set_benchmark_cudnn(int b);
 void atc_synchronize(int64_t device_index);

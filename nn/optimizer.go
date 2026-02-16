@@ -307,6 +307,10 @@ func (opt *Optimizer) StepCount() int {
 
 // BackwardStep applies a backward step pass, update the gradients, and performs an optimization step.
 func (opt *Optimizer) BackwardStep(loss *ts.Tensor) error {
+	// PyTorch 2.10.0: Ensure gradients enabled before backward pass
+	// optimizer.step() disables them and doesn't restore, so we must manage state
+	ts.MustGradSetEnabled(true)
+
 	err := opt.opt.ZeroGrad()
 	if err != nil {
 		err = fmt.Errorf("Optimizer.BackwardStep() failed: %w\n", err)
@@ -319,6 +323,10 @@ func (opt *Optimizer) BackwardStep(loss *ts.Tensor) error {
 		err = fmt.Errorf("Optimizer.BackwardStep() failed: %w\n", err)
 		return err
 	}
+
+	// PyTorch 2.10.0: step() disables gradients, so re-enable them
+	// BackwardStep is a training operation, gradients must remain enabled
+	ts.MustGradSetEnabled(true)
 
 	return nil
 }

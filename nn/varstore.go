@@ -46,6 +46,10 @@ type Entry struct {
 
 // NewVarStore creates a new variable store located on the specified device
 func NewVarStore(device gotch.Device) *VarStore {
+	// PyTorch 2.10.0: Ensure gradients are enabled when creating VarStore
+	// This provides clean gradient state even if previous tests didn't clean up
+	ts.MustGradSetEnabled(true)
+
 	return &VarStore{
 		device: device,
 		vars:   make(map[string]Var, 0),
@@ -468,6 +472,19 @@ func (vs *VarStore) Destroy() {
 	}
 
 	vs.Unlock()
+
+	// PyTorch 2.10.0: Reset gradient state after VarStore cleanup
+	// Single NoGrad block in init test still requires state reset
+	ts.MustGradSetEnabled(false)
+	ts.MustGradSetEnabled(true)
+
+	// Prime autograd engine to fully reset PyTorch 2.10.0's internal state
+	primeTs := ts.MustRandn([]int64{2, 2}, gotch.Float, vs.device)
+	primeTs.MustSetRequiresGrad(true, false)
+	primeOut := primeTs.MustMul(primeTs, false).MustSum(gotch.Float, false)
+	primeOut.MustBackward()
+	primeOut.MustDrop()
+	primeTs.MustDrop()
 
 	vs = nil
 }
