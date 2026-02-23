@@ -122,6 +122,11 @@ func CleanUp(sleepTimeOpt ...int) {
 	runtime.GC()
 	time.Sleep(time.Millisecond * sleepTime)
 	runtime.GC()
+
+	// PyTorch 2.10.0: Reset gradient state after cleanup
+	// Heavy NoGrad usage can corrupt autograd state, reset to ensure clean state
+	MustGradSetEnabled(false)
+	MustGradSetEnabled(true)
 }
 
 // Ctensor return C pointer value.
@@ -1256,14 +1261,15 @@ func MustGradSetEnabled(b bool) bool {
 }
 
 // NoGrad runs a closure without keeping track of gradients.
+// PyTorch 2.10.0: Save and restore previous gradient state (RAII pattern)
 func NoGrad(fn func()) {
-	// Switch off Grad
-	MustGradSetEnabled(false)
+	// Switch off Grad and save previous state
+	prev := MustGradSetEnabled(false)
 
 	fn()
 
-	// Switch on Grad
-	MustGradSetEnabled(true)
+	// Restore previous Grad state
+	MustGradSetEnabled(prev)
 }
 
 func NoGrad1(fn func() interface{}) interface{} {

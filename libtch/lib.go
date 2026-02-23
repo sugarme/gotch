@@ -1,9 +1,12 @@
 package libtch
 
-// #cgo CFLAGS: -I${SRCDIR} -O3 -Wall -Wno-unused-variable -Wno-deprecated-declarations -Wno-c++11-narrowing -g -Wno-sign-compare -Wno-unused-function
-// #cgo CFLAGS: -I/usr/local/cuda/include
-// #cgo LDFLAGS: -lstdc++ -ltorch -ltorch_cpu -ltorch_cuda -lc10
-// #cgo LDFLAGS: -L/usr/local/cuda/lib64 -lcuda
-// #cgo CFLAGS: -D_GLIBCXX_USE_CXX11_ABI=1
-// #cgo CXXFLAGS: -std=c++17
+// CGO flags are set via environment variables exported by the arch/*.mk
+// Makefile includes (e.g., arch/darwin-arm64.mk). Run builds through
+// `make` or export CGO_CFLAGS/CGO_LDFLAGS/CGO_CXXFLAGS manually.
+//
+// The only hardcoded flag is -I${SRCDIR} so CGO can find the local
+// torch_api.h header next to the .cpp source.
+
+// #cgo CFLAGS: -I${SRCDIR}
+// #cgo CXXFLAGS: -I${SRCDIR}
 import "C"

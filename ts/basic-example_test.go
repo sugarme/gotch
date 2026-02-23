@@ -7,7 +7,7 @@ import (
 	"github.com/sugarme/gotch/ts"
 )
 
-func ExampleTensor_MustArange() {
+func ExampleMustArange() {
 	tensor := ts.MustArange(ts.FloatScalar(12), gotch.Int64, gotch.CPU).MustView([]int64{3, 4}, true)
 
 	fmt.Printf("%v", tensor)
@@ -50,7 +50,7 @@ func ExampleTensor_Matmul() {
 
 }
 
-func ExampleTensor_AddScalar_() {
+func ExampleTensor_AddScalar() {
 	// In-place operation
 	ts3 := ts.MustOnes([]int64{2, 3}, gotch.Float, gotch.CPU)
 	fmt.Println("Before:")

@@ -155,6 +155,10 @@ void ats_free(scalar);
 
 int atc_cuda_device_count();
 int atc_cuda_is_available();
+int atc_mps_is_available();
+size_t atc_mps_current_allocated_memory();
+void atc_mps_empty_cache();
+void atc_mps_synchronize();
 int atc_cudnn_is_available();
 void atc_set_benchmark_cudnn(int b);
 void atc_synchronize(int64_t device_index);

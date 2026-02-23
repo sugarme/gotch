@@ -7,12 +7,12 @@ import (
 	"github.com/sugarme/gotch/ts"
 )
 
-func ExampleTensor_Split(t *testing.T) {
+func ExampleTensor_Split() {
 	tensor := ts.MustArange(ts.FloatScalar(10), gotch.Float, gotch.CPU).MustView([]int64{5, 2}, true)
 	splitTensors := tensor.MustSplit(2, 0, false)
 
-	for _, t := range splitTensors {
-		t.Print()
+	for _, st := range splitTensors {
+		st.Print()
 	}
 
 	//Output:
@@ -26,12 +26,12 @@ func ExampleTensor_Split(t *testing.T) {
 	// [ CPUFloatType{1,2} ]
 }
 
-func ExampleTensorSplitWithSizes(t *testing.T) {
+func ExampleTensor_SplitWithSizes() {
 	tensor := ts.MustArange(ts.FloatScalar(10), gotch.Float, gotch.CPU).MustView([]int64{5, 2}, true)
 	splitTensors := tensor.MustSplitWithSizes([]int64{1, 4}, 0, false)
 
-	for _, t := range splitTensors {
-		t.Print()
+	for _, st := range splitTensors {
+		st.Print()
 	}
 
 	//Output:

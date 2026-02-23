@@ -8,6 +8,7 @@
 #include <torch/csrc/jit/runtime/graph_executor.h>
 #include <torch/script.h>
 #include <torch/torch.h>
+#include <ATen/mps/MPSAllocatorInterface.h>
 #include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -49,7 +50,7 @@ c10::List<c10::optional<torch::Tensor>> of_carray_tensor_opt(torch::Tensor **vs,
 at::Device device_of_int(int d) {
   if (d == -3)
     return at::Device(at::kVulkan);
-  // if (d == -2) return at::Device(at::kMPS);
+  if (d == -2) return at::Device(at::kMPS);
   if (d < 0)
     return at::Device(at::kCPU);
   return at::Device(at::kCUDA, /*index=*/d);
@@ -174,18 +175,19 @@ int at_autocast_increment_nesting() {
 }
 
 bool at_autocast_is_enabled() {
-  PROTECT(return at::autocast::is_enabled();)
+  PROTECT(return at::autocast::is_autocast_enabled(at::kCUDA);)
   return -1;
 }
 
 bool at_autocast_set_enabled(bool b) {
-  PROTECT(bool is_enabled = at::autocast::is_enabled();
-          at::autocast::set_enabled(b); return is_enabled;)
+  PROTECT(bool is_enabled = at::autocast::is_autocast_enabled(at::kCUDA);
+          at::autocast::set_autocast_enabled(at::kCUDA, b); return is_enabled;)
   return -1;
 }
 
 int at_device(tensor t) {
   PROTECT(auto device = t->device(); if (device.type() == at::kCPU) return -1;
+          if (device.type() == at::kMPS) return -2;
           if (device.type() == at::kCUDA) return device.index();)
   return -99; // error
 }
@@ -200,8 +202,11 @@ int at_requires_grad(tensor t) {
 }
 
 int at_grad_set_enabled(int b) {
-  PROTECT(bool is_enabled = torch::autograd::GradMode::is_enabled();
-          torch::autograd::GradMode::set_enabled(b); return is_enabled;)
+  PROTECT(
+    bool is_enabled = torch::autograd::GradMode::is_enabled();
+    torch::autograd::GradMode::set_enabled(b != 0);  // Explicit bool conversion for PyTorch 2.10.0
+    return is_enabled ? 1 : 0;  // Explicit int conversion
+  )
   return -1;
 }
 
@@ -248,7 +253,32 @@ void at_fill_double(tensor t, double v) { PROTECT(t->fill_(v);) }
 void at_fill_int64(tensor t, int64_t v) { PROTECT(t->fill_(v);) }
 
 void at_print(tensor t) {
-  PROTECT(torch::Tensor *tensor = (torch::Tensor *)t; cout << *tensor << endl;)
+  PROTECT(
+    torch::Tensor *tensor = (torch::Tensor *)t;
+    std::ostringstream oss;
+    oss << *tensor;
+    std::string output = oss.str();
+
+    // PyTorch 2.10.0 adds leading spaces to number lines - strip them for backward compatibility
+    std::istringstream iss(output);
+    std::string line;
+    std::vector<std::string> lines;
+    while (std::getline(iss, line)) {
+      // Remove leading space if line starts with space followed by a digit or minus sign
+      if (!line.empty() && line[0] == ' ' && line.length() > 1 &&
+          (std::isdigit(line[1]) || line[1] == '-')) {
+        lines.push_back(line.substr(1));
+      } else {
+        lines.push_back(line);
+      }
+    }
+
+    // Print all lines
+    for (size_t i = 0; i < lines.size(); ++i) {
+      printf("%s\n", lines[i].c_str());
+    }
+    fflush(stdout);
+  )
 }
 
 char *at_to_string(tensor t, int line_size) {
@@ -755,6 +785,33 @@ int atc_cuda_device_count() {
 int atc_cuda_is_available() {
   PROTECT(return torch::cuda::is_available();)
   return -1;
+}
+
+int atc_mps_is_available() {
+  PROTECT(return torch::mps::is_available();)
+  return -1;
+}
+
+size_t atc_mps_current_allocated_memory() {
+  PROTECT(
+    auto* allocator = at::mps::getIMPSAllocator(false);
+    if (allocator) return allocator->getCurrentAllocatedMemory();
+  )
+  return 0;
+}
+
+void atc_mps_empty_cache() {
+  PROTECT(
+    auto* allocator = at::mps::getIMPSAllocator(false);
+    if (allocator) allocator->emptyCache();
+  )
+}
+
+void atc_mps_synchronize() {
+  PROTECT(
+    auto guard = c10::impl::VirtualGuardImpl(at::DeviceType::MPS);
+    guard.synchronizeDevice(0);
+  )
 }
 
 int atc_cudnn_is_available() {

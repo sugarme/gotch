@@ -38,23 +38,29 @@ func TestOptimizer(t *testing.T) {
 
 	// Optimization loop
 	for i := 0; i < 50; i++ {
-		logits := model.Forward(x)
-		loss := logits.MustMseLoss(y, 1, true)
+		logits := x.ApplyT(model, true)
+		loss := logits.MustMseLoss(y, 1, false)
 		if i%10 == 0 {
 			fmt.Printf("Loss: %.3f\n", loss.MustView([]int64{-1}, false).MustFloat64Value([]int64{0}))
 		}
 
-		loss.MustRequiresGrad_(true)
 		opt.BackwardStep(loss)
+		logits.MustDrop()
 		loss.MustDrop()
 	}
 
-	loss := x.Apply(model).MustMseLoss(y, 1, true)
+	logits := x.ApplyT(model, true)
+	loss := logits.MustMseLoss(y, 1, false)
 	opt.BackwardStep(loss)
+	logits.MustDrop()
+	loss.MustDrop()
 
-	loss = x.Apply(model).MustMseLoss(y, 1, true)
+	logits = x.ApplyT(model, true)
+	loss = logits.MustMseLoss(y, 1, false)
 	finalLoss := loss.Float64Values()[0]
 	fmt.Printf("Final loss: %v\n", finalLoss)
+	logits.MustDrop()
+	loss.MustDrop()
 
 	if finalLoss > 0.25 {
 		t.Errorf("Expect initial loss < 0.25, got %v", finalLoss)
